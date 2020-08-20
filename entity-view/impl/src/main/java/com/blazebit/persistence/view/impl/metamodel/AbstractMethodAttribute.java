@@ -189,11 +189,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             return null;
         }
         if (SortedSet.class.isAssignableFrom(pluralContainerType)) {
-            return new SortedSetFactory();
+            return SortedSetFactory.INSTANCE;
         } else if (Set.class.isAssignableFrom(pluralContainerType)) {
-            return new SetFactory();
+            return SetFactory.INSTANCE;
         } else {
-            return new ListFactory();
+            return ListFactory.INSTANCE;
         }
     }
 
@@ -203,9 +203,9 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             return null;
         }
         if (SortedMap.class.isAssignableFrom(pluralContainerType)) {
-            return new SortedMapFactory();
+            return SortedMapFactory.INSTANCE;
         } else {
-            return new MapFactory();
+            return MapFactory.INSTANCE;
         }
     }
 

@@ -23,18 +23,25 @@ import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMultiListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMultiMapAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodMultiListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodMultiMapAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSetAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSingularAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryMethodSingularAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.spi.EntityViewMethodAttributeMapping;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -55,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -98,9 +106,9 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadePersistSubtypesMap;
     private Map<EmbeddableOwner, Set<ManagedViewTypeImplementor<?>>> embeddableCascadeUpdateSubtypesMap;
 
-    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MetamodelBootContext context, String attributeName, Method method, int attributeIndex, boolean isCollection, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
+    public MethodAttributeMapping(ViewMapping viewMapping, Annotation mapping, MappingIndex mappingIndex, MetamodelBootContext context, String attributeName, Method method, int attributeIndex, boolean isCollection, PluralAttribute.ElementCollectionType elementCollectionType, Class<?> declaredTypeClass, Class<?> declaredKeyTypeClass, Class declaredElementTypeClass,
                                   java.lang.reflect.Type type, java.lang.reflect.Type keyType, java.lang.reflect.Type elementType, Map<Class<?>, String> inheritanceSubtypeClassMappings, Map<Class<?>, String> keyInheritanceSubtypeClassMappings, Map<Class<?>, String> elementInheritanceSubtypeClassMappings) {
-        super(viewMapping, mapping, context, isCollection, declaredTypeClass, declaredKeyTypeClass, declaredElementTypeClass, type, keyType, elementType, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
+        super(viewMapping, mapping, mappingIndex, context, isCollection, elementCollectionType, declaredTypeClass, declaredKeyTypeClass, declaredElementTypeClass, type, keyType, elementType, inheritanceSubtypeClassMappings, keyInheritanceSubtypeClassMappings, elementInheritanceSubtypeClassMappings);
         this.attributeName = attributeName;
         this.method = method;
         this.attributeIndex = attributeIndex;
@@ -637,7 +645,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
         MethodAttributeMapping originalAttribute = (MethodAttributeMapping) original;
         // If the mapping is the same, just let it through
-        if (mapping.equals(originalAttribute.getMapping())) {
+        if (mapping.equals(originalAttribute.getMapping()) && Objects.equals(mappingIndex, originalAttribute.getMappingIndex())) {
             return originalAttribute;
         }
 
@@ -653,7 +661,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
             return this;
         }
 
-        context.addError("Conflicting attribute mapping for attribute '" + attributeName + "' at the methods [" + methodReference(method) + ", " + methodReference(originalAttribute.getMethod()) + "] for managed view type '" + viewMapping.getEntityViewClass().getName() + "'");
+        context.addError("Conflicting attribute mapping or index mapping for attribute '" + attributeName + "' at the methods [" + methodReference(method) + ", " + methodReference(originalAttribute.getMethod()) + "] for managed view type '" + viewMapping.getEntityViewClass().getName() + "'");
         return originalAttribute;
     }
 
@@ -700,10 +708,18 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                         attribute = new MappingMethodCollectionAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else if (List.class == declaredTypeClass) {
-                    if (correlated) {
-                        attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                    if (elementCollectionType == null) {
+                        if (correlated) {
+                            attribute = new CorrelatedMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        } else {
+                            attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        }
                     } else {
-                        attribute = new MappingMethodListAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        if (correlated) {
+                            attribute = new CorrelatedMethodMultiListAttribute<X, Object, Collection<Object>>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        } else {
+                            attribute = new MappingMethodMultiListAttribute<X, Object, Collection<Object>>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        }
                     }
                 } else if (Set.class == declaredTypeClass || SortedSet.class == declaredTypeClass || NavigableSet.class == declaredTypeClass) {
                     if (correlated) {
@@ -712,11 +728,18 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                         attribute = new MappingMethodSetAttribute<X, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
                     }
                 } else if (Map.class == declaredTypeClass || SortedMap.class == declaredTypeClass || NavigableMap.class == declaredTypeClass) {
-                    if (correlated) {
-                        context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a Map type with a correlated mapping which is unsupported!");
-                        attribute = null;
+                    if (elementCollectionType == null) {
+                        if (correlated) {
+                            attribute = new CorrelatedMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        } else {
+                            attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        }
                     } else {
-                        attribute = new MappingMethodMapAttribute<X, Object, Object>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        if (correlated) {
+                            attribute = new CorrelatedMethodMultiMapAttribute<X, Object, Object, Collection<Object>>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        } else {
+                            attribute = new MappingMethodMultiMapAttribute<X, Object, Object, Collection<Object>>(viewType, this, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+                        }
                     }
                 } else {
                     context.addError("The mapping defined on method '" + viewType.getJavaType().getName() + "." + method.getName() + "' uses a an unknown collection type: " + declaredTypeClass);

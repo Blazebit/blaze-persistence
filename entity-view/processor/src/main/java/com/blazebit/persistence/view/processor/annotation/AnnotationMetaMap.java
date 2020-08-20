@@ -39,8 +39,8 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     private final String implementationTypeString;
 
     public AnnotationMetaMap(AnnotationMetaEntityView parent, Element element, String collectionType,
-                             String collectionJavaType, String keyType, String realKeyType, String elementType, String realElementType, Context context) {
-        super(parent, element, collectionType, collectionJavaType, elementType, realElementType, context);
+                             String collectionJavaType, String elementCollectionJavaType, String keyType, String realKeyType, String elementType, String realElementType, Context context) {
+        super(parent, element, collectionType, collectionJavaType, elementCollectionJavaType, elementType, realElementType, context);
         this.keyType = keyType;
         this.realKeyType = realKeyType;
         this.keySubviewElement = getSubview(keyType, context);
@@ -49,7 +49,11 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         } else {
             this.generatedKeyTypePrefix = keyType;
         }
-        this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(getRealType()) + ">";
+        if (elementCollectionJavaType == null) {
+            this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(realElementType) + ">";
+        } else {
+            this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(collectionJavaType) + "<" + getHostingEntity().importType(realKeyType) + ", " + getHostingEntity().importType(elementCollectionJavaType) + "<" + getHostingEntity().importType(elementType) + ">>";
+        }
     }
 
     public String getKeyType() {
@@ -128,9 +132,12 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
                 .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
                 .append(", ")
                 .append(getHostingEntity().importType(keyType))
-                .append(", ")
-                .append(getHostingEntity().importType(getType()))
-                .append('>');
+                .append(", ");
+        if (elementCollectionJavaType != null) {
+            sb.append(getHostingEntity().importType(getType())).append(", ");
+        }
+        appendElementType(sb, importContext);
+        sb.append('>');
     }
 
 }

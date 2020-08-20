@@ -26,3 +26,4 @@ A release involves various steps which are outlined here and should be kept up-t
 . Push the new website changes only if you are working on the latest version series and first to the staging server by invoking `./build-deploy-website.sh staging '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'` and if everything is alright push to production with `./build-deploy-website.sh prod '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'`
 . If you want to push just the documentation changes use `./build-deploy-documentation.sh staging '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'` and if everything is alright also push to production with `./build-deploy-documentation.sh prod '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'`
 . Create tweet about new version
+. Update version in Quarkus ecosystem ci poms

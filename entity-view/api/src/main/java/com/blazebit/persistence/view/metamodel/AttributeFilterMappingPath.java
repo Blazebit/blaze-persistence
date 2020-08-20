@@ -26,7 +26,7 @@ package com.blazebit.persistence.view.metamodel;
  */
 public final class AttributeFilterMappingPath<X, FilterValue> {
 
-    private final AttributePath<X, ?> attributePath;
+    private final AttributePath<X, ?, ?> attributePath;
     private final AttributeFilterMapping<?, FilterValue> filter;
     private final String filterName;
 
@@ -36,7 +36,7 @@ public final class AttributeFilterMappingPath<X, FilterValue> {
      * @param attributePath The attribute path
      * @param filter The filter mapping
      */
-    public AttributeFilterMappingPath(AttributePath<X, ?> attributePath, AttributeFilterMapping<?, FilterValue> filter) {
+    public AttributeFilterMappingPath(AttributePath<X, ?, ?> attributePath, AttributeFilterMapping<?, FilterValue> filter) {
         this.attributePath = attributePath;
         this.filter = filter;
         this.filterName = filter.getName();
@@ -48,7 +48,7 @@ public final class AttributeFilterMappingPath<X, FilterValue> {
      * @param attributePath The attribute path
      * @param filterName The filter name
      */
-    public AttributeFilterMappingPath(AttributePath<X, ?> attributePath, String filterName) {
+    public AttributeFilterMappingPath(AttributePath<X, ?, ?> attributePath, String filterName) {
         this.attributePath = attributePath;
         this.filter = null;
         this.filterName = filterName;
@@ -59,7 +59,7 @@ public final class AttributeFilterMappingPath<X, FilterValue> {
      *
      * @return The attribute path
      */
-    public AttributePath<X, ?> getAttributePath() {
+    public AttributePath<X, ?, ?> getAttributePath() {
         return attributePath;
     }
 

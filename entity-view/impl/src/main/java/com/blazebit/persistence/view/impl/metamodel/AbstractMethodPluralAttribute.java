@@ -44,6 +44,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private static final Logger LOG = Logger.getLogger(AbstractMethodPluralAttribute.class.getName());
 
     private final Type<Y> elementType;
+    private final ElementCollectionType elementCollectionType;
     private final int dirtyStateIndex;
     private final String mappedBy;
     private final Map<String, String> writableMappedByMapping;
@@ -64,7 +65,6 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
-    private final boolean forcedUnique;
     private final Class<Comparator<Object>> comparatorClass;
     private final Comparator<Object> comparator;
 
@@ -78,6 +78,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         if (mapping.isVersion()) {
             context.addError("Attribute annotated with @Version must use a singular type. Plural type found at attribute on the " + mapping.getErrorLocation() + "!");
         }
+        this.elementCollectionType = mapping.getElementCollectionType();
         this.elementType = (Type<Y>) mapping.getElementType(context, embeddableMapping);
 
         // The declaring type must be mutable, otherwise attributes can't be considered updatable
@@ -218,7 +219,6 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         this.sorted = mapping.isSorted();
         
         this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;
-        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
         this.comparatorClass = (Class<Comparator<Object>>) mapping.getComparatorClass();
         this.comparator = MetamodelUtils.getComparator(comparatorClass);
     }
@@ -343,6 +343,11 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     }
 
     @Override
+    public ElementCollectionType getElementCollectionType() {
+        return elementCollectionType;
+    }
+
+    @Override
     public Map<ManagedViewType<? extends Y>, String> getElementInheritanceSubtypeMappings() {
         return elementInheritanceSubtypes;
     }
@@ -370,11 +375,6 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
     @Override
     public boolean isOrdered() {
         return ordered;
-    }
-
-    @Override
-    public boolean isForcedUnique() {
-        return forcedUnique;
     }
 
     @Override

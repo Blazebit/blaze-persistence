@@ -20,12 +20,15 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.Limit;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * @author Christian Beikov
@@ -99,6 +102,18 @@ public class AbstractAnnotationAttributeMappingReader {
         Limit limit = annotatedElement.getAnnotation(Limit.class);
         if (limit != null) {
             attributeMapping.setLimit(limit.limit(), limit.offset(), Arrays.asList(limit.order()));
+        }
+    }
+
+    protected PluralAttribute.ElementCollectionType getElementCollectionType(Class<?> elementType) {
+        if (List.class.isAssignableFrom(elementType)) {
+            return PluralAttribute.ElementCollectionType.LIST;
+        } else if (SortedSet.class.isAssignableFrom(elementType)) {
+            return PluralAttribute.ElementCollectionType.SORTED_SET;
+        } else if (Set.class.isAssignableFrom(elementType)) {
+            return PluralAttribute.ElementCollectionType.SET;
+        } else {
+            return PluralAttribute.ElementCollectionType.COLLECTION;
         }
     }
 }

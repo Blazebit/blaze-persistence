@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.AttributeFilters;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingInheritance;
 import com.blazebit.persistence.view.MappingInheritanceMapKey;
 import com.blazebit.persistence.view.MappingInheritanceSubtype;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.OptimisticLock;
 import com.blazebit.persistence.view.UpdatableMapping;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -61,6 +63,7 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         Type declaredElementType;
         Class<?> keyType;
         Class<?> elementType;
+        PluralAttribute.ElementCollectionType elementCollectionType = null;
         if (isCollection) {
             Type[] typeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
             declaredType = returnType;
@@ -68,6 +71,12 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
             declaredElementType = typeArguments[typeArguments.length - 1];
             keyType = ReflectionUtils.resolveType(entityViewClass, declaredKeyType);
             elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+            if (elementType != null && Collection.class.isAssignableFrom(elementType)) {
+                Type[] elementTypeArguments = ((ParameterizedType) declaredElementType).getActualTypeArguments();
+                elementCollectionType = getElementCollectionType(elementType);
+                declaredElementType = elementTypeArguments[0];
+                elementType = ReflectionUtils.resolveType(entityViewClass, declaredElementType);
+            }
         } else {
             declaredType = returnType;
             declaredKeyType = null;
@@ -80,7 +89,7 @@ public class AnnotationMethodAttributeMappingReader extends AbstractAnnotationAt
         Map<Class<?>, String> keyTypeMappings = resolveKeyInheritanceSubtypeMappings(annotatedElement, keyType);
         Map<Class<?>, String> elementTypeMappings = resolveElementInheritanceSubtypeMappings(annotatedElement, elementType);
 
-        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, context, attributeName, method, attributeIndex, isCollection, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
+        MethodAttributeMapping attributeMapping = new MethodAttributeMapping(viewMapping, mapping, annotatedElement.getAnnotation(MappingIndex.class), context, attributeName, method, attributeIndex, isCollection, elementCollectionType, type, keyType, elementType, declaredType, declaredKeyType, declaredElementType, typeMappings, keyTypeMappings, elementTypeMappings);
 
         if (annotatedElement.isAnnotationPresent(IdMapping.class)) {
             viewMapping.setIdAttributeMapping(attributeMapping);

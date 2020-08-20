@@ -102,10 +102,9 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
      * Test for https://github.com/Blazebit/blaze-persistence/issues/329
      */
     @Test
-    // NOTE: Hibernate bug not yet resolved: https://hibernate.atlassian.net/browse/HHH-10537
-    // NOTE: Hibernate bug not yet resolved: https://hibernate.atlassian.net/browse/HHH-10577
+    // NOTE: Hibernate 5.0 and lower don't work because of https://hibernate.atlassian.net/browse/HHH-10537 and https://hibernate.atlassian.net/browse/HHH-10577
     // NOTE: DataNucleus does not support this yet: https://github.com/datanucleus/datanucleus-core/issues/182
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate.class, NoDatanucleus.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class })
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(SubviewDocumentForEntityKeyMapsView.class);

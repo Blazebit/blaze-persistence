@@ -31,7 +31,6 @@ import java.util.Map;
  */
 public class MappingParameterMapAttribute<X, K, V> extends AbstractParameterMapAttribute<X, K, V> implements MappingAttribute<X, Map<K, V>> {
 
-    @SuppressWarnings("unchecked")
     public MappingParameterMapAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(mappingConstructor, mapping, context, embeddableMapping);
     }

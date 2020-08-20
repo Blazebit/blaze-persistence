@@ -23,6 +23,8 @@ import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
+import com.blazebit.persistence.view.impl.objectbuilder.CollectionInstantiatorAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.MethodCollectionAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
@@ -36,11 +38,17 @@ import java.util.Map;
  */
 public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMethodPluralAttribute<X, Collection<Y>, Y> implements MethodCollectionAttribute<X, Y> {
 
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
+    private final boolean forcedUnique;
+    private final CollectionInstantiatorAccumulator collectionInstantiatorAccumulator;
 
     public AbstractMethodCollectionAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
-        this.collectionInstantiator = createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator());
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
+        this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
+                createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator()),
+                null,
+                !isCorrelated()
+        );
     }
 
     @Override
@@ -49,8 +57,13 @@ public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMe
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        return collectionInstantiatorAccumulator;
+    }
+
+    @Override
     public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
+        return collectionInstantiatorAccumulator.getCollectionInstantiator();
     }
 
     @Override
@@ -71,6 +84,11 @@ public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMe
     @Override
     public boolean isOrdered() {
         return true;
+    }
+
+    @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
     }
 
     @Override

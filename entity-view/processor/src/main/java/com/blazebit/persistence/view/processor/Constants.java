@@ -78,6 +78,7 @@ public final class Constants {
 
     public static final String ATTRIBUTE = "com.blazebit.persistence.view.metamodel.Attribute";
     public static final String METHOD_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodAttribute";
+    public static final String METHOD_PLURAL_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodPluralAttribute";
     public static final String PARAMETER_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.ParameterAttribute";
     public static final String SINGULAR_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.SingularAttribute";
     public static final String PLURAL_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.PluralAttribute";
@@ -87,9 +88,11 @@ public final class Constants {
     public static final String MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MapAttribute";
     public static final String METHOD_SINGULAR_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodSingularAttribute";
     public static final String METHOD_LIST_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodListAttribute";
+    public static final String METHOD_MULTI_LIST_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMultiListAttribute";
     public static final String METHOD_SET_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodSetAttribute";
     public static final String METHOD_COLLECTION_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodCollectionAttribute";
     public static final String METHOD_MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMapAttribute";
+    public static final String METHOD_MULTI_MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMultiMapAttribute";
 
     public static final String ENTITY = "javax.persistence.Entity";
     public static final String ID = "javax.persistence.Id";

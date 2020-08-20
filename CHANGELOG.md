@@ -11,6 +11,7 @@ Not yet released
 * Support joins through DBMS `USING` clause in `DELETE` and `UPDATE` queries
 * Emulation of lateral entity joins for RDBMS that don't support lateral joins a concept
 * Workaround Hibernate issue regarding IN subqueries using composite id entity aliases [HHH-14156](https://hibernate.atlassian.net/browse/HHH-14156)
+* Implement support for specifying an index mapping for `List` and `Map` entity attributes via `@MappingIndex`
 
 ### Bug fixes
 

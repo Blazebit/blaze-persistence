@@ -42,6 +42,7 @@ public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
      * @param parent The parent expression
      * @param serviceProvider The service provider
      * @param sb The string builder
+     * @since 1.5.0
      */
     public void renderMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb);
 }

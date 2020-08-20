@@ -32,22 +32,22 @@ import java.util.Map;
 public abstract class AbstractParameterPluralAttribute<X, C, Y> extends AbstractParameterAttribute<X, C> implements PluralAttribute<X, C, Y>, ParameterAttribute<X, C> {
 
     private final Type<Y> elementType;
+    private final ElementCollectionType elementCollectionType;
     private final Map<ManagedViewType<? extends Y>, String> elementInheritanceSubtypes;
     private final boolean sorted;
     private final boolean ordered;
-    private final boolean forcedUnique;
     private final Class<Comparator<Object>> comparatorClass;
     private final Comparator<Object> comparator;
 
     @SuppressWarnings("unchecked")
     public AbstractParameterPluralAttribute(MappingConstructorImpl<X> mappingConstructor, ParameterAttributeMapping mapping, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
         super(mappingConstructor, mapping, context, embeddableMapping);
+        this.elementCollectionType = mapping.getElementCollectionType();
         this.elementType = (Type<Y>) mapping.getElementType(context, embeddableMapping);
         this.elementInheritanceSubtypes = (Map<ManagedViewType<? extends Y>, String>) (Map<?, ?>) mapping.getElementInheritanceSubtypes(context, embeddableMapping);
         this.sorted = mapping.isSorted();
 
         this.ordered = mapping.getContainerBehavior() == AttributeMapping.ContainerBehavior.ORDERED;
-        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
         this.comparatorClass = (Class<Comparator<Object>>) mapping.getComparatorClass();
         this.comparator = MetamodelUtils.getComparator(comparatorClass);
     }
@@ -60,6 +60,11 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
     @Override
     public Type<Y> getElementType() {
         return elementType;
+    }
+
+    @Override
+    public ElementCollectionType getElementCollectionType() {
+        return elementCollectionType;
     }
 
     @Override
@@ -92,11 +97,6 @@ public abstract class AbstractParameterPluralAttribute<X, C, Y> extends Abstract
         return ordered;
     }
 
-    @Override
-    public boolean isForcedUnique() {
-        return forcedUnique;
-    }
-    
     @Override
     @SuppressWarnings("unchecked")
     public Class<Comparator<?>> getComparatorClass() {

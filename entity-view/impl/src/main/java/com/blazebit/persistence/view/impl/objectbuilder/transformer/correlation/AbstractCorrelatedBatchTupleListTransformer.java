@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
@@ -28,6 +29,8 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.LateAdditionalObjectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -65,9 +68,9 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected CorrelatedSubqueryEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     protected Query query;
 
-    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                       boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
+    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches,
+                                                       Expression indexExpression, Correlator indexCorrelator, boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);
         this.correlatesThis = correlatesThis;
         this.expectBatchCorrelationMode = entityViewConfiguration.getExpectBatchCorrelationValues(attributePath);
@@ -172,7 +175,13 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
 
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
-                criteriaBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+                criteriaBuilder.fetch(fetches[i]);
+            }
+        }
+
+        if (indexFetches.length != 0) {
+            for (int i = 0; i < indexFetches.length; i++) {
+                criteriaBuilder.fetch(indexFetches[i]);
             }
         }
 
@@ -183,13 +192,19 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     public List<Object[]> transform(List<Object[]> tuples) {
         FixedArrayList correlationParams = new FixedArrayList(batchSize);
         // We have the correlation key on the first position if we do batching
-        int tupleOffset = batchSize > 1 ? 1 : 0;
+        final int tupleOffset = (batchSize > 1 ? 1 : 0) + (indexCorrelator == null && indexExpression == null ? 0 : 1);
 
         final String correlationRoot = applyAndGetCorrelationRoot(expectBatchCorrelationMode);
         // Add select items so that macros are properly used and we can query usage
-        correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
+        ObjectBuilder<?> objectBuilder = correlator.finish(criteriaBuilder, entityViewConfiguration, 0, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
         if (batchSize > 1) {
             criteriaBuilder.select(correlationSelectExpression);
+        }
+        if (indexCorrelator != null) {
+            ObjectBuilder<?> indexBuilder = indexCorrelator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, 0, indexExpression, embeddingViewJpqlMacro, true);
+            if (indexBuilder != null) {
+                criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, indexBuilder, false));
+            }
         }
 
         // If a view macro is used, we have to decide whether we do batches for each view id or correlation param
@@ -210,8 +225,14 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 // If the expectation was wrong, we have to create a new criteria builder
                 if (expectBatchCorrelationMode != BatchCorrelationMode.VALUES) {
                     applyAndGetCorrelationRoot(BatchCorrelationMode.VALUES);
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
+                    objectBuilder = correlator.finish(criteriaBuilder, entityViewConfiguration, 0, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
+                    if (indexCorrelator != null) {
+                        ObjectBuilder<?> indexBuilder = indexCorrelator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, 0, indexExpression, embeddingViewJpqlMacro, true);
+                        if (indexBuilder != null) {
+                            criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, indexBuilder, false));
+                        }
+                    }
                 }
             }
             populateParameters(criteriaBuilder);
@@ -347,8 +368,14 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 if (expectBatchCorrelationMode != BatchCorrelationMode.VALUES) {
                     applyAndGetCorrelationRoot(BatchCorrelationMode.VALUES);
                     macro = BatchCorrelationMode.VIEW_ROOTS == correlationMode ? viewRootJpqlMacro : embeddingViewJpqlMacro;
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
+                    ObjectBuilder<?> objectBuilder = correlator.finish(criteriaBuilder, entityViewConfiguration, 0, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
+                    if (indexCorrelator != null) {
+                        ObjectBuilder<?> indexBuilder = indexCorrelator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, 0, indexExpression, embeddingViewJpqlMacro, true);
+                        if (indexBuilder != null) {
+                            criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, indexBuilder, false));
+                        }
+                    }
                 }
                 macro.addBatchPredicate(criteriaBuilder);
             } else {
@@ -392,8 +419,14 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
                 if (expectBatchCorrelationMode != correlationMode) {
                     applyAndGetCorrelationRoot(correlationMode);
                     macro = BatchCorrelationMode.VIEW_ROOTS == correlationMode ? viewRootJpqlMacro : embeddingViewJpqlMacro;
-                    correlator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
+                    ObjectBuilder<?> objectBuilder = correlator.finish(criteriaBuilder, entityViewConfiguration, 0, tupleOffset, correlationRoot, embeddingViewJpqlMacro, true);
                     criteriaBuilder.select(correlationSelectExpression);
+                    if (indexCorrelator != null) {
+                        ObjectBuilder<?> indexBuilder = indexCorrelator.finish(criteriaBuilder, entityViewConfiguration, tupleOffset, 0, indexExpression, embeddingViewJpqlMacro, true);
+                        if (indexBuilder != null) {
+                            criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, indexBuilder, false));
+                        }
+                    }
                 }
                 macro.addBatchPredicate(criteriaBuilder);
             } else {
@@ -462,6 +495,43 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
     }
 
-    protected abstract void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list);
+    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
+        if (batchSize == 1) {
+            if (indexCorrelator == null && indexExpression == null) {
+                correlationValues.get(defaultKey).onResult(createContainer(list), this);
+            } else {
+                Object result = createDefaultResult();
+                for (int i = 0; i < list.size(); i++) {
+                    Object[] element = (Object[]) list.get(i);
+                    Object indexObject = element[keyIndex];
+                    containerAccumulator.add(result, indexObject, element[valueIndex], isRecording());
+                }
+                correlationValues.get(defaultKey).onResult(result, this);
+            }
+            return;
+        }
+        Map<Object, Object> collections = new HashMap<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            Object[] element = (Object[]) list.get(i);
+            Object result = collections.get(element[keyIndex]);
+            if (result == null) {
+                result = createDefaultResult();
+                collections.put(element[keyIndex], result);
+            }
+
+            Object indexObject = null;
+            if (indexCorrelator != null || indexExpression != null) {
+                indexObject = element[keyIndex + 1];
+            }
+            containerAccumulator.add(result, indexObject, element[valueIndex], isRecording());
+        }
+
+        for (Map.Entry<Object, Object> entry : collections.entrySet()) {
+            TuplePromise tuplePromise = correlationValues.get(entry.getKey());
+            if (tuplePromise != null) {
+                tuplePromise.onResult(postConstruct(entry.getValue()), this);
+            }
+        }
+    }
 
 }

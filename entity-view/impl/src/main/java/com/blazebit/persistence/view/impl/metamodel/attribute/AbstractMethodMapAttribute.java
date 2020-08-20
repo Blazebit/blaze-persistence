@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodPluralAttribute;
@@ -23,6 +25,8 @@ import com.blazebit.persistence.view.impl.metamodel.EmbeddableOwner;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 import com.blazebit.persistence.view.impl.metamodel.MethodAttributeMapping;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
+import com.blazebit.persistence.view.impl.objectbuilder.MapInstantiatorAccumulator;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodMapAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
@@ -36,16 +40,37 @@ import java.util.Map;
  */
 public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethodPluralAttribute<X, Map<K, V>, V> implements MethodMapAttribute<X, K, V> {
 
+    private final String keyMapping;
+    private final Expression keyMappingExpression;
+    private final String[] keyFetches;
     private final Type<K> keyType;
     private final Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypes;
-    private final MapInstantiatorImplementor<?, ?> mapInstantiator;
+    private final boolean forcedUnique;
+    private final MapInstantiatorAccumulator mapInstantiatorAccumulator;
 
     @SuppressWarnings("unchecked")
     public AbstractMethodMapAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, MetamodelBuildingContext context, int attributeIndex, int dirtyStateIndex, EmbeddableOwner embeddableMapping) {
         super(viewType, mapping, context, attributeIndex, dirtyStateIndex, embeddableMapping);
+        this.keyMapping = determineKeyMapping(mapping);
+        this.keyMappingExpression = createSimpleExpression(keyMapping, mapping, context, ExpressionLocation.MAPPING_INDEX);
+        if (mapping.getMappingIndex() == null) {
+            this.keyFetches = EMPTY;
+        } else {
+            this.keyFetches = mapping.getMappingIndex().fetches();
+        }
         this.keyType = (Type<K>) mapping.getKeyType(context, embeddableMapping);
         this.keyInheritanceSubtypes = (Map<ManagedViewType<? extends K>, String>) (Map<?, ?>) mapping.getKeyInheritanceSubtypes(context, embeddableMapping);
-        this.mapInstantiator = createMapInstantiator(context, createMapFactory(context), isSorted(), isOrdered(), getComparator());
+        this.forcedUnique = mapping.isForceUniqueness() || determineForcedUnique(context);
+        this.mapInstantiatorAccumulator = new MapInstantiatorAccumulator(
+                createMapInstantiator(context, createMapFactory(context), isSorted(), isOrdered(), getComparator()),
+                createValueContainerAccumulator(),
+                !isCorrelated()
+        );
+    }
+
+    @Override
+    public boolean isForcedUnique() {
+        return forcedUnique;
     }
 
     @Override
@@ -74,13 +99,18 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        return mapInstantiatorAccumulator;
+    }
+
+    @Override
     public CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
         throw new UnsupportedOperationException("Map attribute");
     }
 
     @Override
     public MapInstantiatorImplementor<?, ?> getMapInstantiator() {
-        return mapInstantiator;
+        return mapInstantiatorAccumulator.getMapInstantiator();
     }
 
     @Override
@@ -88,4 +118,23 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
         return true;
     }
 
+    @Override
+    public String getKeyMapping() {
+        return keyMapping;
+    }
+
+    @Override
+    public Expression getKeyMappingExpression() {
+        return keyMappingExpression;
+    }
+
+    @Override
+    public String[] getKeyFetches() {
+        return keyFetches;
+    }
+
+    @Override
+    public void renderKeyMapping(String parent, ServiceProvider serviceProvider, StringBuilder sb) {
+        renderExpression(parent, keyMappingExpression, null, serviceProvider, sb);
+    }
 }

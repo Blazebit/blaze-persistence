@@ -20,15 +20,9 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
-import com.blazebit.persistence.view.impl.collection.RecordingCollection;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -37,54 +31,12 @@ import java.util.Map;
  */
 public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorrelatedBatchTupleListTransformer {
 
-    private final CollectionInstantiatorImplementor<?, ?> collectionInstantiator;
-    private final boolean filterNulls;
     private final boolean recording;
 
-    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, boolean correlatesThis,
-                                                         int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration, CollectionInstantiatorImplementor<?, ?> collectionInstantiator, boolean filterNulls, boolean recording) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
-        this.collectionInstantiator = collectionInstantiator;
-        this.filterNulls = filterNulls;
+    public CorrelatedCollectionBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                         String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration, boolean recording) {
+        super(ef, correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.recording = recording;
-    }
-
-    @Override
-    protected void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object> list) {
-        if (batchSize == 1) {
-            correlationValues.get(defaultKey).onResult(createCollection(list), this);
-            return;
-        }
-        Map<Object, Collection<Object>> collections = new HashMap<Object, Collection<Object>>(list.size());
-        for (int i = 0; i < list.size(); i++) {
-            Object[] element = (Object[]) list.get(i);
-            Collection<Object> result = collections.get(element[keyIndex]);
-            if (result == null) {
-                result = (Collection<Object>) createDefaultResult();
-                collections.put(element[keyIndex], result);
-            }
-
-            if (element[valueIndex] != null) {
-                add(result, element[valueIndex]);
-            }
-        }
-
-        for (Map.Entry<Object, Collection<Object>> entry : collections.entrySet()) {
-            correlationValues.get(entry.getKey()).onResult(postConstruct(entry.getValue()), this);
-        }
-    }
-
-    private void add(Collection<Object> result, Object o) {
-        if (recording) {
-            ((RecordingCollection<?, Object>) result).getDelegate().add(o);
-        } else {
-            result.add(o);
-        }
-    }
-
-    @Override
-    public Object copy(Object o) {
-        return createCollection((Collection<? extends Object>) o);
     }
 
     @Override
@@ -92,13 +44,4 @@ public class CorrelatedCollectionBatchTupleListTransformer extends AbstractCorre
         return recording;
     }
 
-    @Override
-    protected boolean isFilterNulls() {
-        return filterNulls;
-    }
-
-    @Override
-    protected CollectionInstantiatorImplementor<?, ?> getCollectionInstantiator() {
-        return collectionInstantiator;
-    }
 }

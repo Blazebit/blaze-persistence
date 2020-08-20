@@ -39,14 +39,18 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
     private final String attributePath;
     private final String multisetResultAlias;
     private final String embeddingViewPath;
+    private final String indexExpression;
+    private final ViewTypeObjectBuilderTemplate<Object[]> indexTemplate;
     private final Limiter limiter;
 
-    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String multisetResultAlias, String embeddingViewPath, Limiter limiter) {
+    public MultisetTupleElementMapper(ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate, String correlationExpression, String attributePath, String multisetResultAlias, String embeddingViewPath, String indexExpression, ViewTypeObjectBuilderTemplate<Object[]> indexTemplate, Limiter limiter) {
         this.subviewTemplate = subviewTemplate;
         this.correlationExpression = correlationExpression.intern();
         this.attributePath = attributePath;
         this.multisetResultAlias = multisetResultAlias;
         this.embeddingViewPath = embeddingViewPath;
+        this.indexExpression = indexExpression;
+        this.indexTemplate = indexTemplate;
         this.limiter = limiter;
     }
 
@@ -59,7 +63,13 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
             mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
         }
-
+        if (indexTemplate != null) {
+            for (TupleElementMapper mapper : indexTemplate.getMappers()) {
+                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+            }
+        } else if (indexExpression != null) {
+            subqueryBuilder.select(indexExpression);
+        }
         if (limiter != null) {
             limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
         }

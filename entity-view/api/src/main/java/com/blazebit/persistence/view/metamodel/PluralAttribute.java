@@ -38,6 +38,14 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
     public CollectionType getCollectionType();
 
     /**
+     * Returns the element collection type.
+     *
+     * @return The element collection type
+     * @since 1.5.0
+     */
+    public ElementCollectionType getElementCollectionType();
+
+    /**
      * Returns the type representing the element type of the collection.
      *
      * @return The element type
@@ -120,5 +128,29 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
          * Set-valued attribute.
          */
         SET;
+    }
+
+    /**
+     * The different element collection types.
+     * @since 1.5.0
+     */
+    public static enum ElementCollectionType {
+
+        /**
+         * Collection type.
+         */
+        COLLECTION,
+        /**
+         * List type.
+         */
+        LIST,
+        /**
+         * Set type.
+         */
+        SET,
+        /**
+         * SortedSet type.
+         */
+        SORTED_SET;
     }
 }

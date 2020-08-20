@@ -183,6 +183,7 @@ class BlazePersistenceProcessor {
         return Arrays.asList(
                 entityViewClassName.replace("$", "") + "_",
                 entityViewClassName.replace("$", "") + "Relation",
+                entityViewClassName.replace("$", "") + "MultiRelation",
                 entityViewClassName.replace("$", "") + "Impl",
                 entityViewClassName.replace("$", "") + "Builder",
                 entityViewClassName.replace("$", "") + "Builder$Init"

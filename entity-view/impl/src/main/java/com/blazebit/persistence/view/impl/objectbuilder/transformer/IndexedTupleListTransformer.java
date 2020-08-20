@@ -16,33 +16,38 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleListTransformer {
+public class IndexedTupleListTransformer extends TupleListTransformer {
 
     private final int[] parentIdPositions;
     private final int valueStartIndex;
     private final int valueOffset;
+    private final ContainerAccumulator<Object> containerAccumulator;
+    private final boolean dirtyTracking;
     private final TypeConverter<Object, Object> keyConverter;
     private final TypeConverter<Object, Object> valueConverter;
 
-    public AbstractIndexedTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
+    public IndexedTupleListTransformer(int[] parentIdPositions, int startIndex, int valueStartIndex, ContainerAccumulator<?> containerAccumulator, boolean dirtyTracking, TypeConverter<Object, Object> keyConverter, TypeConverter<Object, Object> valueConverter) {
         super(startIndex);
         this.parentIdPositions = parentIdPositions;
         this.valueStartIndex = valueStartIndex;
+        this.containerAccumulator = (ContainerAccumulator<Object>) containerAccumulator;
+        this.dirtyTracking = dirtyTracking;
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
         this.valueOffset = valueStartIndex - startIndex;
@@ -68,7 +73,7 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
                 // At startIndex we have the index/key of the list/map
                 // At valueStartIndex is the actual element that should be put into the collection
                 if (tupleIndexValue == null) {
-                    Object collection = createCollection();
+                    Object collection = containerAccumulator.createContainer(dirtyTracking, 0);
                     tupleIndexValue = new TupleIndexValue(collection, tuple, startIndex, valueOffset + 1);
                     Object key = tuple[startIndex];
                     add(collection, key, tuple[valueStartIndex]);
@@ -97,10 +102,7 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
         return tuples;
     }
 
-    protected abstract Object createCollection();
-
-    @SuppressWarnings("unchecked")
-    protected void add(Object collection, Object key, Object value) {
+    private void add(Object collection, Object key, Object value) {
         if (keyConverter != null) {
             key = keyConverter.convertToViewType(key);
         }
@@ -108,10 +110,8 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
             if (valueConverter != null) {
                 value = valueConverter.convertToViewType(value);
             }
-            addToCollection((C) collection, (K) key, value);
+            containerAccumulator.add(collection, key, value, dirtyTracking);
         }
     }
-
-    protected abstract void addToCollection(C collection, K key, Object value);
 
 }

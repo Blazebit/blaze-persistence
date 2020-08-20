@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
@@ -68,9 +69,10 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected MutableEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
 
-    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
-                                                           CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
-        super(ef, correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
+    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
+                                                           CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity,
+                                                           Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+        super(ef, correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.evm = evm;
         this.viewRootAlias = viewRootAlias;
         String viewRootAliasPrefix = viewRootAlias + ".";
@@ -166,13 +168,19 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         }
         if (fetches.length != 0) {
             for (int i = 0; i < fetches.length; i++) {
-                criteriaBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+                criteriaBuilder.fetch(fetches[i]);
+            }
+        }
+        if (indexFetches.length != 0) {
+            for (int i = 0; i < indexFetches.length; i++) {
+                criteriaBuilder.fetch(indexFetches[i]);
             }
         }
 
         // Before we can determine whether we use view roots or embedding views, we need to add all selects, otherwise macros might report false although they are used
         final String correlationRoot = correlationBuilder.getCorrelationRoot();
-        ObjectBuilder<Object[]> objectBuilder = (ObjectBuilder<Object[]>) correlator.finish(criteriaBuilder, entityViewConfiguration, maximumViewMapperCount + 1, correlationRoot, embeddingViewJpqlMacro, true);
+        final int tupleSuffix = maximumViewMapperCount + 1 + (indexCorrelator == null && indexExpression == null ? 0 : 1);
+        ObjectBuilder<Object[]> objectBuilder = (ObjectBuilder<Object[]>) correlator.finish(criteriaBuilder, entityViewConfiguration, 0, tupleSuffix, correlationRoot, embeddingViewJpqlMacro, true);
 
         final boolean usesViewRoot = viewRootJpqlMacro.usesViewMacro();
         final boolean usesEmbeddingView = embeddingViewJpqlMacro.usesEmbeddingView();
@@ -212,7 +220,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             if (embeddingViewObjectBuilder == null) {
                 criteriaBuilder.select(embeddingViewIdExpression);
             } else {
-                criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, embeddingViewObjectBuilder));
+                criteriaBuilder.selectNew(objectBuilder = new LateAdditionalObjectBuilder(objectBuilder, embeddingViewObjectBuilder, true));
             }
             // Group tuples by view roots and correlation values and create tuple promises
             for (Object[] tuple : tuples) {
@@ -240,7 +248,7 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
             if (viewRootObjectBuilder == null) {
                 criteriaBuilder.select(viewRootIdExpression);
             } else {
-                criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, viewRootObjectBuilder));
+                criteriaBuilder.selectNew(objectBuilder = new LateAdditionalObjectBuilder(objectBuilder, viewRootObjectBuilder, true));
             }
             // Group tuples by view roots and correlation values and create tuple promises
             for (Object[] tuple : tuples) {
@@ -280,6 +288,12 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         }
 
         criteriaBuilder.select(correlationKeyExpression);
+        if (indexCorrelator != null) {
+            ObjectBuilder<?> indexBuilder = indexCorrelator.finish(criteriaBuilder, entityViewConfiguration, maximumViewMapperCount + 2, 0, indexExpression, embeddingViewJpqlMacro, true);
+            if (indexBuilder != null) {
+                criteriaBuilder.selectNew(new LateAdditionalObjectBuilder(objectBuilder, indexBuilder, false));
+            }
+        }
 
         populateParameters(criteriaBuilder);
         viewJpqlMacro.setViewPath(oldViewPath);
@@ -292,6 +306,40 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
         return tuples;
     }
 
-    protected abstract void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list);
+    protected void populateResult(Map<Object, Map<Object, TuplePromise>> correlationValues, List<Object[]> list) {
+        Map<Object, Map<Object, Object>> collections;
+        collections = new HashMap<>(list.size());
+        for (int i = 0; i < list.size(); i++) {
+            Object[] element = list.get(i);
+            Map<Object, Object> viewRootResult = collections.get(element[viewIndex]);
+            if (viewRootResult == null) {
+                viewRootResult = new HashMap<>();
+                collections.put(element[viewIndex], viewRootResult);
+            }
+            Object result = viewRootResult.get(element[keyIndex]);
+            if (result == null) {
+                result = createDefaultResult();
+                viewRootResult.put(element[keyIndex], result);
+            }
+
+            Object indexObject = null;
+            if (indexCorrelator != null || indexExpression != null) {
+                indexObject = element[keyIndex + 1];
+            }
+            containerAccumulator.add(result, indexObject, element[valueIndex], isRecording());
+        }
+
+        for (Map.Entry<Object, Map<Object, Object>> entry : collections.entrySet()) {
+            Map<Object, TuplePromise> tuplePromiseMap = correlationValues.get(entry.getKey());
+            if (tuplePromiseMap != null) {
+                for (Map.Entry<Object, Object> correlationEntry : entry.getValue().entrySet()) {
+                    TuplePromise tuplePromise = tuplePromiseMap.get(correlationEntry.getKey());
+                    if (tuplePromise != null) {
+                        tuplePromise.onResult(postConstruct(correlationEntry.getValue()), this);
+                    }
+                }
+            }
+        }
+    }
 
 }

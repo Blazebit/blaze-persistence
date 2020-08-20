@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.metamodel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +41,7 @@ public final class AttributePaths {
      * @param <E> The element type
      * @return The attribute path
      */
-    public static <X, E> AttributePath<X, E> of(String attributePath) {
+    public static <X, E> AttributePath<X, E, E> of(String attributePath) {
         return new StringAttributePath<>(attributePath);
     }
 
@@ -52,7 +53,7 @@ public final class AttributePaths {
      * @param <E> The element type
      * @return The attribute path
      */
-    public static <X, E> AttributePath<X, E> of(MethodSingularAttribute<X, E> attribute) {
+    public static <X, E> AttributePath<X, E, E> of(MethodSingularAttribute<X, E> attribute) {
         return new TypedAttributePath<>(attribute);
     }
 
@@ -64,7 +65,33 @@ public final class AttributePaths {
      * @param <E> The element type
      * @return The attribute path
      */
-    public static <X, E> AttributePath<X, E> of(MethodPluralAttribute<X, ?, E> attribute) {
+    public static <X, E> AttributePath<X, E, E> of(MethodPluralAttribute<X, ?, E> attribute) {
+        return new TypedAttributePath<>(attribute);
+    }
+
+    /**
+     * Creates an attribute path for the given multi-list attribute.
+     *
+     * @param attribute The attribute
+     * @param <X> The source type
+     * @param <C> The element type to resolve against
+     * @param <E> The element type
+     * @return The attribute path
+     */
+    public static <X, C extends Collection<E>, E> AttributePath<X, C, E> of(MethodMultiListAttribute<X, E, C> attribute) {
+        return new TypedAttributePath<>(attribute);
+    }
+
+    /**
+     * Creates an attribute path for the given multi-map attribute.
+     *
+     * @param attribute The attribute
+     * @param <X> The source type
+     * @param <C> The element type to resolve against
+     * @param <E> The element type
+     * @return The attribute path
+     */
+    public static <X, C extends Collection<E>, E> AttributePath<X, C, E> of(MethodMultiMapAttribute<X, ?, E, C> attribute) {
         return new TypedAttributePath<>(attribute);
     }
 
@@ -92,11 +119,12 @@ public final class AttributePaths {
      * An typed attribute path.
      *
      * @param <X> The source type
+     * @param <B> The result base type of attribute path to resolve against
      * @param <Y> The result type
      * @author Christian Beikov
      * @since 1.5.0
      */
-    private static final class StringAttributePath<X, Y> implements AttributePath<X, Y> {
+    private static final class StringAttributePath<X, B, Y> implements AttributePath<X, B, Y> {
 
         private final List<String> attributes;
 
@@ -105,7 +133,7 @@ public final class AttributePaths {
             this.attributes = Collections.unmodifiableList(attributes);
         }
 
-        private StringAttributePath(StringAttributePath<X, ?> base, String attributePath) {
+        private StringAttributePath(StringAttributePath<X, ?, ?> base, String attributePath) {
             String[] parts = attributePath.split("\\.");
             List<String> attributes = new ArrayList<>(base.attributes.size() + parts.length);
             attributes.addAll(base.attributes);
@@ -115,7 +143,7 @@ public final class AttributePaths {
             this.attributes = Collections.unmodifiableList(attributes);
         }
 
-        private StringAttributePath(StringAttributePath<X, ?> base, AttributePath<?, Y> sub) {
+        private StringAttributePath(StringAttributePath<X, ?, ?> base, AttributePath<?, B, Y> sub) {
             List<String> attributeNames = sub.getAttributeNames();
             List<String> attributes = new ArrayList<>(base.attributes.size() + attributeNames.size());
             attributes.addAll(base.attributes);
@@ -179,22 +207,37 @@ public final class AttributePaths {
         }
 
         @Override
-        public <E> AttributePath<X, E> get(String attributePath) {
+        public <E> AttributePath<X, E, E> get(String attributePath) {
             return new StringAttributePath<>(this, attributePath);
         }
 
         @Override
-        public <E> AttributePath<X, E> get(MethodSingularAttribute<Y, E> attribute) {
+        public <E, C extends Collection<E>> AttributePath<X, E, C> getMulti(String attributePath) {
+            return new StringAttributePath<>(this, attributePath);
+        }
+
+        @Override
+        public <E> AttributePath<X, E, E> get(MethodSingularAttribute<B, E> attribute) {
             return new StringAttributePath<>(this, attribute.getName());
         }
 
         @Override
-        public <E> AttributePath<X, E> get(MethodPluralAttribute<Y, ?, E> attribute) {
+        public <E> AttributePath<X, E, E> get(MethodPluralAttribute<B, ?, E> attribute) {
             return new StringAttributePath<>(this, attribute.getName());
         }
 
         @Override
-        public <E> AttributePath<X, E> get(AttributePath<Y, E> attributePath) {
+        public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiListAttribute<B, E, C> attribute) {
+            return new StringAttributePath<>(this, attribute.getName());
+        }
+
+        @Override
+        public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiMapAttribute<B, ?, E, C> attribute) {
+            return new StringAttributePath<>(this, attribute.getName());
+        }
+
+        @Override
+        public <C,E> AttributePath<X, C, E> get(AttributePath<B, C, E> attributePath) {
             return new StringAttributePath<>(this, attributePath);
         }
 
@@ -213,11 +256,12 @@ public final class AttributePaths {
      * A typed attribute path.
      *
      * @param <X> The source type
+     * @param <B> The result base type of attribute path to resolve against
      * @param <Y> The result type
      * @author Christian Beikov
      * @since 1.5.0
      */
-    private static final class TypedAttributePath<X, Y> implements AttributePath<X, Y> {
+    private static final class TypedAttributePath<X, B, Y> implements AttributePath<X, B, Y> {
 
         private final List<MethodAttribute<?, ?>> attributes;
 
@@ -225,11 +269,11 @@ public final class AttributePaths {
             this.attributes = (List<MethodAttribute<?, ?>>) (List<?>) Collections.singletonList(attribute);
         }
 
-        private TypedAttributePath(TypedAttributePath<X, ?> base, String attributePath) {
+        private TypedAttributePath(TypedAttributePath<X, ?, ?> base, String attributePath) {
             this(base, Arrays.asList(attributePath.split("\\.")));
         }
 
-        private TypedAttributePath(TypedAttributePath<X, ?> base, List<String> attributeNames) {
+        private TypedAttributePath(TypedAttributePath<X, ?, ?> base, List<String> attributeNames) {
             int size = base.attributes.size();
             List<MethodAttribute<?, ?>> attributes = new ArrayList<>(size + attributeNames.size());
             attributes.addAll(base.attributes);
@@ -254,7 +298,7 @@ public final class AttributePaths {
             this.attributes = Collections.unmodifiableList(attributes);
         }
 
-        private TypedAttributePath(TypedAttributePath<X, ?> base, List<? extends MethodAttribute<?, ?>> subAttributes, boolean noop) {
+        private TypedAttributePath(TypedAttributePath<X, ?, ?> base, List<? extends MethodAttribute<?, ?>> subAttributes, boolean noop) {
             int size = base.attributes.size();
             MethodAttribute<?, ?> lastAttribute = base.attributes.get(size - 1);
             List<MethodAttribute<?, ?>> attributes = new ArrayList<>(size + 1);
@@ -363,24 +407,39 @@ public final class AttributePaths {
         }
 
         @Override
-        public <E> AttributePath<X, E> get(String attributePath) {
+        public <E> AttributePath<X, E, E> get(String attributePath) {
             return new TypedAttributePath<>(this, attributePath);
         }
 
         @Override
-        public <E> AttributePath<X, E> get(MethodSingularAttribute<Y, E> attribute) {
+        public <E, C extends Collection<E>> AttributePath<X, E, C> getMulti(String attributePath) {
+            return new TypedAttributePath<>(this, attributePath);
+        }
+
+        @Override
+        public <E> AttributePath<X, E, E> get(MethodSingularAttribute<B, E> attribute) {
             return new TypedAttributePath<>(this, Collections.singletonList(attribute), false);
         }
 
         @Override
-        public <E> AttributePath<X, E> get(MethodPluralAttribute<Y, ?, E> attribute) {
+        public <E> AttributePath<X, E, E> get(MethodPluralAttribute<B, ?, E> attribute) {
             return new TypedAttributePath<>(this, Collections.singletonList(attribute), false);
         }
 
         @Override
-        public <E> AttributePath<X, E> get(AttributePath<Y, E> attributePath) {
-            if (attributePath instanceof TypedAttributePath<?, ?>) {
-                return new TypedAttributePath<>(this, ((TypedAttributePath<?, ?>) attributePath).attributes, false);
+        public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiListAttribute<B, E, C> attribute) {
+            return new TypedAttributePath<>(this, Collections.singletonList(attribute), false);
+        }
+
+        @Override
+        public <C extends Collection<E>, E> AttributePath<X, E, C> get(MethodMultiMapAttribute<B, ?, E, C> attribute) {
+            return new TypedAttributePath<>(this, Collections.singletonList(attribute), false);
+        }
+
+        @Override
+        public <C, E> AttributePath<X, C, E> get(AttributePath<B, C, E> attributePath) {
+            if (attributePath instanceof TypedAttributePath<?, ?, ?>) {
+                return new TypedAttributePath<>(this, ((TypedAttributePath<?, ?, ?>) attributePath).attributes, false);
             } else {
                 return new TypedAttributePath<>(this, attributePath.getAttributeNames());
             }

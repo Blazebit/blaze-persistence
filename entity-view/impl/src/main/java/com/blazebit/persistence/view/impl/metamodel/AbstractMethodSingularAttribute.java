@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.CascadeType;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.collection.CollectionInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
+import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -305,7 +306,17 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
+    public ContainerAccumulator<?> getContainerAccumulator() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
     protected PluralAttribute.CollectionType getCollectionType() {
+        throw new UnsupportedOperationException("Singular attribute");
+    }
+
+    @Override
+    protected PluralAttribute.ElementCollectionType getElementCollectionType() {
         throw new UnsupportedOperationException("Singular attribute");
     }
 

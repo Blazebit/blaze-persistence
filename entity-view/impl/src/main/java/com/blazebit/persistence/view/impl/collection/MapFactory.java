@@ -26,6 +26,8 @@ import java.util.Map;
  */
 public class MapFactory implements PluralObjectFactory<Map<?, ?>> {
 
+    public static final MapFactory INSTANCE = new MapFactory();
+
     @Override
     public Map<?, ?> createCollection(int size) {
         return new HashMap<>();
