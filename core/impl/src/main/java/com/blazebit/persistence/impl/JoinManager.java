@@ -2121,10 +2121,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
     }
 
-    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, List<JoinNode> placeholderRequiringNodes, boolean externalRepresentation, boolean lateralExample) {
+    private boolean renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix, boolean renderFetches, Set<JoinNode> nodesToFetch, List<String> whereConjuncts, List<JoinNode> placeholderRequiringNodes, boolean externalRepresentation, boolean lateralExample) {
         if (dependency.getParent() != null) {
             if (!placeholderRequiringNodes.contains(dependency.getParent())) {
                 renderReverseDependency(sb, dependency.getParent(), aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
+            }
+            // If the parent join is not yet rendered, we defer rendering the join tree
+            if (!dependency.getParent().isTreatedJoinNode() && !renderedJoins.contains(dependency.getParent())) {
+                return false;
             }
             if (!dependency.getDependencies().isEmpty()) {
                 markedJoinNodes.add(dependency);
@@ -2147,6 +2151,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         }
                         // render reverse dependencies
                         renderReverseDependency(sb, dep, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
+                        // If the parent join is not yet rendered, we defer rendering the join tree
+                        if (!dep.isTreatedJoinNode() && !renderedJoins.contains(dep)) {
+                            return false;
+                        }
                     }
                 } finally {
                     markedJoinNodes.remove(dependency);
@@ -2154,6 +2162,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
             renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
         }
+
+        return true;
     }
 
     private void addDefaultJoins(List<JoinNode> stack, Map<String, JoinTreeNode> nodes) {
@@ -2175,14 +2185,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             return;
         }
 
-        stack.addAll(node.getTreatedJoinNodes().values());
-
         // We have to render any dependencies this join node has before actually rendering itself
         // Non-Default join nodes are rendered in insertion order but their dependencies doesn't include the parent,
         // so we have to render it here by using renderReverseDependency
         if (!node.getDependencies().isEmpty() || !node.isDefaultJoinNode()) {
-            renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample);
+            if (!renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample)) {
+                // If we couldn't render the join node because one of it's parents or dependencies parents isn't rendered yet, we defer the rendering
+                renderedJoins.remove(node);
+                stack.add(Math.max(0, stack.size() - 1), node);
+                return;
+            }
         }
+
+        stack.addAll(node.getTreatedJoinNodes().values());
 
         // Collect the join nodes referring to collections
         if (collectCollectionJoinNodes && isCollection) {

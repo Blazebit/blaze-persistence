@@ -149,7 +149,7 @@ public class Hibernate53Access implements HibernateAccess {
     public void doExecute(StatementExecutor executor, String delete, QueryParameters parameters, SessionImplementor session, List<ParameterSpecification> parameterSpecifications) {
         try {
             if (DO_EXECUTE_METHOD == null) {
-                DO_EXECUTE_METHOD_NEW.invoke(executor, parameters, session, delete, parameterSpecifications);
+                DO_EXECUTE_METHOD_NEW.invoke(executor, delete, parameters, parameterSpecifications, session);
             } else {
                 DO_EXECUTE_METHOD.invoke(executor, parameters, session, delete, parameterSpecifications);
             }
