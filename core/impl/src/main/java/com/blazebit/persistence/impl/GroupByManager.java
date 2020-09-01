@@ -207,7 +207,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
     }
 
     public void collect(ResolvedExpression expression, ClauseType clauseType, boolean hasGroupBy, JoinVisitor joinVisitor) {
-        List<Expression> expressions = embeddableSplittingVisitor.splitOff(expression.getExpression());
+        List<Expression> expressions = embeddableSplittingVisitor.splitOff(expression.getExpression(), false);
         if (expressions != null) {
             if (expressions.isEmpty()) {
                 collect0(expression, clauseType, hasGroupBy);

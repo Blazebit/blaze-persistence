@@ -55,6 +55,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -77,6 +78,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
     protected final AliasManager aliasManager;
     protected final SplittingVisitor splittingVisitor;
     protected final List<Expression> splittedOffExpressions;
+    protected boolean splitEntity;
     protected Expression expressionToSplit;
 
     public EmbeddableSplittingVisitor(EntityMetamodel metamodel, JpaProvider jpaProvider, AliasManager aliasManager, SplittingVisitor splittingVisitor) {
@@ -95,8 +97,9 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         return splittedOffExpressions;
     }
 
-    public List<Expression> splitOff(Expression expression) {
-        expressionToSplit = null;
+    public List<Expression> splitOff(Expression expression, boolean splitEntity) {
+        this.expressionToSplit = null;
+        this.splitEntity = splitEntity;
         expression.accept(this);
         if (collectSplittedOffExpressions(expression)) {
             return null;
@@ -124,7 +127,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
             Map<String, Boolean> orderedAttributes = new TreeMap<>();
             EntityType<?> ownerType;
-            if (baseNode.getParentTreeNode() == null && field == null) {
+            if ((baseNode.getParentTreeNode() == null || splitEntity && baseNode.getManagedType() instanceof EntityType<?>) && field == null) {
                 ownerType = baseNode.getEntityType();
                 for (SingularAttribute<?, ?> idAttribute : managedType.getIdAttributes()) {
                     addAttributes(ownerType, null, fieldPrefix, "", idAttribute, orderedAttributes);
@@ -174,7 +177,13 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         if (pathReference.getField() == null) {
             if (baseNode.getParentTreeNode() != null) {
                 attr = baseNode.getParentTreeNode().getAttribute();
-                if (attr instanceof PluralAttribute<?, ?, ?> && ((PluralAttribute) attr).getElementType() instanceof EmbeddableType<?>) {
+                Type<?> t;
+                if (attr instanceof PluralAttribute<?, ?, ?>) {
+                    t = ((PluralAttribute<?, ?, ?>) attr).getElementType();
+                } else {
+                    t = ((SingularAttribute<?, ?>) attr).getType();
+                }
+                if (t instanceof EmbeddableType<?> || splitEntity && t instanceof EntityType<?>) {
                     expressionToSplit = expr;
                 }
             }
@@ -191,7 +200,7 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
             SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
 
             int dotIndex = expr.getField().lastIndexOf('.');
-            if (dotIndex == -1 && singularAttr.getType() instanceof EmbeddableType<?>) {
+            if (dotIndex == -1 && (singularAttr.getType() instanceof EmbeddableType<?> || splitEntity && singularAttr.getType() instanceof EntityType<?>)) {
                 expressionToSplit = expr;
             }
         }
@@ -258,7 +267,8 @@ class EmbeddableSplittingVisitor extends AbortableVisitorAdapter {
         Attribute attr;
         if (baseNode.getParentTreeNode() != null) {
             attr = baseNode.getParentTreeNode().getAttribute();
-            if (attr instanceof MapAttribute<?, ?, ?> && ((MapAttribute<?, ?, ?>) attr).getKeyType() instanceof EmbeddableType<?>) {
+            Type<?> t;
+            if (attr instanceof MapAttribute<?, ?, ?> && ((t = ((MapAttribute<?, ?, ?>) attr).getKeyType()) instanceof EmbeddableType<?> || splitEntity && t instanceof EntityType<?>)) {
                 expressionToSplit = expression;
             }
         }

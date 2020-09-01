@@ -109,7 +109,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 expr = orderByInfo.getExpression();
             }
 
-            List<Expression> splittedOffExpressions = embeddableSplittingVisitor.splitOff(expr);
+            List<Expression> splittedOffExpressions = embeddableSplittingVisitor.splitOff(expr, false);
             if (splittedOffExpressions != null && !splittedOffExpressions.isEmpty()) {
                 if (!jpaProvider.supportsSingleValuedAssociationIdExpressions() && joinVisitor != null) {
                     ClauseType fromClause = joinVisitor.getFromClause();
@@ -202,7 +202,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 splitOffExpressions = functionalDependencyAnalyzerVisitor.getSplittedOffExpressions();
             } else {
                 unique = false;
-                splitOffExpressions = embeddableSplittingVisitor.splitOff(expr);
+                splitOffExpressions = embeddableSplittingVisitor.splitOff(expr, false);
             }
 
             resultUnique = !joinManager.hasFullJoin() && (resultUnique || unique || clausesRequiredForResultUniqueness != null && clausesRequiredForResultUniqueness.isEmpty());

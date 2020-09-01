@@ -10,7 +10,8 @@ Not yet released
 
 * Support joins through DBMS `USING` clause in `DELETE` and `UPDATE` queries
 * Emulation of lateral entity joins for RDBMS that don't support lateral joins a concept
-* Workaround Hibernate issue regarding IN subqueries using composite id entity aliases [HHH-14156](https://hibernate.atlassian.net/browse/HHH-14156)
+* Workaround Hibernate issue regarding `IN` subqueries using composite id entity aliases [HHH-14156](https://hibernate.atlassian.net/browse/HHH-14156)
+* Implement support for JSON functions to retrieve and alter values of a JSON column
 * Implement support for specifying an index mapping for `List` and `Map` entity attributes via `@MappingIndex`
 
 ### Bug fixes
@@ -34,6 +35,7 @@ Not yet released
 * Fix issues with `@EntityViewId` from JAX-RS path parameter conversion with Resteasy
 * Reorder joins if necessary due to parent dependencies
 * Respect `DISTINCT` flag in count queries and implement counting of complex queries
+* Fix support for pagination when grouping by entity alias
 
 ### Backwards-incompatible changes
 
