@@ -32,6 +32,7 @@ Not yet released
 * Ignore query parameter attributes in `MULTISET` basic type compatibility check
 * Fix keyset extraction for pagination queries with id query inlining and no explicit select items
 * Fix issues with `@EntityViewId` from JAX-RS path parameter conversion with Resteasy
+* Reorder joins if necessary due to parent dependencies
 
 ### Backwards-incompatible changes
 
