@@ -146,11 +146,8 @@ public class PaginationTest extends AbstractCoreTest {
         page.getResultList();
     }
 
-
     @Test
     public void groupByJoinedEntityTest() {
-        // Test that shows that a work around with a manual inner join default
-        // still fails, because the required join is omitted in the count query
         CriteriaBuilder<Tuple> tupleCriteriaBuilder = cbf.create(em, Tuple.class)
             .from(Document.class, "d")
             .innerJoinDefault("d.owner", "theOwner")
@@ -167,6 +164,30 @@ public class PaginationTest extends AbstractCoreTest {
 
         PaginatedCriteriaBuilder<Tuple> page = tupleCriteriaBuilder
             .page(0, 10);
+
+        page.getResultList();
+    }
+
+    @Test
+    public void groupByJoinedEntityAliasTest() {
+        CriteriaBuilder<Tuple> tupleCriteriaBuilder = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .innerJoinDefault("d.owner", "theOwner")
+                .select("theOwner")
+                .select("max(d.id)", "latestDocument")
+                .groupBy("theOwner")
+                .orderByAsc("theOwner.name")
+                .orderByAsc("theOwner.age")
+                .orderByAsc("theOwner.id")
+                .orderByAsc("theOwner.partnerDocument.id")
+                .orderByAsc("theOwner.nameObject.primaryName")
+                .orderByAsc("theOwner.nameObject.secondaryName")
+                .orderByAsc("theOwner.defaultLanguage")
+                .orderByAsc("theOwner.nameObject.intIdEntity.id")
+                .orderByAsc("theOwner.friend.id");
+
+        PaginatedCriteriaBuilder<Tuple> page = tupleCriteriaBuilder
+                .page(0, 10);
 
         page.getResultList();
     }

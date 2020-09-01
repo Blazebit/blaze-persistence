@@ -3536,7 +3536,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected ResolvedExpression[] getGroupByIdentifierExpressions() {
         if (cachedGroupByIdentifierExpressions == null) {
             Set<ResolvedExpression> resolvedExpressions = groupByManager.getCollectedGroupByClauses().keySet();
-            cachedGroupByIdentifierExpressions = resolvedExpressions.toArray(new ResolvedExpression[resolvedExpressions.size()]);
+            Set<ResolvedExpression> splittedResolvedExpressions = new LinkedHashSet<>(resolvedExpressions.size());
+            for (ResolvedExpression resolvedExpression : resolvedExpressions) {
+                List<Expression> splittedExpressions = embeddableSplittingVisitor.splitOff(resolvedExpression.getExpression(), true);
+                if (splittedExpressions.isEmpty()) {
+                    splittedResolvedExpressions.add(resolvedExpression);
+                } else {
+                    for (Expression splittedExpression : splittedExpressions) {
+                        splittedResolvedExpressions.add(new ResolvedExpression(splittedExpression.toString(), splittedExpression));
+                    }
+                }
+            }
+            cachedGroupByIdentifierExpressions = splittedResolvedExpressions.toArray(new ResolvedExpression[splittedResolvedExpressions.size()]);
         }
         return cachedGroupByIdentifierExpressions;
     }
