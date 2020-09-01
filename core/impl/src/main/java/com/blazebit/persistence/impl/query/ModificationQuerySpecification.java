@@ -62,7 +62,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                           boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap,
                                           boolean queryPlanCacheEnabled) {
-        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled);
+        super(commonQueryBuilder, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled, null);
         this.exampleQuery = exampleQuery;
         this.isEmbedded = isEmbedded;
         this.returningColumns = returningColumns;

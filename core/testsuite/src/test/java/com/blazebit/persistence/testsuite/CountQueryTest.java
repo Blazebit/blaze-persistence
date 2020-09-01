@@ -134,11 +134,35 @@ public class CountQueryTest extends AbstractCoreTest {
         crit.getQueryRootCountQuery().getResultList();
     }
 
+    // NOTE: This requires advanced SQL support
     @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     public void countQueryFromHavingQuery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.groupBy("d.id").having("COUNT(partners.id)").eqExpression("1");
-        CatchException.verifyException(crit, IllegalStateException.class).getCountQuery();
+        crit.select("d.id")
+                .groupBy("d.id")
+                .having("COUNT(partners.id)").eqExpression("1");
+        String expectedCountQuery = "SELECT COUNT(*) FROM (SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING COUNT(partners_1.id) = 1)";
+        assertEquals(expectedCountQuery, crit.getCountQueryString());
+        assertEquals(expectedCountQuery, crit.getQueryRootCountQueryString());
+        crit.getCountQuery().getResultList();
+        crit.getQueryRootCountQuery().getResultList();
+    }
+
+    @Test
+    @Category(NoEclipselink.class)
+    // Eclipselink does not render the table alias necessary for the path expression in the count function...
+    public void countQueryWithDistinct() {
+        CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("name").distinct();
+
+        // do not include joins that are only needed for the select clause
+        String expectedCountQuery = "SELECT " + countPaginated("d.name", true) + " FROM Document d";
+        assertEquals(expectedCountQuery, crit.getCountQueryString());
+        assertEquals(expectedCountQuery, crit.getQueryRootCountQueryString());
+        crit.getCountQuery().getResultList();
+        crit.getQueryRootCountQuery().getResultList();
     }
 
     @Test

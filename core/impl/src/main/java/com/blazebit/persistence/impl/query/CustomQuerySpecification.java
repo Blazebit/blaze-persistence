@@ -65,16 +65,18 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     protected final boolean recursive;
     protected final List<CTENode> ctes;
     protected final boolean shouldRenderCtes;
+    protected final boolean queryPlanCacheEnabled;
+    protected final Query countWrapperExampleQuery;
+    protected final String countPrefix;
 
     protected boolean dirty;
     protected String sql;
     protected List<Query> participatingQueries;
     protected Map<String, String> addedCtes;
-    protected boolean queryPlanCacheEnabled;
 
     public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<Parameter<?>> parameters, Set<String> listParameters, String limit, String offset,
                                     List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCtes,
-                                    boolean queryPlanCacheEnabled) {
+                                    boolean queryPlanCacheEnabled, Query countWrapperExampleQuery) {
         this.em = commonQueryBuilder.getEntityManager();
         this.dbmsDialect = commonQueryBuilder.getService(DbmsDialect.class);
         this.serviceProvider = commonQueryBuilder;
@@ -97,6 +99,13 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         this.shouldRenderCtes = shouldRenderCtes;
         this.dirty = true;
         this.queryPlanCacheEnabled = queryPlanCacheEnabled;
+        this.countWrapperExampleQuery = countWrapperExampleQuery;
+        if (countWrapperExampleQuery == null) {
+            this.countPrefix = null;
+        } else {
+            String sqlQuery = extendedQuerySupport.getSql(em, countWrapperExampleQuery);
+            this.countPrefix = sqlQuery.substring(0, SqlUtils.indexOfFrom(sqlQuery) + SqlUtils.FROM.length() - 1) + "(";
+        }
     }
 
     @Override
@@ -107,7 +116,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     @Override
     public SelectQueryPlan<T> createSelectPlan(int firstResult, int maxResults) {
         final String sql = getSql();
-        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, participatingQueries, sql, firstResult, maxResults, queryPlanCacheEnabled);
+        return new CustomSelectQueryPlan<>(extendedQuerySupport, serviceProvider, baseQuery, countWrapperExampleQuery == null ? baseQuery : countWrapperExampleQuery, participatingQueries, sql, firstResult, maxResults, queryPlanCacheEnabled);
     }
 
     @Override
@@ -166,6 +175,11 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, participatingQueries);
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, false, withClause, null, null, null);
         participatingQueries.add(baseQuery);
+
+        if (countPrefix != null) {
+            sqlSb.insert(0, countPrefix);
+            sqlSb.append(") tmp");
+        }
 
         this.sql = sqlSb.toString();
         this.participatingQueries = participatingQueries;

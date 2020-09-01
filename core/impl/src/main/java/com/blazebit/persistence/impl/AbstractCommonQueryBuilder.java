@@ -2763,7 +2763,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.<CTENode>emptyList();
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes,
-                mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
+                mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
         );
 
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(

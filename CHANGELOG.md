@@ -33,6 +33,7 @@ Not yet released
 * Fix keyset extraction for pagination queries with id query inlining and no explicit select items
 * Fix issues with `@EntityViewId` from JAX-RS path parameter conversion with Resteasy
 * Reorder joins if necessary due to parent dependencies
+* Respect `DISTINCT` flag in count queries and implement counting of complex queries
 
 ### Backwards-incompatible changes
 
