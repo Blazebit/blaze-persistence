@@ -53,18 +53,12 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
 
     @Override
     public TypedQuery<Long> getQueryRootCountQuery() {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getCountQuery(getCountQueryRootQueryStringWithoutCheck(Long.MAX_VALUE));
     }
 
     @Override
     public TypedQuery<Long> getQueryRootCountQuery(long maximumCount) {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getCountQuery(getCountQueryRootQueryStringWithoutCheck(maximumCount));
     }

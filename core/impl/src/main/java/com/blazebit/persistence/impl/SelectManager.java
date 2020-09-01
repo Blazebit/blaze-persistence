@@ -334,10 +334,10 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         if (distinct) {
             sb.append("DISTINCT ");
         }
-        buildSelectItems(sb, isInsertInto, externalRepresentation);
+        buildSelectItems(sb, isInsertInto, externalRepresentation, true);
     }
 
-    void buildSelectItems(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation) {
+    void buildSelectItems(StringBuilder sb, boolean isInsertInto, boolean externalRepresentation, boolean renderAlias) {
         List<SelectInfo> infos = selectInfos;
         int size = infos.size();
         ExtendedManagedType<?> managedType;
@@ -383,7 +383,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                         sb.append(", ");
                     }
 
-                    applySelect(queryGenerator, sb, infos.get(i));
+                    applySelect(queryGenerator, sb, infos.get(i), renderAlias);
                 }
             }
             queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
@@ -708,11 +708,11 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         defaultSelectNodes = null;
     }
 
-    private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
+    private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select, boolean renderAlias) {
         try {
             queryGenerator.addAlias(select.alias);
             queryGenerator.generate(select.getExpression());
-            if (select.alias != null) {
+            if (renderAlias && select.alias != null) {
                 sb.append(" AS ").append(select.alias);
             }
         } finally {

@@ -53,6 +53,7 @@ import com.blazebit.persistence.spi.AttributeAccessor;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Parameter;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -266,8 +267,25 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy, maximumCount);
+        if (isComplexCountQuery()) {
+            if (externalRepresentation) {
+                sbSelectFrom.append("SELECT COUNT(*) FROM (");
+                buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+                if (maximumCount != Long.MAX_VALUE) {
+                    sbSelectFrom.append(" LIMIT ").append(maximumCount);
+                }
+                sbSelectFrom.append(')');
+            } else {
+                buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+            }
+        } else {
+            buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy && !selectManager.isDistinct(), maximumCount);
+        }
         return sbSelectFrom.toString();
+    }
+
+    private boolean isComplexCountQuery() {
+        return !havingManager.isEmpty() || hasGroupBy && selectManager.isDistinct();
     }
 
     protected final String getDualNodeAlias() {
@@ -390,7 +408,12 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
                 sbSelectFrom.append("'DISTINCT',");
 
-                isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+                if (selectManager.isDistinct()) {
+                    selectManager.buildSelectItems(sbSelectFrom, false, externalRepresentation, false);
+                    isResultUnique = false;
+                } else {
+                    isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+                }
 
                 sbSelectFrom.append(")");
                 countEndIdx = sbSelectFrom.length() - 1;
@@ -399,7 +422,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             } else {
                 sbSelectFrom.append("COUNT(");
                 sbSelectFrom.append("DISTINCT ");
-                isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+
+                if (selectManager.isDistinct()) {
+                    selectManager.buildSelectItems(sbSelectFrom, false, externalRepresentation, false);
+                    isResultUnique = false;
+                } else {
+                    isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
+                }
 
                 sbSelectFrom.append(")");
                 countEndIdx = sbSelectFrom.length() - 1;
@@ -574,36 +603,24 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public String getCountQueryString() {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getExternalCountQueryString(Long.MAX_VALUE);
     }
 
     @Override
     public String getCountQueryString(long maximumCount) {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getExternalCountQueryString(maximumCount);
     }
 
     @Override
     public TypedQuery<Long> getCountQuery() {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getCountQuery(getCountQueryStringWithoutCheck(Long.MAX_VALUE));
     }
 
     @Override
     public TypedQuery<Long> getCountQuery(long maximumCount) {
-        if (!havingManager.isEmpty()) {
-            throw new IllegalStateException("Cannot count a HAVING query yet!");
-        }
         prepareAndCheck();
         return getCountQuery(getCountQueryStringWithoutCheck(maximumCount));
     }
@@ -613,7 +630,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
         List<JoinNode> entityFunctions = null;
-        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty());
+        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty() && !isComplexCountQuery());
 
         Set<Parameter<?>> parameters = parameterManager.getParameters();
         Map<String, String> valuesParameters = parameterManager.getValuesParameters();
@@ -645,7 +662,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes);
         }
 
-        TypedQuery<Long> baseQuery = em.createQuery(countQueryString, Long.class);
+        Query baseQuery = em.createQuery(countQueryString);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
         List<EntityFunctionNode> entityFunctionNodes;
@@ -658,7 +675,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
-                mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
+                mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(),
+                isComplexCountQuery() ? getCountExampleQuery() : null
         );
 
         TypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
@@ -676,6 +694,22 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             countQuery.setParameter(dualNode.getAlias(), Collections.singleton(0L));
         }
         return countQuery;
+    }
+
+    protected Query getCountExampleQuery() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT ");
+        if (mainQuery.jpaProvider.supportsCountStar()) {
+            sb.append("COUNT(*)");
+        } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+            sb.append(mainQuery.jpaProvider.getCustomFunctionInvocation("count_star", 0)).append(')');
+        } else {
+            sb.append("COUNT(e)");
+        }
+        sb.append(" FROM ValuesEntity e");
+
+        String exampleQueryString = sb.toString();
+        return em.createQuery(exampleQueryString);
     }
 
     @Override
