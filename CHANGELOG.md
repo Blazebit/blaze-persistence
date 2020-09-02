@@ -13,6 +13,7 @@ Not yet released
 * Workaround Hibernate issue regarding `IN` subqueries using composite id entity aliases [HHH-14156](https://hibernate.atlassian.net/browse/HHH-14156)
 * Implement support for JSON functions to retrieve and alter values of a JSON column
 * Implement support for specifying an index mapping for `List` and `Map` entity attributes via `@MappingIndex`
+* Official support for Java 15
 
 ### Bug fixes
 
@@ -36,6 +37,7 @@ Not yet released
 * Reorder joins if necessary due to parent dependencies
 * Respect `DISTINCT` flag in count queries and implement counting of complex queries
 * Fix support for pagination when grouping by entity alias
+* Fix implicit `GROUP BY` generation for `EXISTS` subqueries
 
 ### Backwards-incompatible changes
 

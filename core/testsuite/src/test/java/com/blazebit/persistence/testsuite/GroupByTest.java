@@ -25,8 +25,11 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import javax.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -94,6 +97,22 @@ public class GroupByTest extends AbstractCoreTest {
                 .select("''");
 
         assertEquals("SELECT d.id, " + function("count_tuple", "INDEX(people_1)") + ", '' FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id", cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testGroupBySubqueryCorrelatedExpression() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .innerJoinDefault("d.owner", "o")
+                .selectSubquery("subquery", "CASE WHEN EXISTS subquery THEN 1 ELSE 0 END")
+                    .from(Person.class, "p")
+                    .select("p.id")
+                    .where("p.id").eqExpression("o.id")
+                .end()
+                .select("COUNT(*)");
+
+        assertEquals("SELECT CASE WHEN EXISTS (SELECT p.id FROM Person p WHERE p.id = o.id) THEN 1 ELSE 0 END, " + countStar() + " FROM Document d JOIN d.owner o GROUP BY o.id", cb.getQueryString());
         cb.getResultList();
     }
 

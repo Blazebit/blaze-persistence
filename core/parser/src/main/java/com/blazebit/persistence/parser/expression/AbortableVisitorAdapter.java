@@ -350,7 +350,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(ExistsPredicate predicate) {
-        return false;
+        return predicate.getExpression().accept(this);
     }
 
 }
