@@ -27,3 +27,19 @@ A release involves various steps which are outlined here and should be kept up-t
 . If you want to push just the documentation changes use `./build-deploy-documentation.sh staging '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'` and if everything is alright also push to production with `./build-deploy-documentation.sh prod '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'`
 . Create tweet about new version
 . Update version in Quarkus ecosystem ci poms
+
+Doing a private release
+=======================
+
+A private release involves the following steps
+
+. Make sure nobody pushes to the commercial branch during a release e.g. announce that you do a release
+. Make sure you have GPG installed and the executable is available on PATH
+. Make sure your Maven settings.xml has credentials for the server `blazebit    ` configured
+. Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
+. Make sure you have `C:\Program Files\Java\jdk-14` and `C:\Program Files\Java\jdk1.8.0_181` installed or update the `deploy-project-release.bat` script
+. Checkout the commercial branch for the minor version e.g. `1.5-commercial`
+. Invoke `mvn org.codehaus.mojo:versions-maven-plugin:2.1:set "-DnewVersion=1.5.X"`
+. Invoke `deploy-project-release.bat`
+. Commit and create a tag `git commit -m 'Release 1.5.x'" && git tag 1.5.X`
+. Push the changes `git push commercial && git push commercial 1.5.X`

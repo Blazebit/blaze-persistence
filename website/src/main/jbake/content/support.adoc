@@ -33,5 +33,54 @@ To get your developers up-to date with the latest developments of Blaze-Persiste
 *Consulting*::
 To help you with issues in your project remotely or on-site
 
+*Blaze-Persistence sponsoring hours*::
+If you want specific bugs to be fixed or features to be implemented faster you can sponsor development by buying and assigning sponsoring hours to specific issues
+
 *Support*::
 Long term support via multiple channels, high priority bug fixes and low response times
+
+==== Blaze-Persistence PRO support
+
+The Blaze-Persistence PRO support is an annual subscription that gives access to commercial releases of Blaze-Persistence.
+Community releases are limited to major, minor and critical bug fix releases only.
+
+The subscription is a floating license that is granted for a developer and costs EUR 99,- for one year.
+You need one license for every developer of your team that uses Blaze-Persistence.
+
+The Blaze-Persistence PRO support includes:
+
+* Access to all bug fix releases that are published for commercial customers
+* GitHub issues get higher priority than community issues
+* Response to GitHub issues within five business days
+
+To purchase Blaze-Persistence PRO support, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired subscriptions.
+We will then send you an invoice and after payment, you will receive access to the Maven repository containing the commercial releases.
+
+==== Blaze-Persistence PREMIUM support
+
+The Blaze-Persistence PREMIUM support is an annual subscription for companies that need a guaranteed response time for GitHub issues.
+The subscription costs EUR 699,- for one year and you need to have an active Blaze-Persistence PRO support subscription.
+
+The Blaze-Persistence PREMIUM support includes:
+
+* Access to all bug fix releases that are published for commercial customers
+* GitHub issues get higher priority than community issues
+* Response to GitHub issues within one business day
+* 10 Blaze-Persistence sponsoring hours that can be used to e.g. sponsor the backporting of bug fixes
+
+To purchase Blaze-Persistence PREMIUM support, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired PRO support licenses.
+We will then send you an invoice and after payment, you can assign your sponsoring hours to Blaze-Persistence GitHub issues by sending us an email with the GitHub issue number and the amount of hours you want to assign.
+
+=== Blaze-Persistence sponsoring hours
+
+Blaze-Persistence sponsoring hours can be used to sponsor a fix for a bug or the implementation of a feature.
+One sponsoring hour costs EUR 60,- and is consumed by assigning it to a Blaze-Persistence GitHub issue.
+
+By assigning sponsoring hours to an issue, the issue gets a higher priority.
+Issues with the highest priority are developed first
+
+* You get access to a worklog, showing how the hours have been spent
+* You will be listed as sponsor on the website and in the release notes
+
+To purchase Blaze-Persistence sponsoring hours, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired sponsoring hours.
+We will then send you an invoice and after payment, you can assign your sponsoring hours to Blaze-Persistence GitHub issues by sending us an email with the GitHub issue number and the amount of hours you want to assign.
