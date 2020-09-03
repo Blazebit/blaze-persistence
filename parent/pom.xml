@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence</artifactId>
-        <version>1.5.1-SNAPSHOT</version>
+        <version>1.6.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -33,7 +33,7 @@
     <description>Blaze-Persistence Parent</description>
 
     <properties>
-        <blaze-persistence.codename>Zemo</blaze-persistence.codename>
+        <blaze-persistence.codename>Lockjaw</blaze-persistence.codename>
 
         <version.servlet>4.0.1</version.servlet>
         <version.jaxb>2.2.11</version.jaxb>
