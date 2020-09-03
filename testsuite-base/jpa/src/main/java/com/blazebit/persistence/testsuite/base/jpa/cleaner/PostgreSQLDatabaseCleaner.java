@@ -64,7 +64,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 
     @Override
     public void addIgnoredTable(String tableName) {
-        ignoredTables.add(tableName);
+        ignoredTables.add(tableName.toLowerCase());
     }
 
     @Override
