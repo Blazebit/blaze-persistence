@@ -37,7 +37,7 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** DataNucleus 5.1 integration
 ** Returning clause emulation
 
-= 1.5 Zemo
+= 1.5 Zemo *[RELEASED]*
 
 ** Allow predicates as array index expression
 ** Allow arbitrary expression as array index expression

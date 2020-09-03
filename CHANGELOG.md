@@ -2,9 +2,25 @@
 
 Changes that happened in releases
 
-## 1.5.0-SNAPSHOT
+## 1.6.0-SNAPSHOT
 
 Not yet released
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.5.0
+
+03/09/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.5.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.5.0+is%3Aclosed)
 
 ### New features
 

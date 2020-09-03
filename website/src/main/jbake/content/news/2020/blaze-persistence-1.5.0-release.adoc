@@ -1,0 +1,24 @@
+= Blaze-Persistence 1.5.0 Release
+Christian Beikov
+2020-09-03 0
+:description: Blaze-Persistence version 1.5.0 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+The last big feature for the 1.5 series, the support for custom index/key mapping expressions for `List` and `Map` entity view attributes,
+was finally finished, which lead to this wonderful release today!
+
+This release is pretty big, containing many bug fixes and quite a few great features.
+The most notable features are JSON functions to access/manipulate fields of JSON columns, the support for joins in DML statements
+and the support for +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++custom index/key mapping expressions for `List` and `Map` entity view attributes via the new `@MappingIndex` annotation.
+
+If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150[changelog, window="_blank"] for a full list of changes and improvements.
+
+This release concludes the planned community releases for the 1.5 series. We will publish community bug fix releases only for critical bug fixes.
+If you need long term support please consider the https://persistence.blazebit.com/support.html#_blaze_persistence_commercial_support[commercial support options].
+
+The master branch will now switch to the 1.6 series with the codename Lockjaw. Have fun with the release!
