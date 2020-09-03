@@ -19,7 +19,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-examples-showcase</artifactId>
-        <version>1.5.0-SNAPSHOT</version>
+        <version>1.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
