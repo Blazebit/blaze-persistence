@@ -371,6 +371,34 @@ Questions or issues
 
 Drop by on [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new) or ask on [Stackoverflow](https://stackoverflow.com/questions/ask?tags=java+blaze-persistence).
 
+Commercial support
+==================
+
+You can find commercial support offerings by Blazebit in the [support section](https://persistence.blazebit.com/support.html#_blaze_persistence_commercial_support).
+
+If you are a commercial customer and want to use commercial releases, you need to define the following repository in a profile of your project or the `settings.xml` located in `~/.m2`.
+
+```xml
+<repository>
+  <id>blazebit</id>
+  <name>Blazebit</name>
+  <url>https://nexus.blazebit.com/repository/maven-releases/</url>
+</repository>
+```
+
+You also need to add the following server in the `settings.xml` with the appropriate credentials:
+
+```xml
+<server>
+  <id>blazebit</id>
+  <username>USERNAME</username>
+  <password>PASSWORD</password>
+</server> 
+```
+
+Commercial customers also get access to the [commercial repository](https://github.com/Blazebit-Commercial/blaze-persistence) where they access the source code of commercial releases,
+create issues that are treated with higher priority and browse commercial releases. 
+
 Setup local development
 =======================
 
