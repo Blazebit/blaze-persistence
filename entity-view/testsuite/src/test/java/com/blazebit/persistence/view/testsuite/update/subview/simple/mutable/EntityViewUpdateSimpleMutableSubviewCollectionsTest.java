@@ -202,7 +202,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
         }
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 

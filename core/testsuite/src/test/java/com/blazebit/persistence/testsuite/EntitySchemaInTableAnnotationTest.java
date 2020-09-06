@@ -20,6 +20,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.SchemaEntity;
 import org.junit.Test;
 
+import javax.persistence.EntityManagerFactory;
+import java.sql.Connection;
 import java.util.Properties;
 
 /**
@@ -37,13 +39,21 @@ public class EntitySchemaInTableAnnotationTest extends AbstractCoreTest {
         };
     }
 
-    // Skip schema creation since we only want to check if we can build our metamodel properly
+
     @Override
-    protected Properties applyProperties(Properties properties) {
-        Properties p = super.applyProperties(properties);
-        p.put("javax.persistence.schema-generation.database.action", "none");
-        p.put("hibernate.hbm2ddl.auto", "none");
-        return p;
+    protected EntityManagerFactory repopulateSchema() {
+        // Skip schema creation since we only want to check if we can build our metamodel properly
+        return null;
+    }
+
+    @Override
+    protected void createSchemaIfNotExists(Connection connection, String schemaName) {
+        // Skip schema creation since we only want to check if we can build our metamodel properly
+    }
+
+    @Override
+    protected String getTargetSchema() {
+        return super.getTargetSchema() == null ? null : "test_schema";
     }
 
     @Test

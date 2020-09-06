@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.base;
 
 import com.blazebit.persistence.testsuite.base.jpa.AbstractJpaPersistenceTest;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
+import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.eclipse.persistence.internal.jpa.EntityManagerFactoryProvider;
 import org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl;
 import org.eclipse.persistence.sessions.factories.SessionManager;
@@ -47,6 +48,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         properties.put("eclipselink.logging.session", "false");
         // Give the session a easy name so we can have normal logging config
         properties.put("eclipselink.session-name", "default");
+        properties.put(PersistenceUnitProperties.SESSION_CUSTOMIZER, SchemaModifyingSessionCustomizer.class.getName());
+
+        if (getSchemaMode() == SchemaMode.JPA) {
+            SchemaModifyingSessionCustomizer.setSchemaName(getTargetSchema());
+        }
         return properties;
     }
 
@@ -76,7 +82,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
-    protected void dropSchema() {
+    protected void clearSchemaUsingJpa() {
         Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
         Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
         emSetupImpls.clear();
@@ -85,7 +91,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             manager.getSessions().remove(emSetupImpl.getSessionName());
         }
         try {
-            super.dropSchema();
+            super.clearSchemaUsingJpa();
         } finally {
             emSetupImpls.putAll(copy);
             for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
@@ -95,7 +101,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
-    protected EntityManagerFactory recreateOrClearSchema() {
+    protected EntityManagerFactory repopulateSchema() {
         Map<String, EntityManagerSetupImpl> emSetupImpls = EntityManagerFactoryProvider.getEmSetupImpls();
         Map<String, EntityManagerSetupImpl> copy = new HashMap<>(emSetupImpls);
         emSetupImpls.clear();
@@ -104,7 +110,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             manager.getSessions().remove(emSetupImpl.getSessionName());
         }
         try {
-            return super.recreateOrClearSchema();
+            return super.repopulateSchema();
         } finally {
             emSetupImpls.putAll(copy);
             for (EntityManagerSetupImpl emSetupImpl : copy.values()) {
@@ -113,4 +119,18 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         }
     }
 
+    @Override
+    protected JpaProviderFamily getJpaProviderFamily() {
+        return JpaProviderFamily.ECLIPSELINK;
+    }
+
+    @Override
+    protected int getJpaProviderMajorVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getJpaProviderMinorVersion() {
+        throw new UnsupportedOperationException();
+    }
 }

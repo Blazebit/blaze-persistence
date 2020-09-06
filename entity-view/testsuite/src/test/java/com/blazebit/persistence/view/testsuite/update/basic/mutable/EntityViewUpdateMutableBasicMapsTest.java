@@ -210,7 +210,7 @@ public class EntityViewUpdateMutableBasicMapsTest extends AbstractEntityViewUpda
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("doc1", doc1.getName());
         assertEquals(Collections.singleton("test"), doc1.getStringMap().keySet());
     }

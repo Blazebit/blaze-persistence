@@ -91,10 +91,9 @@ public class OptimizedKeysetPaginationPage1EdgeCaseFallbackTest extends Abstract
     }
 
     @Override
-    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
-        config = super.configure(config);
+    protected void configure(CriteriaBuilderConfiguration config) {
+        super.configure(config);
         config.setProperty(ConfigurationProperties.OPTIMIZED_KEYSET_PREDICATE_RENDERING, "true");
-        return config;
     }
 
     @Test

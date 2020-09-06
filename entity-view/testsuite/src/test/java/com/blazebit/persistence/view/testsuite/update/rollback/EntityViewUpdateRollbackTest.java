@@ -94,7 +94,7 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         });
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("newDoc", docView.getName());
         assertEquals("doc1", doc1.getName());
         assertEquals(1, updateCommitCount.get());
@@ -118,7 +118,7 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("newDoc", docView.getName());
         assertEquals("doc1", doc1.getName());
 
@@ -179,7 +179,7 @@ public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocume
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertTrue(docView.getOwner() == personView);
         assertTrue(((DirtyTracker) personView).$$_hasParent());
 

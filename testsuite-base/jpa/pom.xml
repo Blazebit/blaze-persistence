@@ -77,5 +77,10 @@
             <groupId>io.github.classgraph</groupId>
             <artifactId>classgraph</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.0.2</version>
+        </dependency>
     </dependencies>
 </project>

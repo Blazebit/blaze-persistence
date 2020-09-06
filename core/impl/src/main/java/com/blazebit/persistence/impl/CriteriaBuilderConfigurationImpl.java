@@ -520,6 +520,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -1972,5 +1973,29 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     public CriteriaBuilderConfiguration setProperty(String propertyName, String value) {
         properties.setProperty(propertyName, value);
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CriteriaBuilderConfigurationImpl that = (CriteriaBuilderConfigurationImpl) o;
+        return dbmsDialects.equals(that.dbmsDialects) &&
+                functions.equals(that.functions) &&
+                treatTypes.equals(that.treatTypes) &&
+                macros.equals(that.macros) &&
+                entityManagerIntegrators.equals(that.entityManagerIntegrators) &&
+                Objects.equals(packageOpener, that.packageOpener) &&
+                properties.equals(that.properties) &&
+                Objects.equals(extendedQuerySupport, that.extendedQuerySupport);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dbmsDialects, functions, treatTypes, macros, entityManagerIntegrators, packageOpener, properties, extendedQuerySupport);
     }
 }

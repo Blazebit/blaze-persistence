@@ -348,7 +348,7 @@ public class EntityViewUpdateUpdatableOnlyEntityMapsTest extends AbstractEntityV
                 }
             }
             builder.validate();
-            restartTransactionAndReload();
+            clearPersistenceContextAndReload();
             assertEquals(1, doc1.getContacts().size());
         }
     }

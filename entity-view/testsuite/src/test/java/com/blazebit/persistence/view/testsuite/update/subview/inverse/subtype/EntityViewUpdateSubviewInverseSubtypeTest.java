@@ -83,7 +83,7 @@ public class EntityViewUpdateSubviewInverseSubtypeTest extends AbstractEntityVie
         Assert.assertFalse(evm.getChangeModel(newPerson).get("ownedDocuments2").isDirty());
 
         // Then
-        restartTransaction();
+        em.clear();
         Document newDocument = em.find(Document.class, document.getId());
         Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }
@@ -104,7 +104,7 @@ public class EntityViewUpdateSubviewInverseSubtypeTest extends AbstractEntityVie
         update(newPerson);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document newDocument = em.find(Document.class, document.getId());
         Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }

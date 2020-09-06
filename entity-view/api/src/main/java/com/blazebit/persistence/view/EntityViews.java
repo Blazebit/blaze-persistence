@@ -18,6 +18,7 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewConfigurationProvider;
+
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
@@ -29,6 +30,8 @@ import java.util.ServiceLoader;
  */
 public class EntityViews {
 
+    private static volatile EntityViewConfigurationProvider cachedDefaultProvider;
+
     private EntityViews() {
     }
 
@@ -38,15 +41,19 @@ public class EntityViews {
      * @return The first {@linkplain EntityViewConfigurationProvider} that is found
      */
     public static EntityViewConfigurationProvider getDefaultProvider() {
-        ServiceLoader<EntityViewConfigurationProvider> serviceLoader = ServiceLoader.load(EntityViewConfigurationProvider.class);
-        Iterator<EntityViewConfigurationProvider> iterator = serviceLoader.iterator();
+        EntityViewConfigurationProvider defaultEntityViewConfigurationProvider = EntityViews.cachedDefaultProvider;
+        if (defaultEntityViewConfigurationProvider == null) {
+            ServiceLoader<EntityViewConfigurationProvider> serviceLoader = ServiceLoader.load(EntityViewConfigurationProvider.class);
+            Iterator<EntityViewConfigurationProvider> iterator = serviceLoader.iterator();
 
-        if (iterator.hasNext()) {
-            return iterator.next();
+            if (iterator.hasNext()) {
+                return EntityViews.cachedDefaultProvider = iterator.next();
+            }
+
+            throw new IllegalStateException(
+                    "No EntityViewConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
         }
-
-        throw new IllegalStateException(
-            "No EntityViewConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
+        return defaultEntityViewConfigurationProvider;
     }
 
     /**

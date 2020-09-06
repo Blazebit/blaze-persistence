@@ -310,7 +310,7 @@ public class EntityViewUpdateMutableEmbeddableTest extends AbstractEntityViewUpd
             }
         }
         afterBuilder.validate();
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
     }
 
     @Override

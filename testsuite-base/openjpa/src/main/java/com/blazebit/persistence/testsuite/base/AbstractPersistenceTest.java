@@ -62,4 +62,18 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return true;
     }
 
+    @Override
+    protected JpaProviderFamily getJpaProviderFamily() {
+        return JpaProviderFamily.OPENJPA;
+    }
+
+    @Override
+    protected int getJpaProviderMajorVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getJpaProviderMinorVersion() {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -26,12 +26,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
 public class SchemaClearer extends AbstractJpaPersistenceTest {
+
+    private static final Logger LOG = Logger.getLogger(SchemaClearer.class.getName());
 
     public static void main(String[] args) throws IOException {
         new SchemaClearer().clearSchema();
@@ -41,14 +44,16 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
         String configDirectory = System.getProperty("configDirectory");
         Map<Object, Object> properties = new HashMap<>();
         Path configFile;
+        String schema;
         if (configDirectory == null || configDirectory.isEmpty() || !Files.exists(configFile = Paths.get(configDirectory, "application.properties"))) {
             String jdbcUrl = System.getProperty("jdbc.url");
             String jdbcUser = System.getProperty("jdbc.user");
             String jdbcPassword = System.getProperty("jdbc.password");
             String jdbcDriver = System.getProperty("jdbc.driver");
+            schema = System.getProperty("jdbc.schema");
 
             if (jdbcUrl == null || jdbcUrl.isEmpty() || jdbcDriver == null || jdbcDriver.isEmpty()) {
-                System.out.println("Skipped clearing schema because no configuration could be found!");
+                LOG.warning("Skipping schema clearing because no configuration could be found!");
                 return;
             }
             properties.put("javax.persistence.jdbc.url", jdbcUrl);
@@ -61,15 +66,20 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
                 p.load(stream);
             }
 
-            properties.put("javax.persistence.jdbc.url", p.getProperty("quarkus.datasource.jdbc.url"));
+            schema = p.getProperty("quarkus.hibernate-orm.database.default-schema");
+
+            properties.put("javax.persistence.jdbc.url", p.getProperty("quarkus.datasource.url"));
             properties.put("javax.persistence.jdbc.user", p.getProperty("quarkus.datasource.username"));
             properties.put("javax.persistence.jdbc.password", p.getProperty("quarkus.datasource.password"));
-            properties.put("javax.persistence.jdbc.driver", p.getProperty("quarkus.datasource.jdbc.driver"));
+            properties.put("javax.persistence.jdbc.driver", p.getProperty("quarkus.datasource.driver"));
         }
-        DataSource dataSource = createDataSource(properties);
+        DataSource dataSource = createDataSource(properties, null);
         try (Connection connection = dataSource.getConnection()) {
-            getDatabaseCleaner(connection).clearSchema(connection);
-            System.out.println("Successfully cleared schema!");
+            if (schema == null) {
+                getDatabaseCleaner(connection).clearAllSchemas(connection);
+            } else {
+                getDatabaseCleaner(connection).clearSchema(connection, schema);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -88,5 +98,20 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class[0];
+    }
+
+    @Override
+    protected JpaProviderFamily getJpaProviderFamily() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getJpaProviderMajorVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getJpaProviderMinorVersion() {
+        throw new UnsupportedOperationException();
     }
 }

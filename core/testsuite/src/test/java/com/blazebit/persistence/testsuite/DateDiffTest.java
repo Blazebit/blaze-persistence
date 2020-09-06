@@ -16,33 +16,27 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
+import javax.persistence.EntityManager;
+import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
-import javax.sql.DataSource;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -72,12 +66,12 @@ public class DateDiffTest extends AbstractCoreTest {
     }
 
     @Override
-    protected DataSource createDataSource(Map<Object, Object> properties) {
+    protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         // Set the producer timezone
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         resetTimeZoneCaches();
 
-        return super.createDataSource(properties);
+        return super.createDataSource(properties, connectionCustomizer);
     }
 
     @AfterClass

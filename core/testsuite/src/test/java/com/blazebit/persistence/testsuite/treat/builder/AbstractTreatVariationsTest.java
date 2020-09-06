@@ -261,10 +261,9 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
 
     protected <T> List<T> list(CriteriaBuilder<T> cb) {
         List<T> bases = cb.getResultList();
-        // Close the em and emf to make sure this was fetched properly
+        // Close the em to make sure this was fetched properly
         em.getTransaction().rollback();
         em.close();
-        emf.close();
         // Return new list since datanucleus makes it impossible to modify the direct result
         return new ArrayList<>(bases);
     }
@@ -290,15 +289,15 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     }
 
     private boolean isHibernate() {
-        return getJpaProvider().getClass().getName().contains("Hibernate");
+        return getJpaProviderFamily() == JpaProviderFamily.HIBERNATE;
     }
 
     private boolean isEclipseLink() {
-        return getJpaProvider().getClass().getName().contains("Eclipse");
+        return getJpaProviderFamily() == JpaProviderFamily.ECLIPSELINK;
     }
 
     private boolean isDataNucleus() {
-        return getJpaProvider().getClass().getName().contains("DataNucleus");
+        return getJpaProviderFamily() == JpaProviderFamily.DATANUCLEUS;
     }
 
     private JpaProvider getJpaProvider() {

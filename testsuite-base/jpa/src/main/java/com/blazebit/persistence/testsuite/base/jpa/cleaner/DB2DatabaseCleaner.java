@@ -42,8 +42,8 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
             + "'SYSSTAT',"
             + "'SYSTOOLS'";
 
-    private List<String> ignoredTables = new ArrayList<>();
-    private Map<String, List<String>> cachedForeignKeys;
+    private final List<String> ignoredTables = new ArrayList<>();
+    private final Map<String, Map<String, List<String>>> cachedForeignKeysPerSchema = new HashMap<>();
 
     public static class Factory implements DatabaseCleaner.Factory {
 
@@ -74,7 +74,7 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
-    public void clearSchema(Connection c) {
+    public void clearAllSchemas(Connection c) {
         try (Statement s = c.createStatement()) {
             ResultSet rs;
             List<String> sqls = new ArrayList<>();
@@ -116,7 +116,7 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
             rs = s.executeQuery("SELECT 'DROP VIEW \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\"' " +
                     "FROM SYSCAT.TABLES " +
                     "WHERE TYPE = 'V' " +
-                    "AND TABSCHEMA NOT IN (" + SYSTEM_SCHEMAS + ")");
+                    "AND TABSCHEMA  NOT IN (" + SYSTEM_SCHEMAS + ")");
             while (rs.next()) {
                 sqls.add(rs.getString(1));
             }
@@ -166,14 +166,119 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
-    public void clearData(Connection connection) {
+    public void clearSchema(Connection c, String schemaName) {
+        schemaName = schemaName.toUpperCase();
+        try (Statement s = c.createStatement()) {
+            ResultSet rs;
+            List<String> sqls = new ArrayList<>();
+
+            // Collect schema objects
+            LOG.log(Level.FINEST, "Collect schema objects: START");
+            rs = s.executeQuery("SELECT 'DROP INDEX \"' || TRIM(INDSCHEMA) || '\".\"' || TRIM(INDNAME) || '\"' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'D' " +
+                    "AND INDSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP FOREIGN KEY \"' || TRIM(CONSTNAME) || '\"' " +
+                    "FROM SYSCAT.TABCONST " +
+                    "WHERE TYPE = 'F' " +
+                    "AND TABSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP UNIQUE \"' || TRIM(INDNAME) || '\"' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'U' " +
+                    "AND INDSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'ALTER TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\" DROP PRIMARY KEY' " +
+                    "FROM SYSCAT.INDEXES " +
+                    "WHERE UNIQUERULE = 'P' " +
+                    "AND INDSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP VIEW \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\"' " +
+                    "FROM SYSCAT.TABLES " +
+                    "WHERE TYPE = 'V' " +
+                    "AND TABSCHEMA  = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP TABLE \"' || TRIM(TABSCHEMA) || '\".\"' || TRIM(TABNAME) || '\"' " +
+                    "FROM SYSCAT.TABLES " +
+                    "WHERE TYPE = 'T' " +
+                    "AND TABSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+
+            rs = s.executeQuery("SELECT 'DROP SEQUENCE \"' || TRIM(SEQSCHEMA) || '\".\"' || TRIM(SEQNAME) || '\"' " +
+                    "FROM SYSCAT.SEQUENCES " +
+                    "WHERE SEQSCHEMA = '" + schemaName + "'");
+            while (rs.next()) {
+                sqls.add(rs.getString(1));
+            }
+            LOG.log(Level.FINEST, "Collect schema objects: END");
+
+            LOG.log(Level.FINEST, "Dropping schema objects: START");
+            for (String sql : sqls) {
+                try {
+                    s.execute(sql);
+                } catch (SQLException e) {
+                    if (-204 == e.getErrorCode()) {
+                        // Apparently we deleted this along with a dependent object since it doesn't exist anymore
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            LOG.log(Level.FINEST, "Dropping schema objects: END");
+
+            LOG.log(Level.FINEST, "Committing: START");
+            c.commit();
+            LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void clearAllData(Connection connection) {
+        Map<String, List<String>> cachedForeignKeys = cachedForeignKeysPerSchema.get(null);
         if (cachedForeignKeys == null) {
-            cachedForeignKeys = collectForeignKeys(connection);
+            cachedForeignKeys = collectAllForeignKeys(connection);
+            cachedForeignKeysPerSchema.put(null, cachedForeignKeys);
         }
         deleteAllData(connection, cachedForeignKeys);
     }
 
-    private Map<String, List<String>> collectForeignKeys(Connection c) {
+    @Override
+    public void clearData(Connection connection, String schemaName) {
+        Map<String, List<String>> cachedForeignKeys = cachedForeignKeysPerSchema.get(schemaName);
+        if (cachedForeignKeys == null) {
+            cachedForeignKeys = collectForeignKeys(connection, schemaName.toUpperCase());
+            cachedForeignKeysPerSchema.put(schemaName, cachedForeignKeys);
+        }
+        deleteAllData(connection, cachedForeignKeys);
+    }
+
+    private Map<String, List<String>> collectAllForeignKeys(Connection c) {
         try (Statement s = c.createStatement()) {
             // Collect table names for schemas
             LOG.log(Level.FINEST, "Collect table names: START");
@@ -187,6 +292,37 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
             // Collect foreign keys for tables
             LOG.log(Level.FINEST, "Collect foreign keys: START");
             ResultSet rs2 = s.executeQuery("SELECT FKTABLE_SCHEM || '.' || FKTABLE_NAME, FK_NAME FROM SYSIBM.SQLFOREIGNKEYS WHERE FKTABLE_SCHEM NOT IN (" + SYSTEM_SCHEMAS + ")");
+            while (rs2.next()) {
+                foreignKeys.get(rs2.getString(1)).add(rs2.getString(2));
+            }
+            LOG.log(Level.FINEST, "Collect foreign keys: END");
+
+            return foreignKeys;
+        } catch (SQLException e) {
+            try {
+                c.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<String, List<String>> collectForeignKeys(Connection c, String schemaName) {
+        try (Statement s = c.createStatement()) {
+            // Collect table names for schemas
+            LOG.log(Level.FINEST, "Collect table names: START");
+            ResultSet rs = s.executeQuery("SELECT TRIM(TABLE_SCHEMA) || '.' || TABLE_NAME FROM SYSIBM.TABLES WHERE TABLE_SCHEMA = '" + schemaName + "'");
+            Map<String, List<String>> foreignKeys = new HashMap<>();
+            while (rs.next()) {
+                foreignKeys.put(rs.getString(1), new ArrayList<String>());
+            }
+            LOG.log(Level.FINEST, "Collect table names: END");
+
+            // Collect foreign keys for tables
+            LOG.log(Level.FINEST, "Collect foreign keys: START");
+            ResultSet rs2 = s.executeQuery("SELECT FKTABLE_SCHEM || '.' || FKTABLE_NAME, FK_NAME FROM SYSIBM.SQLFOREIGNKEYS WHERE FKTABLE_SCHEM = '" + schemaName + "'");
             while (rs2.next()) {
                 foreignKeys.get(rs2.getString(1)).add(rs2.getString(2));
             }
@@ -250,4 +386,45 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
         }
     }
 
+    @Override
+    public void createDatabaseIfNotExists(Connection connection, String databaseName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void createSchemaIfNotExists(Connection connection, String schemaName) {
+        schemaName = schemaName.toUpperCase();
+        try (Statement s = connection.createStatement()) {
+            LOG.log(Level.FINEST, "Check if schema exists: START");
+            ResultSet schemas = s.executeQuery("SELECT 1 FROM syscat.SCHEMATA WHERE SCHEMANAME = '" + schemaName + "'");
+            LOG.log(Level.FINEST, "Check if schema exists: END");
+            if (!schemas.next()) {
+                LOG.log(Level.FINEST, "Create schema: START");
+                s.execute("CREATE SCHEMA " + schemaName);
+                LOG.log(Level.FINEST, "Create schema: END");
+            }
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void applyTargetDatabasePropertyModifications(Map<Object, Object> properties, String databaseName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
+        String jdbcUrl = (String) properties.get("javax.persistence.jdbc.url");
+        if (!jdbcUrl.endsWith(";")) {
+            jdbcUrl = jdbcUrl + ":";
+        }
+        properties.put("javax.persistence.jdbc.url", jdbcUrl + "currentSchema=" + schemaName.toUpperCase() + ";");
+    }
 }

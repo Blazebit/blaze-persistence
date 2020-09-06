@@ -321,7 +321,7 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
                 }
                 builder.validate();
             }
-            restartTransactionAndReload();
+            clearPersistenceContextAndReload();
             assertEquals(1, doc1.getPeople().size());
         }
     }

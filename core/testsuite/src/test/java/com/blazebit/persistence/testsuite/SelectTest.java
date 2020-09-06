@@ -49,11 +49,10 @@ import com.blazebit.persistence.testsuite.function.ZeroFunction;
 public class SelectTest extends AbstractCoreTest {
 
     @Override
-    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
-        config = super.configure(config);
+    protected void configure(CriteriaBuilderConfiguration config) {
+        super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("array", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("unnest", new ZeroFunction()));
-        return config;
     }
     
     @Test

@@ -136,6 +136,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
+                            <systemPropertyVariables>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -264,6 +267,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
+                            <systemPropertyVariables>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

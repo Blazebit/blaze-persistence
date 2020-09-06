@@ -16,9 +16,22 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -26,23 +39,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.sql.DataSource;
-
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.entity.Version;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 /**
  *
@@ -101,12 +101,12 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Override
-    protected DataSource createDataSource(Map<Object, Object> properties) {
+    protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         // Set the producer timezone
         TimeZone.setDefault(producerTimeZone);
         resetTimeZoneCaches();
 
-        return super.createDataSource(properties);
+        return super.createDataSource(properties, connectionCustomizer);
     }
 
     @Before

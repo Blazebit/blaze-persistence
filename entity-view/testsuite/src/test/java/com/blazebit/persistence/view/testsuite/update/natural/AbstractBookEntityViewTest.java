@@ -26,7 +26,6 @@ import com.blazebit.persistence.testsuite.entity.NaturalIdJoinTableEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -109,21 +108,6 @@ public abstract class AbstractBookEntityViewTest<T> extends AbstractEntityViewUp
         em.persist(e2);
     }
 
-    @Override
-    protected void cleanDatabase() {
-        transactional(new TxVoidWork() {
-            @Override
-            public void work(EntityManager em) {
-                clearCollections(em, NaturalIdJoinTableEntity.class);
-                em.createQuery("DELETE FROM BookISBNReferenceEntity").executeUpdate();
-                em.createNativeQuery("DELETE FROM nid_jt_join_table1").executeUpdate();
-                em.createNativeQuery("DELETE FROM nid_jt_join_table2").executeUpdate();
-                em.createNativeQuery("DELETE FROM nid_join_table").executeUpdate();
-                em.createQuery("DELETE FROM BookEntity").executeUpdate();
-                em.createQuery("DELETE FROM Person").executeUpdate();
-            }
-        });
-    }
     @Override
     protected void reload() {
         // Load into PC, then access via find

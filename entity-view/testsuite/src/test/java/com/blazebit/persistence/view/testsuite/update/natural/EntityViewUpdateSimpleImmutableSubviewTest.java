@@ -88,7 +88,7 @@ public class EntityViewUpdateSimpleImmutableSubviewTest extends AbstractBookEnti
                 .validate();
 
         assertNoUpdateAndReload(docView);
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("456", e2.getBook().getIsbn());
         assertEquals("123", e2.getBookNormal().getIsbn());
     }

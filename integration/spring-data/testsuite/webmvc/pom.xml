@@ -181,7 +181,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
+                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
@@ -216,7 +216,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
+                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
@@ -962,6 +962,12 @@
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
                     <version>${version.hibernate-5.2}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.javassist</groupId>
+                            <artifactId>javassist</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

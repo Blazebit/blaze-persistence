@@ -78,7 +78,7 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(p4.getFriend());
         assertNull(p8);
     }
@@ -99,7 +99,7 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(p5.getId(), p4.getFriend().getId());
         assertNull(p8);
     }
@@ -121,7 +121,7 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
         builder.insert(Person.class);
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("new", p4.getFriend().getName());
         assertNull(p8);
     }
@@ -166,7 +166,7 @@ public class EntityViewOrphanRemoveNestedSubviewCollectionsTest extends Abstract
         builder.delete(Document.class, "people");
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(p4);
         assertNull(p8);
         assertEquals(1, doc1.getPeople().size());

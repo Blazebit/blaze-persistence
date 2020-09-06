@@ -82,7 +82,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         Assert.assertFalse(evm.getChangeModel(newPerson).get("ownedDocuments2").isDirty());
 
         // Then
-        restartTransaction();
+        em.clear();
         Document newDocument = em.find(Document.class, document.getId());
         Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }
@@ -103,7 +103,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         update(newPerson);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document newDocument = em.find(Document.class, document.getId());
         Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
     }
@@ -124,7 +124,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         update(newPerson);
 
         // Then
-        restartTransaction();
+        em.clear();
         Person pers = em.find(Person.class, newPerson.getId());
         Assert.assertEquals(1, pers.getOwnedDocuments2().size());
     }
@@ -145,7 +145,7 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
         update(newPerson);
 
         // Then
-        restartTransaction();
+        em.clear();
         Person pers = em.find(Person.class, newPerson.getId());
         Assert.assertEquals(1, pers.getOwnedDocuments2().size());
     }

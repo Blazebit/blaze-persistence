@@ -57,7 +57,7 @@
         <version.hibernate-5>5.0.12.Final</version.hibernate-5>
         <version.hibernate-5.1>5.1.5.Final</version.hibernate-5.1>
         <!-- The SQLServer Dialect had a bug before 5.2.9.Final making it impossible to use pagination -->
-        <version.hibernate-5.2>5.2.9.Final</version.hibernate-5.2>
+        <version.hibernate-5.2>5.2.18.Final</version.hibernate-5.2>
         <version.hibernate-5.3>5.3.1.Final</version.hibernate-5.3>
         <!-- Older versions had an issue with rendering NULL in the IN predicate -->
         <version.hibernate-5.4>5.4.10.Final</version.hibernate-5.4>
@@ -118,8 +118,8 @@
         <version.moditect.plugin>1.0.0.Beta1</version.moditect.plugin>
         <version.release.plugin>2.5.1</version.release.plugin>
         <version.shade.plugin>3.2.4</version.shade.plugin>
-        <version.surefire.plugin>3.0.0-M4</version.surefire.plugin>
-        <version.failsafe.plugin>3.0.0-M4</version.failsafe.plugin>
+        <version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
+        <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
         <asmVersion>8.0</asmVersion>
 
         <version.h2>1.4.200</version.h2>

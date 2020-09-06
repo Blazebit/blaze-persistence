@@ -194,7 +194,7 @@ public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewU
             // We need to load the rollback view
             builder.select(Document.class);
             builder.validate();
-            restartTransactionAndReload();
+            clearPersistenceContextAndReload();
             assertEquals(p1.getId(), doc1.getResponsiblePerson().getId());
         }
     }

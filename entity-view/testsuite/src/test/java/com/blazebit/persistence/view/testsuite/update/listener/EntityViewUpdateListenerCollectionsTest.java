@@ -81,7 +81,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -102,7 +102,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         });
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -118,7 +118,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
     }
 
@@ -134,7 +134,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p2.getName());
     }
@@ -154,7 +154,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", p2.getName());
     }
@@ -176,7 +176,7 @@ public class EntityViewUpdateListenerCollectionsTest extends AbstractEntityViewU
         });
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
         assertEquals("newPerson", doc1.getPeople().get(1).getName());
         assertEquals(10L, doc1.getPeople().get(1).getAge());

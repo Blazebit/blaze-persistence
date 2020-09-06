@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 
 /**
@@ -50,16 +51,19 @@ import java.util.Properties;
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 
+    private static final int HIBERNATE_MAJOR_VERSION;
+    private static final int HIBERNATE_MINOR_VERSION;
+
     static {
         String version = org.hibernate.Version.getVersionString();
         String[] versionParts = version.split("[\\.-]");
-        int major = Integer.parseInt(versionParts[0]);
-        int minor = Integer.parseInt(versionParts[1]);
+        HIBERNATE_MAJOR_VERSION = Integer.parseInt(versionParts[0]);
+        HIBERNATE_MINOR_VERSION = Integer.parseInt(versionParts[1]);
         // This is pretty hackish but necessary to be able to execute tests with Hibernate before 5.2 as well
         // We have an empty stub interface class org.hibernate.engine.spi.SharedSessionContractImplementor to be able to
         // define user types that are compatible with all Hibernate versions but must ensure that on 5.2+ we load the correct class
         // So we find the class file and load that class file into the class loader
-        if (major > 5 || minor > 1) {
+        if (HIBERNATE_MAJOR_VERSION > 5 || HIBERNATE_MINOR_VERSION > 1) {
             try {
                 URL correctClass = null;
                 ClassLoader classLoader = Version.class.getClassLoader();
@@ -115,9 +119,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
+        boolean isMySql = properties.get("javax.persistence.jdbc.url").toString().contains("mysql");
         if (System.getProperty("hibernate.dialect") != null) {
             properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
+        } else if (isMySql) {
             // MySQL is drunk, it does stuff case insensitive by default...
             properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
             
@@ -144,8 +149,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             // Apparently the dialect resolver doesn't choose the latest dialect
             properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle10gDialect");
         }
-        if (System.getProperty("hibernate.default_schema") != null) {
-            properties.put("hibernate.default_schema", System.getProperty("hibernate.default_schema"));
+        String targetSchema = System.getProperty("hibernate.default_schema", getTargetSchema());
+        // Ignore default schema for MySQL since MySQL does not support schemas and bad things happen in some Hibernate
+        // versions if we still set it.
+        if (targetSchema != null && getSchemaMode() == SchemaMode.JPA) {
+            properties.put("hibernate.default_schema", targetSchema);
         }
         if (useHbm2ddl()) {
             properties.put("hibernate.connection.url", properties.remove("javax.persistence.jdbc.url"));
@@ -234,9 +242,9 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
-    protected DataSource createDataSource(Map<Object, Object> properties) {
+    protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         if (!useHbm2ddl()) {
-            return super.createDataSource(properties);
+            return super.createDataSource(properties, connectionCustomizer);
         }
 
         try {
@@ -248,7 +256,8 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return createDataSource(
                 (String) properties.remove("hibernate.connection.url"),
                 (String) properties.remove("hibernate.connection.username"),
-                (String) properties.remove("hibernate.connection.password")
+                (String) properties.remove("hibernate.connection.password"),
+                connectionCustomizer
         );
     }
 
@@ -330,5 +339,20 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         return major == 5 && (minor == 3 || minor == 4);
+    }
+
+    @Override
+    protected JpaProviderFamily getJpaProviderFamily() {
+        return JpaProviderFamily.HIBERNATE;
+    }
+
+    @Override
+    protected int getJpaProviderMajorVersion() {
+        return HIBERNATE_MAJOR_VERSION;
+    }
+
+    @Override
+    protected int getJpaProviderMinorVersion() {
+        return HIBERNATE_MINOR_VERSION;
     }
 }

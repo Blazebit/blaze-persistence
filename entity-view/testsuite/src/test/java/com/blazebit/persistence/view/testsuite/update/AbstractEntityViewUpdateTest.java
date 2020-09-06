@@ -129,7 +129,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             }
         });
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
 
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
@@ -189,14 +189,8 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         return true;
     }
 
-    protected void restartTransaction() {
+    protected final void clearPersistenceContextAndReload() {
         em.clear();
-        em.getTransaction().rollback();
-        em.getTransaction().begin();
-    }
-
-    protected final void restartTransactionAndReload() {
-        restartTransaction();
         reload();
         em.clear();
     }
@@ -208,7 +202,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
     }
     
     protected void assertNoUpdateAndReload(T docView, boolean withVersion) {
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         clearQueries();
         update(docView);
         AssertStatementBuilder afterBuilder = assertUnorderedQuerySequence();
@@ -223,18 +217,18 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             }
         }
         afterBuilder.validate();
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
     }
 
     protected void assertNoUpdateFullFetchAndReload(T docView) {
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         clearQueries();
         update(docView);
         fullFetch(assertUnorderedQuerySequence()).validate();
     }
 
     protected AssertStatementBuilder assertQueriesAfterUpdate(T docView) {
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         clearQueries();
         update(docView);
         return assertUnorderedQuerySequence();
@@ -413,4 +407,10 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
         return strategy != FlushStrategy.ENTITY;
     }
 
+    @Override
+    protected SchemaMode getSchemaMode() {
+        // for hibernate, use JDBC mode because setting the default schema results in SQL that cannot be parsed
+        // by CCJSqlParserUtil
+        return getJpaProviderFamily() == JpaProviderFamily.HIBERNATE ? SchemaMode.JDBC : super.getSchemaMode();
+    }
 }

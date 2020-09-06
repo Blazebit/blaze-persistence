@@ -16,12 +16,17 @@
 
 package com.blazebit.persistence.testsuite.base.jpa.cleaner;
 
+import com.blazebit.persistence.testsuite.base.jpa.UncheckedSqlException;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,11 +38,21 @@ import java.util.logging.Logger;
 public class OracleDatabaseCleaner implements DatabaseCleaner {
 
     private static final Logger LOG = Logger.getLogger(OracleDatabaseCleaner.class.getName());
+    private static final String SYSTEM_SEQUENCE_OWNERS = "'SYS'," +
+            "'CTXSYS'," +
+            "'DVSYS'," +
+            "'OJVMSYS'," +
+            "'ORDDATA'," +
+            "'MDSYS'," +
+            "'OLAPSYS'," +
+            "'LBACSYS'," +
+            "'XDB'," +
+            "'WMSYS'";
 
-    private List<String> ignoredTables = new ArrayList<>();
-    private List<String> cachedTruncateTableSql;
-    private List<String> cachedConstraintDisableSql;
-    private List<String> cachedConstraintEnableSql;
+    private final List<String> ignoredTables = new ArrayList<>();
+    private final Map<String, List<String>> cachedTruncateTableSqlPerSchema = new HashMap<>();
+    private final Map<String, List<String>> cachedConstraintDisableSqlPerSchema = new HashMap<>();
+    private final Map<String, List<String>> cachedConstraintEnableSqlPerSchema = new HashMap<>();
 
     public static class Factory implements DatabaseCleaner.Factory {
 
@@ -68,30 +83,56 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
-    public void clearSchema(Connection c) {
+    public void clearAllSchemas(Connection connection) {
+        clearSchema0(connection, s -> {
+            try {
+                return s.executeQuery("SELECT 'DROP TABLE ' || owner || '.' || table_name || ' CASCADE CONSTRAINTS' " +
+                        "FROM all_tables " +
+                        // Exclude the tables owner by sys
+                        "WHERE owner NOT IN ('SYS')" +
+                        // Normally, user tables aren't in sysaux
+                        "      AND tablespace_name NOT IN ('SYSAUX')" +
+                        // Apparently, user tables have global stats off
+                        "      AND global_stats = 'NO'" +
+                        // Exclude the tables with names starting like 'DEF$_'
+                        "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
+                        " UNION ALL " +
+                        "SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner NOT IN (" + SYSTEM_SEQUENCE_OWNERS + ")");
+            } catch (SQLException sqlException) {
+                throw new UncheckedSqlException(sqlException);
+            }
+        });
+    }
+
+    @Override
+    public void clearSchema(Connection c, String schemaName) {
+        clearSchema0(c, s -> {
+            try {
+                return s.executeQuery("SELECT 'DROP TABLE ' || owner || '.' || table_name || ' CASCADE CONSTRAINTS' " +
+                        "FROM all_tables " +
+                        "WHERE owner = '" + schemaName + "'" +
+                        // Normally, user tables aren't in sysaux
+                        "      AND tablespace_name NOT IN ('SYSAUX')" +
+                        // Apparently, user tables have global stats off
+                        "      AND global_stats = 'NO'" +
+                        // Exclude the tables with names starting like 'DEF$_'
+                        "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
+                        " UNION ALL " +
+                        "SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = '" + schemaName + "'");
+            } catch (SQLException sqlException) {
+                throw new UncheckedSqlException(sqlException);
+            }
+        });
+    }
+
+    private void clearSchema0(Connection c, Function<Statement, ResultSet> sqlProvider) {
         try (Statement s = c.createStatement()) {
             ResultSet rs;
             List<String> sqls = new ArrayList<>();
 
             // Collect schema objects
             LOG.log(Level.FINEST, "Collect schema objects: START");
-            rs = s.executeQuery("SELECT 'DROP TABLE ' || table_name || ' CASCADE CONSTRAINTS' FROM user_tables WHERE table_name IN (" +
-                    "SELECT table_name " +
-                    "FROM dba_tables " +
-                    // Exclude the tables owner by sys
-                    "WHERE owner NOT IN ('SYS')" +
-                    // Normally, user tables aren't in sysaux
-                    "      AND tablespace_name NOT IN ('SYSAUX')" +
-                    // Apparently, user tables have global stats off
-                    "      AND global_stats = 'NO'" +
-                    // Exclude the tables with names starting like 'DEF$_'
-                    "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
-                    ")");
-            while (rs.next()) {
-                sqls.add(rs.getString(1));
-            }
-
-            rs = s.executeQuery("SELECT 'DROP SEQUENCE ' || sequence_name FROM USER_SEQUENCES");
+            rs = sqlProvider.apply(s);
             while (rs.next()) {
                 sqls.add(rs.getString(1));
             }
@@ -106,7 +147,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
             LOG.log(Level.FINEST, "Committing: START");
             c.commit();
             LOG.log(Level.FINEST, "Committing: END");
-        } catch (SQLException e) {
+        } catch (SQLException | UncheckedSqlException e) {
             try {
                 c.rollback();
             } catch (SQLException e1) {
@@ -118,25 +159,59 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
     }
 
     @Override
-    public void clearData(Connection connection) {
-        try (Statement s = connection.createStatement()) {
+    public void clearAllData(Connection connection) {
+        clearData0(connection, null, s -> {
+            try {
+                return s.executeQuery(
+                        "SELECT tbl.owner || '.' || tbl.table_name, c.constraint_name FROM (" +
+                                "SELECT owner, table_name " +
+                                "FROM all_tables " +
+                                // Exclude the tables owner by sys
+                                "WHERE owner NOT IN ('SYS')" +
+                                // Normally, user tables aren't in sysaux
+                                "      AND tablespace_name NOT IN ('SYSAUX')" +
+                                // Apparently, user tables have global stats off
+                                "      AND global_stats = 'NO'" +
+                                // Exclude the tables with names starting like 'DEF$_'
+                                "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
+                                ") tbl LEFT JOIN all_constraints c ON tbl.owner = c.owner AND tbl.table_name = c.table_name AND constraint_type = 'R'");
+            } catch (SQLException sqlException) {
+                throw new UncheckedSqlException(sqlException);
+            }
+        });
+    }
 
+    @Override
+    public void clearData(Connection connection, String schemaName) {
+        clearData0(connection, schemaName, s -> {
+            try {
+                return s.executeQuery("SELECT tbl.owner || '.' || tbl.table_name, c.constraint_name FROM (" +
+                                "SELECT owner, table_name " +
+                                "FROM all_tables " +
+                                "WHERE owner = '" + schemaName + "'" +
+                                // Normally, user tables aren't in sysaux
+                                "      AND tablespace_name NOT IN ('SYSAUX')" +
+                                // Apparently, user tables have global stats off
+                                "      AND global_stats = 'NO'" +
+                                // Exclude the tables with names starting like 'DEF$_'
+                                "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
+                                ") tbl LEFT JOIN all_constraints c ON tbl.owner = c.owner AND tbl.table_name = c.table_name AND constraint_type = 'R'");
+            } catch (SQLException sqlException) {
+                throw new UncheckedSqlException(sqlException);
+            }
+        });
+    }
+
+    private void clearData0(Connection connection, String schemaName, Function<Statement, ResultSet> tablesProvider) {
+        try (Statement s = connection.createStatement()) {
+            List<String> cachedTruncateTableSql = cachedTruncateTableSqlPerSchema.get(schemaName);
+            List<String> cachedConstraintDisableSql = cachedConstraintDisableSqlPerSchema.get(schemaName);
+            List<String> cachedConstraintEnableSql = cachedConstraintEnableSqlPerSchema.get(schemaName);
             if (cachedTruncateTableSql == null) {
                 cachedTruncateTableSql = new ArrayList<>();
                 cachedConstraintDisableSql = new ArrayList<>();
                 cachedConstraintEnableSql = new ArrayList<>();
-                ResultSet rs = s.executeQuery("SELECT tbl.table_name, c.constraint_name FROM (" +
-                        "SELECT table_name " +
-                        "FROM dba_tables " +
-                        // Exclude the tables owner by sys
-                        "WHERE owner NOT IN ('SYS')" +
-                        // Normally, user tables aren't in sysaux
-                        "      AND tablespace_name NOT IN ('SYSAUX')" +
-                        // Apparently, user tables have global stats off
-                        "      AND global_stats = 'NO'" +
-                        // Exclude the tables with names starting like 'DEF$_'
-                        "      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
-                        ") tbl LEFT JOIN user_constraints c ON tbl.table_name = c.table_name AND constraint_type = 'R'");
+                ResultSet rs = tablesProvider.apply(s);
                 while (rs.next()) {
                     String tableName = rs.getString(1);
                     String constraintName = rs.getString(2);
@@ -148,6 +223,9 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
                         }
                     }
                 }
+                cachedTruncateTableSqlPerSchema.put(schemaName, cachedTruncateTableSql);
+                cachedConstraintDisableSqlPerSchema.put(schemaName, cachedConstraintDisableSql);
+                cachedConstraintEnableSqlPerSchema.put(schemaName, cachedConstraintEnableSql);
             }
             // Disable foreign keys
             LOG.log(Level.FINEST, "Disable foreign keys: START");
@@ -173,6 +251,43 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
             LOG.log(Level.FINEST, "Committing: START");
             connection.commit();
             LOG.log(Level.FINEST, "Committing: END");
+        } catch (SQLException | UncheckedSqlException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e.addSuppressed(e1);
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void createDatabaseIfNotExists(Connection connection, String databaseName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void createSchemaIfNotExists(Connection connection, String schemaName) {
+        try (Statement s = connection.createStatement()) {
+            LOG.log(Level.FINEST, "Check if schema exists: START");
+            ResultSet schemas = s.executeQuery("SELECT 1 FROM SYS.dba_users WHERE username = '" + schemaName + "'");
+            LOG.log(Level.FINEST, "Check if schema exists: END");
+            if (!schemas.next()) {
+                LOG.log(Level.FINEST, "Create user: START");
+                s.execute("CREATE USER " + schemaName + " IDENTIFIED BY " + schemaName + " QUOTA UNLIMITED ON USERS");
+                LOG.log(Level.FINEST, "Create user: END");
+                LOG.log(Level.FINEST, "Grant user privileges: START");
+                s.execute("GRANT create session TO " + schemaName);
+                s.execute("GRANT create table TO " + schemaName);
+                s.execute("GRANT create view TO " + schemaName);
+                s.execute("GRANT create any trigger TO " + schemaName);
+                s.execute("GRANT create any procedure TO " + schemaName);
+                s.execute("GRANT create sequence TO " + schemaName);
+                s.execute("GRANT create synonym TO " + schemaName);
+                s.execute("GRANT select any dictionary TO " + schemaName);
+                LOG.log(Level.FINEST, "Grant user privileges: END");
+            }
         } catch (SQLException e) {
             try {
                 connection.rollback();
@@ -184,4 +299,14 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
         }
     }
 
+    @Override
+    public void applyTargetDatabasePropertyModifications(Map<Object, Object> properties, String databaseName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
+        properties.put("javax.persistence.jdbc.user", schemaName);
+        properties.put("javax.persistence.jdbc.password", schemaName);
+    }
 }

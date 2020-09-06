@@ -522,7 +522,7 @@ matrix:
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 14 -L GPL
-    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15 BUILD_JDK=15 DELTASPIKE=deltaspike-1.9
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=15 BUILD_JDK=15 DELTASPIKE=deltaspike-1.9 SPRING_DATA=spring-data-2.3.x
       before_install:
         - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
         - . ./install-jdk.sh -F 15 -L GPL

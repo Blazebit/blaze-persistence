@@ -159,10 +159,9 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
         CriteriaBuilder<FetchesPersonView1> cb = evm.applySetting(setting, criteria);
         List<FetchesPersonView1> results = cb.getResultList();
 
-        // Close the em and emf to make sure this was fetched properly
+        // Close the em to make sure this was fetched properly
         em.getTransaction().rollback();
         em.close();
-        emf.close();
 
         // Only a single entity view is produced
         assertEquals(1, results.size());
@@ -226,10 +225,9 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
         CriteriaBuilder<FetchesPersonView2> cb = evm.applySetting(setting, criteria);
         List<FetchesPersonView2> results = cb.getResultList();
 
-        // Close the em and emf to make sure this was fetched properly
+        // Close the em to make sure this was fetched properly
         em.getTransaction().rollback();
         em.close();
-        emf.close();
 
         // Only a single entity view is produced
         assertEquals(1, results.size());
@@ -302,10 +300,9 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
         CriteriaBuilder<FetchesPersonView3> cb = evm.applySetting(setting, criteria);
         List<FetchesPersonView3> results = cb.getResultList();
 
-        // Close the em and emf to make sure this was fetched properly
+        // Close the em to make sure this was fetched properly
         em.getTransaction().rollback();
         em.close();
-        emf.close();
 
         // Only a single entity view is produced
         assertEquals(1, results.size());

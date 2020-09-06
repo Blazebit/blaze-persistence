@@ -74,9 +74,9 @@ public class CustomTypeFunctionArgumentTest extends AbstractCoreTest {
     }
 
     @Override
-    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
+    protected void configure(CriteriaBuilderConfiguration config) {
         config.registerFunction(new JpqlFunctionGroup("array_contains", new ArrayContainsFunction()));
-        return super.configure(config);
+        super.configure(config);
     }
 
     // NOTE: this API was only introduced in Hibernate 5

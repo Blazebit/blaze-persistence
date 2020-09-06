@@ -205,7 +205,7 @@ public class EntityViewUpdateMutableBasicCollectionsTest extends AbstractEntityV
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("doc1", doc1.getName());
         assertEquals(Collections.singletonList("test"), doc1.getStrings());
     }
