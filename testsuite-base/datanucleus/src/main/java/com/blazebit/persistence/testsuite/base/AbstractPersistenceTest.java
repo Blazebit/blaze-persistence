@@ -51,6 +51,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     protected Properties applyProperties(Properties properties) {
         properties.put("datanucleus.rdbms.mysql.characterSet", "utf8mb3");
         properties.put("datanucleus.rdbms.mysql.collation", "utf8mb3_bin");
+
+        String targetSchema = getTargetSchema();
+        if (targetSchema != null && getSchemaMode() == SchemaMode.JPA) {
+            properties.put("datanucleus.mapping.Schema", targetSchema);
+        }
         return properties;
     }
 
@@ -83,5 +88,20 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected JpaProviderFamily getJpaProviderFamily() {
+        return JpaProviderFamily.DATANUCLEUS;
+    }
+
+    @Override
+    protected int getJpaProviderMajorVersion() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected int getJpaProviderMinorVersion() {
+        throw new UnsupportedOperationException();
     }
 }

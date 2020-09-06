@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.testsuite.base.jpa;
 
 import io.github.classgraph.ClassGraph;
@@ -21,70 +20,46 @@ import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.MethodInfoList;
 import io.github.classgraph.ScanResult;
-import junit.framework.JUnit4TestAdapter;
-import junit.framework.TestSuite;
 import org.junit.Test;
-import org.junit.experimental.categories.Categories;
-import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runners.Parameterized;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * We use dynamic testsuites to group test executions by the used entity classes in order to minimize schema dropping
- * and entity manager factory recreation inbetween tests.
- *
  * @author Moritz Becker
  * @since 1.5.0
  */
 public abstract class BlazePersistenceTestsuite {
 
-    public static TestSuite suite() {
-        Class<?>[] excludedGroups = loadExcludedGroups();
-        TestClasses testClasses = loadAndGroupTestClasses();
-
-        TestSuite suite = new TestSuite();
-
-        testClasses.groupedJpaPersistenceTests.values().stream()
-                .sorted(Comparator.comparing(group ->
-                        group.stream().map(Class::getCanonicalName).sorted().collect(Collectors.joining())
-                ))
-                .flatMap(List::stream)
-                .map(testClass -> {
-                    JUnit4TestAdapter jUnit4TestAdapter = new JUnit4TestAdapter(testClass);
-                    try {
-                        jUnit4TestAdapter.filter(Categories.CategoryFilter.exclude(excludedGroups));
-                        return jUnit4TestAdapter;
-                    } catch (NoTestsRemainException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .forEach(suite::addTest);
-
-        testClasses.nonJpaPersistenceTests.stream()
-                .sorted(Comparator.comparing(Class::getCanonicalName))
-                .map(testClass -> {
-                    JUnit4TestAdapter jUnit4TestAdapter = new JUnit4TestAdapter(testClass);
-                    try {
-                        jUnit4TestAdapter.filter(Categories.CategoryFilter.exclude(excludedGroups));
-                        return jUnit4TestAdapter;
-                    } catch (NoTestsRemainException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .forEach(suite::addTest);
-
-        return suite;
+    protected static Class<?>[] loadExcludedGroups() {
+        String excludedGroupsProperty = System.getProperty("excludedGroups");
+        Class<?>[] excludedGroups;
+        if (excludedGroupsProperty == null) {
+            excludedGroups = new Class<?>[0];
+        } else {
+            excludedGroups = Arrays.stream(excludedGroupsProperty.split(","))
+                    .map(groupName -> {
+                        try {
+                            return Thread.currentThread().getContextClassLoader().loadClass(groupName.trim());
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).toArray(Class<?>[]::new);
+        }
+        return excludedGroups;
     }
 
-    private static TestClasses loadAndGroupTestClasses() {
+    protected static TestClasses loadAndGroupTestClasses() {
         String testsuitePackage = System.getProperty("testBasePackage");
         Map<Set<Class<?>>, List<Class<? extends AbstractJpaPersistenceTest>>> groupedJpaPersistenceTests;
         Set<Class<?>> nonJpaPersistenceTests = new HashSet<>();
@@ -129,24 +104,6 @@ public abstract class BlazePersistenceTestsuite {
                     ));
         }
         return new TestClasses(groupedJpaPersistenceTests, nonJpaPersistenceTests);
-    }
-
-    private static Class<?>[] loadExcludedGroups() {
-        String excludedGroupsProperty = System.getProperty("excludedGroups");
-        Class<?>[] excludedGroups;
-        if (excludedGroupsProperty == null) {
-            excludedGroups = new Class<?>[0];
-        } else {
-            excludedGroups = Arrays.stream(excludedGroupsProperty.split(","))
-                    .map(groupName -> {
-                        try {
-                            return Thread.currentThread().getContextClassLoader().loadClass(groupName.trim());
-                        } catch (ClassNotFoundException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).toArray(Class<?>[]::new);
-        }
-        return excludedGroups;
     }
 
     private static Set<Class<?>> getEntityClasses(AbstractJpaPersistenceTest jpaPersistenceTest) {
@@ -201,9 +158,9 @@ public abstract class BlazePersistenceTestsuite {
         return testInstance;
     }
 
-    private static final class TestClasses {
-        private final Map<Set<Class<?>>, List<Class<? extends AbstractJpaPersistenceTest>>> groupedJpaPersistenceTests;
-        private final Set<Class<?>> nonJpaPersistenceTests;
+    static final class TestClasses {
+        final Map<Set<Class<?>>, List<Class<? extends AbstractJpaPersistenceTest>>> groupedJpaPersistenceTests;
+        final Set<Class<?>> nonJpaPersistenceTests;
 
         private TestClasses(Map<Set<Class<?>>, List<Class<? extends AbstractJpaPersistenceTest>>> groupedJpaPersistenceTests, Set<Class<?>> nonJpaPersistenceTests) {
             this.groupedJpaPersistenceTests = groupedJpaPersistenceTests;

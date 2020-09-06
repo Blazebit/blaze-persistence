@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -49,6 +50,8 @@ import java.util.Set;
  * @since 1.2.0
  */
 public abstract class AbstractAssertStatement implements AssertStatement {
+
+    private static final Pattern ORACLE_SCHEMA_PREFIX = Pattern.compile("c##\\w+\\.");
 
     protected final List<String> tables;
 
@@ -101,6 +104,8 @@ public abstract class AbstractAssertStatement implements AssertStatement {
 
     protected List<String> getFromElements(String query) {
         try {
+            // remove Oracle schema prefixes because the sql parser cannot handle it
+            query = ORACLE_SCHEMA_PREFIX.matcher(query).replaceAll("");
             final Statement statement = CCJSqlParserUtil.parse(query);
             List<Table> tables = getTables(statement);
             return tableNames(tables);
@@ -119,6 +124,8 @@ public abstract class AbstractAssertStatement implements AssertStatement {
 
     protected List<String> getFetchedFromElements(String query) {
         try {
+            // remove Oracle schema prefixes because the sql parser cannot handle it
+            query = ORACLE_SCHEMA_PREFIX.matcher(query).replaceAll("");
             Statement statement = CCJSqlParserUtil.parse(query);
             final List<Table> tables = getTables(statement);
             final Set<Table> fetchedTables = new HashSet<>();

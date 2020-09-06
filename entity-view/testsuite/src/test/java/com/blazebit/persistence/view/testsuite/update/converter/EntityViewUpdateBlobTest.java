@@ -102,7 +102,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("newDoc", docView.getName());
         assertEquals("doc1", entity.getName());
 
@@ -125,7 +125,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("newDoc", docView.getName());
         assertEquals("doc1", entity.getName());
 
@@ -155,7 +155,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
 
         // Then
         validateNoChange(docView);
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("doc1", docView.getName());
         assertEquals(entity.getName(), docView.getName());
     }
@@ -167,7 +167,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
             final UpdatableBlobEntityView docView = getBlobView();
             docView.setBlob(new BlobImpl(new byte[1]));
             update(docView);
-            restartTransactionAndReload();
+            clearPersistenceContextAndReload();
         }
         final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
@@ -184,7 +184,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
             builder.update(BlobEntity.class);
         }
         builder.validate();
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("doc1", docView.getName());
         assertEquals(entity.getName(), docView.getName());
     }
@@ -208,7 +208,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         builder.validate();
 
         assertEquals(1, docView.getBlob().length());
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(1, entity.getBlob().length());
     }
 
@@ -223,7 +223,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
             final UpdatableBlobEntityView docView = getBlobView();
             docView.setBlob(new BlobImpl(new byte[1]));
             update(docView);
-            restartTransactionAndReload();
+            clearPersistenceContextAndReload();
         }
         final UpdatableBlobEntityView docView = getBlobView();
         clearQueries();
@@ -250,7 +250,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
         builder.validate();
 
         assertEquals(2, docView.getBlob().length());
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(2, entity.getBlob().length());
     }
 

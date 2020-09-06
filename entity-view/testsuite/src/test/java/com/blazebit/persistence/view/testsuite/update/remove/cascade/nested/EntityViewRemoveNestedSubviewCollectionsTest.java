@@ -102,7 +102,7 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                 .delete(Document.class)
                 .validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(doc1);
         assertNull(p1);
         assertNull(p3);
@@ -175,7 +175,7 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                 .delete(Document.class)
                 .validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(doc1);
         assertNull(p1);
         assertNull(p3);

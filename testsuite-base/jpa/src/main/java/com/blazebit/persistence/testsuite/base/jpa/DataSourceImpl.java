@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
@@ -33,11 +34,13 @@ public class DataSourceImpl implements DataSource {
     private final String url;
     private final String username;
     private final String password;
+    private final Consumer<Connection> connectionCustomizer;
 
-    public DataSourceImpl(String url, String username, String password) {
+    public DataSourceImpl(String url, String username, String password, Consumer<Connection> connectionCustomizer) {
         this.url = url;
         this.username = username;
         this.password = password;
+        this.connectionCustomizer = connectionCustomizer;
     }
 
     @Override
@@ -47,7 +50,11 @@ public class DataSourceImpl implements DataSource {
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        return DriverManager.getConnection(this.url, username, password);
+        Connection conn = DriverManager.getConnection(this.url, username, password);
+        if (connectionCustomizer != null) {
+            connectionCustomizer.accept(conn);
+        }
+        return conn;
     }
 
     @Override

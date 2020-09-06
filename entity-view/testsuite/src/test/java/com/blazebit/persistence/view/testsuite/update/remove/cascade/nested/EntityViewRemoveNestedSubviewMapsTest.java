@@ -102,7 +102,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
                 .delete(Document.class)
                 .validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(doc1);
         assertNull(p1);
         assertNull(p3);
@@ -176,7 +176,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
                 .delete(Document.class)
                 .validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(doc1);
         assertNull(p1);
         assertNull(p3);

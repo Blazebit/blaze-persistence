@@ -155,7 +155,7 @@
 
     <profiles>
         <profile>
-            <id>pre-10-unsafe-code</id>
+            <id>pre-11-unsafe-code</id>
             <activation>
                 <jdk>[1.7,11)</jdk>
             </activation>

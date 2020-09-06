@@ -68,7 +68,7 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(1, doc1.getStrings().size());
         clearQueries();
 
@@ -110,7 +110,7 @@ public class EntityViewUpdateRollbackCollectionsTest extends AbstractEntityViewU
         updateWithRollback(docView);
 
         // Then 1
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(1, doc1.getStrings().size());
         clearQueries();
 

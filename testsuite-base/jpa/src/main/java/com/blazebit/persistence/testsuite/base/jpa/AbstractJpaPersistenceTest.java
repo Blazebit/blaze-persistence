@@ -23,14 +23,15 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DB2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.H2DatabaseCleaner;
-import com.blazebit.persistence.testsuite.base.jpa.cleaner.MySQLDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.MSSQLDatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.MySQL5DatabaseCleaner;
+import com.blazebit.persistence.testsuite.base.jpa.cleaner.MySQL8DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.OracleDatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.PostgreSQLDatabaseCleaner;
-import com.blazebit.persistence.testsuite.base.jpa.cleaner.MSSQLDatabaseCleaner;
-import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.ttddyy.dsproxy.ExecutionInfo;
@@ -67,10 +68,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -85,32 +89,42 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractJpaPersistenceTest {
 
     protected static EntityManagerFactory emf;
+    protected static CriteriaBuilderFactory cbf;
+    protected static JpaProvider jpaProvider;
+    protected static DbmsDialect dbmsDialect;
     private static boolean resolvedNoop = false;
     private static boolean databaseClean = false;
     private static Class<?> lastTestClass;
+    private static String lastTargetSchema;
     private static Class<?> recreateTestClass;
     private static Set<Class<?>> databaseCleanerClasses;
     private static DatabaseCleaner databaseCleaner;
     private static HikariDataSource dataSource;
+    private static DataSource bootstrapDataSource;
+    private static CriteriaBuilderConfiguration lastCriteriaBuilderConfiguration;
+    private static SchemaMode lastSchemaMode;
+    private static CriteriaBuilderConfiguration defaultCbConfiguration;
     private static final Map<Class<?>, List<String>> PLURAL_DELETES = new HashMap<>();
     private static final List<DatabaseCleaner.Factory> DATABASE_CLEANERS = Arrays.asList(
             new H2DatabaseCleaner.Factory(),
             new PostgreSQLDatabaseCleaner.Factory(),
             new DB2DatabaseCleaner.Factory(),
-            new MySQLDatabaseCleaner.Factory(),
+            new MySQL5DatabaseCleaner.Factory(),
+            new MySQL8DatabaseCleaner.Factory(),
             new MSSQLDatabaseCleaner.Factory(),
             new OracleDatabaseCleaner.Factory()
     );
 
     protected EntityManager em;
-    protected CriteriaBuilderFactory cbf;
-    protected JpaProvider jpaProvider;
-    protected DbmsDialect dbmsDialect;
-
-    private boolean schemaChanged;
+    private CriteriaBuilderConfiguration criteriaBuilderConfiguration;
 
     static {
         System.setProperty("org.jboss.logging.provider", "jdk");
+
+        Locale.setDefault(new Locale(
+                System.getProperty("user.language", "en"),
+                System.getProperty("user.country", "US")
+        ));
     }
 
     @BeforeClass
@@ -154,7 +168,15 @@ public abstract class AbstractJpaPersistenceTest {
                     connection.setAutoCommit(false);
                 }
                 // Clear the data with the cleaner
-                databaseCleaner.clearData(connection);
+                String targetSchema = getTargetSchema();
+                if (targetSchema == null) {
+                    targetSchema = connection.getSchema();
+                }
+                if (targetSchema == null) {
+                    databaseCleaner.clearAllData(connection);
+                } else {
+                    databaseCleaner.clearData(connection, targetSchema);
+                }
                 databaseClean = true;
             } catch (Exception ex) {
                 try {
@@ -165,6 +187,7 @@ public abstract class AbstractJpaPersistenceTest {
 
                 throw new RuntimeException(ex);
             } finally {
+                connection.commit();
                 if (wasAutoCommit) {
                     try {
                         connection.setAutoCommit(true);
@@ -209,7 +232,12 @@ public abstract class AbstractJpaPersistenceTest {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
             // Clear the data with the cleaner
-            databaseCleaner.clearSchema(connection);
+            String targetSchema = getTargetSchema();
+            if (targetSchema == null) {
+                databaseCleaner.clearAllSchemas(connection);
+            } else {
+                databaseCleaner.clearSchema(connection, targetSchema);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -228,7 +256,11 @@ public abstract class AbstractJpaPersistenceTest {
             }
 
             @Override
-            public void clearSchema(Connection connection) {
+            public void clearAllSchemas(Connection connection) {
+            }
+
+            @Override
+            public void clearSchema(Connection connection, String schemaName) {
             }
 
             @Override
@@ -236,8 +268,29 @@ public abstract class AbstractJpaPersistenceTest {
             }
 
             @Override
-            public void clearData(Connection connection) {
-                recreateOrClearSchema();
+            public void clearAllData(Connection connection) {
+                repopulateSchema();
+            }
+
+            @Override
+            public void clearData(Connection connection, String schemaName) {
+                repopulateSchema();
+            }
+
+            @Override
+            public void createDatabaseIfNotExists(Connection connection, String databaseName) {
+            }
+
+            @Override
+            public void createSchemaIfNotExists(Connection connection, String schemaName) {
+            }
+
+            @Override
+            public void applyTargetDatabasePropertyModifications(Map<Object, Object> properties, String databaseName) {
+            }
+
+            @Override
+            public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
             }
         };
     }
@@ -261,6 +314,7 @@ public abstract class AbstractJpaPersistenceTest {
     public void init() {
         boolean firstTest = lastTestClass != getClass();
         boolean veryFirstTest = lastTestClass == null;
+        boolean schemaChanged;
         lastTestClass = getClass();
         // If a previous test run resolved the no-op cleaner, we won't be able to resolve any other cleaner
         if (resolvedNoop) {
@@ -268,8 +322,17 @@ public abstract class AbstractJpaPersistenceTest {
             schemaChanged = true;
         } else {
             databaseCleaner = getLastDatabaseCleaner();
-            schemaChanged = databaseCleaner == null;
+            schemaChanged = databaseCleaner == null || !Objects.equals(lastTargetSchema, getTargetSchema());
         }
+        lastTargetSchema = getTargetSchema();
+
+        SchemaMode schemaMode = getSchemaMode();
+        if (dataSource != null && lastSchemaMode != schemaMode) {
+            dataSource.close();
+            dataSource = null;
+            closeEmf();
+        }
+        lastSchemaMode = schemaMode;
 
         // Nothing to delete if the schema changed
         databaseClean = schemaChanged;
@@ -293,16 +356,24 @@ public abstract class AbstractJpaPersistenceTest {
         QueryInspectorListener.collectSequences = false;
 
         if (!resolvedNoop && databaseCleaner == null) {
-            if (dataSource == null) {
-                getDataSource(createProperties("none"));
+            if (bootstrapDataSource == null) {
+                getBootstrapDataSource();
             }
-            try (Connection c = dataSource.getConnection()) {
+            try (Connection c = bootstrapDataSource.getConnection()) {
                 DatabaseCleaner applicableCleaner = getDatabaseCleaner(c);
 
                 if (applicableCleaner == null) {
                     // If none was found, we use the default cleaner
                     Logger.getLogger(getClass().getName()).warning("Could not resolve database cleaner for the database, falling back to drop-and-create strategy.");
                     resolvedNoop = true;
+                }
+                String targetDatabase = getTargetDatabase();
+                String targetSchema = getTargetSchema();
+                if (targetDatabase != null) {
+                    databaseCleaner.createDatabaseIfNotExists(c, targetDatabase);
+                }
+                if (targetSchema != null) {
+                    createSchemaIfNotExists(c, targetSchema);
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -314,9 +385,10 @@ public abstract class AbstractJpaPersistenceTest {
             setLastDatabaseCleaner(getDefaultDatabaseCleaner());
         }
 
+        EntityManagerFactory emfBefore = emf;
         if (veryFirstTest || schemaChanged) {
             getDataSource(createProperties("none"));
-            emf = recreateOrClearSchema();
+            emf = repopulateSchema();
             if (emf == null) {
                 emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
             }
@@ -324,11 +396,26 @@ public abstract class AbstractJpaPersistenceTest {
             emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
         }
 
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        config = configure(config);
-        cbf = config.createCriteriaBuilderFactory(emf);
-        jpaProvider = cbf.getService(JpaProvider.class);
-        dbmsDialect = cbf.getService(DbmsDialect.class);
+        if (criteriaBuilderConfiguration == null) {
+            if (requiresCriteriaBuilderConfigurationCustomization()) {
+                criteriaBuilderConfiguration = Criteria.getDefault();
+                configure(criteriaBuilderConfiguration);
+            } else {
+                if (defaultCbConfiguration == null) {
+                    // We cannot initialize this statically due to static initializer in
+                    // com.blazebit.persistence.testsuite.base.AbstractPersistenceTest (Hibernate)
+                    defaultCbConfiguration = Criteria.getDefault();
+                }
+                criteriaBuilderConfiguration = defaultCbConfiguration;
+            }
+        }
+
+        if (cbf == null || emfBefore != emf || !criteriaBuilderConfiguration.equals(lastCriteriaBuilderConfiguration)) {
+            cbf = criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
+            lastCriteriaBuilderConfiguration = criteriaBuilderConfiguration;
+            jpaProvider = cbf.getService(JpaProvider.class);
+            dbmsDialect = cbf.getService(DbmsDialect.class);
+        }
 
         getEm();
         if (firstTest) {
@@ -338,6 +425,14 @@ public abstract class AbstractJpaPersistenceTest {
         if (runTestInTransaction() && !getEm().getTransaction().isActive()) {
             getEm().getTransaction().begin();
         }
+    }
+
+    protected void createSchemaIfNotExists(Connection connection, String schemaName) {
+        databaseCleaner.createSchemaIfNotExists(connection, schemaName);
+    }
+
+    protected SchemaMode getSchemaMode() {
+        return SchemaMode.JPA;
     }
 
     private EntityManager getEm() {
@@ -382,15 +477,16 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    protected EntityManagerFactory createSchema() {
+    protected EntityManagerFactory populateSchema() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("create"));
         if (needsEntityManagerForDbAction()) {
             entityManagerFactory.createEntityManager().close();
+            entityManagerFactory = null;
         }
         return entityManagerFactory;
     }
 
-    protected void dropSchema() {
+    protected void clearSchemaUsingJpa() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop"));
         if (needsEntityManagerForDbAction()) {
             try {
@@ -401,20 +497,21 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    protected EntityManagerFactory dropAndCreateSchema() {
+    private EntityManagerFactory repopulateSchemaUsingJpa() {
         EntityManagerFactory entityManagerFactory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
         if (needsEntityManagerForDbAction()) {
             entityManagerFactory.createEntityManager().close();
+            entityManagerFactory = null;
         }
         return entityManagerFactory;
     }
 
-    protected EntityManagerFactory recreateOrClearSchema() {
+    protected EntityManagerFactory repopulateSchema() {
         if (databaseCleaner.supportsClearSchema()) {
             clearSchema();
-            return createSchema();
+            return populateSchema();
         } else {
-            return dropAndCreateSchema();
+            return repopulateSchemaUsingJpa();
         }
     }
 
@@ -456,7 +553,7 @@ public abstract class AbstractJpaPersistenceTest {
         }
 
         if (databaseCleaner != null && !databaseCleaner.supportsClearSchema()) {
-            dropSchema();
+            clearSchemaUsingJpa();
         }
 
         if (dataSource != null && recreateDataSource()) {
@@ -474,15 +571,41 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
+    protected String getTargetSchema() {
+        return System.getProperty("jdbc.schema");
+    }
+
+    protected String getTargetDatabase() {
+        return System.getProperty("jdbc.database");
+    }
+
     protected Properties createProperties(String dbAction) {
+        Properties properties = createDefaultProperties();
+        properties.put("javax.persistence.schema-generation.database.action", dbAction);
+        String targetDatabase = getTargetDatabase();
+        String targetSchema = getTargetSchema();
+        if (targetDatabase != null) {
+            databaseCleaner.applyTargetDatabasePropertyModifications(properties, targetDatabase);
+        }
+        if (targetSchema != null && getSchemaMode() == SchemaMode.JDBC) {
+            databaseCleaner.applyTargetSchemaPropertyModifications(properties, targetSchema);
+        }
+        return applyProperties(properties);
+    }
+
+    protected Properties createBootstrapProperties() {
+        Properties properties = createDefaultProperties();
+        return applyProperties(properties);
+    }
+
+    private static Properties createDefaultProperties() {
         Properties properties = new Properties();
         properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"));
         properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", "user"));
         properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", "password"));
         properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver", "org.h2.Driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
-        properties.put("javax.persistence.schema-generation.database.action", dbAction);
-        properties = applyProperties(properties);
+        properties.put("javax.persistence.schema-generation.database.action", "none");
         return properties;
     }
 
@@ -492,9 +615,11 @@ public abstract class AbstractJpaPersistenceTest {
         return em.unwrap(Connection.class);
     }
     
-    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
-        return config;
+    protected boolean requiresCriteriaBuilderConfigurationCustomization() {
+        return false;
     }
+
+    protected void configure(CriteriaBuilderConfiguration config) { }
 
     protected Properties applyProperties(Properties properties) {
         return properties;
@@ -549,10 +674,17 @@ public abstract class AbstractJpaPersistenceTest {
             return dataSource;
         }
 
-        return dataSource = createPooledDataSource(proxyDataSource(createDataSource(properties)));
+        return dataSource = createPooledDataSource(proxyDataSource(createDataSource(properties, null)));
     }
 
-    protected DataSource createDataSource(Map<Object, Object> properties) {
+    private DataSource getBootstrapDataSource() {
+        if (bootstrapDataSource == null) {
+            return bootstrapDataSource = createDataSource(createBootstrapProperties(), null);
+        }
+        return bootstrapDataSource;
+    }
+
+    protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         try {
             // Load the driver
             Class.forName((String) properties.remove("javax.persistence.jdbc.driver"));
@@ -562,12 +694,13 @@ public abstract class AbstractJpaPersistenceTest {
         return createDataSource(
                 (String) properties.remove("javax.persistence.jdbc.url"),
                 (String) properties.remove("javax.persistence.jdbc.user"),
-                (String) properties.remove("javax.persistence.jdbc.password")
+                (String) properties.remove("javax.persistence.jdbc.password"),
+                connectionCustomizer
         );
     }
 
-    protected DataSource createDataSource(String url, String username, String password) {
-        return new DataSourceImpl(url, username, password);
+    protected DataSource createDataSource(String url, String username, String password, Consumer<Connection> connectionCustomizer) {
+        return new DataSourceImpl(url, username, password, connectionCustomizer);
     }
 
     private HikariDataSource createPooledDataSource(DataSource dataSource) {
@@ -575,6 +708,7 @@ public abstract class AbstractJpaPersistenceTest {
         // Need 3 connections, one for sequence table access, one for the test and another one for a possible write TX during a test
         config.setMaximumPoolSize(3);
         config.setDataSource(dataSource);
+        config.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
         return new HikariDataSource(config);
     }
 
@@ -739,5 +873,23 @@ public abstract class AbstractJpaPersistenceTest {
             strWriter.append(newline);
             return new PersistenceException(strWriter.toString());
         }
+    }
+
+    protected abstract JpaProviderFamily getJpaProviderFamily();
+
+    protected abstract int getJpaProviderMajorVersion();
+
+    protected abstract int getJpaProviderMinorVersion();
+
+    protected enum SchemaMode {
+        JPA,
+        JDBC
+    }
+
+    protected enum JpaProviderFamily {
+        HIBERNATE,
+        DATANUCLEUS,
+        ECLIPSELINK,
+        OPENJPA
     }
 }

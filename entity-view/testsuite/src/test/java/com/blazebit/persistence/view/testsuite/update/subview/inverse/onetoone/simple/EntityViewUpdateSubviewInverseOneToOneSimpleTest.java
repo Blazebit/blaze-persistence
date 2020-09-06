@@ -107,7 +107,7 @@ public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         Assert.assertEquals("123", doc1.getDocumentInfo().getSomeInfo());
     }
 
@@ -124,7 +124,7 @@ public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         Assert.assertEquals("123", doc2.getDocumentInfo().getSomeInfo());
     }
 
@@ -138,7 +138,7 @@ public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         Assert.assertNull(doc1.getDocumentInfo());
     }
 
@@ -152,7 +152,7 @@ public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         Assert.assertEquals("doc2", doc1.getDocumentInfo().getSomeInfo());
     }
 
@@ -168,7 +168,7 @@ public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         Assert.assertEquals("newDoc2", doc1.getDocumentInfo().getSomeInfo());
     }
 

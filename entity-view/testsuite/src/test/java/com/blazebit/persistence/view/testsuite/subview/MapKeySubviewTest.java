@@ -70,6 +70,18 @@ public class MapKeySubviewTest extends AbstractEntityViewTest {
     }
 
     @Override
+    protected SchemaMode getSchemaMode() {
+        if (getJpaProviderFamily() == JpaProviderFamily.HIBERNATE &&
+                (getJpaProviderMajorVersion() == 5 && getJpaProviderMinorVersion() <= 3 ||
+                        getJpaProviderMajorVersion() <= 4)
+        ) {
+            return SchemaMode.JDBC;
+        } else {
+            return super.getSchemaMode();
+        }
+    }
+
+    @Override
     public void setUpOnce() {
         cleanDatabase();
         transactional(new TxVoidWork() {

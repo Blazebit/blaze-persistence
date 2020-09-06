@@ -236,10 +236,9 @@ public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
         TypedQuery<T> q = em.createQuery(query, clazz);
         
         List<T> bases = q.getResultList();
-        // Close the em and emf to make sure this was fetched properly
+        // Close the em to make sure this was fetched properly
         em.getTransaction().rollback();
         em.close();
-        emf.close();
         return bases;
     }
     

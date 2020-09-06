@@ -80,7 +80,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -101,7 +101,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         });
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -117,7 +117,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
     }
 
@@ -133,7 +133,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p2.getName());
     }
@@ -153,7 +153,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", p2.getName());
     }
@@ -175,7 +175,7 @@ public class EntityViewUpdateListenerMapsTest extends AbstractEntityViewUpdateDo
         });
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertSubviewEquals(doc1.getContacts(), docView.getContacts());
         assertEquals("newPerson", doc1.getContacts().get(2).getName());
         assertEquals(10L, doc1.getContacts().get(2).getAge());

@@ -84,7 +84,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document doc = em.find(Document.class, newDocument.getId());
         Assert.assertEquals(1, doc.getVersions().size());
         Assert.assertEquals(version.getId(), doc.getVersions().iterator().next().getId());
@@ -103,7 +103,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // When
-        restartTransaction();
+        em.clear();
         newDocument = evm.applySetting(EntityViewSetting.create(UpdatableDocumentView.class), cbf.create(em, Document.class)).getSingleResult();
         newDocument.getVersions().remove(newDocument.getVersions().iterator().next());
         PluralChangeModel<Object, Object> positionsChangeModel = (PluralChangeModel<Object, Object>) evm.getChangeModel(newDocument).get("versions");
@@ -111,7 +111,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document doc = em.find(Document.class, newDocument.getId());
         Assert.assertEquals(0, doc.getVersions().size());
     }
@@ -129,7 +129,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document doc = em.find(Document.class, newDocument.getId());
         Assert.assertEquals(1, doc.getVersions().size());
         Assert.assertEquals(version.getId(), doc.getVersions().iterator().next().getId());
@@ -146,7 +146,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // When
-        restartTransaction();
+        em.clear();
         newDocument = evm.applySetting(EntityViewSetting.create(UpdatableDocumentView.class), cbf.create(em, Document.class)).getSingleResult();
         UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
         newPerson.setName("newPerson");
@@ -155,7 +155,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document doc = em.find(Document.class, newDocument.getId());
         Assert.assertEquals(1, doc.getPartners().size());
     }
@@ -171,7 +171,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // When
-        restartTransaction();
+        em.clear();
         newDocument = evm.applySetting(EntityViewSetting.create(UpdatableDocumentView.class), cbf.create(em, Document.class)).getSingleResult();
         UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
         newPerson.setName("newPerson");
@@ -181,7 +181,7 @@ public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityVie
         update(newDocument);
 
         // Then
-        restartTransaction();
+        em.clear();
         Document doc = em.find(Document.class, newDocument.getId());
         Assert.assertEquals(1, doc.getPartners().iterator().next().getLocalized().size());
     }

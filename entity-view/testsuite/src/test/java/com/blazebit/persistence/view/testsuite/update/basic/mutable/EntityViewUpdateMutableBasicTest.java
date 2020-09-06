@@ -165,7 +165,7 @@ public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBa
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("doc1", doc1.getName());
         assertEquals(false, doc1.isArchived());
         if (isFullMode()) {

@@ -91,7 +91,7 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(1, removeCount.get());
         assertEquals(1, removeCommitCount.get());
         assertNull(p2.getFriend());
@@ -125,7 +125,7 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(1, removeCount.get());
         assertEquals(1, removeCommitCount.get());
         assertEquals(p3.getId(), p2.getFriend().getId());
@@ -149,7 +149,7 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         builder.insert(Person.class);
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("new", p2.getFriend().getName());
         assertNull(p7);
     }
@@ -191,7 +191,7 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         builder.update(Document.class);
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(p2);
         assertNull(p7);
         assertNull(doc1.getResponsiblePerson());

@@ -78,7 +78,7 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(p6.getFriend());
         assertNull(p9);
     }
@@ -99,7 +99,7 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
 
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(p5.getId(), p6.getFriend().getId());
         assertNull(p9);
     }
@@ -121,7 +121,7 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
         builder.insert(Person.class);
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals("new", p6.getFriend().getName());
         assertNull(p9);
     }
@@ -167,7 +167,7 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
         builder.delete(Document.class, "contacts");
         builder.validate();
 
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertNull(p6);
         assertNull(p9);
         assertEquals(1, doc1.getContacts().size());

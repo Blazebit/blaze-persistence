@@ -367,7 +367,7 @@ public class EntityViewUpdateMutableEmbeddableMapsTest extends AbstractEntityVie
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(doc1.getNameMap(), docView.getNameMap());
     }
 

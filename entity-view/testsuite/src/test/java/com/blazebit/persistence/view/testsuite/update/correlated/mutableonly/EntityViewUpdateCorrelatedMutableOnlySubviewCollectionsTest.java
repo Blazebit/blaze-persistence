@@ -118,7 +118,7 @@ public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends
         // Given
         final UpdatableDocumentWithCollectionsView docView = getDoc1View();
         clearQueries();
-        restartTransaction();
+        em.clear();
 
         // When
         docView.getPartners().get(0).setName("newPerson");

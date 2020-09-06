@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ConfigurationProperties;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
@@ -26,13 +26,19 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
+import com.blazebit.persistence.testsuite.entity.DocumentType;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.NameObject;
+import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.googlecode.catchexception.CatchException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -40,6 +46,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -47,6 +54,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -85,12 +93,12 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Override
-    protected DataSource createDataSource(Map<Object, Object> properties) {
+    protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         // Set the producer timezone
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         resetTimeZoneCaches();
 
-        return super.createDataSource(properties);
+        return super.createDataSource(properties, connectionCustomizer);
     }
 
     @AfterClass

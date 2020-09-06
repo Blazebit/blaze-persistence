@@ -26,7 +26,6 @@ import org.junit.Test;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
@@ -34,7 +33,6 @@ import javax.persistence.Table;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -43,6 +41,11 @@ import static org.junit.Assert.assertTrue;
 public class Issue519Test extends AbstractCoreTest {
 
     private A instance;
+
+    @Override
+    protected SchemaMode getSchemaMode() {
+        return SchemaMode.JDBC;
+    }
 
     @Override
     protected Class<?>[] getEntityClasses() {

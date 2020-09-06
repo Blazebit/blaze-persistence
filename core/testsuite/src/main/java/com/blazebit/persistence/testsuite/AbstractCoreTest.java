@@ -66,8 +66,13 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     @Override
-    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
-        config = super.configure(config);
+    protected boolean requiresCriteriaBuilderConfigurationCustomization() {
+        return true;
+    }
+
+    @Override
+    protected void configure(CriteriaBuilderConfiguration config) {
+        super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
 
@@ -77,8 +82,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         if ("postgresql".equals(dbms)) {
             config.setProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "false");
         }
-        
-        return config;
     }
     
     /**

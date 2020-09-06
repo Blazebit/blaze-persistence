@@ -497,7 +497,7 @@ Since the JDBC driver derives values from the locale settings of the JVM, you sh
 In IntelliJ when defining the Oracle database, go to the Advanced tab an specify the JVM options `-Duser.country=us -Duser.language=en`. 
 
 For executing tests against the Oracle docker container started via `docker_db.sh oracle` you need to specify the following
-system properties `-Djdbc.url=jdbc:oracle:thin:@192.168.99.100:1521/xe -Djdbc.user=SYSTEM -Djdbc.password=oracle -Doracle.jdbc.DateZeroTime=true`.
+system properties `-Djdbc.url=jdbc:oracle:thin:@192.168.99.100:1521/xe -Djdbc.user=SYSTEM -Djdbc.password=Oracle18 -Doracle.jdbc.DateZeroTime=true`.
 
 ### Install Oracle locally
 
@@ -513,6 +513,11 @@ When using the DB2 docker container via `docker_db.sh db2` you might want to spe
 You have to install the JDBC driver manually. If you install DB2 Express locally, you can take it from $DB2_HOME/sqllib/java otherwise download it from http://www-01.ibm.com/support/docview.wss?uid=swg21363866
 
 When using the docker container, you can find in the copy script to extract the JDBC driver from the container in `docker_db.sh`.
+
+`docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar ~/db2jcc4.jar`
+
+`docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar ~/db2jcc_license_cu.jar`
+
 Install via the following commands.
 
 `mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true`

@@ -338,7 +338,7 @@ public class EntityViewUpdateMutableEmbeddableCollectionsTest extends AbstractEn
         update(docView);
 
         // Then
-        restartTransactionAndReload();
+        clearPersistenceContextAndReload();
         assertEquals(doc1.getNames(), docView.getNames());
     }
 

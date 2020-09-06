@@ -113,7 +113,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -130,7 +130,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         update(newOrder);
 
         // When
-        restartTransaction();
+        em.clear();
         newOrder = evm.applySetting(EntityViewSetting.create(UpdatableLegacyOrderView.class), cbf.create(em, LegacyOrder.class)).getSingleResult();
         newOrder.getPositions().remove(newOrder.getPositions().iterator().next());
         PluralChangeModel<Object, Object> positionsChangeModel = (PluralChangeModel<Object, Object>) evm.getChangeModel(newOrder).get("positions");
@@ -138,7 +138,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(0, legacyOrder.getPositions().size());
     }
@@ -156,7 +156,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         // Then
         // After update, the position is replaced with the declaration type
        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -175,7 +175,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         // Then
         // After update, the position is replaced with the declaration type
         assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -193,13 +193,13 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
             Assert.fail("Expected the transaction to fail!");
         } catch (Exception ex) {
             // When
-            restartTransaction();
+            em.clear();
             position.setArticleNumber("123");
             update(newOrder);
         }
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals("123", legacyOrder.getPositions().iterator().next().getArticleNumber());
     }
@@ -231,7 +231,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
             }
         });
 
-        restartTransaction();
+        em.clear();
         List<UpdatableLegacyOrderPositionDefaultView> resultList = evm.applySetting(
                 EntityViewSetting.create(UpdatableLegacyOrderPositionDefaultView.class),
                 cbf.create(em, LegacyOrderPositionDefault.class)

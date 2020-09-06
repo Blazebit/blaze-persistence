@@ -114,7 +114,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -140,7 +140,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
@@ -175,7 +175,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // Then 2
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(2, legacyOrder.getPositions().size());
         Iterator<LegacyOrderPosition> iterator = legacyOrder.getPositions().iterator();
@@ -197,7 +197,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // When
-        restartTransaction();
+        em.clear();
         newOrder = evm.applySetting(EntityViewSetting.create(UpdatableLegacyOrderView.class), cbf.create(em, LegacyOrder.class)).getSingleResult();
         newOrder.getPositions().remove(newOrder.getPositions().iterator().next());
         PluralChangeModel<Object, Object> positionsChangeModel = (PluralChangeModel<Object, Object>) evm.getChangeModel(newOrder).get("positions");
@@ -205,7 +205,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(0, legacyOrder.getPositions().size());
     }
@@ -227,7 +227,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         update(newOrder);
 
         // Then
-        restartTransaction();
+        em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         LegacyOrderPosition orderPosition = legacyOrder.getPositions().iterator().next();

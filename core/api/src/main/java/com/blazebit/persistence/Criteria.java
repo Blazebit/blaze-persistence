@@ -30,6 +30,8 @@ import java.util.ServiceLoader;
  */
 public class Criteria {
 
+    private static volatile CriteriaBuilderConfigurationProvider cachedDefaultProvider;
+
     private Criteria() {
     }
 
@@ -39,14 +41,18 @@ public class Criteria {
      * @return The first {@linkplain CriteriaBuilderConfigurationProvider} that is found
      */
     public static CriteriaBuilderConfigurationProvider getDefaultProvider() {
-        ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(CriteriaBuilderConfigurationProvider.class);
-        Iterator<CriteriaBuilderConfigurationProvider> iterator = serviceLoader.iterator();
+        CriteriaBuilderConfigurationProvider cachedDefaultProvider = Criteria.cachedDefaultProvider;
+        if (cachedDefaultProvider == null) {
+            ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(CriteriaBuilderConfigurationProvider.class);
+            Iterator<CriteriaBuilderConfigurationProvider> iterator = serviceLoader.iterator();
 
-        if (iterator.hasNext()) {
-            return iterator.next();
+            if (iterator.hasNext()) {
+                return Criteria.cachedDefaultProvider = iterator.next();
+            }
+
+            throw new IllegalStateException("No CriteriaBuilderConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
         }
-
-        throw new IllegalStateException("No CriteriaBuilderConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
+        return cachedDefaultProvider;
     }
 
     /**
