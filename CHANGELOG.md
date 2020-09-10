@@ -12,7 +12,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix Hibernate 5.4.19+ integration issue
 
 ### Backwards-incompatible changes
 
