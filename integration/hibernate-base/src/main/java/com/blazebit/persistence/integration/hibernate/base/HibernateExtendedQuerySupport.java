@@ -96,7 +96,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     private static final String[] KNOWN_STATEMENTS = { "select ", "insert ", "update ", "delete " };
     
-    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>>();
+    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<FieldKey, Field> fieldCache = new ConcurrentHashMap<>();
     private final HibernateAccess hibernateAccess;
     
     public HibernateExtendedQuerySupport() {
@@ -1005,7 +1006,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
         }
         
-        return new CacheEntry<HQLQueryPlan>(queryPlan, fromCache);
+        return new CacheEntry<>(queryPlan, fromCache);
     }
     
     private HQLQueryPlan putQueryPlanIfAbsent(SessionFactoryImplementor sfi, QueryPlanCacheKey cacheKey, HQLQueryPlan queryPlan) {
@@ -1193,25 +1194,57 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return fromCache;
         }
     }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.5.0
+     */
+    private static class FieldKey {
+
+        private final Class<?> clazz;
+        private final Class<?> expectClazz;
+        private final String fieldName;
+
+        public FieldKey(Class<?> clazz, Class<?> expectClazz, String fieldName) {
+            this.clazz = clazz;
+            this.expectClazz = expectClazz;
+            this.fieldName = fieldName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof FieldKey)) {
+                return false;
+            }
+
+            FieldKey fieldKey = (FieldKey) o;
+            return clazz.equals(fieldKey.clazz)
+                    && expectClazz.equals(fieldKey.expectClazz)
+                    && fieldName.equals(fieldKey.fieldName);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = clazz.hashCode();
+            result = 31 * result + expectClazz.hashCode();
+            result = 31 * result + fieldName.hashCode();
+            return result;
+        }
+    }
     
     @SuppressWarnings("unchecked")
     private <T> T getField(Object object, String field) {
-        boolean madeAccessible = false;
-        Field f = null;
+        FieldKey key = new FieldKey(object.getClass(), object.getClass(), field);
+        Field f = fieldCache.get(key);
         try {
-            f = ReflectionUtils.getField(object.getClass(), field);
-            madeAccessible = !f.isAccessible();
-            
-            if (madeAccessible) {
+            if (f == null) {
+                f = ReflectionUtils.getField(object.getClass(), field);
                 f.setAccessible(true);
+                fieldCache.put(key, f);
             }
             return (T) f.get(object);
         } catch (Exception e1) {
             throw new RuntimeException(e1);
-        } finally {
-            if (madeAccessible) {
-                f.setAccessible(false);
-            }
         }
     }
 
@@ -1220,23 +1253,20 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private void setField(Object object, Class<?> clazz, String field, Object value) {
-        boolean madeAccessible = false;
-        Field f = null;
+        FieldKey key = new FieldKey(object.getClass(), clazz, field);
+        Field f = fieldCache.get(key);
         try {
-            f = ReflectionUtils.getField(clazz, field);
-            madeAccessible = !f.isAccessible();
-            
-            if (madeAccessible) {
+            if (f == null) {
+                f = ReflectionUtils.getField(clazz, field);
+                if (f == null) {
+                    f = ReflectionUtils.getField(object.getClass(), field);
+                }
                 f.setAccessible(true);
+                fieldCache.put(key, f);
             }
-            
             f.set(object, value);
         } catch (Exception e1) {
             throw new RuntimeException(e1);
-        } finally {
-            if (madeAccessible) {
-                f.setAccessible(false);
-            }
         }
     }
 
