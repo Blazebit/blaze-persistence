@@ -61,10 +61,10 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
                 p.load(stream);
             }
 
-            properties.put("javax.persistence.jdbc.url", p.getProperty("quarkus.datasource.url"));
+            properties.put("javax.persistence.jdbc.url", p.getProperty("quarkus.datasource.jdbc.url"));
             properties.put("javax.persistence.jdbc.user", p.getProperty("quarkus.datasource.username"));
             properties.put("javax.persistence.jdbc.password", p.getProperty("quarkus.datasource.password"));
-            properties.put("javax.persistence.jdbc.driver", p.getProperty("quarkus.datasource.driver"));
+            properties.put("javax.persistence.jdbc.driver", p.getProperty("quarkus.datasource.jdbc.driver"));
         }
         DataSource dataSource = createDataSource(properties);
         try (Connection connection = dataSource.getConnection()) {
