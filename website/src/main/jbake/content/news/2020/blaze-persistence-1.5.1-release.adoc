@@ -1,0 +1,14 @@
+= Blaze-Persistence 1.5.1 Release
+Christian Beikov
+2020-09-14 0
+:description: Blaze-Persistence version 1.5.1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+Here comes the first fix release for 1.5 containing a fix for our Hibernate 5.4 integration.
+Hibernate 5.4.19.Final introduced a change that broke our integration and since Quarkus updates the Hibernate version pretty quickly,
+we decided to publish a public 1.5 release containing this fix.

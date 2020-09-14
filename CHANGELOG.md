@@ -18,6 +18,22 @@ None yet
 
 None yet
 
+## 1.5.1
+
+14/09/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.5.1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.5.1+is%3Aclosed)
+
+### New features
+
+None
+
+### Bug fixes
+
+* Fix Hibernate 5.4.19+ integration issue
+
+### Backwards-incompatible changes
+
+None
+
 ## 1.5.0
 
 03/09/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.5.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.5.0+is%3Aclosed)
