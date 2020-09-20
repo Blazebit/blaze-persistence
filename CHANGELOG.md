@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Implement support for configuring sorting and order for multi collection entity view mappings
 
 ### Bug fixes
 

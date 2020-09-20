@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingIndex;
+import com.blazebit.persistence.view.MultiCollectionMapping;
 
 import java.util.List;
 import java.util.Map;
@@ -49,14 +50,17 @@ public interface DocumentViewWithMappingIndexJoin extends DocumentViewWithMappin
     @Mapping(value = "versions[2 = 2]", fetch = FetchStrategy.JOIN)
     // Good job Datanucleus.. https://github.com/datanucleus/datanucleus-core/issues/356
     @MappingIndex("idx - idx")
+    @MultiCollectionMapping(comparator = VersionViewWithMappingIndex.DefaultComparator.class)
     public List<SortedSet<VersionViewWithMappingIndex>> getMultiVersions();
 
     @Mapping(value = "versions[3 = 3]", fetch = FetchStrategy.JOIN)
     // Good job Datanucleus.. https://github.com/datanucleus/datanucleus-core/issues/356
     @MappingIndex("idx - idx")
+    @MultiCollectionMapping(comparator = VersionViewWithMappingIndex.DefaultComparator.class)
     public Map<Integer, SortedSet<VersionViewWithMappingIndex>> getMultiVersionMap();
 
     @Mapping(value = "versions[4 = 4]", fetch = FetchStrategy.JOIN)
     @MappingIndex("this")
+    @MultiCollectionMapping(comparator = VersionViewWithMappingIndex.DefaultComparator.class)
     public Map<VersionStaticKeyView, SortedSet<VersionViewWithMappingIndex>> getMultiVersionMap2();
 }

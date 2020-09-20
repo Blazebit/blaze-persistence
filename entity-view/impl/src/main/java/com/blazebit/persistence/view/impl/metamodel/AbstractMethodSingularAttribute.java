@@ -306,6 +306,21 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
     }
 
     @Override
+    protected boolean isElementCollectionOrdered() {
+        return false;
+    }
+
+    @Override
+    protected boolean isElementCollectionSorted() {
+        return false;
+    }
+
+    @Override
+    protected boolean isElementCollectionForcedUnique() {
+        return false;
+    }
+
+    @Override
     public ContainerAccumulator<?> getContainerAccumulator() {
         throw new UnsupportedOperationException("Singular attribute");
     }

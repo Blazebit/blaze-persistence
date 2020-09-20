@@ -89,6 +89,59 @@ public interface EntityViewAttributeMapping {
     public void setForceUniqueness(boolean forceUniqueness);
 
     /**
+     * Returns the behavior of a plural attribute element collection if the attribute is a multi-collection, or <code>null</code> otherwise.
+     *
+     * @return The container behavior, or null if attribute is singular
+     * @since 1.6.0
+     */
+    public ElementCollectionBehavior getElementCollectionBehavior();
+
+    /**
+     * Sets the element collection behavior to {@link ElementCollectionBehavior#DEFAULT}.
+     * @since 1.6.0
+     */
+    public void setElementCollectionDefault();
+
+    /**
+     * Sets the element collection behavior to {@link ElementCollectionBehavior#ORDERED}.
+     * @since 1.6.0
+     */
+    public void setElementCollectionOrdered();
+
+    /**
+     * Sets the element collection behavior to {@link ElementCollectionBehavior#SORTED} using the given
+     * comparator class, if given, for sorting. If none is given, the element type
+     * is expected to implement {@link Comparable}.
+     *
+     * @param comparatorClass The class of the comparator to use for sorting or <code>null</code>
+     * @since 1.6.0
+     */
+    public void setElementCollectionSorted(Class<? extends Comparator<?>> comparatorClass);
+
+    /**
+     * Specifies whether elements should be forcefully deduplicated if the element collection allows duplicates or not.
+     *
+     * @return true if uniqueness of element should be forced, false otherwise
+     * @since 1.6.0
+     */
+    public boolean isElementCollectionForceUniqueness();
+
+    /**
+     * Sets whether elements should be forcefully deduplicated if the element collection allows duplicates or not.
+     *
+     * @param forceUniqueness true if uniqueness of element should be forced, false otherwise
+     * @since 1.6.0
+     */
+    public void setElementCollectionForceUniqueness(boolean forceUniqueness);
+
+    /**
+     * Returns the comparator class, or <code>null</code> if there none.
+     *
+     * @return The comparator class
+     */
+    public Class<? extends Comparator<?>> getElementCollectionComparatorClass();
+
+    /**
      * Specifies whether an updatable entity view type is disallowed for owned *ToOne relationships or not.
      *
      * @return true if disallowed, false otherwise
@@ -212,6 +265,24 @@ public interface EntityViewAttributeMapping {
          * Specifies that the elements of the container are indexed upon which the iteration order is based on.
          */
         INDEXED,
+        /**
+         * Specifies that the container's iteration order must match the sort order as defined by a comparator or a comparable element type.
+         */
+        SORTED;
+    }
+
+    /**
+     * The behavior of a plural attribute element collections.
+     */
+    public static enum ElementCollectionBehavior {
+        /**
+         * The default behavior doesn't mandate a deterministic ordering.
+         */
+        DEFAULT,
+        /**
+         * Specifies that the container's iteration order must match the element insertion order.
+         */
+        ORDERED,
         /**
          * Specifies that the container's iteration order must match the sort order as defined by a comparator or a comparable element type.
          */

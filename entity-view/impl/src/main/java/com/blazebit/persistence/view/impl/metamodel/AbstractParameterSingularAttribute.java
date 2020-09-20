@@ -75,6 +75,21 @@ public abstract class AbstractParameterSingularAttribute<X, Y> extends AbstractP
     }
 
     @Override
+    protected boolean isElementCollectionOrdered() {
+        return false;
+    }
+
+    @Override
+    protected boolean isElementCollectionSorted() {
+        return false;
+    }
+
+    @Override
+    protected boolean isElementCollectionForcedUnique() {
+        return false;
+    }
+
+    @Override
     public ContainerAccumulator<?> getContainerAccumulator() {
         throw new UnsupportedOperationException("Singular attribute");
     }

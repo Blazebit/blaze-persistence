@@ -108,6 +108,48 @@ public interface PluralAttribute<X, C, E> extends Attribute<X, C> {
     public Class<Comparator<?>> getComparatorClass();
 
     /**
+     * Returns whether the element collection is ordered or not.
+     *
+     * @return true if the element collection is ordered, false otherwise
+     * @since 1.6.0
+     */
+    public boolean isElementCollectionOrdered();
+
+    /**
+     * Returns whether the element collection is sorted or not.
+     *
+     * @return true if the element collection is sorted, false otherwise
+     * @since 1.6.0
+     */
+    public boolean isElementCollectionSorted();
+
+    /**
+     * Returns whether the element collection is forcefully deduplicated on load or not.
+     *
+     * @return true if the element collection is forcefully deduplicated on load, false otherwise
+     * @since 1.6.0
+     */
+    public boolean isElementCollectionForcedUnique();
+
+    /**
+     * Returns the comparator that should be used for sorting in the element collection.
+     * Returns null if no sorting is used or the natural sort order should be used.
+     *
+     * @return the comparator that should be used for sorting in the element collection
+     * @since 1.6.0
+     */
+    public Comparator<?> getElementCollectionComparator();
+
+    /**
+     * Returns the comparator class that should be used for sorting in the element collection.
+     * Returns null if no sorting is used or the natural sort order should be used.
+     *
+     * @return the comparator class that should be used for sorting in the element collection
+     * @since 1.6.0
+     */
+    public Class<Comparator<?>> getElementCollectionComparatorClass();
+
+    /**
      * The different collection types.
      */
     public static enum CollectionType {

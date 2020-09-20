@@ -910,6 +910,79 @@ FROM Cat cat
 LEFT JOIN cat.kittens kittens_1
 ----
 
+Ordered element collection mapping::
+By specifying `ordered = true` for the element collection via the annotation `@MultiCollectionMapping` you can force a set implementation that retains the insertion order like a `LinkedHashSet`.
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatAgeView {
+    int getAge();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("this")
+    @Mapping("kittens")
+    @MultiCollectionMapping(ordered = true)
+    Map<CatAgeView, Set<SimpleCatView>> getKittensByAge();
+}
+----
+
+The query doesn't change, the only thing that does, is the implementation for the collection.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
+This oviously only makes sense when used along with an _ORDER BY_ clause that orders the result set deterministically.
+
+Sorted element collection mapping::
+You can specify the comparator for the collection via the annotation `@MultiCollectionMapping`
+
+[source,java]
+----
+@EntityView(Cat.class)
+interface CatAgeView {
+    int getAge();
+}
+
+@EntityView(Cat.class)
+interface CatView extends SimpleCatView {
+
+    @MappingIndex("this")
+    @Mapping("kittens")
+    @MultiCollectionMapping(comparator = SimpleCatView.DefaultComparator.class)
+    Map<CatAgeView, Set<SimpleCatView>> getKittensByAge();
+}
+----
+
+This will ensure the correct ordering of the element collection elements regardless of the query ordering.
+The query stays the same.
+
+[source,sql]
+----
+SELECT
+    cat.id,
+    cat.name,
+
+    kittens_1.age,
+    kittens_1.id,
+    kittens_1.name
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+----
+
 === Singular collection type mappings
 
 There are cases when the entity model defines a collection that is actually a singular entity attribute. This can happen when you use custom type implementations or JPA 2.1 attribute converters that produce collections.
