@@ -1235,6 +1235,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     protected abstract boolean isForcedUnique();
 
+    protected abstract boolean isElementCollectionOrdered();
+
+    protected abstract boolean isElementCollectionSorted();
+
+    protected abstract boolean isElementCollectionForcedUnique();
+
     protected abstract PluralAttribute.CollectionType getCollectionType();
 
     protected abstract PluralAttribute.ElementCollectionType getElementCollectionType();
@@ -1275,31 +1281,40 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public abstract MapInstantiatorImplementor<?, ?> getMapInstantiator();
 
-    protected final ContainerAccumulator<?> createValueContainerAccumulator() {
+    protected final ContainerAccumulator<?> createValueContainerAccumulator(Comparator<Object> comparator) {
         if (getElementCollectionType() == null) {
             return null;
         }
+        boolean forcedUnique = false;
         PluralObjectFactory<? extends Collection<?>> instance;
         //CHECKSTYLE:OFF: FallThrough
         switch (getElementCollectionType()) {
             case COLLECTION:
             case LIST:
+                forcedUnique = isElementCollectionForcedUnique();
                 instance = ListFactory.INSTANCE;
                 break;
             case SET:
-                instance = SetFactory.INSTANCE;
-                break;
+                if (!isElementCollectionSorted()) {
+                    instance = SetFactory.INSTANCE;
+                    break;
+                }
             case SORTED_SET:
-                instance = SortedSetFactory.INSTANCE;
+                if (comparator == null) {
+                    instance = SortedSetFactory.INSTANCE;
+                } else {
+                    instance = new SortedSetFactory(comparator);
+                    comparator = null;
+                }
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported element collection type: " + getElementCollectionType());
         }
         //CHECKSTYLE:ON: FallThrough
         if (isCorrelated()) {
-            return new SimpleCollectionAccumulator(instance);
+            return new SimpleCollectionAccumulator(instance, forcedUnique, comparator);
         } else {
-            return new NullFilteringCollectionAccumulator(instance);
+            return new NullFilteringCollectionAccumulator(instance, forcedUnique, comparator);
         }
     }
 

@@ -76,6 +76,9 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     protected Class<? extends Comparator<?>> comparatorClass;
     protected boolean forceUniqueness;
     protected Boolean disallowOwnedUpdatableSubview;
+    protected ElementCollectionBehavior elementCollectionBehavior;
+    protected Class<? extends Comparator<?>> elementCollectionComparatorClass;
+    protected boolean elementCollectionForceUniqueness;
 
     // Other configs
     protected Integer defaultBatchSize;
@@ -193,6 +196,44 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
     @Override
     public void setForceUniqueness(boolean forceUniqueness) {
         this.forceUniqueness = forceUniqueness;
+    }
+
+    @Override
+    public ElementCollectionBehavior getElementCollectionBehavior() {
+        return elementCollectionBehavior;
+    }
+
+    @Override
+    public void setElementCollectionDefault() {
+        this.elementCollectionBehavior = ElementCollectionBehavior.DEFAULT;
+        this.elementCollectionComparatorClass = null;
+    }
+
+    @Override
+    public void setElementCollectionOrdered() {
+        this.elementCollectionBehavior = ElementCollectionBehavior.ORDERED;
+        this.elementCollectionComparatorClass = null;
+    }
+
+    @Override
+    public void setElementCollectionSorted(Class<? extends Comparator<?>> comparatorClass) {
+        this.elementCollectionBehavior = ElementCollectionBehavior.SORTED;
+        this.elementCollectionComparatorClass = comparatorClass;
+    }
+
+    @Override
+    public boolean isElementCollectionForceUniqueness() {
+        return elementCollectionForceUniqueness;
+    }
+
+    @Override
+    public void setElementCollectionForceUniqueness(boolean forceUniqueness) {
+        this.elementCollectionForceUniqueness = forceUniqueness;
+    }
+
+    @Override
+    public Class<? extends Comparator<?>> getElementCollectionComparatorClass() {
+        return elementCollectionComparatorClass;
     }
 
     @Override

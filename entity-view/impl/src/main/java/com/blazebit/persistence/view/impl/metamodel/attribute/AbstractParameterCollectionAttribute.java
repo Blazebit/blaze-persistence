@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.metamodel.CollectionAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 
 /**
@@ -90,6 +91,31 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
     @Override
     public boolean isForcedUnique() {
         return forcedUnique;
+    }
+
+    @Override
+    public boolean isElementCollectionOrdered() {
+        return false;
+    }
+
+    @Override
+    public boolean isElementCollectionSorted() {
+        return false;
+    }
+
+    @Override
+    public boolean isElementCollectionForcedUnique() {
+        return false;
+    }
+
+    @Override
+    public Comparator<?> getElementCollectionComparator() {
+        return null;
+    }
+
+    @Override
+    public Class<Comparator<?>> getElementCollectionComparatorClass() {
+        return null;
     }
 
     @Override

@@ -21,20 +21,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Comparator;
-import java.util.SortedMap;
 import java.util.SortedSet;
 
 /**
- * Specifies the behavior of a collection mapping. This can be used to configure ordering, uniqueness and the sort order.
+ * Specifies the behavior of a multi-map collection mapping. This can be used to configure uniqueness and the sort order.
  *
- * The default sort order of {@link SortedSet} and {@link SortedMap} is the natural order. By using this annotation, the sort order can be overridden.
+ * The default sort order of a {@link SortedSet} is the natural order. By using this annotation, the sort order can be overridden.
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.6.0
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CollectionMapping {
+public @interface MultiCollectionMapping {
     
     /**
      * The comparator that should be used for sorting of the collection.
@@ -50,13 +49,6 @@ public @interface CollectionMapping {
      * @return true if ordered, false otherwise
      */
     boolean ordered() default false;
-    
-    /**
-     * Specifies whether the index of the indexed collection should be ignored or not.
-     *
-     * @return true if the index should be ignored, false otherwise
-     */
-    boolean ignoreIndex() default false;
 
     /**
      * Specifies whether the elements should be forcefully deduplicated if the collection allows duplicates or not.

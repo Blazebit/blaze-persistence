@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,6 +81,31 @@ public abstract class AbstractParameterSetAttribute<X, Y> extends AbstractParame
     @Override
     public boolean isForcedUnique() {
         return forcedUnique;
+    }
+
+    @Override
+    public boolean isElementCollectionOrdered() {
+        return false;
+    }
+
+    @Override
+    public boolean isElementCollectionSorted() {
+        return false;
+    }
+
+    @Override
+    public boolean isElementCollectionForcedUnique() {
+        return false;
+    }
+
+    @Override
+    public Comparator<?> getElementCollectionComparator() {
+        return null;
+    }
+
+    @Override
+    public Class<Comparator<?>> getElementCollectionComparatorClass() {
+        return null;
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.EmptyFlatViewCreation;
 import com.blazebit.persistence.view.Limit;
+import com.blazebit.persistence.view.MultiCollectionMapping;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 
 import java.lang.reflect.AnnotatedElement;
@@ -87,6 +88,38 @@ public class AbstractAnnotationAttributeMappingReader {
                     attributeMapping.setContainerDefault();
                 }
             }
+        }
+
+        MultiCollectionMapping multiCollectionMapping = annotatedElement.getAnnotation(MultiCollectionMapping.class);
+
+        PluralAttribute.ElementCollectionType elementCollectionType = attributeMapping.getElementCollectionType();
+        if (multiCollectionMapping != null && elementCollectionType == null) {
+            context.addError("Illegal @MultiCollectionMapping mapping on non-multi collection " + attributeMapping.getErrorLocation());
+        }
+
+        if (multiCollectionMapping != null) {
+            Class<? extends Comparator<?>> comparatorClass;
+            Class<?> c = multiCollectionMapping.comparator();
+            if (c == Comparator.class) {
+                comparatorClass = null;
+            } else {
+                comparatorClass = (Class<? extends Comparator<?>>) c;
+            }
+            if (comparatorClass != null || elementCollectionType == PluralAttribute.ElementCollectionType.SORTED_SET) {
+                if (multiCollectionMapping.ordered()) {
+                    context.addError("Illegal ordered mapping for the sorted element collection " + attributeMapping.getErrorLocation());
+                }
+                attributeMapping.setElementCollectionSorted(comparatorClass);
+            } else if (multiCollectionMapping.ordered()) {
+                attributeMapping.setElementCollectionOrdered();
+            } else {
+                attributeMapping.setElementCollectionDefault();
+            }
+            attributeMapping.setElementCollectionForceUniqueness(multiCollectionMapping.forceUnique());
+        } else if (elementCollectionType == PluralAttribute.ElementCollectionType.SORTED_SET) {
+            attributeMapping.setContainerSorted(null);
+        } else if (elementCollectionType != null) {
+            attributeMapping.setContainerDefault();
         }
 
         BatchFetch batchFetch = annotatedElement.getAnnotation(BatchFetch.class);
