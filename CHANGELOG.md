@@ -13,6 +13,7 @@ Not yet released
 ### Bug fixes
 
 * Fix Hibernate 5.4.19+ integration issue
+* Fix boot exception when using Hibernate `@Where` on entity level
 
 ### Backwards-incompatible changes
 
