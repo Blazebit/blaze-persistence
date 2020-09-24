@@ -1410,16 +1410,10 @@ public class HibernateJpaProvider implements JpaProvider {
                 AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName());
                 String filterFragment = elementPersister.filterFragment("x", Collections.emptyMap());
                 if (elementPersister instanceof SingleTableEntityPersister) {
-                    if (!filterFragment.isEmpty()) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(" and ");
-                        String discriminatorColumnName = elementPersister.getDiscriminatorColumnName();
+                    String discriminatorColumnName;
+                    if (!filterFragment.isEmpty() && (discriminatorColumnName = elementPersister.getDiscriminatorColumnName()) != null) {
                         InFragment frag = new InFragment();
-                        if (discriminatorColumnName == null) {
-                            frag.setFormula("x", elementPersister.toColumns("x", "class")[0]);
-                        } else {
-                            frag.setColumn("x", discriminatorColumnName);
-                        }
+                        frag.setColumn("x", discriminatorColumnName);
 
                         String[] subclasses = ((SingleTableEntityPersister) elementPersister).getSubclassClosure();
                         for (int i = 0; i < subclasses.length; i++) {
