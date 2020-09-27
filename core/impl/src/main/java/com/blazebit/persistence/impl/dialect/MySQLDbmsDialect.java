@@ -135,6 +135,12 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        // The implementation is an emulation but it is not restricted by value size
+        return true;
+    }
+
+    @Override
     public DbmsLimitHandler createLimitHandler() {
         return new MySQLDbmsLimitHandler();
     }

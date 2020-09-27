@@ -9,6 +9,7 @@ Not yet released
 ### New features
 
 * Implement support for configuring sorting and order for multi collection entity view mappings
+* Optimize `FullQueryBuilder.getCountQuery()` to use a subquery to determine distinct tuple counts instead of distinct count emulation
 
 ### Bug fixes
 

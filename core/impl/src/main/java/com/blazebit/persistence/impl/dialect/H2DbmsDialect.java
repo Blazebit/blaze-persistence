@@ -45,6 +45,11 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return true;
+    }
+
+    @Override
     public boolean supportsReturningAllGeneratedKeys() {
         return false;
     }

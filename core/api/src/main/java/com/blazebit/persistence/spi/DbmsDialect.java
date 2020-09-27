@@ -274,6 +274,14 @@ public interface DbmsDialect {
     public boolean supportsFullRowValueComparison();
 
     /**
+     * Returns true if the dbms supports tuples in the count function, false otherwise.
+     *
+     * @return Whether tuples in the count function are supported by the dbms
+     * @since 1.6.0
+     */
+    public boolean supportsCountTuple();
+
+    /**
      * Returns true if the dbms supports window functions.
      *
      * @return Whether the dbms supports window functions

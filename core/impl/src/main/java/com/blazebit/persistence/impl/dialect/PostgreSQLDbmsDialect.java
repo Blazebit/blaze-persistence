@@ -78,6 +78,11 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return true;
+    }
+
+    @Override
     public boolean supportsFilterClause() {
         return false;
     }

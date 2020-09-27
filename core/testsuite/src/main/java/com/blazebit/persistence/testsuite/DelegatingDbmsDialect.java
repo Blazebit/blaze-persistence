@@ -243,6 +243,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return delegate.supportsCountTuple();
+    }
+
+    @Override
     public String getSqlType(Class<?> castType) {
         return delegate.getSqlType(castType);
     }
