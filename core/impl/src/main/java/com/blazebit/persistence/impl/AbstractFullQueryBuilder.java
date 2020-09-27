@@ -267,7 +267,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        if (isComplexCountQuery()) {
+        if (isComplexCountQuery() || !mainQuery.dbmsDialect.supportsCountTuple() && (!countAll || hasGroupBy || selectManager.isDistinct())) {
             if (externalRepresentation) {
                 sbSelectFrom.append("SELECT COUNT(*) FROM (");
                 buildBaseQueryString(sbSelectFrom, externalRepresentation, null);

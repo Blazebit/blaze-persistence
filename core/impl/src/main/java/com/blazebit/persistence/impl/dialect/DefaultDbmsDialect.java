@@ -133,6 +133,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return true;
+    }
+
+    @Override
     public boolean supportsWindowFunctions() {
         return true;
     }
