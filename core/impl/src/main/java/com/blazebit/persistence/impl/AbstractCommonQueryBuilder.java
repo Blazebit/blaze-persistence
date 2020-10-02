@@ -817,6 +817,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         prepareForModification(ClauseType.JOIN);
         joinManager.addRoot(correlationPath, alias, false);
+        fromClassExplicitlySet = true;
         return (BuilderType) this;
     }
 
