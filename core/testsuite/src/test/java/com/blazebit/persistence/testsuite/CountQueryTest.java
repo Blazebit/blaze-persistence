@@ -24,7 +24,6 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -127,9 +126,15 @@ public class CountQueryTest extends AbstractCoreTest {
                 .groupBy("name");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT " + countPaginated("d.name", true) + " FROM Document d";
+        String expectedRootCountQuery = "SELECT " + countPaginated("d.name", true) + " FROM Document d";
+        String expectedCountQuery;
+        if (dbmsDialect.supportsCountTuple() || !supportsAdvancedSql()) {
+            expectedCountQuery = expectedRootCountQuery;
+        } else {
+            expectedCountQuery = "SELECT COUNT(*) FROM (SELECT COUNT(*) FROM Document d GROUP BY d.name)";
+        }
         assertEquals(expectedCountQuery, crit.getCountQueryString());
-        assertEquals(expectedCountQuery, crit.getQueryRootCountQueryString());
+        assertEquals(expectedRootCountQuery, crit.getQueryRootCountQueryString());
         crit.getCountQuery().getResultList();
         crit.getQueryRootCountQuery().getResultList();
     }
@@ -158,9 +163,15 @@ public class CountQueryTest extends AbstractCoreTest {
                 .select("name").distinct();
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT " + countPaginated("d.name", true) + " FROM Document d";
+        String expectedRootCountQuery = "SELECT " + countPaginated("d.name", true) + " FROM Document d";
+        String expectedCountQuery;
+        if (dbmsDialect.supportsCountTuple() || !supportsAdvancedSql()) {
+            expectedCountQuery = expectedRootCountQuery;
+        } else {
+            expectedCountQuery = "SELECT COUNT(*) FROM (SELECT DISTINCT d.name FROM Document d)";
+        }
         assertEquals(expectedCountQuery, crit.getCountQueryString());
-        assertEquals(expectedCountQuery, crit.getQueryRootCountQueryString());
+        assertEquals(expectedRootCountQuery, crit.getQueryRootCountQueryString());
         crit.getCountQuery().getResultList();
         crit.getQueryRootCountQuery().getResultList();
     }

@@ -267,7 +267,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        if (isComplexCountQuery() || !mainQuery.dbmsDialect.supportsCountTuple() && (!countAll || hasGroupBy || selectManager.isDistinct())) {
+        if (useCountWrapper(countAll)) {
             if (externalRepresentation) {
                 sbSelectFrom.append("SELECT COUNT(*) FROM (");
                 buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
@@ -284,7 +284,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         return sbSelectFrom.toString();
     }
 
-    private boolean isComplexCountQuery() {
+    protected final boolean useCountWrapper(boolean countAll) {
+        return isComplexCountQuery() || !mainQuery.dbmsDialect.supportsCountTuple() && countAll && (hasGroupBy || selectManager.isDistinct());
+    }
+
+    protected final boolean isComplexCountQuery() {
         return !havingManager.isEmpty() || hasGroupBy && selectManager.isDistinct();
     }
 
@@ -616,21 +620,21 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     public TypedQuery<Long> getCountQuery() {
         prepareAndCheck();
-        return getCountQuery(getCountQueryStringWithoutCheck(Long.MAX_VALUE));
+        return getCountQuery(getCountQueryStringWithoutCheck(Long.MAX_VALUE), useCountWrapper(true));
     }
 
     @Override
     public TypedQuery<Long> getCountQuery(long maximumCount) {
         prepareAndCheck();
-        return getCountQuery(getCountQueryStringWithoutCheck(maximumCount));
+        return getCountQuery(getCountQueryStringWithoutCheck(maximumCount), useCountWrapper(true));
     }
 
-    protected TypedQuery<Long> getCountQuery(String countQueryString) {
+    protected TypedQuery<Long> getCountQuery(String countQueryString, boolean useCountWrapper) {
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
         List<JoinNode> entityFunctions = null;
-        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty() && !isComplexCountQuery());
+        boolean normalQueryMode = !useCountWrapper && (!isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty()));
 
         Set<Parameter<?>> parameters = parameterManager.getParameters();
         Map<String, String> valuesParameters = parameterManager.getValuesParameters();
@@ -676,7 +680,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(),
-                isComplexCountQuery() ? getCountExampleQuery() : null
+                useCountWrapper ? getCountExampleQuery() : null
         );
 
         TypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
@@ -994,14 +998,15 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @Override
     @SuppressWarnings("unchecked")
     public X fetch(String... paths) {
-        prepareForModification(ClauseType.JOIN);
-        verifyBuilderEnded();
+        if (paths.length != 0) {
+            prepareForModification(ClauseType.JOIN);
+            verifyBuilderEnded();
 
-        HashSet<String> currentlyResolvingAliases = new HashSet<>();
-        for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, true, null, null, null, null, currentlyResolvingAliases, false, false, true, false, true, false);
+            HashSet<String> currentlyResolvingAliases = new HashSet<>();
+            for (String path : paths) {
+                joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, true, true, null, null, null, null, currentlyResolvingAliases, false, false, true, false, true, false);
+            }
         }
-
         return (X) this;
     }
 

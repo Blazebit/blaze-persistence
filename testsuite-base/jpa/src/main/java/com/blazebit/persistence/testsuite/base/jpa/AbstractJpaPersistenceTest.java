@@ -20,6 +20,7 @@ import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DB2DatabaseCleaner;
@@ -431,6 +432,11 @@ public abstract class AbstractJpaPersistenceTest {
 
     public boolean supportsTableGroupJoins() {
         return false;
+    }
+
+    protected boolean supportsAdvancedSql() {
+        ExtendedQuerySupport extendedQuerySupport = cbf.getService(ExtendedQuerySupport.class);
+        return extendedQuerySupport != null && extendedQuerySupport.supportsAdvancedSql();
     }
 
     protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {

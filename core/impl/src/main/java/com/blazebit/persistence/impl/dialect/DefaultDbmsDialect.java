@@ -134,7 +134,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
 
     @Override
     public boolean supportsCountTuple() {
-        return true;
+        return false;
     }
 
     @Override
