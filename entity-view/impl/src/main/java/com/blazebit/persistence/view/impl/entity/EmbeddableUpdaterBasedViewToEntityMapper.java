@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,8 +39,8 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
     private final Mapper<Object, Object> idViewToEntityMapper;
 
     public EmbeddableUpdaterBasedViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
-                                                    EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper, EntityViewUpdaterImpl owner, String ownerMapping) {
-        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, null, persistAllowed, owner, ownerMapping);
+                                                    EntityLoader entityLoader, boolean persistAllowed, Mapper<Object, Object> idViewToEntityMapper, EntityViewUpdaterImpl owner, String ownerMapping, Map<Object, EntityViewUpdaterImpl> localCache) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, null, null, persistAllowed, owner, ownerMapping, localCache);
         this.idViewToEntityMapper = idViewToEntityMapper;
     }
 

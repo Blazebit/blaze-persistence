@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,8 +34,8 @@ import java.util.Set;
 public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper {
 
     public LoadOrPersistViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
-                                           EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
-        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, entityIdAccessor, persistAllowed, owner, ownerMapping);
+                                           EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping, Map<Object, EntityViewUpdaterImpl> localCache) {
+        super(attributeLocation, evm, viewTypeClass, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, entityLoader, viewIdAccessor, entityIdAccessor, persistAllowed, owner, ownerMapping, localCache);
     }
 
     @Override

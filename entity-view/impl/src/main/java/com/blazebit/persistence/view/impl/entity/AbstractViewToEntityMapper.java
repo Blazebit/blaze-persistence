@@ -56,7 +56,7 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     protected final boolean persistAllowed;
 
     public AbstractViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Class<?> viewTypeClass, Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes,
-                                      EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping) {
+                                      EntityLoader entityLoader, AttributeAccessor viewIdAccessor, AttributeAccessor entityIdAccessor, boolean persistAllowed, EntityViewUpdaterImpl owner, String ownerMapping, Map<Object, EntityViewUpdaterImpl> localCache) {
         this.attributeLocation = attributeLocation;
         ManagedViewTypeImplementor<?> managedViewTypeImplementor = evm.getMetamodel().managedView(viewTypeClass);
         this.isEmbeddable = !(managedViewTypeImplementor.getJpaManagedType() instanceof EntityType<?>);
@@ -65,26 +65,26 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
         Map<Class<?>, EntityViewUpdater> removeUpdater = new HashMap<>();
 
         for (Type<?> t : persistAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, managedViewTypeImplementor, owner, ownerMapping);
+            EntityViewUpdater updater = evm.getUpdater(localCache, (ManagedViewTypeImplementor<?>) t, managedViewTypeImplementor, owner, ownerMapping);
             persistUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
         for (Type<?> t : updateAllowedSubtypes) {
-            EntityViewUpdater updater = evm.getUpdater((ManagedViewTypeImplementor<?>) t, null, owner, ownerMapping);
+            EntityViewUpdater updater = evm.getUpdater(localCache, (ManagedViewTypeImplementor<?>) t, null, owner, ownerMapping);
             updateUpdater.put(t.getJavaType(), updater);
             removeUpdater.put(t.getJavaType(), updater);
         }
 
-        this.defaultUpdater = evm.getUpdater(managedViewTypeImplementor, null, owner, ownerMapping);
+        this.defaultUpdater = evm.getUpdater(localCache, managedViewTypeImplementor, null, owner, ownerMapping);
         removeUpdater.put(viewTypeClass, defaultUpdater);
         Set<Class<?>> viewTypeClasses = new HashSet<>();
         for (Type<?> readOnlyType : readOnlyAllowedSubtypes) {
             viewTypeClasses.add(readOnlyType.getJavaType());
             if (readOnlyType instanceof ManagedViewTypeImplementor<?>) {
                 if (isEmbeddable) {
-                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, owner, ownerMapping));
+                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater(localCache, (ManagedViewTypeImplementor<?>) readOnlyType, null, owner, ownerMapping));
                 } else {
-                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater((ManagedViewTypeImplementor<?>) readOnlyType, null, null, null));
+                    removeUpdater.put(readOnlyType.getJavaType(), evm.getUpdater(localCache, (ManagedViewTypeImplementor<?>) readOnlyType, null, null, null));
                 }
             }
         }

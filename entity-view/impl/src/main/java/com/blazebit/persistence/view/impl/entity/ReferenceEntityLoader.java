@@ -49,19 +49,19 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
         this.queryString = primaryKeyId ? null : "SELECT e FROM " + evm.getMetamodel().getEntityMetamodel().entity(entityClass).getName() + " e WHERE e." + idAttributeName + " = :id";
     }
 
-    public static EntityLoader forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, AbstractMethodAttribute<?, ?> attribute) {
-        return forAttribute(evm, subviewType, attribute.getViewTypes());
+    public static EntityLoader forAttribute(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> subviewType, AbstractMethodAttribute<?, ?> attribute) {
+        return forAttribute(evm, localCache, subviewType, attribute.getViewTypes());
     }
 
-    public static EntityLoader forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, Set<? extends ManagedViewType<?>> viewTypes) {
+    public static EntityLoader forAttribute(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> subviewType, Set<? extends ManagedViewType<?>> viewTypes) {
         if (viewTypes.size() == 1) {
-            return new ReferenceEntityLoader(evm, subviewType, EntityViewUpdaterImpl.createViewIdMapper(evm, subviewType));
+            return new ReferenceEntityLoader(evm, subviewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType));
         }
 
         EntityLoader first = null;
         Map<Class<?>, EntityLoader> entityLoaderMap = new HashMap<>(viewTypes.size());
         for (ManagedViewType<?> viewType : viewTypes) {
-            ReferenceEntityLoader referenceEntityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType));
+            ReferenceEntityLoader referenceEntityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, viewType));
             entityLoaderMap.put(viewType.getJavaType(), referenceEntityLoader);
             if (viewType == subviewType) {
                 first = referenceEntityLoader;

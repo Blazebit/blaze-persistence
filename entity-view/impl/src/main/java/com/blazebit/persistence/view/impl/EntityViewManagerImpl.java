@@ -445,7 +445,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         if (Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.UPDATER_EAGER_LOADING)))) {
             for (ManagedViewType<?> view : metamodel.getViews()) {
-                getUpdater((ManagedViewTypeImplementor<?>) view, null, null, null);
+                getUpdater(null, (ManagedViewTypeImplementor<?>) view, null, null, null);
             }
         }
     }
@@ -806,7 +806,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 referenceConstructorCache.put(entityViewClass, constructor);
             }
             if (!managedViewType.getIdAttribute().getJavaType().isInstance(id)) {
-                id = getUpdater(managedViewType, null, null, null).getFullGraphNode().createViewIdByEntityId(id);
+                id = getUpdater(null, managedViewType, null, null, null).getFullGraphNode().createViewIdByEntityId(id);
             }
             return constructor.newInstance(id);
         } catch (Exception e) {
@@ -818,7 +818,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         UpdateContext context = new SimpleUpdateContext(this, entityManager);
         Class<?> entityViewClass = proxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         return ((CompositeAttributeFlusher) updater.getFullGraphNode()).getEntityIdCopy(context, proxy);
     }
 
@@ -1040,7 +1040,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         DirtyStateTrackable updatableProxy = (DirtyStateTrackable) entityView;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<DirtyStateTrackable> viewType = (ManagedViewTypeImplementor<DirtyStateTrackable>) metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         return (SingularChangeModel<T>) new ViewChangeModel<>(viewType, updatableProxy, updater.getDirtyChecker());
     }
 
@@ -1086,7 +1086,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         EntityViewProxy proxy = (EntityViewProxy) view;
         Class<?> entityViewClass = proxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         try {
             if (proxy.$$_isNew()) {
                 MutableStateTrackable updatableProxy = (MutableStateTrackable) proxy;
@@ -1119,7 +1119,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (viewType == null) {
             throw new IllegalArgumentException("Can't remove non entity view object: " + entityViewClass.getName());
         }
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         try {
             updater.remove(context, viewId);
         } catch (Throwable t) {
@@ -1174,7 +1174,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         try {
             if (updatableProxy.$$_isNew()) {
                 updater.executePersist(context, updatableProxy);
@@ -1198,7 +1198,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         try {
             updater.executeUpdate(context, entity, updatableProxy);
         } catch (Throwable t) {
@@ -1215,7 +1215,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MutableStateTrackable updatableProxy = (MutableStateTrackable) view;
         Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ManagedViewTypeImplementor<?> viewType = metamodel.managedViewOrError(entityViewClass);
-        EntityViewUpdater updater = getUpdater(viewType, null, null, null);
+        EntityViewUpdater updater = getUpdater(null, viewType, null, null, null);
         return updater.executePersist(context, updatableProxy);
     }
 
@@ -1388,32 +1388,38 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return value;
     }
 
-    public void addUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping, EntityViewUpdaterImpl updater) {
+    public void addUpdater(Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping, EntityViewUpdaterImpl updater) {
         if (declaredViewType != null && declaredViewType != viewType || owner != null) {
             ContextAwareUpdaterKey key = new ContextAwareUpdaterKey(viewType, declaredViewType, owner, ownerMapping);
-            contextAwareEntityViewUpdaterCache.put(key, updater);
+            localCache.put(key, updater);
         } else {
-            entityViewUpdaterCache.put(viewType, updater);
+            localCache.put(viewType, updater);
         }
     }
     
-    public EntityViewUpdaterImpl getUpdater(ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
+    public EntityViewUpdaterImpl getUpdater(Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewTypeImplementor<?> viewType, ManagedViewTypeImplementor<?> declaredViewType, EntityViewUpdaterImpl owner, String ownerMapping) {
         if (declaredViewType != null && declaredViewType != viewType || owner != null) {
             ContextAwareUpdaterKey key = new ContextAwareUpdaterKey(viewType, declaredViewType, owner, ownerMapping);
-            EntityViewUpdaterImpl value = contextAwareEntityViewUpdaterCache.get(key);
+            EntityViewUpdaterImpl value;
 
-            if (value == null) {
-                new EntityViewUpdaterImpl(this, viewType, declaredViewType, owner, ownerMapping);
+            if (localCache == null || (value = localCache.get(key)) == null) {
                 value = contextAwareEntityViewUpdaterCache.get(key);
+                if (value == null) {
+                    value = new EntityViewUpdaterImpl(this, localCache == null ? (localCache = new HashMap<>()) : localCache, viewType, declaredViewType, owner, ownerMapping);
+                    contextAwareEntityViewUpdaterCache.putAll((Map<? extends ContextAwareUpdaterKey, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                }
             }
 
             return value;
         } else {
-            EntityViewUpdaterImpl value = entityViewUpdaterCache.get(viewType);
+            EntityViewUpdaterImpl value;
 
-            if (value == null) {
-                new EntityViewUpdaterImpl(this, viewType, null, null, null);
+            if (localCache == null || (value = localCache.get(viewType)) == null) {
                 value = entityViewUpdaterCache.get(viewType);
+                if (value == null) {
+                    value = new EntityViewUpdaterImpl(this, localCache == null ? (localCache = new HashMap<>()) : localCache, viewType, null, null, null);
+                    entityViewUpdaterCache.putAll((Map<? extends ManagedViewType<?>, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                }
             }
 
             return value;

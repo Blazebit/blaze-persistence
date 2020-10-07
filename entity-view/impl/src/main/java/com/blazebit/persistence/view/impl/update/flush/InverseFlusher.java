@@ -111,7 +111,7 @@ public final class InverseFlusher<E> {
         this.childEntityToEntityMapper = childEntityToEntityMapper;
     }
 
-    public static <E> InverseFlusher<E> forAttribute(EntityViewManagerImpl evm, ManagedViewType<?> viewType, AbstractMethodAttribute<?, ?> attribute, TypeDescriptor childTypeDescriptor, EntityViewUpdaterImpl owner, String ownerMapping) {
+    public static <E> InverseFlusher<E> forAttribute(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> viewType, AbstractMethodAttribute<?, ?> attribute, TypeDescriptor childTypeDescriptor, EntityViewUpdaterImpl owner, String ownerMapping) {
         if (attribute.getMappedBy() != null) {
             String attributeLocation = attribute.getLocation();
             Type<?> elementType = attribute instanceof PluralAttribute<?, ?, ?> ? ((PluralAttribute<?, ?, ?>) attribute).getElementType() : ((SingularAttribute<?, ?>) attribute).getType();
@@ -124,7 +124,7 @@ public final class InverseFlusher<E> {
             TargetViewClassBasedInverseViewToEntityMapper childViewToEntityMapper = null;
             InverseEntityToEntityMapper childEntityToEntityMapper = null;
             ViewToEntityMapper parentReferenceViewToEntityMapper = new LoadOnlyViewToEntityMapper(
-                    new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, viewType)),
+                    new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, viewType)),
                     Accessors.forViewId(evm, (ViewType<?>) viewType, true),
                     evm.getEntityIdAccessor());
             ViewToEntityMapper childReferenceViewToEntityMapper = null;
@@ -169,12 +169,13 @@ public final class InverseFlusher<E> {
                             attribute.getReadOnlyAllowedSubtypes(),
                             attribute.getPersistCascadeAllowedSubtypes(),
                             attribute.getUpdateCascadeAllowedSubtypes(),
-                            new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
+                            new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
                             evm.getEntityIdAccessor(),
                             true,
                             owner,
-                            ownerMapping
+                            ownerMapping,
+                            localCache
                     );
                 } else if (childTypeDescriptor.isJpaEntity()) {
                     Class<?> childType = elementType.getJavaType();
@@ -208,12 +209,13 @@ public final class InverseFlusher<E> {
                             attribute.getReadOnlyAllowedSubtypes(),
                             attribute.getPersistCascadeAllowedSubtypes(),
                             attribute.getUpdateCascadeAllowedSubtypes(),
-                            new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType)),
+                            new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, childViewType)),
                             Accessors.forViewId(evm, childViewType, true),
                             evm.getEntityIdAccessor(),
                             true,
                             owner,
-                            ownerMapping
+                            ownerMapping,
+                            localCache
                     );
                     parentEntityOnChildEntityAddMapper = parentEntityOnChildEntityRemoveMapper = Mappers.forAccessor(parentReferenceAttributeAccessor);
 
@@ -310,13 +312,14 @@ public final class InverseFlusher<E> {
                 for (ManagedViewType<?> type : attribute.getViewTypes()) {
                     InverseViewToEntityMapper inverseViewToEntityMapper = new InverseViewToEntityMapper(
                             evm,
+                            localCache,
                             (ViewType<?>) type,
                             parentEntityOnChildViewMapper,
                             parentEntityOnChildEntityAddMapper,
                             parentEntityOnChildEntityRemoveMapper,
                             childTypeDescriptor.getViewToEntityMapper(),
                             parentReferenceAttributeFlusher,
-                            EntityViewUpdaterImpl.createIdFlusher(evm, (ViewType<?>) type, EntityViewUpdaterImpl.createViewIdMapper(evm, type))
+                            EntityViewUpdaterImpl.createIdFlusher(evm, localCache, (ViewType<?>) type, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, type))
                     );
                     mappers.put(type.getJavaType(), inverseViewToEntityMapper);
                     if (type == elementType) {
@@ -363,7 +366,7 @@ public final class InverseFlusher<E> {
         if (elementIds.isEmpty()) {
             return Collections.emptySet();
         }
-        CompositeAttributeFlusher compositeFlusher = evm.getUpdater(childViewToEntityMapper.getViewType(), null, null, null).getFullGraphNode();
+        CompositeAttributeFlusher compositeFlusher = evm.getUpdater(null, childViewToEntityMapper.getViewType(), null, null, null).getFullGraphNode();
         List<Object> elements = new ArrayList<>(elementIds.size());
         for (Object elementId : elementIds) {
             elements.add(evm.getReference(childViewToEntityMapper.getViewType().getJavaType(), compositeFlusher.createViewIdByEntityId(elementId)));
