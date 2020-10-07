@@ -96,7 +96,7 @@ public class TypeDescriptor {
         this.loadOnlyViewToEntityMapper = loadOnlyViewToEntityMapper;
     }
 
-    public static TypeDescriptor forType(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, AbstractMethodAttribute<?, ?> attribute, Type<?> type, EntityViewUpdaterImpl owner, String ownerMapping) {
+    public static TypeDescriptor forType(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, EntityViewUpdaterImpl updater, AbstractMethodAttribute<?, ?> attribute, Type<?> type, EntityViewUpdaterImpl owner, String ownerMapping) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         String attributeLocation = attribute.getLocation();
         boolean cascadePersist = attribute.isPersistCascaded();
@@ -176,8 +176,8 @@ public class TypeDescriptor {
                 entityIdAttributeName = extendedManagedType.getIdAttribute().getName();
                 attributeIdAttributeName = getAttributeElementIdentifier(evm, (EntityType<?>) ownerEntityType, attribute.getName(), ownerMapping, attribute.getMapping(), extendedManagedType.getType());
             }
-            viewToEntityMapper = createViewToEntityMapper(evm, updater, attributeIdAttributeName, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
-            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, attributeIdAttributeName, attribute.getMapping(), elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            viewToEntityMapper = createViewToEntityMapper(evm, localCache, updater, attributeIdAttributeName, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, localCache, attributeIdAttributeName, attribute.getMapping(), elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
             identifiable = viewToEntityMapper.getViewIdAccessor() != null;
         }
 
@@ -302,9 +302,9 @@ public class TypeDescriptor {
         return fetchGraph;
     }
 
-    private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, EntityViewUpdaterImpl updater, String attributeIdAttributeName, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+    private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, EntityViewUpdaterImpl updater, String attributeIdAttributeName, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
                                                                Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
+        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, localCache, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
@@ -325,7 +325,8 @@ public class TypeDescriptor {
                     entityIdAccessor,
                     cascadePersist,
                     owner,
-                    ownerMapping
+                    ownerMapping,
+                    localCache
             );
         }
 
@@ -341,7 +342,8 @@ public class TypeDescriptor {
                     cascadePersist,
                     null,
                     owner == null ? updater : owner,
-                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping
+                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping,
+                    localCache
             );
         } else {
             return new UpdaterBasedViewToEntityMapper(
@@ -356,14 +358,15 @@ public class TypeDescriptor {
                     entityIdAccessor,
                     cascadePersist,
                     owner,
-                    ownerMapping
+                    ownerMapping,
+                    localCache
             );
         }
     }
 
-    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, String attributeIdAttributeName, String attributeMapping, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
+    private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, String attributeIdAttributeName, String attributeMapping, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
                                                                        Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, viewType, viewTypes);
+        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, localCache, viewType, viewTypes);
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
@@ -383,7 +386,8 @@ public class TypeDescriptor {
                     cascadePersist,
                     null,
                     owner,
-                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping
+                    ownerMapping == null ? attributeMapping : ownerMapping + "." + attributeMapping,
+                    localCache
             );
         } else {
             Class<?> viewTypeClass = viewType.getJavaType();
@@ -399,7 +403,8 @@ public class TypeDescriptor {
                     entityIdAccessor,
                     cascadePersist,
                     owner,
-                    ownerMapping
+                    ownerMapping,
+                    localCache
             );
         }
     }

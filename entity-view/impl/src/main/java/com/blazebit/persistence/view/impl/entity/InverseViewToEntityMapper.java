@@ -30,6 +30,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
+import java.util.Map;
 
 /**
  *
@@ -54,13 +55,13 @@ public class InverseViewToEntityMapper<E> implements InverseElementToEntityMappe
     private final DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher;
     private final DirtyAttributeFlusher<?, Object, Object> idAttributeFlusher;
 
-    public InverseViewToEntityMapper(EntityViewManagerImpl evm, ViewType<?> childViewType, Mapper<Object, Object> parentEntityOnChildViewMapper, Mapper<Object, Object> parentEntityOnChildEntityAddMapper, Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper,
+    public InverseViewToEntityMapper(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ViewType<?> childViewType, Mapper<Object, Object> parentEntityOnChildViewMapper, Mapper<Object, Object> parentEntityOnChildEntityAddMapper, Mapper<Object, Object> parentEntityOnChildEntityRemoveMapper,
                                      ViewToEntityMapper elementViewToEntityMapper, DirtyAttributeFlusher<?, Object, Object> parentReferenceAttributeFlusher, DirtyAttributeFlusher<?, Object, Object> idAttributeFlusher) {
         this.viewType = (ViewTypeImplementor<?>) childViewType;
         this.elementViewToEntityMapper = elementViewToEntityMapper;
         this.viewIdAccessor = Accessors.forViewId(evm, childViewType, true);
         // TODO: this should be the same loader that the viewToEntityMapper uses
-        this.entityLoader = new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, childViewType));
+        this.entityLoader = new ReferenceEntityLoader(evm, childViewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, childViewType));
         this.persistAllowed = false;
         EntityType<?> entityType = evm.getMetamodel().getEntityMetamodel().entity(childViewType.getEntityClass());
         this.parentEntityOnChildViewMapper = parentEntityOnChildViewMapper;

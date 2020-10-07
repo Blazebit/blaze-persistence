@@ -16,6 +16,7 @@ Not yet released
 * Fix Hibernate 5.4.19+ integration issue
 * Fix boot exception when using Hibernate `@Where` on entity level
 * Properly set `fromClassExplicitlySet` flag when using the subquery `from(String correlationPath)` methods
+* Fix concurrency issue during `EntityViewUpdaterImpl` initialization which can lead to a NPE
 
 ### Backwards-incompatible changes
 
