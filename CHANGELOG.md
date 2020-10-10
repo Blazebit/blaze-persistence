@@ -17,6 +17,7 @@ Not yet released
 * Fix boot exception when using Hibernate `@Where` on entity level
 * Properly set `fromClassExplicitlySet` flag when using the subquery `from(String correlationPath)` methods
 * Fix concurrency issue during `EntityViewUpdaterImpl` initialization which can lead to a NPE
+* Fix NPE during flush for views that were converted with `ConvertOption.CREATE_NEW` and contain an updatable inverse mapping
 
 ### Backwards-incompatible changes
 
