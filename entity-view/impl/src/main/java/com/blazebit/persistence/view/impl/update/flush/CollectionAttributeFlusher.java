@@ -1207,10 +1207,8 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         // TODO: should "replace" mean that the initial values we know right now are "removed" or the actual current values?
                         Map<Object, Object> added = Collections.emptyMap();
                         Map<Object, Object> removed = new IdentityHashMap<>();
-                        if (initial != null) {
-                            for (Object o : (Collection<?>) initial) {
-                                removed.put(o, o);
-                            }
+                        for (Object o : (Collection<?>) initial) {
+                            removed.put(o, o);
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
