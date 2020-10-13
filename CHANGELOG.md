@@ -18,6 +18,7 @@ Not yet released
 * Properly set `fromClassExplicitlySet` flag when using the subquery `from(String correlationPath)` methods
 * Fix concurrency issue during `EntityViewUpdaterImpl` initialization which can lead to a NPE
 * Fix NPE during flush for views that were converted with `ConvertOption.CREATE_NEW` and contain an updatable inverse mapping
+* Fix issues with using Javassist default class pool which leads to issues when deploying multiple WARs
 
 ### Backwards-incompatible changes
 
