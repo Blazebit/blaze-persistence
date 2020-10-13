@@ -155,7 +155,9 @@ public class ProxyFactory {
     }
 
     public ProxyFactory(boolean unsafeDisabled, boolean strictCascadingCheck, PackageOpener packageOpener) {
-        this.pool = new ClassPool(ClassPool.getDefault());
+        ClassPool pool = new ClassPool((ClassPool) null);
+        pool.appendSystemPath();
+        this.pool = pool;
         this.unsafeDisabled = unsafeDisabled;
         this.strictCascadingCheck = strictCascadingCheck;
         this.packageOpener = packageOpener;
