@@ -14,31 +14,27 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.spi;
+package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.spi.JpqlMacro;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Interface implemented by the entity view provider.
- *
- * Represents the current view that is accessible through the expression <code>VIEW()</code>.
+ * Annotation to register entity view roots.
  *
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.0
  */
-public interface ViewJpqlMacro extends JpqlMacro {
+@Target({ ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface EntityViewRoots {
 
     /**
-     * Returns the current view path.
+     * The entity view root definitions.
      *
-     * @return the current view path
+     * @return The entity view root definitions
      */
-    public String getViewPath();
-
-    /**
-     * Sets the current view path.
-     *
-     * @param viewPath The new view path
-     */
-    public void setViewPath(String viewPath);
+    EntityViewRoot[] value();
 }

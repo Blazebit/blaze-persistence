@@ -522,7 +522,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         return rootAlias;
     }
 
-    String addRoot(EntityType<?> entityType, String rootAlias) {
+    String addRoot(EntityType<?> entityType, String rootAlias, boolean lateral) {
         if (rootAlias == null) {
             // TODO: not sure if other JPA providers support case sensitive queries like hibernate
             String entityTypeName = entityType.getName();
@@ -542,9 +542,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         }
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, false, true, aliasManager);
-        JoinNode rootNode = JoinNode.createRootNode(entityType, rootAliasInfo);
+        JoinNode rootNode;
+        if (lateral)  {
+            JoinNode baseNode = rootNodes.get(0);
+            rootNode = JoinNode.createEntityJoinNode(baseNode, JoinType.LEFT, entityType, rootAliasInfo, true);
+            baseNode.addEntityJoin(rootNode);
+        } else {
+            rootNode = JoinNode.createRootNode(entityType, rootAliasInfo);
+            rootNodes.add(rootNode);
+        }
         rootAliasInfo.setJoinNode(rootNode);
-        rootNodes.add(rootNode);
         explicitJoinNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
@@ -655,7 +662,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 ArrayExpression arrayExpression = (ArrayExpression) pathElements.get(0);
                 JoinNode matchingNode = implicitCorrelation ? findNode(null, null, arrayExpression) : null;
                 if (matchingNode == null) {
-                    rootAlias = addRoot(metamodel.entity(((EntityLiteral) arrayExpression.getBase()).getValue()), rootAlias);
+                    rootAlias = addRoot(metamodel.entity(((EntityLiteral) arrayExpression.getBase()).getValue()), rootAlias, lateral && pathElements.size() == 1);
                     implicitJoinIndex(arrayExpression);
                     correlationParent = ((JoinAliasInfo) aliasManager.getAliasInfo(rootAlias)).getJoinNode();
                     generateAndApplyOnPredicate(correlationParent, arrayExpression);
@@ -945,7 +952,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private boolean isJoinable(JoinResult result, Expression finalExpression) {
         if (finalExpression instanceof PropertyExpression) {
-            AttributeHolder attributeForJoining = JpaUtils.getAttributeForJoining(metamodel, result.baseNode.getNodeType(), finalExpression, result.baseNode.getAlias());
+            AttributeHolder attributeForJoining = JpaUtils.getAttributeForJoining(metamodel, result.baseNode.getNodeType(), finalExpression, null);
             if (!mainQuery.jpaProvider.getJpaMetamodelAccessor().isJoinable(attributeForJoining.getAttribute())) {
                 return false;
             }
@@ -1009,7 +1016,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!aliasManager.isAliasAvailable(alias)) {
                 alias = aliasManager.generateRootAlias(alias);
             }
-            String baseAlias = addRoot(result.baseNode.getEntityType(), alias);
+            String baseAlias = addRoot(result.baseNode.getEntityType(), alias, false);
             JoinNode joinNode = ((JoinAliasInfo) aliasManager.getAliasInfo(baseAlias)).getJoinNode();
             joinNode.getAliasInfo().setImplicit(true);
             Predicate correlationPredicate = expressionFactory.createBooleanExpression(createCorrelationPredicate(result.baseNode.getEntityType(), result.baseNode.getAliasExpression(), baseAlias), false);
@@ -2478,7 +2485,19 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         }
 
         if (elementExpr instanceof ArrayExpression) {
-            throw new IllegalArgumentException("Array expressions are not allowed!");
+            ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
+            implicitJoinIndex(arrayExpr);
+            if (arrayExpr.getBase() instanceof PropertyExpression) {
+                List<String> resultFields = result.addToList(new ArrayList<String>());
+                current = current == null ? getRootNodeOrFail("Could not join path [", expr, "] because it did not use an absolute path but multiple root nodes are available!") : current;
+                resultFields.add(arrayExpr.getBase().toString());
+                result = createOrUpdateNode(current, resultFields, treatType, alias, type, null, false, defaultJoin, true, true);
+            } else {
+                Class<?> entityClass = ((EntityLiteral) arrayExpr.getBase()).getValue();
+                joinOn(null, rootNodes.get(0).getAlias(), entityClass, alias, JoinType.LEFT, false).end();
+                result = new JoinResult(((JoinAliasInfo) aliasManager.getAliasInfo(alias)).getJoinNode());
+            }
+            generateAndApplyOnPredicate(result.baseNode, arrayExpr);
         } else if (elementExpr instanceof MapKeyExpression) {
             MapKeyExpression mapKeyExpression = (MapKeyExpression) elementExpr;
             boolean fromSubquery = false;
@@ -2728,7 +2747,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                     metamodel,
                                     singleValuedAssociationRoot.getNodeType(),
                                     elementExpr,
-                                    singleValuedAssociationRoot.getAlias()
+                                    null
                             );
                             Type<?> type = attributeHolder.getAttributeType();
                             result = new JoinResult(singleValuedAssociationRoot, Arrays.asList(elementExpr.toString()), type, -1, -1);
@@ -2749,7 +2768,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                         metamodel,
                                         treeNode.getDefaultNode().getNodeType(),
                                         restExpression,
-                                        treeNode.getDefaultNode().getAlias()
+                                        null
                                 );
                                 Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(treeNode.getDefaultNode(), Arrays.asList(elementString), type, -1, -1);
@@ -2774,7 +2793,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                         metamodel,
                                         current.getNodeType(),
                                         resultExpr,
-                                        current.getAlias()
+                                        null
                                 );
                                 Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(current, Arrays.asList(associationName), type, -1, -1);
@@ -3385,7 +3404,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(resultFields.get(i));
             }
             Expression expression = expressionFactory.createSimpleExpression(sb.toString(), false);
-            Type<?> type = JpaUtils.getAttributeForJoining(metamodel, current.getNodeType(), expression, current.getAlias()).getAttributeType();
+            Type<?> type = JpaUtils.getAttributeForJoining(metamodel, current.getNodeType(), expression, null).getAttributeType();
             return new JoinResult(current, resultFields, type, singleValuedAssociationNameStartIndex, singleValuedAssociationNameEndIndex);
         }
     }
@@ -3456,7 +3475,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Type<?> baseNodeType = baseNode.getNodeType();
         // The given path may be relative to the root or it might be an alias
         if (objectLeafAllowed) {
-            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
+            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), null);
             Attribute<?, ?> attr = attributeHolder.getAttribute();
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name '" + attributeName + "' was not found within managed type " + JpaMetamodelUtils.getTypeName(baseNodeType));
@@ -3481,7 +3500,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         } else {
             JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
-            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), baseNode.getAlias());
+            AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(attributeName), null);
             Attribute<?, ?> attr = attributeHolder.getAttribute();
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
@@ -3521,7 +3540,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         Type<?> baseNodeType = baseNode.getNodeType();
         String joinRelationName = StringUtils.join(".", joinRelationAttributes);
         JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
-        AttributeHolder attrJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(joinRelationName), baseNode.getAlias());
+        AttributeHolder attrJoinResult = JpaUtils.getAttributeForJoining(metamodel, baseNodeType, expressionFactory.createJoinPathExpression(joinRelationName), null);
         Attribute<?, ?> attr = attrJoinResult.getAttribute();
         if (attr == null) {
             throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + JpaMetamodelUtils.getTypeName(baseNodeType));
@@ -3888,7 +3907,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
             });
-            joinNode.setOnPredicate((CompoundPredicate) predicate);
+            if (joinNode.getOnPredicate() != null) {
+                joinNode.getOnPredicate().getChildren().addAll(((CompoundPredicate) predicate).getChildren());
+            } else {
+                joinNode.setOnPredicate((CompoundPredicate) predicate);
+            }
             joinNode.updateClauseDependencies(ClauseType.JOIN, new LinkedHashSet<JoinNode>());
         }
     }

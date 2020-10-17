@@ -26,6 +26,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
+import java.util.Set;
+
 /**
  *
  * @author Christian Beikov
@@ -44,7 +46,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     protected final String[] fetches;
     protected final Limiter limiter;
 
-    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
+    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
         this.correlationBasis = correlationBasis.intern();
         this.alias = alias;
         this.attributePath = attributePath;
@@ -65,7 +67,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
             EmbeddingViewJpqlMacro embeddingViewJpqlMacro = (EmbeddingViewJpqlMacro) ef.getDefaultMacroConfiguration().get("EMBEDDING_VIEW").getState()[0];
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
             embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, correlationExternalAlias, joinBase, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, correlationExternalAlias, joinBase, null, rootAliases, true, false);
             generator.setQueryBuffer(sb);
             correlationResult.accept(generator);
             embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);

@@ -25,6 +25,7 @@ import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.impl.objectbuilder.SecondaryMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
@@ -41,9 +42,11 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -58,20 +61,22 @@ public class TupleElementMapperBuilder implements ServiceProvider {
     private final String aliasPrefix;
     private final String mappingPrefix;
     private final String idPrefix;
-    private final EntityType<?> treatType;
+    private final Map<String, Type<?>> rootTypes;
     private final EntityMetamodel metamodel;
     private final ExpressionFactory ef;
     private final String constraint;
     private final Integer subtypeIndex;
     private final List<TupleElementMapper> mappers;
     private final List<String> parameterMappings;
+    private final List<SecondaryMapper> secondaryMapper;
     private final TupleTransformatorFactory tupleTransformatorFactory;
 
-    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef) {
-        this(mapperIndex, constraint, subtypeIndex, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, new ArrayList<TupleElementMapper>(), new ArrayList<String>(), new TupleTransformatorFactory());
+    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef, Map<String, Type<?>> rootTypes) {
+        this(mapperIndex, constraint, subtypeIndex, aliasPrefix, mappingPrefix, idPrefix, treatType, metamodel, ef, new ArrayList<TupleElementMapper>(), new ArrayList<String>(), new ArrayList<SecondaryMapper>(), new TupleTransformatorFactory(), rootTypes);
     }
 
-    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef, List<TupleElementMapper> mappers, List<String> parameterMappings, TupleTransformatorFactory tupleTransformatorFactory) {
+    public TupleElementMapperBuilder(int mapperIndex, String constraint, Integer subtypeIndex, String aliasPrefix, String mappingPrefix, String idPrefix, EntityType<?> treatType, EntityMetamodel metamodel, ExpressionFactory ef,
+                                     List<TupleElementMapper> mappers, List<String> parameterMappings, List<SecondaryMapper> secondaryMapper, TupleTransformatorFactory tupleTransformatorFactory, Map<String, Type<?>> rootTypes) {
         this.mapperIndex = mapperIndex;
         this.constraint = constraint;
         this.subtypeIndex = subtypeIndex;
@@ -82,11 +87,12 @@ public class TupleElementMapperBuilder implements ServiceProvider {
             this.mappingPrefix = mappingPrefix;
         }
         this.idPrefix = idPrefix;
-        this.treatType = treatType;
+        this.rootTypes = rootTypes;
         this.metamodel = metamodel;
         this.ef = ef;
         this.mappers = mappers;
         this.parameterMappings = parameterMappings;
+        this.secondaryMapper = secondaryMapper;
         this.tupleTransformatorFactory = tupleTransformatorFactory;
     }
 
@@ -125,6 +131,14 @@ public class TupleElementMapperBuilder implements ServiceProvider {
     public void addQueryParam(String paramName) {
         mappers.add(NULL_MAPPER);
         parameterMappings.add(paramName);
+    }
+
+    public void addSecondaryMapper(SecondaryMapper mapper) {
+        secondaryMapper.add(mapper);
+    }
+
+    public void addSecondaryMappers(SecondaryMapper[] mappers) {
+        Collections.addAll(this.secondaryMapper, mappers);
     }
 
     public String getAlias(String attributeName) {
@@ -190,7 +204,7 @@ public class TupleElementMapperBuilder implements ServiceProvider {
     public String getMapping(Expression expression) {
         StringBuilder sb = new StringBuilder();
         if (mappingPrefix != null && !mappingPrefix.isEmpty()) {
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, mappingPrefix, null, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, mappingPrefix, null, null, rootTypes.keySet(), true, false);
             generator.setQueryBuffer(sb);
             expression.accept(generator);
         } else {
@@ -215,7 +229,7 @@ public class TupleElementMapperBuilder implements ServiceProvider {
         }
         if (prefixParts != null && !prefixParts.isEmpty()) {
             Expression expr = ef.createSimpleExpression(mapping, false, false, true);
-            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefixParts, null, null, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefixParts, null, null, rootTypes.keySet(), true, false);
             generator.setQueryBuffer(sb);
             expr.accept(generator);
         } else {

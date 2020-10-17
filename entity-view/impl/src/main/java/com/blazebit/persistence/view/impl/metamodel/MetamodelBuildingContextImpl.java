@@ -29,6 +29,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -37,9 +38,11 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
 import com.blazebit.persistence.view.impl.MacroConfigurationExpressionFactory;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.TypeExtractingCorrelationBuilder;
 import com.blazebit.persistence.view.impl.macro.DefaultViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.FunctionPassthroughJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableEmbeddingViewJpqlMacro;
@@ -88,6 +91,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     private final DbmsDialect dbmsDialect;
     private final Map<String, JpqlFunction> jpqlFunctions;
     private final ExpressionFactory expressionFactory;
+    private final MacroConfigurationExpressionFactory typeExtractionExpressionFactory;
     private final MacroConfigurationExpressionFactory typeValidationExpressionFactory;
     private final ProxyFactory proxyFactory;
     private final Map<Class<?>, ViewMapping> viewMappings;
@@ -113,6 +117,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         this.dbmsDialect = dbmsDialect;
         this.jpqlFunctions = jpqlFunctions;
         this.expressionFactory = expressionFactory;
+        this.typeExtractionExpressionFactory = createMacroAwareExpressionFactory("this");
         this.typeValidationExpressionFactory = createTypeValidationExpressionFactory();
         this.proxyFactory = proxyFactory;
         this.viewMappings = viewMappings;
@@ -265,7 +270,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping) {
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClass);
         String expression;
         if (mapping instanceof Mapping) {
@@ -287,15 +292,33 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                 ));
             }
         } else if (mapping instanceof MappingCorrelated) {
-            // We can't determine the managed type
-            return Collections.emptyList();
+            MappingCorrelated m = (MappingCorrelated) mapping;
+            CorrelationProviderFactory correlationProviderFactory = CorrelationProviderHelper.getFactory(m.correlator());
+            ScalarTargetResolvingExpressionVisitor resolver = new ScalarTargetResolvingExpressionVisitor(entityClass, getEntityMetamodel(), getJpqlFunctions(), rootTypes);
+            javax.persistence.metamodel.Type<?> type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, "_alias", this, resolver);
+            if (type == null) {
+                // We can't determine the managed type
+                return Collections.emptyList();
+            }
+            managedType = (ManagedType<?>) type;
+            expression = m.correlationResult();
+            // Correlation result is the correlated type, so the possible target type is the managed type
+            if (expression.isEmpty()) {
+                return Collections.<ScalarTargetResolvingExpressionVisitor.TargetType>singletonList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
+                        false,
+                        null,
+                        managedType.getJavaType(),
+                        null,
+                        null
+                ));
+            }
         } else if (mapping instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             if (!mappingSubquery.expression().isEmpty()) {
                 Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(((MappingSubquery) mapping).expression(), false, true, false);
                 AliasReplacementVisitor aliasReplacementVisitor = new AliasReplacementVisitor(NullExpression.INSTANCE, mappingSubquery.subqueryAlias());
                 simpleExpression.accept(aliasReplacementVisitor);
-                ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(entityMetamodel.getManagedType(entityClass), entityMetamodel, jpqlFunctions);
+                ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(entityClass, entityMetamodel, jpqlFunctions, rootTypes);
                 simpleExpression.accept(visitor);
                 return visitor.getPossibleTargetTypes();
             }
@@ -323,7 +346,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             ));
         }
         Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, false, true);
-        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions);
+        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions, rootTypes);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargetTypes();
     }
@@ -486,8 +509,8 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory() {
-        return createMacroAwareExpressionFactory("syntax_checking_placeholder");
+    public ExpressionFactory getTypeExtractionExpressionFactory() {
+        return typeExtractionExpressionFactory;
     }
 
     @Override

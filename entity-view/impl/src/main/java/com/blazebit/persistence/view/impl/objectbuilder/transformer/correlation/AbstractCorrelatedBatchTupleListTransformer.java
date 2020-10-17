@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryEmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.macro.MutableViewJpqlMacro;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.LateAdditionalObjectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
@@ -68,7 +69,7 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
     protected CorrelatedSubqueryEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     protected Query query;
 
-    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches,
+    public AbstractCorrelatedBatchTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewTypeImplementor<?> viewRootType, ManagedViewTypeImplementor<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches,
                                                        Expression indexExpression, Correlator indexCorrelator, boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int defaultBatchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(ef, correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.batchSize = entityViewConfiguration.getBatchSize(attributePath, defaultBatchSize);

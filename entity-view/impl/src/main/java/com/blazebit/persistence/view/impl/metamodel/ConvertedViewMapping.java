@@ -23,8 +23,10 @@ import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
+import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
+import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.ManagedType;
@@ -205,6 +207,26 @@ public class ConvertedViewMapping implements ViewMapping {
     @Override
     public void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders) {
         delegate.setViewFilterProviders(viewFilterProviders);
+    }
+
+    @Override
+    public Set<EntityViewRootMapping> getEntityViewRoots() {
+        return delegate.getEntityViewRoots();
+    }
+
+    @Override
+    public void setEntityViewRoots(Set<EntityViewRootMapping> entityViewRoots) {
+        delegate.setEntityViewRoots(entityViewRoots);
+    }
+
+    @Override
+    public Set<ViewRoot> getViewRoots(MetamodelBuildingContext context) {
+        return delegate.getViewRoots(context);
+    }
+
+    @Override
+    public Map<String, javax.persistence.metamodel.Type<?>> getViewRootTypes(MetamodelBuildingContext context) {
+        return delegate.getViewRootTypes(context);
     }
 
     @Override

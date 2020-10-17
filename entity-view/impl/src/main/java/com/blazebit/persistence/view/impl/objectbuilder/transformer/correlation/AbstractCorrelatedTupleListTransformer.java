@@ -26,10 +26,10 @@ import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.ExpressionUtils;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.Parameter;
 import javax.persistence.metamodel.IdentifiableType;
@@ -53,8 +53,8 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final JpaProvider jpaProvider;
     protected final Correlator correlator;
     protected final ContainerAccumulator<Object> containerAccumulator;
-    protected final ManagedViewType<?> viewRootType;
-    protected final ManagedViewType<?> embeddingViewType;
+    protected final ManagedViewTypeImplementor<?> viewRootType;
+    protected final ManagedViewTypeImplementor<?> embeddingViewType;
     protected final int viewRootIndex;
     protected final int embeddingViewIndex;
     protected final String correlationAlias;
@@ -72,7 +72,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     protected final EntityViewConfiguration entityViewConfiguration;
 
-    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewType<?> viewRootType, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public AbstractCorrelatedTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, ManagedViewTypeImplementor<?> viewRootType, ManagedViewTypeImplementor<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                   String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);
         this.containerAccumulator = (ContainerAccumulator<Object>) containerAccumulator;
@@ -90,7 +90,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.entityViewConfiguration = entityViewConfiguration;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         this.indexCorrelator = indexCorrelator;
-        this.indexExpression = indexExpression == null ? null : PrefixingQueryGenerator.prefix(ef, indexExpression, correlationAlias, true);
+        this.indexExpression = indexExpression == null ? null : PrefixingQueryGenerator.prefix(ef, indexExpression, correlationAlias, viewRootType.getEntityViewRootTypes().keySet(), true);
         this.fetches = prefix(correlationAlias, fetches);
         this.indexFetches = prefix(this.indexExpression, indexFetches);
         if (limiter == null) {
@@ -101,7 +101,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         if (ExpressionUtils.isEmptyOrThis(correlationResult)) {
             this.correlationResult = correlationExternalAlias;
         } else {
-            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, true);
+            this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, viewRootType.getEntityViewRootTypes().keySet(), true);
         }
     }
 

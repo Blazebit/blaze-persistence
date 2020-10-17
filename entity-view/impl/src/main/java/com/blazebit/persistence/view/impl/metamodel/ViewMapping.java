@@ -19,9 +19,12 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewFilterProvider;
+import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
+import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -96,4 +99,12 @@ public interface ViewMapping extends Comparable<ViewMapping>, EntityViewMapping 
     Map<String, Class<? extends ViewFilterProvider>> getViewFilterProviders();
 
     void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders);
+
+    Set<EntityViewRootMapping> getEntityViewRoots();
+
+    void setEntityViewRoots(Set<EntityViewRootMapping> entityViewRoots);
+
+    Set<ViewRoot> getViewRoots(MetamodelBuildingContext context);
+
+    Map<String, Type<?>> getViewRootTypes(MetamodelBuildingContext context);
 }

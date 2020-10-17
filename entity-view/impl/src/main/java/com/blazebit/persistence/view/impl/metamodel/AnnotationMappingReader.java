@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.BatchFetch;
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
@@ -26,6 +27,8 @@ import com.blazebit.persistence.view.EntityViewInheritanceMapping;
 import com.blazebit.persistence.view.EntityViewListener;
 import com.blazebit.persistence.view.EntityViewListeners;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewRoot;
+import com.blazebit.persistence.view.EntityViewRoots;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.LockOwner;
@@ -55,6 +58,7 @@ import com.blazebit.persistence.view.With;
 import com.blazebit.persistence.view.impl.EntityViewListenerFactory;
 import com.blazebit.persistence.view.impl.metamodel.analysis.AssignmentAnalyzer;
 import com.blazebit.persistence.view.impl.metamodel.analysis.Frame;
+import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 import com.blazebit.reflection.ReflectionUtils;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -77,8 +81,10 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -225,6 +231,7 @@ public class AnnotationMappingReader implements MappingReader {
 
         Set<Class<? extends CTEProvider>> cteProviders = new LinkedHashSet<>();
         Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders = new HashMap<>();
+        Map<String, EntityViewRootMapping> viewRootMappings = new LinkedHashMap<>();
         for (Annotation a : AnnotationUtils.getAllAnnotations(entityViewClass)) {
             if (a instanceof With) {
                 cteProviders.addAll(Arrays.asList(((With) a).value()));
@@ -234,12 +241,21 @@ public class AnnotationMappingReader implements MappingReader {
             } else if (a instanceof ViewFilters) {
                 ViewFilters viewFilters = (ViewFilters) a;
                 for (ViewFilter viewFilter : viewFilters.value()) {
-                    viewFilterProviders.put(viewFilter.name(), viewFilter.value());
+                    addFilterMapping(viewFilter.name(), viewFilter.value(), viewFilterProviders, entityViewClass, context);
+                }
+            } else if (a instanceof EntityViewRoot) {
+                EntityViewRoot entityViewRoot = (EntityViewRoot) a;
+                addEntityViewRootMapping(entityViewRoot, viewRootMappings, entityViewClass, context);
+            } else if (a instanceof EntityViewRoots) {
+                EntityViewRoots entityViewRoots = (EntityViewRoots) a;
+                for (EntityViewRoot entityViewRoot : entityViewRoots.value()) {
+                    addEntityViewRootMapping(entityViewRoot, viewRootMappings, entityViewClass, context);
                 }
             }
         }
         viewMapping.setCteProviders(cteProviders);
         viewMapping.setViewFilterProviders(viewFilterProviders);
+        viewMapping.setEntityViewRoots(viewRootMappings.isEmpty() ? Collections.<EntityViewRootMapping>emptySet() : new LinkedHashSet<>(viewRootMappings.values()));
 
         UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(entityViewClass, UpdatableEntityView.class);
 
@@ -840,6 +856,38 @@ public class AnnotationMappingReader implements MappingReader {
 
         if (!errorOccurred) {
             viewFilters.put(filterName, viewFilterProvider);
+        }
+    }
+
+    private void addEntityViewRootMapping(EntityViewRoot entityViewRoot, Map<String, EntityViewRootMapping> viewRootMappings, Class<?> entityViewClass, MetamodelBootContext context) {
+        boolean errorOccurred = false;
+        String viewRootName = entityViewRoot.name();
+        if (viewRootName != null && viewRootName.isEmpty()) {
+            errorOccurred = true;
+            context.addError("Illegal empty name for the entity view root at the class '" + entityViewClass.getName() + "'!");
+        } else if (viewRootMappings.containsKey(viewRootName)) {
+            errorOccurred = true;
+            context.addError("Illegal duplicate entity view root name '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'!");
+        }
+        Class<?> entityClass = entityViewRoot.entity();
+        String joinExpression = entityViewRoot.expression();
+        Class<? extends CorrelationProvider> correlationProvider = entityViewRoot.correlator();
+        String conditionExpression = entityViewRoot.condition();
+        if (entityClass == void.class) {
+            entityClass = null;
+        }
+        if (joinExpression != null && joinExpression.isEmpty()) {
+            joinExpression = null;
+        }
+        if (correlationProvider == CorrelationProvider.class) {
+            correlationProvider = null;
+        }
+        if (conditionExpression != null && conditionExpression.isEmpty()) {
+            conditionExpression = null;
+        }
+
+        if (!errorOccurred) {
+            viewRootMappings.put(viewRootName, new EntityViewRootMappingImpl(viewRootName, entityClass, joinExpression, correlationProvider, conditionExpression, entityViewRoot.joinType(), entityViewRoot.fetches(), Arrays.asList(entityViewRoot.order()), entityViewRoot.limit(), entityViewRoot.offset()));
         }
     }
 

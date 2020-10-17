@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -39,8 +41,8 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
 
     private final CorrelationProvider provider;
 
-    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter) {
-        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches, limiter);
+    public ExpressionCorrelationJoinTupleElementMapper(CorrelationProvider provider, ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
+        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches, limiter, rootAliases);
         this.provider = provider;
     }
 
@@ -63,7 +65,7 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
             originalMaxResults = ((LimitBuilder<?>) queryBuilder).getMaxResults();
         }
 
-        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, fullQueryBuilder, joinBase, correlationAlias, correlationExternalAlias, attributePath, limiter);
+        JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, fullQueryBuilder, joinBase, correlationAlias, correlationExternalAlias, attributePath, JoinType.LEFT, limiter);
         provider.applyCorrelation(correlationBuilder, correlationBasis);
 
         if (queryBuilder instanceof LimitBuilder<?>) {

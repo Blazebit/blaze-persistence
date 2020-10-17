@@ -31,9 +31,10 @@ public interface CorrelationProvider {
      * Applies a correlation to a query builder.
      * Depending on the correlation strategy, the <i>correlationExpression</i> may be one of the following:
      * <ul>
-     *     <li>{@link FetchStrategy#SELECT} - A named parameter</li>
-     *     <li>{@link FetchStrategy#SUBSELECT} - A named collection parameter</li>
+     *     <li>{@link FetchStrategy#SELECT} - A named parameter or correlation expression if batched</li>
+     *     <li>{@link FetchStrategy#SUBSELECT} - The correlation expression</li>
      *     <li>{@link FetchStrategy#JOIN} - The correlation expression</li>
+     *     <li>{@link FetchStrategy#MULTISET} - The correlation expression</li>
      * </ul>
      *
      * To be able to make use of all strategies it is best if you use the IN predicate in conjunction with the <i>correlationExpression</i>.

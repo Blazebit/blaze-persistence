@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A static correlation provider implementation.
@@ -37,12 +38,14 @@ public class StaticCorrelationProvider implements CorrelationProvider, Correlati
     private final String correlationKeyAlias;
     private final int approximateExpressionSize;
     private final Predicate correlationPredicate;
+    private final Set<String> rootAliases;
 
-    public StaticCorrelationProvider(Class<?> correlated, String correlationKeyAlias, String correlationExpression, Predicate correlationPredicate) {
+    public StaticCorrelationProvider(Class<?> correlated, String correlationKeyAlias, String correlationExpression, Predicate correlationPredicate, Set<String> rootAliases) {
         this.correlated = correlated;
         this.correlationKeyAlias = correlationKeyAlias;
         this.approximateExpressionSize = correlationExpression.length() * 2;
         this.correlationPredicate = correlationPredicate;
+        this.rootAliases = rootAliases;
     }
 
     @Override
@@ -55,18 +58,22 @@ public class StaticCorrelationProvider implements CorrelationProvider, Correlati
         return this;
     }
 
+    public Predicate getCorrelationPredicate() {
+        return correlationPredicate;
+    }
+
     @Override
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
         String alias = correlationBuilder.getCorrelationAlias();
 
         ExpressionFactory expressionFactory = correlationBuilder.getService(ExpressionFactory.class);
-        PrefixingQueryGenerator prefixingQueryGenerator = new PrefixingQueryGenerator(expressionFactory, alias, correlationExpression, correlationKeyAlias, PrefixingQueryGenerator.DEFAULT_QUERY_ALIASES, true, false);
+        PrefixingQueryGenerator prefixingQueryGenerator = new PrefixingQueryGenerator(expressionFactory, alias, correlationExpression, correlationKeyAlias, rootAliases, true, false);
         StringBuilder sb = new StringBuilder(approximateExpressionSize);
         prefixingQueryGenerator.setQueryBuffer(sb);
         correlationPredicate.accept(prefixingQueryGenerator);
         String finalExpression = sb.toString();
 
-        correlationBuilder.correlate(correlated).setOnExpression(finalExpression);
+        correlationBuilder.correlate(correlated).onExpression(finalExpression).end();
     }
 
 }

@@ -21,9 +21,9 @@ import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Map;
 
@@ -34,15 +34,16 @@ import java.util.Map;
  */
 public class CorrelatedSingularSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
 
-    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewType<?> viewRoot, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
+    public CorrelatedSingularSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRoot, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
+                                                                  Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
                                                                   String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
         super(correlator, evm, viewRoot, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter);
     }
 
     @Override
     public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex,
-                correlationBasisIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
+        return new CorrelatedSingularSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory,
+                attributePath, fetches, viewRootIndex, embeddingViewIndex, correlationBasisIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
     }
 
 }

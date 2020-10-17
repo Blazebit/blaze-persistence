@@ -16,16 +16,28 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.ViewTransition;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.StaticCorrelationProvider;
+import com.blazebit.persistence.view.impl.StaticPathCorrelationProvider;
+import com.blazebit.persistence.view.impl.TypeExtractingCorrelationBuilder;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
+import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.EntityViewAttributeMapping;
 import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
+import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.metamodel.EmbeddableType;
@@ -33,6 +45,9 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,6 +128,9 @@ public class ViewMappingImpl implements ViewMapping {
 
     private Set<Class<? extends CTEProvider>> cteProviders;
     private Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders;
+    private Set<EntityViewRootMapping> entityViewRoots;
+    private Set<ViewRoot> viewRoots;
+    private Map<String, Type<?>> viewRootTypes;
 
     public ViewMappingImpl(Class<?> entityViewClass, Class<?> entityClass, MetamodelBootContext context) {
         this.entityViewClass = entityViewClass;
@@ -351,6 +369,122 @@ public class ViewMappingImpl implements ViewMapping {
     @Override
     public void setViewFilterProviders(Map<String, Class<? extends ViewFilterProvider>> viewFilterProviders) {
         this.viewFilterProviders = viewFilterProviders;
+    }
+
+    @Override
+    public Set<EntityViewRootMapping> getEntityViewRoots() {
+        return entityViewRoots;
+    }
+
+    @Override
+    public void setEntityViewRoots(Set<EntityViewRootMapping> entityViewRoots) {
+        this.entityViewRoots = entityViewRoots;
+        this.viewRoots = null;
+        this.viewRootTypes = null;
+    }
+
+    @Override
+    public Set<ViewRoot> getViewRoots(MetamodelBuildingContext context) {
+        if (viewRoots == null) {
+            initViewRoots(context);
+        }
+        return viewRoots;
+    }
+
+    @Override
+    public Map<String, Type<?>> getViewRootTypes(MetamodelBuildingContext context) {
+        if (viewRootTypes == null) {
+            initViewRoots(context);
+        }
+        return viewRootTypes;
+    }
+
+    private void initViewRoots(MetamodelBuildingContext context) {
+        if (entityViewRoots == null || entityViewRoots.isEmpty()) {
+            this.viewRoots = Collections.emptySet();
+            this.viewRootTypes = Collections.emptyMap();
+        } else {
+            this.viewRoots = new LinkedHashSet<>(entityViewRoots.size());
+            this.viewRootTypes = new HashMap<>(entityViewRoots.size());
+            Set<String> rootAliases = new HashSet<>(entityViewRoots.size());
+            for (EntityViewRootMapping entityViewRoot : entityViewRoots) {
+                rootAliases.add(entityViewRoot.getName());
+            }
+
+            for (EntityViewRootMapping entityViewRoot : entityViewRoots) {
+                String viewRootName = entityViewRoot.getName();
+                Class<?> entityClass = entityViewRoot.getManagedTypeClass();
+                String joinExpression = entityViewRoot.getJoinExpression();
+                Class<? extends CorrelationProvider> correlationProvider = entityViewRoot.getCorrelationProvider();
+                CorrelationProviderFactory correlationProviderFactory = null;
+                javax.persistence.metamodel.Type<?> type = null;
+                String conditionExpression = entityViewRoot.getConditionExpression();
+
+                if (entityClass != null) {
+                    if (joinExpression != null || correlationProvider != null) {
+                        context.addError("Illegal entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'! Only one of the attributes entity, expression or correlator may be used!");
+                    }
+                    if (conditionExpression == null) {
+                        context.addError("Illegal entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'! When using the entity attribute, a condition expression is required!");
+                    } else {
+                        correlationProviderFactory = new StaticCorrelationProvider(entityClass, viewRootName, conditionExpression, createPredicate(conditionExpression, context, viewRootName), rootAliases);
+                    }
+                } else if (joinExpression != null) {
+                    if (correlationProvider != null) {
+                        context.addError("Illegal entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'! Only one of the attributes entity, expression or correlator may be used!");
+                    }
+                    if (conditionExpression == null) {
+                        correlationProviderFactory = new StaticPathCorrelationProvider(joinExpression, viewRootName, "1=1", createPredicate("1=1", context, viewRootName), rootAliases);
+                    } else {
+                        correlationProviderFactory = new StaticPathCorrelationProvider(joinExpression, viewRootName, conditionExpression, createPredicate(conditionExpression, context, viewRootName), rootAliases);
+                    }
+                } else if (correlationProvider != null) {
+                    if (conditionExpression != null) {
+                        context.addError("Illegal entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'! When using the correlator attribute, using a condition expression is illegal!");
+                    }
+                    correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
+                } else {
+                    context.addError("Illegal entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "'! One of the attributes entity, expression or correlator must be used for a valid entity view root definition!");
+                }
+                String limitExpression;
+                String offsetExpression;
+                List<OrderByItem> orderByItems;
+                if (entityViewRoot.getLimitExpression() == null || entityViewRoot.getLimitExpression().isEmpty()) {
+                    limitExpression = null;
+                    offsetExpression = null;
+                    orderByItems = Collections.emptyList();
+                } else {
+                    limitExpression = entityViewRoot.getLimitExpression();
+                    offsetExpression = entityViewRoot.getOffsetExpression();
+                    if (offsetExpression == null || offsetExpression.isEmpty()) {
+                        offsetExpression = "0";
+                    }
+                    List<String> orderByItemExpressions = entityViewRoot.getOrderByItems();
+                    orderByItems = AbstractAttribute.parseOrderByItems(orderByItemExpressions);
+                }
+                try {
+                    type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, viewRootName, context, new ScalarTargetResolvingExpressionVisitor(getManagedType(context), context.getEntityMetamodel(), context.getJpqlFunctions(), viewRootTypes));
+                } catch (Exception ex) {
+                    StringWriter sw = new StringWriter();
+                    sw.append("Illegal entity view root mapping '").append(viewRootName).append("' at the class '").append(entityViewClass.getName()).append("'! The given entity class is not a valid managed type:\n");
+                    ex.printStackTrace(new PrintWriter(sw));
+                    context.addError(sw.toString());
+                }
+                viewRootTypes.put(viewRootName, type);
+                viewRoots.add(new ViewRootImpl(viewRootName, type, correlationProviderFactory, correlationProvider, entityViewRoot.getJoinType(), entityViewRoot.getFetches(), orderByItems, limitExpression, offsetExpression));
+            }
+        }
+    }
+
+    private Predicate createPredicate(String expression, MetamodelBuildingContext context, String viewRootName) {
+        try {
+            return context.getTypeValidationExpressionFactory().createBooleanExpression(expression, false);
+        } catch (SyntaxErrorException ex) {
+            context.addError("Syntax error in condition expression '" + expression + "' of the entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "': " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            context.addError("An error occurred while trying to resolve the condition expression '" + expression + "' of the entity view root mapping '" + viewRootName + "' at the class '" + entityViewClass.getName() + "': " + ex.getMessage());
+        }
+        return null;
     }
 
     @Override

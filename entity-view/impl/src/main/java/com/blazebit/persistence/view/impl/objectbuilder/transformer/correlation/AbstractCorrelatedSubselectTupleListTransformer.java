@@ -69,9 +69,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
     protected CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     protected MutableEmbeddingViewJpqlMacro embeddingViewJpqlMacro;
 
-    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewType<?> viewRootType, String viewRootAlias, ManagedViewType<?> embeddingViewType, String embeddingViewPath, Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression,
-                                                           CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity,
-                                                           Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
+    public AbstractCorrelatedSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
+                                                           Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                           String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, EntityViewConfiguration entityViewConfiguration) {
         super(ef, correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.evm = evm;
         this.viewRootAlias = viewRootAlias;

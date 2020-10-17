@@ -371,7 +371,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             return possibleTargets;
         }
         try {
-            return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping());
+            return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping(), viewMapping.getViewRootTypes(context));
         } catch (RuntimeException ex) {
             StringWriter sw = new StringWriter();
             sw.append("Exception while resolving type for ").append(getErrorLocation()).append(":\n");
@@ -386,7 +386,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             return possibleIndexTargets;
         }
         try {
-            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMappingIndex());
+            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMappingIndex(), viewMapping.getViewRootTypes(context));
         } catch (RuntimeException ex) {
             StringWriter sw = new StringWriter();
             sw.append("Exception while resolving index type for ").append(getErrorLocation()).append(":\n");

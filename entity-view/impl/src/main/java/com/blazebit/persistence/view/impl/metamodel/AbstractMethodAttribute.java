@@ -226,7 +226,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 }
             }
             if (mappingExpression != null) {
-                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable());
+                UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable(), getDeclaringType().getEntityViewRootTypes());
                 try {
                     mappingExpression.accept(visitor);
                     Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
@@ -308,7 +308,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 } else {
                     PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(context.getEntityMetamodel(), elementJpaType, null);
                     for (String value : writableMappedByMappings.values()) {
-                        visitor.reset(elementJpaType);
+                        visitor.clear();
                         context.getTypeValidationExpressionFactory().createPathExpression(value).accept(visitor);
                         Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
                         if (possibleTargets.size() > 1) {
