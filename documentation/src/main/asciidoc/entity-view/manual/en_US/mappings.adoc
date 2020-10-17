@@ -2057,3 +2057,114 @@ public interface BaseCatView {
 ----
 
 For more information about CTEs refer to the link:{core_doc}#ctes[CTE section] in the core documentation.
+
+=== Secondary entity view roots
+
+Up until now, mappings were always relative to the entity type of the entity view within which the mappings are defined,
+except for <<entity-array-expression-correlation,entity array expression correlations>>. Although entity array expressions are very mighty,
+they always imply a left join and there is no way to define a limit on elements to be joined. This is where secondary entity view roots come in.
+
+A secondary entity view root has an name and is defined on the entity view class level through the `@EntityViewRoot` and `@EntityViewRoots` annotations.
+The name is very important as secondary entity view roots are registered on the underlying query builder with the name as alias.
+
+Roughly speaking, secondary entity view roots can be thought of as a way to define joins that are registered and make them available through the defined name to mappings of an entity view.
+
+[source,java]
+----
+@EntityView(Cat.class)
+@EntityViewRoot(name = "v1", entity = Cat.class, condition = "id = VIEW(id)", joinType = JoinType.INNER)
+@EntityViewRoot(name = "v2", expression = "Cat[id = VIEW(id)]", limit = "1", order = "id DESC")
+@EntityViewRoot(name = "v3", correlator = CatView.TestCorrelator.class)
+public interface CatView {
+
+    @IdMapping
+    Long getId();
+
+    String getName();
+
+    @Mapping("v1.name")
+    String getV1Name();
+
+    @Mapping("v2.name")
+    String getV2Name();
+
+    @Mapping("v3.name")
+    String getV3Name();
+
+    class TestCorrelator implements CorrelationProvider {
+        @Override
+        public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
+            correlationBuilder.correlate(Cat.class)
+                    .on(correlationBuilder.getCorrelationAlias()).eqExpression(correlationExpression)
+                    .end();
+        }
+    }
+}
+----
+
+The generated query for such an entity view will roughly look like the following:
+
+[source,sql]
+----
+SELECT
+    cat.id
+    cat.name,
+    v1.name,
+    v2.name,
+    v3.name
+FROM Cat cat
+JOIN Cat v1 ON v1.id = cat.id
+LEFT JOIN LATERAL Cat(
+    SELECT v2_sub.age, v2_sub.father.id, v2_sub.id, v2_sub.mother.id, v2_sub.name
+    FROM Cat v2_sub
+    WHERE v2_sub.id = cat.id
+    ORDER BY v2_sub.id DESC
+    LIMIT 1
+) v2(age, father.id, id, mother.id, name) ON 1=1
+LEFT JOIN Cat v3 ON v3.id = cat.id
+----
+
+The big differences to using entity array expressions directly are:
+
+* Possibility to specify the join type
+* Possibility to specify a limit/offset with an order to implement a TOP-N per category join
+* Possibility to use subqueries in the `ON` clause through a `CorrelationProvider`
+
+A view root can be either defined through an entity class with a condition:
+
+[source,java]
+----
+@EntityViewRoot(
+    name = "root1",
+    entity = Document.class,
+    condition = "id = VIEW(documentId)"
+)
+----
+
+an expression with an optional condition:
+
+[source,java]
+----
+@EntityViewRoot(
+    name = "root2",
+    expression = "Document[id = VIEW(documentId)]",
+    condition = "root2.age > 10"
+)
+----
+
+or through a correlator:
+
+[source,java]
+----
+@EntityViewRoot(
+    name = "root3",
+    correlator = MyCorrelationProvider.class
+)
+----
+
+Paths that are not fully qualified i.e. relative paths that use no root alias, are prefixed with the entity view root alias.
+
+The entity view root name must be unique across all entity view types that are accessible through attributes.
+
+NOTE: During boot, every `CorrelationProvider` is probed to figure out the correlation type. If the `CorrelationProvider` is dynamic, you can optionally define the type through the `entity` attribute.
+NOTE: Using this feature requires a JPA provider that supports entity joins. Using `JoinType.INNER` can be a workaround as that is emulated through cross joins if needed.

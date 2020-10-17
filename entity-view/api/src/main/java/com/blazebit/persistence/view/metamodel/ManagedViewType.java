@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.FlushMode;
@@ -24,6 +25,7 @@ import com.blazebit.persistence.view.ViewTransition;
 import com.blazebit.persistence.view.With;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -269,5 +271,24 @@ public interface ManagedViewType<X> extends Type<X> {
      * @since 1.4.0
      */
     public Set<CTEProvider> getCteProviders();
+
+    /**
+     * Returns the set of {@link ViewRoot}s defined in the view using the {@link com.blazebit.persistence.view.EntityViewRoot} annotation.
+     *
+     * @return the set of {@link ViewRoot}s
+     * @since 1.6.0
+     */
+    public Set<ViewRoot> getEntityViewRoots();
+
+    /**
+     * Renders secondary mappings like {@link CTEProvider} and {@link ViewRoot}.
+     *
+     * @param viewPath The expression that refers to the root of the view
+     * @param baseQueryBuilder The base query builder to apply secondary mappings on
+     * @param optionalParameters The optional parameters to use for applying secondary mappings
+     * @param renderFetches Whether to render fetch joins
+     * @since 1.6.0
+     */
+    public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches);
 
 }

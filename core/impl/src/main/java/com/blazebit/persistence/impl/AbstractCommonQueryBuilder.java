@@ -327,7 +327,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
                 }
             } else {
-                this.joinManager.addRoot(type, alias);
+                this.joinManager.addRoot(type, alias, false);
             }
         }
 
@@ -1065,7 +1065,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     private String fromInternal(EntityType<?> type, String alias) {
         prepareFromModification();
-        String finalAlias = joinManager.addRoot(type, alias);
+        String finalAlias = joinManager.addRoot(type, alias, false);
         fromClassExplicitlySet = true;
         return finalAlias;
     }

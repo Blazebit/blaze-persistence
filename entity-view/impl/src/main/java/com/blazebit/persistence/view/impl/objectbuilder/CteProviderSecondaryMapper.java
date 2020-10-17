@@ -1,0 +1,53 @@
+/*
+ * Copyright 2014 - 2020 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.blazebit.persistence.view.impl.objectbuilder;
+
+import com.blazebit.persistence.CTEBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
+import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
+
+import java.util.Map;
+
+/**
+ * @author Christian Beikov
+ * @since 1.6.0
+ */
+public class CteProviderSecondaryMapper implements SecondaryMapper {
+
+    private final String attributePath;
+    private final CTEProvider cteProvider;
+
+    public CteProviderSecondaryMapper(String attributePath, CTEProvider cteProvider) {
+        this.attributePath = attributePath;
+        this.cteProvider = cteProvider;
+    }
+
+    @Override
+    public String getAttributePath() {
+        return attributePath;
+    }
+
+    @Override
+    public void apply(FullQueryBuilder<?, ?> fullQueryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+        if (fullQueryBuilder instanceof CTEBuilder) {
+            cteProvider.applyCtes((CTEBuilder<?>) fullQueryBuilder, optionalParameters);
+        }
+    }
+}

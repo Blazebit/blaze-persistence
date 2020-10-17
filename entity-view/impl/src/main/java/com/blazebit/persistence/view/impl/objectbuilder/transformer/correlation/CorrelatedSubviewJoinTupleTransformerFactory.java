@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
@@ -83,7 +84,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
         if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
             FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
             CorrelationProvider provider = correlationProviderFactory.create(parameterHolder, optionalParameters);
-            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, queryBuilder, joinBase, correlationAlias, correlationExternalAlias, attributePath, limiter);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, queryBuilder, joinBase, correlationAlias, correlationExternalAlias, attributePath, JoinType.LEFT, limiter);
             int originalFirstResult = -1;
             int originalMaxResults = -1;
             if (queryBuilder instanceof LimitBuilder<?>) {

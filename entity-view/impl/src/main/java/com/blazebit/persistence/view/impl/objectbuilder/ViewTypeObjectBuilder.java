@@ -16,20 +16,19 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.ParameterHolder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
+import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.blazebit.persistence.CTEBuilder;
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.ParameterHolder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.CTEProvider;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
-import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
-import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 /**
  *
@@ -47,7 +46,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final ViewJpqlMacro viewJpqlMacro;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     private final Set<String> fetches;
-    private final Set<CTEProvider> cteProviders;
+    private final SecondaryMapper[] secondaryMappers;
 
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Set<String> fetches, boolean nullIfEmpty) {
         this.hasId = template.hasId();
@@ -59,7 +58,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.fetches = fetches;
         this.nullIfEmpty = nullIfEmpty;
-        this.cteProviders = template.getViewRoot().getCteProviders();
+        this.secondaryMappers = template.getSecondaryMappers();
     }
 
     @Override
@@ -88,17 +87,25 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
-        if (this.cteProviders != null && queryBuilder instanceof CTEBuilder) {
-            CTEBuilder<?> cteBuilder = (CTEBuilder<?>) queryBuilder;
-            for (CTEProvider cteProvider : this.cteProviders) {
-                cteProvider.applyCtes(cteBuilder, this.optionalParameters);
-            }
-        }
         if (fetches.isEmpty()) {
+            if (secondaryMappers.length != 0) {
+                FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
+                for (SecondaryMapper viewRoot : secondaryMappers) {
+                    viewRoot.apply(fullQueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro);
+                }
+            }
             for (int i = 0; i < mappers.length; i++) {
                 mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
             }
         } else {
+            if (secondaryMappers.length != 0) {
+                FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
+                for (SecondaryMapper viewRoot : secondaryMappers) {
+                    if (fetches.contains(viewRoot.getAttributePath())) {
+                        viewRoot.apply(fullQueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro);
+                    }
+                }
+            }
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 if (fetches.contains(mapper.getAttributePath())) {

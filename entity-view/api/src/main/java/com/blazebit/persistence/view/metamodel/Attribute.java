@@ -16,9 +16,13 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.LimitBuilder;
+import com.blazebit.persistence.OrderByBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.FetchStrategy;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an attribute of a view type.
@@ -152,6 +156,18 @@ public interface Attribute<X, Y> {
      * @since 1.5.0
      */
     public String getOffsetExpression();
+
+    /**
+     * Renders the limit mapping for the given parent expression to the given query builder.
+     *
+     * @param parent The parent expression
+     * @param parameterHolder The parameter holder
+     * @param optionalParameters The optional parameters
+     * @param builder The query builder
+     * @param <T> The query builder type
+     * @since 1.6.0
+     */
+    public <T extends LimitBuilder<?> & OrderByBuilder<?>> void renderLimit(String parent, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, T builder);
 
     /**
      * The different attribute types.

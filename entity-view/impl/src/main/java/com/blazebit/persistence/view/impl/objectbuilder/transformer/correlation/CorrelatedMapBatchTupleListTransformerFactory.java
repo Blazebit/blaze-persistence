@@ -20,10 +20,10 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class CorrelatedMapBatchTupleListTransformerFactory extends AbstractCorre
     private final ContainerAccumulator<?> containerAccumulator;
     private final boolean recording;
 
-    public CorrelatedMapBatchTupleListTransformerFactory(Correlator correlator, ManagedViewType<?> viewRoot, ManagedViewType<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+    public CorrelatedMapBatchTupleListTransformerFactory(Correlator correlator, ManagedViewTypeImplementor<?> viewRoot, ManagedViewTypeImplementor<?> embeddingViewType, Expression correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
                                                          boolean correlatesThis, int viewRootIndex, int embeddingViewIndex, int tupleIndex, int batchSize, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator,
                                                          ContainerAccumulator<?> containerAccumulator, boolean recording) {
         super(correlator, viewRoot, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter);

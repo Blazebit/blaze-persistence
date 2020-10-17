@@ -73,6 +73,7 @@ import javax.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,8 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     protected PathPosition currentPosition;
     protected List<PathPosition> pathPositions;
     protected final EntityMetamodel metamodel;
-    private final String skipBaseNodeAlias;
+    protected final Type<?> rootType;
+    protected final Map<String, Type<?>> rootTypes;
 
     /**
      * @author Christian Beikov
@@ -173,16 +175,33 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
     }
 
-    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> startClass, String skipBaseNodeAlias) {
-        this.metamodel = metamodel;
-        this.pathPositions = new ArrayList<>();
-        this.skipBaseNodeAlias = skipBaseNodeAlias;
-        reset(startClass);
+    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> rootType, String skipBaseNodeAlias) {
+        this(metamodel, rootType, skipBaseNodeAlias, Collections.<String, Type<?>>emptyMap());
     }
 
-    public void reset(Type<?> startClass) {
+    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> rootType, String skipBaseNodeAlias, Map<String, Type<?>> rootTypes) {
+        this.metamodel = metamodel;
+        this.pathPositions = new ArrayList<>();
+        this.rootType = rootType;
+        this.rootTypes = withRootType(rootTypes, rootType, skipBaseNodeAlias);
+        clear();
+    }
+
+    private static Map<String, Type<?>> withRootType(Map<String, Type<?>> rootTypes, Type<?> rootType, String rootAlias) {
+        Map<String, Type<?>> newRootTypes = new HashMap<>();
+        if (rootTypes != null) {
+            newRootTypes.putAll(rootTypes);
+        }
+        newRootTypes.put("this", rootType);
+        if (rootAlias != null) {
+            newRootTypes.put(rootAlias, rootType);
+        }
+        return Collections.unmodifiableMap(newRootTypes);
+    }
+
+    public void clear() {
         pathPositions.clear();
-        pathPositions.add(currentPosition = new PathPosition(startClass, null));
+        pathPositions.add(currentPosition = new PathPosition(rootType, null));
     }
 
     private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {
@@ -220,7 +239,6 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             throw new IllegalArgumentException("Can't access property '" + property + "' on basic type '" + JpaMetamodelUtils.getTypeName(currentPosition.getCurrentType()) + "'. Did you forget to add the embeddable type to your persistence.xml?");
         }
         Attribute<?, ?> attribute = JpaMetamodelUtils.getAttribute((ManagedType<?>) currentPosition.getCurrentType(), property);
-        // Older Hibernate versions did not throw an exception but returned null instead
         if (attribute == null) {
             throw new IllegalArgumentException("Attribute '" + property + "' not found on type '" + JpaMetamodelUtils.getTypeName(currentPosition.getCurrentType()) + "'");
         }
@@ -295,22 +313,22 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     @Override
     public void visit(PathExpression expression) {
-        if (currentPosition.getCurrentType() == null) {
-            currentPosition.setCurrentType(expression.getPathReference().getType());
-            return;
-        }
         List<PathElementExpression> expressions = expression.getExpressions();
         int size = expressions.size();
         int i = 0;
-        // Skip the base node in (absolute) path expressions otherwise the resolving will fail
-        if (size > 1) {
-            PathElementExpression firstExpression = expressions.get(0);
-            if (firstExpression instanceof PropertyExpression) {
-                if (((PropertyExpression) firstExpression).getProperty().equals(skipBaseNodeAlias)) {
-                    i = 1;
-                }
+        PathElementExpression firstExpression = expressions.get(0);
+        if (firstExpression instanceof PropertyExpression) {
+            String property = ((PropertyExpression) firstExpression).getProperty();
+            if (rootTypes.containsKey(property)) {
+                i = 1;
+                currentPosition.setCurrentType(rootTypes.get(property));
             }
-        } else if (expressions.get(0) instanceof PropertyExpression && "this".equals(((PropertyExpression) expressions.get(0)).getProperty())) {
+        }
+
+        if (currentPosition.getCurrentType() == null) {
+            if (expression.getPathReference() != null) {
+                currentPosition.setCurrentType(expression.getPathReference().getType());
+            }
             return;
         }
 
@@ -369,7 +387,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         boolean handled = false;
         if (expression.getExpression() instanceof PathExpression) {
             PathExpression treatPath = (PathExpression) expression.getExpression();
-            if (treatPath.getExpressions().size() == 1 && skipBaseNodeAlias != null && skipBaseNodeAlias.equals(treatPath.getExpressions().get(0).toString())) {
+            if (treatPath.getExpressions().size() == 1 && rootTypes.containsKey(treatPath.getExpressions().get(0).toString())) {
                 // When we encounter a naked root treat like "TREAT(alias AS Subtype)" we always skip it
                 handled = true;
             }

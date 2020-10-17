@@ -51,6 +51,8 @@ public @interface Limit {
      * The order to use for the elements for the limit. This will not necessarily order the elements in a collection!
      * The syntax is like for a JPQL.next order by item i.e. something like <code>age DESC NULLS LAST</code>.
      *
+     * Paths that are not fully qualified i.e. relative paths that use no root alias, are prefixed with the mapping result.
+     *
      * @return order to use for the limit
      */
     String[] order();

@@ -16,17 +16,34 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.CTEBuilder;
+import com.blazebit.persistence.FetchBuilder;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
+import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.SyntaxErrorException;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.CTEProvider;
+import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.SimpleCTEProviderFactory;
+import com.blazebit.persistence.view.impl.StaticCorrelationProvider;
+import com.blazebit.persistence.view.impl.StaticPathCorrelationProvider;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
 import com.blazebit.persistence.view.impl.proxy.AbstractReflectionInstantiator;
 import com.blazebit.persistence.view.impl.type.NormalMapUserTypeWrapper;
 import com.blazebit.persistence.view.impl.type.NormalSetUserTypeWrapper;
@@ -39,8 +56,10 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
+import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
@@ -138,6 +157,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final boolean hasJoinFetchedCollections;
     private final boolean hasSelectOrSubselectFetchedAttributes;
     private final boolean hasJpaManagedAttributes;
+    private final Map<String, javax.persistence.metamodel.Type<?>> viewRootTypes;
+    private final Set<ViewRoot> viewRoots = new LinkedHashSet<>();
     private final Set<CTEProvider> cteProviders = new LinkedHashSet<>();
 
     @SuppressWarnings("unchecked")
@@ -209,6 +230,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             this.defaultBatchSize = Integer.MIN_VALUE;
         } else {
             this.defaultBatchSize = batchSize;
+        }
+
+        if (viewMapping.getEntityViewRoots().isEmpty()) {
+            this.viewRootTypes = Collections.emptyMap();
+        } else {
+            this.viewRoots.addAll(viewMapping.getViewRoots(context));
+            this.viewRootTypes = Collections.unmodifiableMap(new HashMap<>(viewMapping.getViewRootTypes(context)));
         }
 
         Map<String, AbstractMethodAttribute<? super X, ?>> attributes = new LinkedHashMap<>();
@@ -435,7 +463,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
         }
 
-        context.onViewTypeFinished(this, new CTEProviderCollector(this, context, viewMapping));
+        context.onViewTypeFinished(this, new HierarchicCollector(this, context, viewMapping));
     }
 
     private void removeIfSetByDefault(ExtendedManagedType<?> extendedManagedType, Set<String> requiredUpdatableAttributes) {
@@ -875,7 +903,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     @Override
     public void checkAttributes(MetamodelBuildingContext context) {
         if (inheritanceMapping != null) {
-            ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(jpaManagedType, context.getEntityMetamodel(), context.getJpqlFunctions());
+            ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(jpaManagedType, context.getEntityMetamodel(), context.getJpqlFunctions(), viewRootTypes);
             try {
                 context.getExpressionFactory().createBooleanExpression(inheritanceMapping, false).accept(visitor);
             } catch (RuntimeException ex) {
@@ -928,6 +956,110 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             }
         } else {
             reportCollectionMappingErrors(context, collectionMappings, collectionMappingSingulars);
+        }
+
+        for (ViewRoot viewRoot : viewRoots) {
+            if (viewRoot.getType() != null) {
+                String location = "entity view root with the name '" + viewRoot.getName() + "' on type '" + javaType.getName() + "'";
+                ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor((ManagedType<?>) viewRoot.getType(), context.getEntityMetamodel(), context.getJpqlFunctions(), viewRootTypes);
+                String[] fetches = viewRoot.getFetches();
+                if (fetches.length != 0) {
+                    if (!(viewRoot.getType() instanceof ManagedType<?>)) {
+                        context.addError("Specifying fetches for non-entity attribute type [" + Arrays.toString(fetches) + "] at the " + location + " is not allowed!");
+                    } else {
+                        for (int i = 0; i < fetches.length; i++) {
+                            final String fetch = fetches[i];
+                            final String errorLocation;
+                            if (fetches.length == 1) {
+                                errorLocation = "the fetch expression";
+                            } else {
+                                errorLocation = "the " + (i + 1) + ". fetch expression";
+                            }
+                            visitor.clear();
+
+                            try {
+                                // Validate the fetch expression parses
+                                context.getExpressionFactory().createPathExpression(fetch).accept(visitor);
+                            } catch (SyntaxErrorException ex) {
+                                try {
+                                    context.getExpressionFactory().createSimpleExpression(fetch, false, false, true);
+                                    // The used expression is not usable for fetches
+                                    context.addError("Invalid fetch expression '" + fetch + "' of the " + location + ". Simplify the fetch expression to a simple path expression. Encountered error: " + ex.getMessage());
+                                } catch (SyntaxErrorException ex2) {
+                                    // This is a real syntax error
+                                    context.addError("Syntax error in " + errorLocation + " '" + fetch + "' of the " + location + ": " + ex.getMessage());
+                                }
+                            } catch (IllegalArgumentException ex) {
+                                context.addError("An error occurred while trying to resolve the " + errorLocation + " '" + fetch + "' of the " + location + ": " + ex.getMessage());
+                            }
+                        }
+                    }
+                }
+                String limitExpression = viewRoot.getLimitExpression();
+                if (limitExpression != null) {
+                    try {
+                        Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(limitExpression);
+                        if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                            context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + location + ": The expression must be a integer literal or a parameter expression");
+                        }
+                    } catch (SyntaxErrorException ex) {
+                        context.addError("Syntax error in the limit expression '" + limitExpression + "' of the " + location + ": " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        context.addError("An error occurred while trying to resolve the limit expression '" + limitExpression + "' of the " + location + ": " + ex.getMessage());
+                    }
+                    String offsetExpression = viewRoot.getOffsetExpression();
+                    try {
+                        Expression inItemExpression = context.getTypeValidationExpressionFactory().createInItemExpression(offsetExpression);
+                        if (!(inItemExpression instanceof ParameterExpression) && !(inItemExpression instanceof NumericLiteral) || inItemExpression instanceof NumericLiteral && ((NumericLiteral) inItemExpression).getNumericType() != NumericType.INTEGER) {
+                            context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + location + ": The expression must be a integer literal or a parameter expression");
+                        }
+                    } catch (SyntaxErrorException ex) {
+                        context.addError("Syntax error in the offset expression '" + offsetExpression + "' of the " + location + ": " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        context.addError("An error occurred while trying to resolve the offset expression '" + offsetExpression + "' of the " + location + ": " + ex.getMessage());
+                    }
+                    List<OrderByItem> orderByItems = viewRoot.getOrderByItems();
+                    for (int i = 0; i < orderByItems.size(); i++) {
+                        OrderByItem orderByItem = orderByItems.get(i);
+                        String expression = orderByItem.getExpression();
+                        try {
+                            visitor.clear();
+                            context.getTypeValidationExpressionFactory().createSimpleExpression(expression, false, false, true).accept(visitor);
+                        } catch (SyntaxErrorException ex) {
+                            context.addError("Syntax error in the " + (i + 1) + "th order by expression '" + expression + "' of the " + location + ": " + ex.getMessage());
+                        } catch (IllegalArgumentException ex) {
+                            context.addError("An error occurred while trying to resolve the " + (i + 1) + "th order by expression '" + expression + "' of the " + location + ": " + ex.getMessage());
+                        }
+                    }
+                }
+
+                CorrelationProviderFactory correlationProviderFactory = viewRoot.getCorrelationProviderFactory();
+                Predicate correlationPredicate = null;
+                if (correlationProviderFactory instanceof StaticCorrelationProvider) {
+                    correlationPredicate = ((StaticCorrelationProvider) correlationProviderFactory).getCorrelationPredicate();
+                } else if (correlationProviderFactory instanceof StaticPathCorrelationProvider) {
+                    correlationPredicate = ((StaticPathCorrelationProvider) correlationProviderFactory).getCorrelationPredicate();
+                    String correlationPath = ((StaticPathCorrelationProvider) correlationProviderFactory).getCorrelationPath();
+                    try {
+                        ScalarTargetResolvingExpressionVisitor correlationPathVisitor = new ScalarTargetResolvingExpressionVisitor(getJpaManagedType(), context.getEntityMetamodel(), context.getJpqlFunctions(), viewRootTypes);
+                        context.getTypeValidationExpressionFactory().createSimpleExpression(correlationPath, false, false, true).accept(correlationPathVisitor);
+                    } catch (SyntaxErrorException ex) {
+                        context.addError("Syntax error in the expression '" + correlationPath + "' of the " + location + ": " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        context.addError("An error occurred while trying to resolve the expression '" + correlationPath + "' of the " + location + ": " + ex.getMessage());
+                    }
+                }
+                if (correlationPredicate != null) {
+                    try {
+                        visitor.clear();
+                        correlationPredicate.accept(visitor);
+                    } catch (SyntaxErrorException ex) {
+                        context.addError("Syntax error in the condition expression '" + correlationPredicate + "' of the " + location + ": " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        context.addError("An error occurred while trying to resolve the condition expression '" + correlationPredicate + "' of the " + location + ": " + ex.getMessage());
+                    }
+                }
+            }
         }
     }
 
@@ -1264,17 +1396,79 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         return cteProviders;
     }
 
+    @Override
+    public Set<ViewRoot> getEntityViewRoots() {
+        return viewRoots;
+    }
+
+    @Override
+    public Map<String, javax.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
+        return viewRootTypes;
+    }
+
+    @Override
+    public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
+        if (baseQueryBuilder instanceof CTEBuilder) {
+            CTEBuilder<?> cteBuilder = (CTEBuilder<?>) baseQueryBuilder;
+            for (CTEProvider cteProvider : getCteProviders()) {
+                cteProvider.applyCtes(cteBuilder, optionalParameters);
+            }
+        }
+        for (ViewRoot viewRoot : viewRoots) {
+            String entityViewRootName = viewRoot.getName();
+            CorrelationProvider correlationProvider = viewRoot.getCorrelationProviderFactory().create(baseQueryBuilder, optionalParameters);
+            ExpressionFactory expressionFactory = baseQueryBuilder.getService(ExpressionFactory.class);
+            Limiter limiter = createLimiter(expressionFactory, viewPath, viewRoot.getLimitExpression(), viewRoot.getOffsetExpression(), viewRoot.getOrderByItems());
+            String correlationAlias;
+            if (limiter == null) {
+                correlationAlias = entityViewRootName;
+            } else {
+                correlationAlias = "_sub_" + entityViewRootName;
+            }
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(baseQueryBuilder, optionalParameters, baseQueryBuilder, viewPath, correlationAlias, entityViewRootName, null, viewRoot.getJoinType(), limiter);
+            correlationProvider.applyCorrelation(correlationBuilder, viewPath);
+            correlationBuilder.finish();
+            if (renderFetches && baseQueryBuilder instanceof FetchBuilder<?>) {
+                ((FetchBuilder<?>) baseQueryBuilder).fetch(viewRoot.getFetches());
+            }
+        }
+    }
+
+    @Override
+    public Limiter createLimiter(ExpressionFactory expressionFactory, String prefix, String limitExpression, String offsetExpression, List<OrderByItem> orderByItems) {
+        if (limitExpression != null) {
+            List<OrderByItem> items;
+            if (orderByItems.isEmpty()) {
+                items = Collections.emptyList();
+            } else {
+                PrefixingQueryGenerator prefixingQueryGenerator = new PrefixingQueryGenerator(expressionFactory, prefix, null, null, getEntityViewRootTypes().keySet(), true, false);
+                StringBuilder sb = new StringBuilder();
+                prefixingQueryGenerator.setQueryBuffer(sb);
+                items = new ArrayList<>(orderByItems.size());
+                for (int i = 0; i < orderByItems.size(); i++) {
+                    OrderByItem orderByItem = orderByItems.get(i);
+                    Expression expr = expressionFactory.createSimpleExpression(orderByItem.getExpression(), false, false, true);
+                    sb.setLength(0);
+                    expr.accept(prefixingQueryGenerator);
+                    items.add(new OrderByItem(sb.toString(), orderByItem.isAscending(), orderByItem.isNullsFirst()));
+                }
+            }
+            return new Limiter(limitExpression, offsetExpression, items);
+        }
+        return null;
+    }
+
     /**
      *
      * @author Giovanni Lovato
      * @since 1.4.0
      */
-    private static final class CTEProviderCollector implements Runnable {
+    private static final class HierarchicCollector implements Runnable {
         private final ManagedViewTypeImpl<?> viewType;
         private final MetamodelBuildingContext context;
         private final ViewMapping viewMapping;
 
-        private CTEProviderCollector(ManagedViewTypeImpl<?> viewType, MetamodelBuildingContext context, ViewMapping viewMapping) {
+        private HierarchicCollector(ManagedViewTypeImpl<?> viewType, MetamodelBuildingContext context, ViewMapping viewMapping) {
             this.viewType = viewType;
             this.viewMapping = viewMapping;
             this.context = context;
@@ -1283,6 +1477,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         @Override
         public void run() {
             Set<Class<? extends CTEProvider>> rootProviders = viewMapping.getCteProviders();
+            Set<CTEProvider> cteProviders = this.viewType.cteProviders;
             if (rootProviders != null) {
                 Map<Class<?>, CTEProvider> providers = context.getCteProviders();
                 for (Class<? extends CTEProvider> clazz : rootProviders) {
@@ -1291,14 +1486,20 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                         provider = new SimpleCTEProviderFactory(clazz).create();
                         providers.put(clazz, provider);
                     }
-                    this.viewType.cteProviders.add(provider);
+                    cteProviders.add(provider);
                 }
             }
-            for (AbstractMethodAttribute<?, ?> attribute : this.viewType.recursiveSubviewAttributes.values()) {
+            Set<ViewRoot> viewRoots = this.viewType.viewRoots;
+            for (Map.Entry<String, AbstractMethodAttribute<?, ?>> entry : (Set<Map.Entry<String, AbstractMethodAttribute<?, ?>>>) (Set<?>) this.viewType.recursiveSubviewAttributes.entrySet()) {
+                AbstractMethodAttribute<?, ?> attribute = entry.getValue();
                 com.blazebit.persistence.view.metamodel.Type<?> elementType = attribute.getElementType();
                 if (elementType instanceof ManagedViewTypeImpl) {
                     ManagedViewType<?> viewType = (ManagedViewType<?>) attribute.getElementType();
-                    this.viewType.cteProviders.addAll(viewType.getCteProviders());
+                    for (ViewRoot entityViewRoot : viewType.getEntityViewRoots()) {
+                        if (viewRoots.contains(entityViewRoot)) {
+                            context.addError("Entity view root name collision for '" + entityViewRoot.getName() + "' on entity view '" + this.viewType.getJavaType().getName() + "' with the entity view '" + viewType.getJavaType().getName() + "' through the attribute path: " + entry.getKey());
+                        }
+                    }
                 }
             }
         }

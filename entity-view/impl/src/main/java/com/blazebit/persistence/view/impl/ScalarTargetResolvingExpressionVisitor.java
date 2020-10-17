@@ -36,8 +36,6 @@ import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
-import com.blazebit.persistence.parser.expression.PathExpression;
-import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.parser.expression.SimpleCaseExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
@@ -76,7 +74,6 @@ import java.math.BigInteger;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -124,12 +121,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     private final Map<String, JpqlFunction> functions;
     private boolean parametersAllowed;
 
-    public ScalarTargetResolvingExpressionVisitor(Class<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
-        this(metamodel.managedType(managedType), metamodel, functions);
+    public ScalarTargetResolvingExpressionVisitor(Class<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+        this(metamodel.managedType(managedType), metamodel, functions, rootTypes);
     }
 
-    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions) {
-        super(metamodel, managedType, null);
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+        super(metamodel, managedType, null, rootTypes);
         this.managedType = managedType;
         this.functions = functions;
         this.parametersAllowed = false;
@@ -222,19 +219,9 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         }
     }
 
-    public void clear() {
-        reset(managedType);
-    }
-
     public List<TargetType> getPossibleTargetTypes() {
         List<PathPosition> positions = pathPositions;
         int size = positions.size();
-        
-        if (managedType != null && size == 1 && positions.get(0).getAttribute() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
-            // When we didn't resolve any property, the expression is probably static and we can't give types in that case
-            return Collections.emptyList();
-        }
-        
         List<TargetType> possibleTargets = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
@@ -367,6 +354,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(ArithmeticExpression expression) {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        } else {
+            currentPosition.setCurrentType(null);
         }
     }
 
@@ -374,6 +363,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(ArithmeticFactor expression) {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        } else {
+            currentPosition.setCurrentType(null);
         }
     }
 
@@ -381,6 +372,8 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     public void visit(NumericLiteral expression) {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
+        } else {
+            currentPosition.setCurrentType(null);
         }
     }
 
@@ -611,16 +604,6 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     @Override
     public void visit(WhenClauseExpression expression) {
         invalid(expression, "Should be handled by case expression");
-    }
-
-    @Override
-    public void visit(PropertyExpression expression) {
-        super.visit(expression);
-    }
-
-    @Override
-    public void visit(PathExpression expression) {
-        super.visit(expression);
     }
 
     @Override

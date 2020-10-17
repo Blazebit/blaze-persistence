@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.spi;
+package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ParameterHolder;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.spi.ViewJpqlMacro;
+
+import java.util.Map;
 
 /**
- * Interface implemented by the entity view provider.
- *
- * Represents the current view that is accessible through the expression <code>VIEW()</code>.
  *
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.0
  */
-public interface ViewJpqlMacro extends JpqlMacro {
+public interface SecondaryMapper {
 
-    /**
-     * Returns the current view path.
-     *
-     * @return the current view path
-     */
-    public String getViewPath();
+    String getAttributePath();
 
-    /**
-     * Sets the current view path.
-     *
-     * @param viewPath The new view path
-     */
-    public void setViewPath(String viewPath);
+    void apply(FullQueryBuilder<?, ?> fullQueryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro);
 }

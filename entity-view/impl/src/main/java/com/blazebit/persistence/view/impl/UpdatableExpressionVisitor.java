@@ -73,8 +73,8 @@ public class UpdatableExpressionVisitor extends PathTargetResolvingExpressionVis
 
     private final boolean updatable;
 
-    public UpdatableExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass, boolean updatable) {
-        super(metamodel, metamodel.type(startClass), null);
+    public UpdatableExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass, boolean updatable, Map<String, Type<?>> rootTypes) {
+        super(metamodel, metamodel.type(startClass), null, rootTypes);
         this.updatable = updatable;
     }
 

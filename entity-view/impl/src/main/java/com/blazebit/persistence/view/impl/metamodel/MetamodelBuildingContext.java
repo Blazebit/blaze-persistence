@@ -63,7 +63,7 @@ public interface MetamodelBuildingContext {
      * @param mapping The mapping annotation
      * @return The possible target types or <code>null</code>
      */
-    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping);
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes);
 
     public Map<String, JpqlFunction> getJpqlFunctions();
 
@@ -77,7 +77,7 @@ public interface MetamodelBuildingContext {
 
     public ExpressionFactory getTypeValidationExpressionFactory();
 
-    public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory();
+    public ExpressionFactory getTypeExtractionExpressionFactory();
 
     public MacroConfigurationExpressionFactory createMacroAwareExpressionFactory(String viewRoot);
 

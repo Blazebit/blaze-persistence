@@ -16,10 +16,14 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.LockMode;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
 
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -79,4 +83,8 @@ public interface ManagedViewTypeImplementor<X> extends ManagedViewType<X> {
     int getSubtypeIndex(ManagedViewTypeImplementor<? super X> inheritanceBase);
 
     List<Method> getSpecialMethods();
+
+    Map<String, Type<?>> getEntityViewRootTypes();
+
+    Limiter createLimiter(ExpressionFactory expressionFactory, String prefix, String limitExpression, String offsetExpression, List<OrderByItem> orderByItems);
 }

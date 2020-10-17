@@ -91,7 +91,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         this.entityType = mainQuery.metamodel.entity(clazz);
-        this.entityAlias = joinManager.addRoot(entityType, alias);
+        this.entityAlias = joinManager.addRoot(entityType, alias, false);
         this.result = result;
         this.listener = listener;
         

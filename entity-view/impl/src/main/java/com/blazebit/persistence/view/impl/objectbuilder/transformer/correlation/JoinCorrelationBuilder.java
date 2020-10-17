@@ -17,11 +17,12 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.BaseFromQueryBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
-import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -41,16 +42,17 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
-    private final FullQueryBuilder<?, ?> criteriaBuilder;
+    private final BaseQueryBuilder<?, ?> criteriaBuilder;
     private final String joinBase;
     private final String correlationAlias;
     private final String correlationExternalAlias;
     private final String attributePath;
+    private final JoinType joinType;
     private final Limiter limiter;
     private boolean correlated;
     private Object correlationBuilder;
 
-    public JoinCorrelationBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, FullQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationExternalAlias, String attributePath, Limiter limiter) {
+    public JoinCorrelationBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, BaseQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationExternalAlias, String attributePath, JoinType joinType, Limiter limiter) {
         this.parameterHolder = parameterHolder;
         this.optionalParameters = optionalParameters;
         this.criteriaBuilder = criteriaBuilder;
@@ -58,6 +60,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
         this.correlationAlias = correlationAlias;
         this.correlationExternalAlias = correlationExternalAlias;
         this.attributePath = attributePath;
+        this.joinType = joinType;
         this.limiter = limiter;
     }
 
@@ -92,10 +95,10 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
         correlated = true;
         if (limiter == null) {
-            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityClass, correlationAlias);
+            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.joinOn(joinBase, entityClass, correlationAlias, joinType);
         } else {
             checkLimitSupport();
-            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.leftJoinLateralEntitySubquery(joinBase, entityClass, correlationExternalAlias, correlationAlias);
+            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.joinLateralEntitySubquery(joinBase, entityClass, correlationExternalAlias, correlationAlias, joinType);
             limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
             this.correlationBuilder = lateralBuilder;
             return lateralBuilder.getService(JoinOnBuilder.class);
@@ -110,10 +113,10 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
         correlated = true;
         if (limiter == null) {
-            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(joinBase, entityType, correlationAlias);
+            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.joinOn(joinBase, entityType, correlationAlias, joinType);
         } else {
             checkLimitSupport();
-            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.leftJoinLateralEntitySubquery(joinBase, entityType, correlationExternalAlias, correlationAlias);
+            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.joinLateralEntitySubquery(joinBase, entityType, correlationExternalAlias, correlationAlias, joinType);
             limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
             this.correlationBuilder = lateralBuilder;
             return lateralBuilder.getService(JoinOnBuilder.class);
@@ -128,9 +131,9 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
         correlated = true;
         if (limiter == null) {
-            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.leftJoinOn(correlationPath, correlationAlias);
+            return (JoinOnBuilder<CorrelationQueryBuilder>) (JoinOnBuilder<?>) criteriaBuilder.joinOn(correlationPath, correlationAlias, joinType);
         } else {
-            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.leftJoinLateralEntitySubquery(correlationPath, correlationExternalAlias, correlationAlias);
+            BaseFromQueryBuilder<?, ?> lateralBuilder = criteriaBuilder.joinLateralEntitySubquery(correlationPath, correlationExternalAlias, correlationAlias, joinType);
             limiter.apply(parameterHolder, optionalParameters, lateralBuilder);
             this.correlationBuilder = lateralBuilder;
             return lateralBuilder.getService(JoinOnBuilder.class);

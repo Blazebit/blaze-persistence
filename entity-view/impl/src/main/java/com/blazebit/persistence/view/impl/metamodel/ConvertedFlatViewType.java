@@ -16,14 +16,19 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
+import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.OrderByItem;
+import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
 import javax.persistence.metamodel.ManagedType;
@@ -239,6 +244,26 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
     @Override
     public boolean isCreatable() {
         return delegate.isCreatable();
+    }
+
+    @Override
+    public Set<ViewRoot> getEntityViewRoots() {
+        return delegate.getEntityViewRoots();
+    }
+
+    @Override
+    public Map<String, javax.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
+        return delegate.getEntityViewRootTypes();
+    }
+
+    @Override
+    public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
+        delegate.renderSecondaryMappings(viewPath, baseQueryBuilder, optionalParameters, renderFetches);
+    }
+
+    @Override
+    public Limiter createLimiter(ExpressionFactory expressionFactory, String prefix, String limitExpression, String offsetExpression, List<OrderByItem> orderByItems) {
+        return delegate.createLimiter(expressionFactory, prefix, limitExpression, offsetExpression, orderByItems);
     }
 
     @Override

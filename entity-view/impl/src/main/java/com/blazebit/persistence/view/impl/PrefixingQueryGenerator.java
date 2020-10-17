@@ -46,7 +46,7 @@ import java.util.Set;
  */
 public class PrefixingQueryGenerator extends SimpleQueryGenerator {
 
-    public static final Set<String> DEFAULT_QUERY_ALIASES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, CorrelatedSubqueryViewRootJpqlMacro.CORRELATION_VIEW_ROOT_ALIAS)));
+    private static final Set<String> DEFAULT_QUERY_ALIASES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(CorrelatedSubqueryEmbeddingViewJpqlMacro.CORRELATION_EMBEDDING_VIEW_ALIAS, CorrelatedSubqueryViewRootJpqlMacro.CORRELATION_VIEW_ROOT_ALIAS)));
     private static final Set<String> MACROS = new HashSet<>(Arrays.asList("VIEW", "VIEW_ROOT", "EMBEDDING_VIEW"));
 
     private final ExpressionFactory expressionFactory;
@@ -65,11 +65,12 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
         this.expandMacros = expandMacros;
         this.fromEmbeddingViewScope = fromEmbeddingViewScope;
         this.aliasToReplace = aliasToReplace;
-        this.queryAliases = queryAliases;
+        this.queryAliases = new HashSet<>(queryAliases);
+        this.queryAliases.addAll(DEFAULT_QUERY_ALIASES);
     }
 
-    public static String prefix(ExpressionFactory ef, Expression expression, String prefix, boolean fromEmbeddingViewScope) {
-        SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefix, null, null, DEFAULT_QUERY_ALIASES, !fromEmbeddingViewScope, fromEmbeddingViewScope);
+    public static String prefix(ExpressionFactory ef, Expression expression, String prefix, Set<String> queryAliases, boolean fromEmbeddingViewScope) {
+        SimpleQueryGenerator generator = new PrefixingQueryGenerator(ef, prefix, null, null, queryAliases, !fromEmbeddingViewScope, fromEmbeddingViewScope);
         StringBuilder sb = new StringBuilder(20 + prefix.length());
         generator.setQueryBuffer(sb);
         expression.accept(generator);
