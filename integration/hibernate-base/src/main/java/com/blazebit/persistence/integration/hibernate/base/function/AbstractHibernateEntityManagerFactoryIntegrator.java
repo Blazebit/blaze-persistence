@@ -69,17 +69,27 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
     private static final String VERSION_STRING;
 
     static {
-        Iterator<HibernateVersionProvider> iter = ServiceLoader.load(HibernateVersionProvider.class).iterator();
-        if (iter.hasNext()) {
-            VERSION_STRING = iter.next().getVersion();
-        } else {
-            VERSION_STRING = Version.getVersionString();
+        HibernateVersionProvider usedProvider = null;
+        try {
+            Iterator<HibernateVersionProvider> iter = ServiceLoader.load(HibernateVersionProvider.class).iterator();
+            if (iter.hasNext()) {
+                usedProvider = iter.next();
+                VERSION_STRING = usedProvider.getVersion();
+            } else {
+                VERSION_STRING = Version.getVersionString();
+            }
+            String[] parts = VERSION_STRING.split("[\\.-]");
+            MAJOR = Integer.parseInt(parts[0]);
+            MINOR = Integer.parseInt(parts[1]);
+            FIX = Integer.parseInt(parts[2]);
+            TYPE = parts[3];
+        } catch (RuntimeException ex) {
+            if (usedProvider == null) {
+                throw new IllegalArgumentException("Error while trying to resolve the Hibernate version. This can happen when using an uber-jar deployment. In that case, please provide a service provider implementation of " + HibernateVersionProvider.class.getName(), ex);
+            } else {
+                throw new IllegalArgumentException("An error happened while trying to resolve the Hibernate version through the version provider " + usedProvider.getClass().getName(), ex);
+            }
         }
-        String[] parts = VERSION_STRING.split("[\\.-]");
-        MAJOR = Integer.parseInt(parts[0]);
-        MINOR = Integer.parseInt(parts[1]);
-        FIX = Integer.parseInt(parts[2]);
-        TYPE = parts[3];
     }
 
     protected String getDbmsName(EntityManagerFactory emf, EntityManager em, Dialect dialect) {

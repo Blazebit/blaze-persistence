@@ -11,6 +11,7 @@ Not yet released
 * Implement support for configuring sorting and order for multi collection entity view mappings
 * Optimize `FullQueryBuilder.getCountQuery()` to use a subquery to determine distinct tuple counts instead of distinct count emulation
 * Add support for secondary entity view roots
+* Improve error message when Hibernate version resolving fails especially due to uber-JAR deployments
 
 ### Bug fixes
 
