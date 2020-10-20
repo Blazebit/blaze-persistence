@@ -18,6 +18,7 @@ package com.blazebit.persistence.examples.spring.hateoas.view;
 
 import com.blazebit.persistence.examples.spring.hateoas.model.Cat;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingParameter;
 
 /**
  * @author Christian Beikov
@@ -27,5 +28,8 @@ import com.blazebit.persistence.view.EntityView;
 public interface CatWithOwnerView extends CatSimpleView {
 
     PersonSimpleView getOwner();
+
+    @MappingParameter("test")
+    String getTest();
 
 }

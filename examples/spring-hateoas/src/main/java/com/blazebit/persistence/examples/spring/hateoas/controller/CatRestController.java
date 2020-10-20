@@ -144,7 +144,7 @@ public class CatRestController {
             KeysetAwarePagedResourcesAssembler<CatWithOwnerView> assembler) {
         Specification<Cat> specification = getSpecificationForFilter(filter);
 
-        Page<CatWithOwnerView> resultPage = catViewRepository.findAll(specification, keysetPageable);
+        Page<CatWithOwnerView> resultPage = catViewRepository.findAll(specification, keysetPageable, "test");
         if (keysetPageable.getPageNumber() > resultPage.getTotalPages()) {
             throw new RuntimeException("Invalid page number!");
         }

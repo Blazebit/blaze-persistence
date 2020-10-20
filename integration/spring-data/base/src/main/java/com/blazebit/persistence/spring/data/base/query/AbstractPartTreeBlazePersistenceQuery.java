@@ -28,6 +28,7 @@ import com.blazebit.persistence.spring.data.base.EntityViewSortUtil;
 import com.blazebit.persistence.spring.data.base.query.JpaParameters.JpaParameter;
 import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
+import com.blazebit.persistence.spring.data.repository.KeysetPageable;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
@@ -283,28 +284,57 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
                     values[parameters.getDynamicProjectionIndex()] = null;
                 }
             }
+
+            boolean withKeysetExtraction = false;
+            boolean withExtractAllKeysets = false;
+            Pageable pageable = binder.getPageable();
+            if (!withCount) {
+                maxResults++;
+            }
+
             if (entityViewClass == null) {
-                if (withCount) {
-                    jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults).withCountQuery(true).getQuery();
+                PaginatedCriteriaBuilder<Object> paginatedCriteriaBuilder;
+                if (pageable instanceof KeysetPageable) {
+                    KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                    paginatedCriteriaBuilder = (PaginatedCriteriaBuilder<Object>) cb.page(keysetPageable.getKeysetPage(), firstResult, maxResults);
+                    withKeysetExtraction = true;
+                    withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
                 } else {
-                    jpaQuery = (TypedQuery<Object>) cb.page(firstResult, maxResults + 1).withHighestKeysetOffset(1).withCountQuery(false).getQuery();
+                    paginatedCriteriaBuilder = (PaginatedCriteriaBuilder<Object>) cb.page(firstResult, maxResults);
                 }
+                if (withKeysetExtraction) {
+                    paginatedCriteriaBuilder.withKeysetExtraction(true);
+                    paginatedCriteriaBuilder.withExtractAllKeysets(withExtractAllKeysets);
+                }
+                if (withCount) {
+                    paginatedCriteriaBuilder.withCountQuery(true);
+                } else {
+                    paginatedCriteriaBuilder.withHighestKeysetOffset(1).withCountQuery(false);
+                }
+                jpaQuery = paginatedCriteriaBuilder.getQuery();
             } else {
-                if (withCount) {
-                    EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
-                    setting = processSetting(setting, values);
-                    Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
-                    setting.getAttributeSorters().clear();
-                    PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withCountQuery(true);
-                    processSort(pcb, values, entityViewClass, settingProcessorAttributeSorters);
-                    jpaQuery = (TypedQuery<Object>) pcb.getQuery();
-                } else {
-                    EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults + 1);
-                    setting = processSetting(setting, values);
-                    PaginatedCriteriaBuilder<?> pcb = ((PaginatedCriteriaBuilder<?>) evm.applySetting(setting, cb)).withHighestKeysetOffset(1).withCountQuery(false);
-                    processSort(pcb, values, entityViewClass, Collections.<String, Sorter>emptyMap());
-                    jpaQuery = (TypedQuery<Object>) pcb.getQuery();
+                EntityViewSetting<?, ?> setting = EntityViewSetting.create(entityViewClass, firstResult, maxResults);
+                if (pageable instanceof KeysetPageable) {
+                    KeysetPageable keysetPageable = (KeysetPageable) pageable;
+                    withKeysetExtraction = true;
+                    withExtractAllKeysets = keysetPageable.isWithExtractAllKeysets();
+                    setting.withKeysetPage(keysetPageable.getKeysetPage());
                 }
+                setting = processSetting(setting, values);
+                Map<String, Sorter> settingProcessorAttributeSorters = new HashMap<>(setting.getAttributeSorters());
+                setting.getAttributeSorters().clear();
+                PaginatedCriteriaBuilder<Object> paginatedCriteriaBuilder = (PaginatedCriteriaBuilder<Object>) evm.applySetting(setting, cb);
+                processSort(paginatedCriteriaBuilder, values, entityViewClass, settingProcessorAttributeSorters);
+                if (withCount) {
+                    paginatedCriteriaBuilder.withCountQuery(true);
+                } else {
+                    paginatedCriteriaBuilder.withHighestKeysetOffset(1).withCountQuery(false);
+                }
+                if (withKeysetExtraction) {
+                    paginatedCriteriaBuilder.withKeysetExtraction(true);
+                    paginatedCriteriaBuilder.withExtractAllKeysets(withExtractAllKeysets);
+                }
+                jpaQuery = paginatedCriteriaBuilder.getQuery();
             }
 
             // Just bind the parameters, not the pagination information
@@ -348,10 +378,12 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             int specificationIndex = parameters.getSpecificationIndex();
             if (specificationIndex >= 0) {
                 Specification<?> specification = (Specification<?>) values[specificationIndex];
-                Root root = criteriaQuery.getRoots().iterator().next();
-                BlazeCriteriaBuilder criteriaBuilder = blazeCriteriaQuery.getCriteriaBuilder();
-                Predicate predicate = specification.toPredicate(root, criteriaQuery, criteriaBuilder);
-                criteriaQuery.where(predicate);
+                if (specification != null) {
+                    Root root = criteriaQuery.getRoots().iterator().next();
+                    BlazeCriteriaBuilder criteriaBuilder = blazeCriteriaQuery.getCriteriaBuilder();
+                    Predicate predicate = specification.toPredicate(root, criteriaQuery, criteriaBuilder);
+                    criteriaQuery.where(predicate);
+                }
             }
         }
 
@@ -361,7 +393,9 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             if (criteriaBuilderProcessorIndex >= 0) {
                 String rootAlias = criteriaBuilder.getRoots().iterator().next().getAlias();
                 BlazeSpecification blazeSpecification = (BlazeSpecification) values[criteriaBuilderProcessorIndex];
-                blazeSpecification.applySpecification(rootAlias, criteriaBuilder);
+                if (blazeSpecification != null) {
+                    blazeSpecification.applySpecification(rootAlias, criteriaBuilder);
+                }
             }
         }
 
