@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.0-Alpha1
+
+22/10/2020 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.6.0+is%3Aclosed+closed%3A%3C2020-10-22+sort%3Aupdated-desc)
+
+### New features
+
 * Implement support for configuring sorting and order for multi collection entity view mappings
 * Optimize `FullQueryBuilder.getCountQuery()` to use a subquery to determine distinct tuple counts instead of distinct count emulation
 * Add support for secondary entity view roots

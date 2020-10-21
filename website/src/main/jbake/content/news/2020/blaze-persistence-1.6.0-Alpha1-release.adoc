@@ -1,0 +1,25 @@
+= Blaze-Persistence 1.6.0-Alpha1 Release
+Christian Beikov
+2020-10-22 0
+:description: Blaze-Persistence version 1.6.0-Alpha1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the first alpha release of the 1.6 series. We introduced two very interesting features that I would like to highlight.
+The first is the support for specifying collection behavior for a multi-collection via the new `@MultiCollectionMapping` annotation which can be used
+to configure a comparator or ordering for the collection within the indexed collection/map.
+The next notable feature is the support for secondary entity view roots which can be imagined like correlations on steroids.
+
+Since we+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ also fixed a few issues, some in the Spring Data integration,
+and one concurrency issue during entity view updater initialization, you should update as soon as possible to avoid running into these issues.
+
+If you want to know more about the new features, take a look into the updated https://persistence.blazebit.com/documentation/1.6/core/manual/en_US/[core, window="_blank"]
+and https://persistence.blazebit.com/documentation/1.6/entity-view/manual/en_US/[entity view, window="_blank"] documentation.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
+
+I wish you all the best, stay safe and healthy in this hard times! Enjoy the release and stay tuned for the next one!
