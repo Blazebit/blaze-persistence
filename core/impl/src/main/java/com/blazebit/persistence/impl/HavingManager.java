@@ -52,7 +52,7 @@ public class HavingManager<T> extends PredicateManager<T> {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
-    void buildGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
+    void buildImplicitGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
         if (rootPredicate.getPredicate().getChildren().isEmpty()) {
             return;
         }
@@ -62,7 +62,7 @@ public class HavingManager<T> extends PredicateManager<T> {
         queryGenerator.setClauseType(ClauseType.GROUP_BY);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
 
-        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(rootPredicate.getPredicate());
+        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(rootPredicate.getPredicate(), getClauseType());
         if (!extractedGroupByExpressions.isEmpty()) {
             for (Expression expr : extractedGroupByExpressions) {
                 queryGenerator.generate(expr);

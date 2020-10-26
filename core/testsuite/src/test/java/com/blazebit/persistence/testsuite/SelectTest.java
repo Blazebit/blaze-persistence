@@ -402,7 +402,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY d.id DESC";
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", "d.id") + " ORDER BY d.id DESC";
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -416,7 +416,7 @@ public class SelectTest extends AbstractCoreTest {
                 .page(0, 10);
 
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
-        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY d.id DESC";
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY " + groupBy("d.id", "owner_1.name", "d.id") + " ORDER BY d.id DESC";
 
         cb.getResultList();
 
@@ -433,7 +433,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name "
                 + "FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", renderNullPrecedenceGroupBy("d.id"))
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", "d.id")
                 + " ORDER BY d.id DESC";
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
@@ -449,7 +449,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", renderNullPrecedenceGroupBy("d.id")) + " ORDER BY d.id DESC";
+                + "GROUP BY " + groupBy("d.creationDate", "owner_1.name", "d.id") + " ORDER BY d.id DESC";
 
         cb.getResultList();
 
@@ -468,9 +468,9 @@ public class SelectTest extends AbstractCoreTest {
                 + "JOIN d.owner owner_1 ";
 
         if (jpaProvider.supportsGroupByEntityAlias()) {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", "d.id");
         } else {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", "d.id");
         }
 
         objectQuery += " ORDER BY d.id DESC";
@@ -492,9 +492,9 @@ public class SelectTest extends AbstractCoreTest {
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 ";
         if (jpaProvider.supportsGroupByEntityAlias()) {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1", "d.id");
         } else {
-            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", renderNullPrecedenceGroupBy("d.id"));
+            objectQuery += "GROUP BY " + groupBy("d.creationDate", "owner_1.age", "owner_1.defaultLanguage", "owner_1.friend.id", "owner_1.id", "owner_1.name", "owner_1.nameObject.intIdEntity.id", "owner_1.nameObject.primaryName", "owner_1.nameObject.secondaryName", "owner_1.partnerDocument.id", "d.id");
         }
         objectQuery += " ORDER BY d.id DESC";
 
@@ -525,7 +525,7 @@ public class SelectTest extends AbstractCoreTest {
 
         assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1.id") + ", TRIM(BOTH FROM document.name) FROM Document document " +
                 "LEFT JOIN document.partners partners_1 " +
-                "GROUP BY document.id, " + groupByPathExpressions("TRIM(BOTH FROM document.name)", "document.name"), cb.getQueryString());
+                "GROUP BY document.id, TRIM(BOTH FROM document.name)", cb.getQueryString());
         cb.getResultList();
     }
 

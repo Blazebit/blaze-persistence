@@ -22,10 +22,16 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import java.util.ArrayList;
@@ -45,18 +51,20 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
     private final EmbeddableSplittingVisitor embeddableSplittingVisitor;
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
     private final FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor;
-    private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
+    private final List<OrderByInfo> orderByInfos = new ArrayList<>();
     private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
     private final AliasManager aliasManager;
+    private final ExpressionFactory expressionFactory;
     private final EntityMetamodel metamodel;
     private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, SelectManager<?> selectManager, JoinManager joinManager, AliasManager aliasManager,
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, SelectManager<?> selectManager, JoinManager joinManager, AliasManager aliasManager, ExpressionFactory expressionFactory,
                    EmbeddableSplittingVisitor embeddableSplittingVisitor, FunctionalDependencyAnalyzerVisitor functionalDependencyAnalyzerVisitor, EntityMetamodel metamodel, JpaProvider jpaProvider, GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor) {
         super(queryGenerator, parameterManager, subqueryInitFactory);
         this.selectManager = selectManager;
         this.joinManager = joinManager;
+        this.expressionFactory = expressionFactory;
         this.embeddableSplittingVisitor = embeddableSplittingVisitor;
         this.functionalDependencyAnalyzerVisitor = functionalDependencyAnalyzerVisitor;
         this.metamodel = metamodel;
@@ -167,14 +175,14 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             if (aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
-                if (clausesRequiredForResultUniqueness != null) {
+                if (clausesRequiredForResultUniqueness != null && !clausesRequiredForResultUniqueness.isEmpty()) {
                     expressionStringBuilder.setLength(0);
                     expr.accept(queryGenerator);
                     clausesRequiredForResultUniqueness.remove(expressionStringBuilder.toString());
                 }
             } else {
                 expr = orderByInfo.getExpression();
-                if (clausesRequiredForResultUniqueness != null) {
+                if (clausesRequiredForResultUniqueness != null && !clausesRequiredForResultUniqueness.isEmpty()) {
                     expressionStringBuilder.setLength(0);
                     expr.accept(queryGenerator);
                     clausesRequiredForResultUniqueness.remove(expressionStringBuilder.toString());
@@ -184,6 +192,17 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
             // We analyze the model and join node structure and also detect top-level EQ predicates that constantify attributes which makes them non-null
             boolean nullable = joinManager.hasFullJoin() || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), expr);
 
+            // Since we generate the null precedence emulation expressions, we must also generate them in the uniqueness determination code
+            if (nullable && clausesRequiredForResultUniqueness != null && !clausesRequiredForResultUniqueness.isEmpty() && !jpaProvider.supportsNullPrecedenceExpression()) {
+                expressionStringBuilder.insert(0, "CASE WHEN ");
+                expressionStringBuilder.append(" IS NULL THEN ");
+                if (orderByInfo.nullFirst) {
+                    expressionStringBuilder.append("0 ELSE 1 END");
+                } else {
+                    expressionStringBuilder.append("1 ELSE 0 END");
+                }
+                clausesRequiredForResultUniqueness.remove(expressionStringBuilder.toString());
+            }
             // Note that there are actually two notions of uniqueness that we have to check for
             // There is a result uniqueness which is relevant for the safety checks we do
             // and there is a also the general uniqueness which is what is relevant for keyset pagination
@@ -341,7 +360,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
      * 
      * @return
      */
-    void buildGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
+    void buildImplicitGroupByClauses(GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -350,6 +369,7 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         StringBuilder sb = new StringBuilder();
 
         List<OrderByInfo> infos = orderByInfos;
+        boolean hasFullJoin = !jpaProvider.supportsNullPrecedenceExpression() && joinManager.hasFullJoin();
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
@@ -365,22 +385,39 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                 expr = orderByInfo.getExpression();
             }
 
-            Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
+            Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr, getClauseType());
             if (!extractedGroupByExpressions.isEmpty()) {
                 queryGenerator.setClauseType(ClauseType.GROUP_BY);
                 queryGenerator.setQueryBuffer(sb);
-                for (Expression expression : extractedGroupByExpressions) {
+                for (Expression extractedExpression : extractedGroupByExpressions) {
                     sb.setLength(0);
-                    queryGenerator.generate(expression);
-                    if (jpaProvider.supportsNullPrecedenceExpression()) {
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
-                    } else {
-                        String expressionString = sb.toString();
-                        sb.setLength(0);
-                        jpaProvider.renderNullPrecedence(sb, expressionString, expressionString, null, null);
+                    queryGenerator.generate(extractedExpression);
+                    String expressionString = sb.toString();
+                    if (!jpaProvider.supportsNullPrecedenceExpression()) {
+                        boolean nullable = hasFullJoin || ExpressionUtils.isNullable(metamodel, functionalDependencyAnalyzerVisitor.getConstantifiedJoinNodeAttributeCollector(), extractedExpression);
 
-                        groupByManager.collect(new ResolvedExpression(sb.toString(), expression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
+                        Expression resultExpression;
+                        Expression defaultExpression;
+                        if (nullable) {
+                            sb.insert(0, "CASE WHEN ");
+                            sb.append(" IS NULL THEN ");
+                            if (orderByInfo.nullFirst) {
+                                resultExpression = new NumericLiteral("0", NumericType.INTEGER);
+                                defaultExpression = new NumericLiteral("1", NumericType.INTEGER);
+                                sb.append("0 ELSE 1 END");
+                            } else {
+                                resultExpression = new NumericLiteral("1", NumericType.INTEGER);
+                                defaultExpression = new NumericLiteral("0", NumericType.INTEGER);
+                                sb.append("1 ELSE 0 END");
+                            }
+                            List<WhenClauseExpression> whenClauses = new ArrayList<>(1);
+                            whenClauses.add(new WhenClauseExpression(new IsNullPredicate(extractedExpression.copy(ExpressionCopyContext.CLONE)), resultExpression));
+                            Expression nullEmulationExpression = new GeneralCaseExpression(whenClauses, defaultExpression);
+                            String nullPrecedenceEmulationExpression = sb.toString();
+                            groupByManager.collect(new ResolvedExpression(nullPrecedenceEmulationExpression, nullEmulationExpression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
+                        }
                     }
+                    groupByManager.collect(new ResolvedExpression(expressionString, extractedExpression), ClauseType.ORDER_BY, hasGroupBy, joinVisitor);
                 }
                 queryGenerator.setClauseType(null);
             }

@@ -266,7 +266,8 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .orderByAsc("p.id")
                 .orderByAsc("ownedDocument.id");
 
-        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id"), renderNullPrecedenceGroupBy("ownedDocument.id")) +
+        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1" +
+                " GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("ownedDocument.id", "ASC", "LAST")) +
                 " ORDER BY p.id ASC, " + renderNullPrecedence("ownedDocument.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
@@ -286,7 +287,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("p.id");
 
-        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id")) +
+        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1.id") + ", (SELECT " + countStar() + " FROM " + correlationPath("p.ownedDocuments", Document.class,"ownedDocuments", "owner.id = p.id") + ") FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id") +
                 " ORDER BY p.id ASC";
 
         Assert.assertEquals(expectedQuery, cb.getQueryString());
@@ -307,7 +308,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 "LEFT JOIN p.ownedDocuments ownedDocument " +
                 "LEFT JOIN ownedDocument.partners partner " +
                 "LEFT JOIN partner.favoriteDocuments favoriteDocuments_1 " +
-                "GROUP BY " + groupBy("partner.id", "p.id", renderNullPrecedenceGroupBy("p.id"), "ownedDocument.id") +
+                "GROUP BY " + groupBy("partner.id", "p.id", "p.id", "ownedDocument.id") +
                 " ORDER BY p.id ASC";
 
         Assert.assertEquals(expectedQuery, cb.getQueryString());

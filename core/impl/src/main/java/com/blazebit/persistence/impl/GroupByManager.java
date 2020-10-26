@@ -98,7 +98,7 @@ public class GroupByManager extends AbstractManager<ExpressionModifier> {
         queryGenerator.setQueryBuffer(sb);
         for (NodeInfo info : groupByInfos) {
             Expression expr = info.getExpression();
-            Set<Expression> collectedExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr);
+            Set<Expression> collectedExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(expr, getClauseType());
             if (collectedExpressions.size() > 1 || collectedExpressions.iterator().next() != expr) {
                 throw new RuntimeException("The complex group by expression [" + expr + "] is not supported by the underlying database. The valid sub-expressions are: " + collectedExpressions);
             }

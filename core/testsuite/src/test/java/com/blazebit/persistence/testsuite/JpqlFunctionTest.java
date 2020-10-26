@@ -145,7 +145,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
                 + "FROM Document d "
                 + "WHERE " + function("YEAR", "d.creationDate") + " IN " + listParameter("param_0") + " "
-                + "GROUP BY " + groupBy("d.age", groupByPathExpressions(function("YEAR", "d.creationDate"), "d.creationDate"), renderNullPrecedenceGroupBy(groupByPathExpressions(function("YEAR", "d.creationDate"), "d.creationDate")))
+                + "GROUP BY " + groupBy("d.age", function("YEAR", "d.creationDate"), renderNullPrecedenceGroupBy(function("YEAR", "d.creationDate"), "ASC", "LAST"))
                 + " ORDER BY " + renderNullPrecedence("years", function("YEAR", "d.creationDate"), "ASC", "LAST");
         
         assertEquals(expected, cb.getQueryString());

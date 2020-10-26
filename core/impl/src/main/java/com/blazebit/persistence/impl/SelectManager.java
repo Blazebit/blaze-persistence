@@ -229,7 +229,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
      * @param joinVisitor
      * @return
      */
-    void buildGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
+    void buildImplicitGroupByClauses(final EntityMetamodel m, GroupByManager groupByManager, boolean hasGroupBy, JoinVisitor joinVisitor) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
@@ -247,13 +247,13 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             PathExpression pathExpression = new PathExpression(path, new SimplePathReference(rootNode, null, rootNode.getNodeType()), false, false);
 
             if (jpaProvider.supportsGroupByEntityAlias()) {
-                Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(pathExpression);
+                Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(pathExpression, getClauseType());
                 if (!extractedGroupByExpressions.isEmpty()) {
-                    collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
+                    collectImplicitGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
                 }
             } else {
                 resolveVisitor.visit(pathExpression);
-                collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
+                collectImplicitGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
             }
         } else {
             List<SelectInfo> infos = selectInfos;
@@ -261,9 +261,9 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
             for (int i = 0; i < size; i++) {
                 final SelectInfo selectInfo = infos.get(i);
                 if (jpaProvider.supportsGroupByEntityAlias()) {
-                    Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
+                    Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression(), getClauseType());
                     if (!extractedGroupByExpressions.isEmpty()) {
-                        collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
+                        collectImplicitGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
                     }
                 } else {
                     componentPaths.clear();
@@ -272,11 +272,11 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
                     // The select info can only either an entity select or any other expression
                     // but entity selects can't be nested in other expressions, therefore we can differentiate here
                     if (componentPaths.size() > 0) {
-                        collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
+                        collectImplicitGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, componentPaths, resolveVisitor.getRootNode());
                     } else {
-                        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression());
+                        Set<Expression> extractedGroupByExpressions = groupByExpressionGatheringVisitor.extractGroupByExpressions(selectInfo.getExpression(), getClauseType());
                         if (!extractedGroupByExpressions.isEmpty()) {
-                            collectGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
+                            collectImplicitGroupBys(sb, joinVisitor, groupByManager, hasGroupBy, extractedGroupByExpressions, null);
                         }
                     }
                 }
@@ -287,7 +287,7 @@ public class SelectManager<T> extends AbstractManager<SelectInfo> {
         groupByExpressionGatheringVisitor.clear();
     }
 
-    private void collectGroupBys(StringBuilder sb, JoinVisitor joinVisitor, GroupByManager groupByManager, boolean hasGroupBy, Set<? extends Expression> componentPaths, JoinNode rootNode) {
+    private void collectImplicitGroupBys(StringBuilder sb, JoinVisitor joinVisitor, GroupByManager groupByManager, boolean hasGroupBy, Set<? extends Expression> componentPaths, JoinNode rootNode) {
         queryGenerator.setClauseType(ClauseType.GROUP_BY);
         queryGenerator.setQueryBuffer(sb);
         if (joinVisitor == null) {

@@ -26,9 +26,11 @@ import java.util.Map;
 public class ExpressionCopyContextMap implements ExpressionCopyContext {
 
     private final Map<String, String> parameterMapping;
+    private final boolean copyResolved;
 
-    public ExpressionCopyContextMap(Map<String, String> parameterMapping) {
+    public ExpressionCopyContextMap(Map<String, String> parameterMapping, boolean copyResolved) {
         this.parameterMapping = parameterMapping;
+        this.copyResolved = copyResolved;
     }
 
     @Override
@@ -40,4 +42,8 @@ public class ExpressionCopyContextMap implements ExpressionCopyContext {
         return newParameterName;
     }
 
+    @Override
+    public boolean isCopyResolved() {
+        return copyResolved;
+    }
 }

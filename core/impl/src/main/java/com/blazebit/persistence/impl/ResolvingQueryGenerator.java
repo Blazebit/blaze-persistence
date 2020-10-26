@@ -53,8 +53,6 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
-import com.blazebit.persistence.parser.util.TypeConverter;
-import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -632,7 +630,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append('(');
         }
 
-        super.visit(expression);
+        ParameterManager.ParameterImpl<?> parameter = parameterManager.getParameter(expression.getName());
+        if (parameter.isUsedInGroupBy()) {
+            ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.LITERAL);
+            super.visit(expression);
+            setParameterRenderingMode(oldParameterRenderingMode);
+        } else {
+            super.visit(expression);
+        }
 
         if (needsBrackets) {
             sb.append(')');
@@ -646,26 +651,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     protected String getLiteralParameterValue(ParameterExpression expression) {
-        Object value = expression.getValue();
-        if (value == null) {
-            value = parameterManager.getParameterValue(expression.getName());
-        }
-
-        if (value != null) {
-            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass(), getSupportedEnumTypes());
-            if (converter != null) {
-                // We can't render enum values as literals directly, only in the context of a predicate, so we need the BooleanLiteralRenderingContext.PLAIN
-                if (value instanceof Enum<?>) {
-                    if (getBooleanLiteralRenderingContext() == BooleanLiteralRenderingContext.PLAIN) {
-                        return converter.toString(value);
-                    }
-                } else if (jpaProvider.supportsTemporalLiteral() || !TypeUtils.isTemporalConverter(converter)) {
-                    return converter.toString(value);
-                }
-            }
-        }
-
-        return null;
+        // We can't render enum values as literals directly, only in the context of a predicate, so we need the BooleanLiteralRenderingContext.PLAIN
+        boolean renderEnumAsLiteral = getBooleanLiteralRenderingContext() == BooleanLiteralRenderingContext.PLAIN;
+        return parameterManager.getLiteralParameterValue(expression, renderEnumAsLiteral);
     }
 
     public void setResolveSelectAliases(boolean replaceSelectAliases) {
