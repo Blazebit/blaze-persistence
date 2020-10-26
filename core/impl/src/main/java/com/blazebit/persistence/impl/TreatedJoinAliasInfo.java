@@ -30,9 +30,9 @@ public class TreatedJoinAliasInfo extends JoinAliasInfo {
     private final JoinNode treatedJoinNode;
     private final EntityType<?> treatType;
 
-    public TreatedJoinAliasInfo(JoinNode treatedJoinNode, EntityType<?> treatType) {
+    public TreatedJoinAliasInfo(JoinNode treatedJoinNode, EntityType<?> treatType, String alias) {
         super(
-                treatedJoinNode.getAlias(),
+                alias,
                 "TREAT(" + treatedJoinNode.getAliasInfo().getAbsolutePath() + " AS " + treatType.getName() + ")",
                 treatedJoinNode.getAliasInfo().isImplicit(),
                 treatedJoinNode.getAliasInfo().isRootNode(),

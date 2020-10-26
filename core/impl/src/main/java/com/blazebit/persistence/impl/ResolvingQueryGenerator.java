@@ -37,23 +37,21 @@ import com.blazebit.persistence.parser.expression.QualifiedExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.WindowDefinition;
-import com.blazebit.persistence.parser.predicate.BetweenPredicate;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
 import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.ExistsPredicate;
 import com.blazebit.persistence.parser.predicate.GePredicate;
 import com.blazebit.persistence.parser.predicate.GtPredicate;
 import com.blazebit.persistence.parser.predicate.InPredicate;
-import com.blazebit.persistence.parser.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.parser.predicate.IsNullPredicate;
 import com.blazebit.persistence.parser.predicate.LePredicate;
-import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
-import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.ExtendedAttribute;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -68,7 +66,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,7 +86,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private boolean quantifiedPredicate;
     private Set<JoinNode> renderedJoinNodes;
     private ClauseType clauseType;
-    private Map<JoinNode, Boolean> treatedJoinNodesForConstraints;
     private final EntityMetamodel entityMetamodel;
     private final Set<String> currentlyResolvingAliases;
     private final AliasManager aliasManager;
@@ -98,7 +94,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final JpaProvider jpaProvider;
     private final DbmsDialect dbmsDialect;
     private final Map<String, JpqlFunction> registeredFunctions;
-    private final Map<String, String> registeredFunctionsNames;
+    private final Map<String, String> registeredFunctionNames;
 
     static {
         Set<String> functions = new HashSet<>();
@@ -126,7 +122,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         BUILT_IN_FUNCTIONS = functions;
     }
 
-    public ResolvingQueryGenerator(EntityMetamodel entityMetamodel, AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions) {
+    public ResolvingQueryGenerator(EntityMetamodel entityMetamodel, AliasManager aliasManager, ParameterManager parameterManager, AssociationParameterTransformerFactory parameterTransformerFactory, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions, Map<String, String> registeredFunctionNames) {
         this.entityMetamodel = entityMetamodel;
         this.aliasManager = aliasManager;
         this.parameterManager = parameterManager;
@@ -135,10 +131,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.dbmsDialect = dbmsDialect;
         this.registeredFunctions = registeredFunctions;
         this.currentlyResolvingAliases = new HashSet<>();
-        this.registeredFunctionsNames = new HashMap<>(registeredFunctions.size());
-        for (Map.Entry<String, JpqlFunction> registeredFunctionEntry : registeredFunctions.entrySet()) {
-            registeredFunctionsNames.put(registeredFunctionEntry.getKey().toLowerCase(), registeredFunctionEntry.getKey());
-        }
+        this.registeredFunctionNames = registeredFunctionNames;
     }
 
     @Override
@@ -200,11 +193,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             expression.getRealArgument().accept(this);
             return;
         }
-        // A type constraint of a treat expression from within an aggregate may not "escape" the aggregate
-        Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
-        if (expression instanceof AggregateExpression) {
-            treatedJoinNodesForConstraints = null;
-        }
 
         if (com.blazebit.persistence.parser.util.ExpressionUtils.isOuterFunction(expression)) {
             // Outer can only have paths, no need to set expression context for parameters
@@ -228,12 +216,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             renderFunctionFunction(resolveRenderedFunctionName(expression.getFunctionName()), expression.getExpressions(), expression.getResolvedWindowDefinition());
         }
-
-        treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
     }
 
     private String resolveRenderedFunctionName(String literalFunctionName) {
-        String registeredFunctionName = registeredFunctionsNames.get(literalFunctionName.toLowerCase());
+        String registeredFunctionName = registeredFunctionNames.get(literalFunctionName.toLowerCase());
         return registeredFunctionName == null ? literalFunctionName : registeredFunctionName;
     }
 
@@ -513,17 +499,20 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 }
             } else {
                 List<JoinNode> treatedJoinNodes = baseNode.getJoinNodesForTreatConstraint();
-                if (treatedJoinNodesForConstraints != null) {
-                    for (JoinNode node : treatedJoinNodes) {
-                        treatedJoinNodesForConstraints.put(node, Boolean.FALSE);
+                Type<?> baseNodeType = baseNode.getBaseType();
+                boolean addTypeCaseWhen = false;
+                if (!treatedJoinNodes.isEmpty() && baseNodeType instanceof EntityType<?> && baseNode.getTreatType() != null && (jpaProvider.supportsSubtypePropertyResolving() || !jpaProvider.supportsRootTreat())) {
+                    ExtendedManagedType<?> extendedManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, baseNode.getTreatType().getName());
+                    ExtendedAttribute<?, ?> extendedAttribute = extendedManagedType.getAttributes().get(field);
+                    if (extendedAttribute.isColumnShared()) {
+                        // To disambiguate shared column access, we also must use the type constraint
+                        addTypeCaseWhen = jpaProvider.needsTypeConstraintForColumnSharing();
+                    } else {
+                        // If the attribute is declared by an entity sub-type of the treat target type, we don't need the case when
+                        ExtendedAttribute<?, ?> baseTypeAttribute = (ExtendedAttribute<?, ?>) entityMetamodel.getManagedType(ExtendedManagedType.class, ((EntityType<?>) baseNode.getBaseType()).getName()).getAttributes().get(field);
+                        addTypeCaseWhen = baseTypeAttribute != null && !baseNode.getTreatType().getJavaType().isAssignableFrom(baseTypeAttribute.getAttributePath().get(0).getDeclaringType().getJavaType());
                     }
                 }
-
-                ManagedType<?> baseNodeType = baseNode.getManagedType();
-                boolean addTypeCaseWhen = !treatedJoinNodes.isEmpty()
-                        && baseNodeType instanceof EntityType<?>
-                        && jpaProvider.needsTypeConstraintForColumnSharing()
-                        && jpaProvider.isColumnShared((EntityType<?>) baseNodeType, field);
                 if (addTypeCaseWhen) {
                     sb.append("CASE WHEN ");
                     boolean first = true;
@@ -544,7 +533,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                         }
 
                         sb.append("TYPE(");
-                        sb.append(treatedJoinNode.getAlias());
+                        treatedJoinNode.appendAlias(sb, externalRepresentation);
                         sb.append(") IN (");
                         for (EntityType<?> entitySubtype : entityMetamodel.getEntitySubtypes(treatedJoinNode.getTreatType())) {
                             sb.append(entitySubtype.getName());
@@ -555,7 +544,12 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                         sb.append(')');
                     }
 
-                    sb.append(" THEN ");
+                    if (first) {
+                        sb.setLength(sb.length() - "CASE WHEN ".length());
+                        addTypeCaseWhen = false;
+                    } else {
+                        sb.append(" THEN ");
+                    }
                 }
 
                 boolean valueFunction = collectionValueFunction != null && needsValueFunction(expression, baseNode, field);
@@ -583,6 +577,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 }
 
                 if (addTypeCaseWhen) {
+                    if (jpaProvider.needsCaseWhenElseBranch()) {
+                        sb.append(" ELSE NULL");
+                    }
                     sb.append(" END");
                 }
             }
@@ -740,9 +737,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         renderEquality(predicate.getLeft(), predicate.getRight(), predicate.isNegated(), predicate.getQuantifier());
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
         this.quantifiedPredicate = quantifiedPredicate;
     }
 
@@ -888,43 +882,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT NULL");
-            flipTreatedJoinNodeConstraints();
         } else {
             sb.append(" IS NULL");
         }
         setParameterRenderingMode(oldParameterRenderingMode);
-    }
-
-    @Override
-    public void visit(IsEmptyPredicate predicate) {
-        super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
-    }
-
-    @Override
-    public void visit(MemberOfPredicate predicate) {
-        super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
-    }
-
-    @Override
-    public void visit(LikePredicate predicate) {
-        super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
-    }
-
-    @Override
-    public void visit(BetweenPredicate predicate) {
-        super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
     }
 
     @Override
@@ -952,9 +913,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else {
             super.visit(predicate);
         }
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
     }
 
     @Override
@@ -962,9 +920,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
         this.quantifiedPredicate = quantifiedPredicate;
     }
 
@@ -973,9 +928,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
         this.quantifiedPredicate = quantifiedPredicate;
     }
 
@@ -984,9 +936,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
         this.quantifiedPredicate = quantifiedPredicate;
     }
 
@@ -995,28 +944,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = predicate.getQuantifier() != PredicateQuantifier.ONE;
         super.visit(predicate);
-        if (predicate.isNegated()) {
-            flipTreatedJoinNodeConstraints();
-        }
         this.quantifiedPredicate = quantifiedPredicate;
-    }
-
-    protected void visitWhenClauseCondition(Expression condition) {
-        if (!(condition instanceof Predicate) || condition instanceof CompoundPredicate) {
-            condition.accept(this);
-            return;
-        }
-
-        Predicate p = (Predicate) condition;
-
-        int startPosition = sb.length();
-        Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
-        treatedJoinNodesForConstraints = new LinkedHashMap<>();
-
-        p.accept(this);
-
-        insertTreatJoinConstraint(startPosition, sb.length());
-        treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
     }
 
     @Override
@@ -1032,26 +960,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
 
         if (predicate.getChildren().size() == 1) {
-            int startPosition = sb.length();
-            Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
-            treatedJoinNodesForConstraints = new LinkedHashMap<>();
-
             predicate.getChildren().get(0).accept(this);
-
-            insertTreatJoinConstraint(startPosition, sb.length());
-            treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
             return;
         }
         final int startLen = sb.length();
         final String operator = " " + predicate.getOperator().toString() + " ";
         final List<Predicate> children = predicate.getChildren();
         int size = children.size();
-        Map<JoinNode, Boolean> oldTreatedJoinNodesForConstraints = treatedJoinNodesForConstraints;
-        treatedJoinNodesForConstraints = new LinkedHashMap<>();
         for (int i = 0; i < size; i++) {
-            int startPosition = sb.length();
-            int endPosition;
-
             Predicate child = children.get(i);
             if (child instanceof CompoundPredicate && ((CompoundPredicate) child).getOperator() != predicate.getOperator() && !child.isNegated()) {
                 sb.append("(");
@@ -1060,23 +976,15 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 // If the child was empty, we remove the opening parenthesis again
                 if (len == sb.length()) {
                     sb.deleteCharAt(len - 1);
-                    endPosition = sb.length();
                 } else {
                     sb.append(")");
-                    endPosition = sb.length();
                     sb.append(operator);
                 }
             } else {
                 child.accept(this);
-                endPosition = sb.length();
                 sb.append(operator);
             }
-
-            insertTreatJoinConstraint(startPosition, endPosition);
-            treatedJoinNodesForConstraints.clear();
         }
-
-        treatedJoinNodesForConstraints = oldTreatedJoinNodesForConstraints;
 
         // Delete the last operator only if the children actually generated something
         if (startLen < sb.length()) {
@@ -1087,98 +995,5 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         setBooleanLiteralRenderingContext(oldConditionalContext);
         setParameterRenderingMode(oldParameterRenderingMode);
-    }
-
-    private void flipTreatedJoinNodeConstraints() {
-        if (treatedJoinNodesForConstraints != null) {
-            for (Map.Entry<JoinNode, Boolean> entry : treatedJoinNodesForConstraints.entrySet()) {
-                if (entry.getValue() == Boolean.TRUE) {
-                    entry.setValue(Boolean.FALSE);
-                } else {
-                    entry.setValue(Boolean.TRUE);
-                }
-            }
-        }
-    }
-
-    private boolean insertTreatJoinConstraint(int startPosition, int endPosition) {
-        if (!treatedJoinNodesForConstraints.isEmpty()) {
-            // Compute the set of entity type positive conjunct and negative disjunct restrictions per treated join node
-            Map<JoinNode, Set<EntityType<?>>[]> typeRestrictions = new LinkedHashMap<>(treatedJoinNodesForConstraints.size());
-            for (Map.Entry<JoinNode, Boolean> entry : treatedJoinNodesForConstraints.entrySet()) {
-                JoinNode node = entry.getKey();
-                // When the JPA provider supports rendering treat joins and we have a treat join node
-                // we skip the type constraint as that is already applied through the join
-                if (jpaProvider.supportsTreatJoin() && node.isTreatJoinNode()) {
-                    continue;
-                }
-                Boolean negatedContext = entry.getValue();
-                JoinAliasInfo joinAliasInfo = entry.getKey().getAliasInfo();
-                JoinNode treatedJoinNode = entry.getKey();
-                if (joinAliasInfo instanceof TreatedJoinAliasInfo) {
-                    treatedJoinNode = ((TreatedJoinAliasInfo) joinAliasInfo).getTreatedJoinNode();
-                }
-                Set<EntityType<?>>[] entityTypes = typeRestrictions.get(treatedJoinNode);
-                if (entityTypes == null) {
-                    entityTypes = new Set[2];
-                    typeRestrictions.put(treatedJoinNode, entityTypes);
-                }
-
-                if (negatedContext == Boolean.TRUE) {
-                    // Negated context
-                    if (entityTypes[1] == null) {
-                        entityTypes[1] = new HashSet<>(entityMetamodel.getEntitySubtypes((EntityType<?>) treatedJoinNode.getBaseType()));
-                    }
-                    entityTypes[1].removeAll(entityMetamodel.getEntitySubtypes(node.getTreatType()));
-                } else {
-                    if (entityTypes[0] == null) {
-                        entityTypes[0] = new HashSet<>();
-                    }
-                    entityTypes[0].addAll(entityMetamodel.getEntitySubtypes(node.getTreatType()));
-                }
-            }
-            if (!typeRestrictions.isEmpty()) {
-                StringBuilder treatConditionBuilder = new StringBuilder(typeRestrictions.size() * 40);
-                treatConditionBuilder.append('(');
-                for (Map.Entry<JoinNode, Set<EntityType<?>>[]> entry : typeRestrictions.entrySet()) {
-                    JoinNode node = entry.getKey();
-
-                    if (entry.getValue()[1] != null && !entry.getValue()[1].isEmpty()) {
-                        treatConditionBuilder.append("TYPE(");
-                        treatConditionBuilder.append(node.getAlias());
-                        treatConditionBuilder.append(") IN (");
-                        for (EntityType<?> entityType : entry.getValue()[1]) {
-                            treatConditionBuilder.append(entityType.getName());
-                            treatConditionBuilder.append(", ");
-                        }
-                        treatConditionBuilder.setLength(treatConditionBuilder.length() - 2);
-                        treatConditionBuilder.append(")");
-                        treatConditionBuilder.append(" OR ");
-                    }
-
-                    if (entry.getValue()[0] != null) {
-                        treatConditionBuilder.append("TYPE(");
-                        treatConditionBuilder.append(node.getAlias());
-                        treatConditionBuilder.append(") IN (");
-                        for (EntityType<?> entityType : entry.getValue()[0]) {
-                            treatConditionBuilder.append(entityType.getName());
-                            treatConditionBuilder.append(", ");
-                        }
-                        treatConditionBuilder.setLength(treatConditionBuilder.length() - 2);
-                        treatConditionBuilder.append(")");
-                        treatConditionBuilder.append(" AND ");
-                    }
-                }
-
-                // Because we always have the open parenthesis as first char
-                if (treatConditionBuilder.length() > 1) {
-                    sb.insert(endPosition, ')');
-                    sb.insert(startPosition, treatConditionBuilder);
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

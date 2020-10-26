@@ -87,4 +87,28 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
         assertEquals(1, result.size());
         assertTrue(result.contains(sub1));
     }
+
+    @Test
+    // NOTE: Datanucleus does not seem to support this kind of model? TODO: report the error
+    // NOTE: EclipseLink is just fundamentally broken in this regard...
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    public void treatWithSuperTypeColumnAccess() {
+        // Given
+        Sub1 sub1 = new Sub1();
+        sub1.setSub1Value(11);
+        Sub2 sub2 = new Sub2();
+        sub2.setSub2Value(9);
+        em.persist(sub1);
+        em.persist(sub2);
+
+        // When
+        CriteriaBuilder<Parent> criteria = cbf.create(em, Parent.class);
+        List<Parent> result = criteria.from(Parent.class, "p")
+                .where("TREAT(p AS Sub2).id").eq(sub1.getId())
+                .where("TREAT(p AS Sub1).id").eq(sub2.getId())
+                .getResultList();
+
+        // Then
+        assertEquals(0, result.size());
+    }
 }

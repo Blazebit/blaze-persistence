@@ -260,7 +260,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.aliasManager = new AliasManager(queryContext.getParent().aliasManager);
         this.expressionFactory = builder.expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(cbf.getMetamodel(), this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.dbmsDialect, mainQuery.registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(cbf.getMetamodel(), this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.dbmsDialect, mainQuery.registeredFunctions, mainQuery.registeredFunctionNames);
         this.joinManager = new JoinManager(mainQuery, this, queryGenerator, this.aliasManager, queryContext.getParent().joinManager, expressionFactory);
         this.fromClassExplicitlySet = builder.fromClassExplicitlySet;
 
@@ -313,7 +313,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        this.queryGenerator = new ResolvingQueryGenerator(cbf.getMetamodel(), this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.dbmsDialect, mainQuery.registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(cbf.getMetamodel(), this.aliasManager, parameterManager, mainQuery.parameterTransformerFactory, mainQuery.jpaProvider, mainQuery.dbmsDialect, mainQuery.registeredFunctions, mainQuery.registeredFunctionNames);
         this.joinManager = new JoinManager(mainQuery, this, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         if (implicitFromClause) {

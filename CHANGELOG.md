@@ -32,6 +32,7 @@ Not yet released
 * Support constant concatenation in optional parameter detection for entity view annotation processor
 * Fix issues with `EntityViewManager.getEntityReference` when used with embedded id entity types
 * Reorder explicit join nodes into the appropriate table references according to their dependencies
+* Fix `TREAT` issues regarding nested expression/predicate uses and wrong omitting of `TREAT` constraint for superclass attribute access
 
 ### Backwards-incompatible changes
 

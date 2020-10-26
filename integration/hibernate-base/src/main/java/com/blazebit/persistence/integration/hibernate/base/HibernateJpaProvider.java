@@ -273,6 +273,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsCaseWhenElseBranch() {
+        return false;
+    }
+
+    @Override
     public boolean supportsJpa21() {
         return false;
     }

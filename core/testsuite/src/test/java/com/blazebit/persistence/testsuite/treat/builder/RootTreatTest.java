@@ -215,9 +215,11 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, new Object[] { null, 2    });
         assertRemoved(bases, new Object[] { null, 102  });
     }
-    
+
+    // NOTE: EclipseLink is broken in this regard and it's unfortunately not possible to fix or workaround this: https://github.com/eclipse-ee4j/eclipselink/issues/428
     @Test
     public void whereTreatedRootBasic() {
+        assumeTreatInNonPredicateDoesNotFilter();
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
@@ -225,9 +227,11 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         );
                 
         // From => 4 instances
-        // Where => 1 instance because 1 Sub1 has sub1Value 101, the others are Sub2s
-        Assert.assertEquals(1, bases.size());
+        // Where => 3 instance because 1 Sub1 has sub1Value 101, the others are Sub2s
+        Assert.assertEquals(3, bases.size());
+        assertRemoved(bases, objectPrefix + "2.parent");
         assertRemoved(bases, objectPrefix + "1");
+        assertRemoved(bases, objectPrefix + "2");
     }
 
     @Test
@@ -248,9 +252,11 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, objectPrefix + "1");
         assertRemoved(bases, objectPrefix + "2");
     }
-    
+
+    // NOTE: EclipseLink is broken in this regard and it's unfortunately not possible to fix or workaround this: https://github.com/eclipse-ee4j/eclipselink/issues/428
     @Test
     public void whereMultipleTreatedRootBasic() {
+        assumeTreatInNonPredicateDoesNotFilter();
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
@@ -259,8 +265,10 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         );
                 
         // From => 4 instances
-        // Where => 0 instances because one variable can't be treated with 2 different subtypes in a single AND predicate
-        Assert.assertEquals(0, bases.size());
+        // Where => 2 instances because one Sub1 has sub1Value 1 and one Sub2 has sub2Value 1
+        Assert.assertEquals(2, bases.size());
+        assertRemoved(bases, objectPrefix + "1");
+        assertRemoved(bases, objectPrefix + "2");
     }
 
     @Test
@@ -286,8 +294,10 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, objectPrefix + "2");
     }
 
+    // NOTE: EclipseLink is broken in this regard and it's unfortunately not possible to fix or workaround this: https://github.com/eclipse-ee4j/eclipselink/issues/428
     @Test
     public void whereTreatedRootEmbeddableBasic() {
+        assumeTreatInNonPredicateDoesNotFilter();
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
@@ -296,8 +306,10 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         
         // From => 4 instances
         // Where => 1 instance because 1 Sub1 has sub1Value 101, the others are Sub2s
-        Assert.assertEquals(1, bases.size());
+        Assert.assertEquals(3, bases.size());
+        assertRemoved(bases, objectPrefix + "2.parent");
         assertRemoved(bases, objectPrefix + "1");
+        assertRemoved(bases, objectPrefix + "2");
     }
     
     @Test
@@ -318,9 +330,11 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         assertRemoved(bases, objectPrefix + "1");
         assertRemoved(bases, objectPrefix + "2");
     }
-    
+
+    // NOTE: EclipseLink is broken in this regard and it's unfortunately not possible to fix or workaround this: https://github.com/eclipse-ee4j/eclipselink/issues/428
     @Test
     public void whereMultipleTreatedRootEmbeddableBasic() {
+        assumeTreatInNonPredicateDoesNotFilter();
         List<String> bases = list(
                 from(String.class, "Base", "b")
                         .select("b.name")
@@ -329,8 +343,10 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         );
                 
         // From => 4 instances
-        // Where => 0 instances because one variable can't be treated with 2 different subtypes in a single AND predicate
-        Assert.assertEquals(0, bases.size());
+        // Where => 2 instances because one Sub1 has sub1Value 1 and one Sub2 has sub2Value 1
+        Assert.assertEquals(2, bases.size());
+        assertRemoved(bases, objectPrefix + "1");
+        assertRemoved(bases, objectPrefix + "2");
     }
 
     @Test
@@ -431,11 +447,9 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         );
 
         // From => 4 instances
-        // Where => 3 instances because 1 Sub1 has sub1Value 101, the other has 1 and Sub2s are included because type constraint is inverted
-        Assert.assertEquals(3, bases.size());
+        // Where => 1 instance because 1 Sub1 has sub1Value 1, for the other objects the treat comparison result in NULL, leading to FALSE overall
+        Assert.assertEquals(1, bases.size());
         assertRemoved(bases, objectPrefix + "1");
-        assertRemoved(bases, objectPrefix + "2");
-        assertRemoved(bases, objectPrefix + "2.parent");
     }
     
     @Test
@@ -447,10 +461,8 @@ public class RootTreatTest extends AbstractTreatVariationsTest {
         );
                 
         // From => 4 instances
-        // Where => 2 instances because 1 Sub1 has sub1Value 101 and 1 Sub2 has sub2Value 102
-        Assert.assertEquals(2, bases.size());
-        assertRemoved(bases, objectPrefix + "1");
-        assertRemoved(bases, objectPrefix + "2");
+        // Where => 0 instances because one of the treat comparisons result in NULL, leading to FALSE overall
+        Assert.assertEquals(0, bases.size());
     }
     
     @Test
