@@ -476,7 +476,7 @@ public class SubqueryTest extends AbstractCoreTest {
         
         String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id, " + joinAliasValue("c", "id") + " ORDER BY localizedCount ASC";
+                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id, " + groupBy(joinAliasValue("c", "id"), renderNullPrecedenceGroupBy(joinAliasValue("c", "id"), "ASC", "LAST")) + " ORDER BY localizedCount ASC";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList(); 
     }

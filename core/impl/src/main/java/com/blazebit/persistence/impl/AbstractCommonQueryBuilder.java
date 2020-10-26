@@ -263,7 +263,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager);
         this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager, splittingVisitor);
-        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
+        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, parameterManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
         this.windowManager = (WindowManager<BuilderType>) joinManager.getWindowManager();
@@ -272,7 +272,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, builder.resultType);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, expressionFactory, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
@@ -334,7 +334,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.subqueryInitFactory = joinManager.getSubqueryInitFactory();
         SplittingVisitor splittingVisitor = new SplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager);
         this.embeddableSplittingVisitor = new EmbeddableSplittingVisitor(mainQuery.metamodel, mainQuery.jpaProvider, this.aliasManager, splittingVisitor);
-        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, mainQuery.dbmsDialect);
+        GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor = new GroupByExpressionGatheringVisitor(false, this.aliasManager, parameterManager, mainQuery.dbmsDialect);
         this.functionalDependencyAnalyzerVisitor = new FunctionalDependencyAnalyzerVisitor(mainQuery.metamodel, splittingVisitor, mainQuery.jpaProvider, this.aliasManager);
 
         this.windowManager = (WindowManager<BuilderType>) joinManager.getWindowManager();
@@ -343,7 +343,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.havingManager = new HavingManager<>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory, groupByExpressionGatheringVisitor);
 
         this.selectManager = new SelectManager<>(queryGenerator, parameterManager, this, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, mainQuery.jpaProvider, mainQuery, groupByExpressionGatheringVisitor, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, subqueryInitFactory, selectManager, this.joinManager, this.aliasManager, expressionFactory, embeddableSplittingVisitor, functionalDependencyAnalyzerVisitor, mainQuery.metamodel, mainQuery.jpaProvider, groupByExpressionGatheringVisitor);
         this.keysetManager = new KeysetManager(this, queryGenerator, parameterManager, mainQuery.jpaProvider, mainQuery.dbmsDialect);
 
         final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, mainQuery.jpaProvider);
@@ -372,7 +372,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         if (copyMainQuery) {
-            copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager));
+            copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager), false);
             mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
         }
 
@@ -611,7 +611,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             prepareForModification(ClauseType.CTE);
-            ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager));
+            ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager), false);
             this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>(), copyContext);
         }
         return (BuilderType) this;
@@ -2693,13 +2693,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (hasGroupBy || addsGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
-                selectManager.buildGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy, joinVisitor);
+                selectManager.buildImplicitGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy, joinVisitor);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromHavingEnabled()) {
-                havingManager.buildGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
+                havingManager.buildImplicitGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
             }
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
-                orderByManager.buildGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
+                orderByManager.buildImplicitGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
             }
         }
 

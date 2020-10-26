@@ -77,9 +77,10 @@ public class MainQuery {
         if (em == null) {
             throw new NullPointerException("entityManager");
         }
-        
-        ParameterManager parameterManager = new ParameterManager();
-        return new MainQuery(cbf, em, cbf.getJpaProvider(), dbmsDialect, registeredFunctions, parameterManager);
+
+        JpaProvider jpaProvider = cbf.getJpaProvider();
+        ParameterManager parameterManager = new ParameterManager(jpaProvider, cbf.getMetamodel());
+        return new MainQuery(cbf, em, jpaProvider, dbmsDialect, registeredFunctions, parameterManager);
     }
 
     public final void registerMacro(String macroName, JpqlMacro jpqlMacro) {

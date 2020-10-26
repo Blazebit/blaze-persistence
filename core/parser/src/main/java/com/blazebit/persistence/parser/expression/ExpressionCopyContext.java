@@ -28,8 +28,26 @@ public interface ExpressionCopyContext {
         public String getNewParameterName(String oldParameterName) {
             return oldParameterName;
         }
+
+        @Override
+        public boolean isCopyResolved() {
+            return false;
+        }
+    };
+
+    public static final ExpressionCopyContext CLONE = new ExpressionCopyContext() {
+        @Override
+        public String getNewParameterName(String oldParameterName) {
+            return oldParameterName;
+        }
+
+        @Override
+        public boolean isCopyResolved() {
+            return true;
+        }
     };
 
     public String getNewParameterName(String oldParameterName);
 
+    public boolean isCopyResolved();
 }

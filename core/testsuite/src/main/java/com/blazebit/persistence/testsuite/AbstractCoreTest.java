@@ -133,27 +133,34 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return sb.toString();
     }
 
-    protected String renderNullPrecedenceGroupBy(String resolvedExpression) {
-        StringBuilder sb = new StringBuilder();
-        jpaProvider.renderNullPrecedence(sb, resolvedExpression, resolvedExpression, null, null);
+    protected String renderNullPrecedenceGroupBy(String resolvedExpression, String order, String nulls) {
+        if (jpaProvider.supportsNullPrecedenceExpression()) {
+            return resolvedExpression;
+        }
+
+        StringBuilder sb = new StringBuilder(resolvedExpression.length() + 36);
+        sb.append("CASE WHEN ");
+        sb.append(resolvedExpression);
+        sb.append(" IS NULL THEN ");
+        if ("FIRST".equals(nulls)) {
+            sb.append("0 ELSE 1 END");
+        } else {
+            sb.append("1 ELSE 0 END");
+        }
         return sb.toString();
     }
 
     protected String groupBy(String... groupBys) {
-        Set<String> distinctGroupBys = new LinkedHashSet<String>();
-        distinctGroupBys.addAll(Arrays.asList(groupBys));
-        return StringUtils.join(", ", distinctGroupBys);
+        return StringUtils.join(", ", new LinkedHashSet<>(Arrays.asList(groupBys)));
     }
 
-    protected String groupByPathExpressions(String groupByExpression, String... pathExpressions) {
+    protected String groupByPathExpressions(String... pathExpressions) {
         if (cbf.getService(DbmsDialect.class).supportsGroupByExpressionInHavingMatching()) {
-            return groupByExpression;
+            return "";
         }
-        Set<String> distinctGroupBys = new LinkedHashSet<String>();
-        distinctGroupBys.addAll(Arrays.asList(pathExpressions));
-        return StringUtils.join(", ", distinctGroupBys);
+        return ", " + StringUtils.join(", ", new LinkedHashSet<>(Arrays.asList(pathExpressions)));
     }
-    
+
     protected String countStar() {
         if (jpaProvider.supportsCountStar()) {
             return "COUNT(*)";

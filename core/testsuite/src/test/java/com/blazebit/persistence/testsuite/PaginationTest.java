@@ -569,14 +569,14 @@ public class PaginationTest extends AbstractCoreTest {
     @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy6() {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.name, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1") + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedIdQuery = "SELECT d.name, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.name = :ids_0_0 AND strings_1 = :ids_1_0)"
-                + " GROUP BY " + groupBy("d.name", "strings_1")
+                + " GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
-                + " GROUP BY " + groupBy("d.name", "strings_1")
+                + " GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");
@@ -599,14 +599,14 @@ public class PaginationTest extends AbstractCoreTest {
     @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testPaginatedWithGroupBy7() {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, d.age, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedIdQuery = "SELECT d.name, d.age, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", "d.age") + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
+        String expectedIdQuery = "SELECT d.name, d.age, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE (d.name = :ids_0_0 AND d.age = :ids_1_0 AND strings_1 = :ids_2_0)"
-                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
+                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
                 + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.name", "d.age", "strings_1", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
-                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age")
+                + " GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("strings").select("COUNT(contacts.id)");

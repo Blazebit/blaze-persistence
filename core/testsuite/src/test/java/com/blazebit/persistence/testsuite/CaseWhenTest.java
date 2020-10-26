@@ -259,48 +259,47 @@ public class CaseWhenTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-@Test
-public void testImplicitGroupByCase() {
-    CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
-            .from(Document.class, "d")
-            .selectCase()
-            .when("version").eqExpression("1").thenExpression("'first'")
-            .otherwiseExpression("'later'")
-            .select("COUNT(id)");
+    @Test
+    public void testImplicitGroupByCase() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .selectCase()
+                .when("version").eqExpression("1").thenExpression("'first'")
+                .otherwiseExpression("'later'")
+                .select("COUNT(id)");
 
-    final String queryString = criteria.getQueryString();
+        String expected = "SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
 
-    assertEquals("SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END", queryString);
-}
+    @Test
+    public void testImplicitGroupByConstantifiedCase1() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .selectCase()
+                .when("version").eqExpression("1").then("first")
+                .otherwiseExpression("'later'")
+                .select("COUNT(id)");
 
-@Test
-public void testImplicitGroupByConstantifiedCase1() {
-    CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
-            .from(Document.class, "d")
-            .selectCase()
-            .when("version").eqExpression("1").then("first")
-            .otherwiseExpression("'later'")
-            .select("COUNT(id)");
+        String expected = "SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
 
-    final String queryString = criteria.getQueryString();
+    @Test
+    public void testImplicitGroupByConstantifiedCase2() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .selectCase()
+                .when("version").eqExpression("1").thenExpression("'first'")
+                .otherwise("later")
+                .select("COUNT(id)");
 
-    assertEquals("SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END", queryString);
-}
-
-
-@Test
-public void testImplicitGroupByConstantifiedCase2() {
-    CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
-            .from(Document.class, "d")
-            .selectCase()
-            .when("version").eqExpression("1").thenExpression("'first'")
-            .otherwise("later")
-            .select("COUNT(id)");
-
-    final String queryString = criteria.getQueryString();
-
-    assertEquals("SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END", queryString);
-}
+        String expected = "SELECT CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END, COUNT(d.id) FROM Document d GROUP BY CASE WHEN d.version = 1 THEN 'first' ELSE 'later' END";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
 
     @Test
     public void testCaseWhenSizeThenAttribute(){

@@ -16,9 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.util.TypeConverter;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.AttributeAccessor;
+import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -47,13 +51,17 @@ public class ParameterManager {
 
     private static final String PREFIX = "param_";
     private int counter;
+    private final JpaProvider jpaProvider;
+    private final EntityMetamodel entityMetamodel;
     private final Map<String, ParameterImpl<?>> parameters = new TreeMap<>();
     private final Map<String, String> valuesParameters = new TreeMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
     private int positionalOffset = -1; // Records the last positional parameter index that was used
 
-    public ParameterManager() {
+    public ParameterManager(JpaProvider jpaProvider, EntityMetamodel entityMetamodel) {
+        this.jpaProvider = jpaProvider;
+        this.entityMetamodel = entityMetamodel;
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);
         this.parameterUnregistrationVisitor = new ParameterUnregistrationVisitor(this);
     }
@@ -291,6 +299,28 @@ public class ParameterManager {
         return parameter.getValue();
     }
 
+    public String getLiteralParameterValue(ParameterExpression expression, boolean renderEnumAsLiteral) {
+        Object value = expression.getValue();
+        if (value == null) {
+            value = getParameterValue(expression.getName());
+        }
+
+        if (value != null) {
+            final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass(), entityMetamodel.getEnumTypes().keySet());
+            if (converter != null) {
+                if (value instanceof Enum<?>) {
+                    if (renderEnumAsLiteral) {
+                        return converter.toString(value);
+                    }
+                } else if (jpaProvider.supportsTemporalLiteral() || !TypeUtils.isTemporalConverter(converter)) {
+                    return converter.toString(value);
+                }
+            }
+        }
+
+        return null;
+    }
+
     public ParameterExpression addParameterExpression(Object o, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         String name = addParameter(o, o instanceof Collection, clause, queryBuilder);
         return new ParameterExpression(name, o, o instanceof Collection);
@@ -460,6 +490,7 @@ public class ParameterManager {
         private final boolean collectionValued;
         private final boolean implicit;
         private final Map<ClauseType, Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>>> clauseTypes;
+        private boolean usedInImplicitGroupBy;
         private Class<T> parameterType;
         private T value;
         private boolean valueSet;
@@ -537,6 +568,18 @@ public class ParameterManager {
 
         public void setParameterType(Class<T> parameterType) {
             this.parameterType = parameterType;
+        }
+
+        public boolean isUsedInGroupBy() {
+            return usedInImplicitGroupBy || clauseTypes.containsKey(ClauseType.GROUP_BY);
+        }
+
+        public boolean isUsedInImplicitGroupBy() {
+            return usedInImplicitGroupBy;
+        }
+
+        public void setUsedInImplicitGroupBy(boolean usedInImplicitGroupBy) {
+            this.usedInImplicitGroupBy = usedInImplicitGroupBy;
         }
 
         public ParameterValue getParameterValue() {

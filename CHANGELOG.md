@@ -12,7 +12,8 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix generation of implicit group by expressions that contain parameters
+* Fix generation of implicit group by expressions when using MySQL
 
 ### Backwards-incompatible changes
 

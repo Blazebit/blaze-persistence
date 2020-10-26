@@ -71,8 +71,13 @@ public class PathExpression extends AbstractExpression implements Expression {
             newPathProperties.add(pathProperties.get(i).copy(copyContext));
         }
 
-        // NOTE: don't copy the path reference, it has to be set manually on the copy
-        return new PathExpression(newPathProperties, null, usedInCollectionFunction, collectionQualifiedPath);
+        PathReference pathReference;
+        if (copyContext.isCopyResolved()) {
+            pathReference = this.pathReference;
+        } else {
+            pathReference = null;
+        }
+        return new PathExpression(newPathProperties, pathReference, usedInCollectionFunction, collectionQualifiedPath);
     }
 
     @Override
@@ -157,7 +162,7 @@ public class PathExpression extends AbstractExpression implements Expression {
     public int hashCode() {
         int hash = 3;
         if (this.pathReference != null) {
-            hash = 31 * hash + (this.pathReference != null ? this.pathReference.hashCode() : 0);
+            hash = 31 * hash + this.pathReference.hashCode();
         } else {
             hash = 31 * hash + (this.pathProperties != null ? this.pathProperties.hashCode() : 0);
         }

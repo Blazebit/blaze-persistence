@@ -382,22 +382,6 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         }
     }
 
-    private String groupByClause(String expression, boolean asc, boolean nullsFirst) {
-        if (asc) {
-            if (nullsFirst) {
-                return renderNullPrecedenceGroupBy(expression);
-            } else {
-                return renderNullPrecedenceGroupBy(expression);
-            }
-        } else {
-            if (nullsFirst) {
-                return renderNullPrecedenceGroupBy(expression);
-            } else {
-                return renderNullPrecedenceGroupBy(expression);
-            }
-        }
-    }
-        
     static PageNavigation.PageNavigation1 fromPage(int from) {
         PageNavigation.PageNavigation1 result = new PageNavigation.PageNavigation1();
         result.from = from;

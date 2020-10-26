@@ -20,13 +20,20 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -316,7 +323,7 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public String toString(java.sql.Time value) {
+        public String toString(Time value) {
             return jdbcTime(value.getHours(), value.getMinutes(), value.getSeconds());
         }
 
@@ -352,7 +359,7 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public String toString(java.util.Date value) {
+        public String toString(Date value) {
             return jdbcTime(value.getHours(), value.getMinutes(), value.getSeconds());
         }
 
@@ -424,13 +431,13 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public String toString(java.util.Date value) {
+        public String toString(Date value) {
             return jdbcDate(value.getYear() + 1900, value.getMonth() + 1, value.getDate());
         }
 
         @Override
         @SuppressWarnings("deprecation")
-        public void appendTo(java.util.Date value, StringBuilder stringBuilder) {
+        public void appendTo(Date value, StringBuilder stringBuilder) {
             appendJdbcDate(stringBuilder, value.getYear() + 1900, value.getMonth() + 1, value.getDate());
         }
     };
@@ -459,7 +466,7 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public String toString(java.sql.Timestamp value) {
+        public String toString(Timestamp value) {
             return jdbcTimestamp(
                     value.getYear() + 1900,
                     value.getMonth() + 1,
@@ -473,7 +480,7 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void appendTo(java.sql.Timestamp value, StringBuilder stringBuilder) {
+        public void appendTo(Timestamp value, StringBuilder stringBuilder) {
             appendJdbcTimestamp(
                     stringBuilder,
                     value.getYear() + 1900,
@@ -511,7 +518,7 @@ public class TypeUtils {
 
         @Override
         @SuppressWarnings("deprecation")
-        public String toString(java.util.Date value) {
+        public String toString(Date value) {
             return jdbcTimestamp(
                 value.getYear() + 1900,
                 value.getMonth() + 1,
@@ -563,7 +570,7 @@ public class TypeUtils {
         }
 
         @Override
-        public String toString(java.util.Calendar value) {
+        public String toString(Calendar value) {
             return jdbcTimestamp(
                 value.get(Calendar.YEAR),
                 value.get(Calendar.MONTH) + 1,
@@ -590,6 +597,7 @@ public class TypeUtils {
         }
     };
 
+    private static final Logger LOG = Logger.getLogger(TypeUtils.class.getName());
     private static final Map<Class<?>, TypeConverter<?>> CONVERTERS;
     private static final Set<TypeConverter<?>> TEMPORAL_CONVERTERS;
 
@@ -765,6 +773,28 @@ public class TypeUtils {
         temporalConverters.add(CALENDAR_CONVERTER);
         // Maybe support Java 8 time types if JPA provider can handle it? See https://github.com/Blazebit/blaze-persistence/issues/1050
         // LocalDate, LocalTime, LocalDateTime, Instant, ZoneDateTime, OffsetDateTime, OffsetTime
+        Set<TypeConverterContributor> contributors = new TreeSet<>(new TypeConverterContributorComparator());
+        for (Iterator<TypeConverterContributor> iterator = ServiceLoader.load(TypeConverterContributor.class).iterator(); iterator.hasNext(); ) {
+            try {
+                TypeConverterContributor typeConverterContributor = iterator.next();
+                contributors.add(typeConverterContributor);
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "Couldn't load contributor", t);
+            }
+        }
+
+        for (TypeConverterContributor contributor : contributors) {
+            try {
+                contributor.registerTypeConverters(c);
+            } catch (Throwable t) {
+                LOG.log(Level.SEVERE, "An error occurred while trying to register type converters through: " + contributor.getClass().getName(), t);
+            }
+        }
+
+        // Copy the map since it could have "escaped" through the register calls and we don't want converter changes at runtime
+        if (!contributors.isEmpty()) {
+            c = new HashMap<>(c);
+        }
         CONVERTERS = Collections.unmodifiableMap(c);
         TEMPORAL_CONVERTERS = temporalConverters;
     }
@@ -844,5 +874,21 @@ public class TypeUtils {
     private static IllegalArgumentException unknownConversion(Object value, Class<?> targetType) {
         String type = value == null ? "unknown" : value.getClass().getName();
         return new IllegalArgumentException("Could not convert '" + value + "' of type '" + type + "' to the type '" + targetType.getName() + "'!");
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.6.0
+     */
+    private static final class TypeConverterContributorComparator implements Comparator<TypeConverterContributor> {
+        @Override
+        public int compare(TypeConverterContributor o1, TypeConverterContributor o2) {
+            int cmp = Integer.compare(o1.priority(), o2.priority());
+            if (cmp == 0) {
+                cmp = o1.getClass().getName().compareTo(o2.getClass().getName());
+            }
+            return cmp;
+        }
     }
 }

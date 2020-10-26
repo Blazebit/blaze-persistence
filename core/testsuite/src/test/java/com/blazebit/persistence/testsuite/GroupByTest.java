@@ -17,11 +17,14 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -57,22 +60,26 @@ public class GroupByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
     
-    /*
-     * Some databases like DB2, SQL Server and Oracle do not support group bys with parameter markers.
-     * Thus, for these DBs the group by should contain all subexpressions instead.
-     *
-     * SQL Server bug? https://support.microsoft.com/en-us/kb/2873474#
-     * For DB2, parameters in group by are problematic: https://groups.google.com/forum/#!topic/comp.databases.ibm-db2/yhg4wNk4IT0
-     * Oracle does not allow parameters in the group by
-     */
     @Test
-    @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoSQLite.class})
     public void testSizeTransformWithImplicitParameterGroupBy1() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")
                 .selectCase().when("d.age").lt(2L).thenExpression("'a'").otherwiseExpression("'b'");
 
-        final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.age";
+        final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    // This is a MySQL only test
+    @Test
+    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
+    public void testImplicitGroupByFunctionExpression() {
+        CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
+                .select("CAST_DATE(FUNCTION('date', '2000-01-01'))")
+                .select("COUNT(*)");
+
+        final String expected = "SELECT " + function("cast_date", function("date", "'2000-01-01'")) + ", " + countStar() + " FROM Document d GROUP BY " + function("cast_date", function("date", "'2000-01-01'"));
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }

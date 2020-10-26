@@ -70,21 +70,24 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     private final boolean treatSizeAsAggregate;
     private final AliasManager aliasManager;
+    private final ParameterManager parameterManager;
     private final DbmsDialect dbmsDialect;
-    private Set<Expression> expressions = new LinkedHashSet<Expression>();
+    private final Set<Expression> expressions = new LinkedHashSet<>();
     /**
      * Is set to true once a parameter/subquery expression is encountered to collect the surrounding expressions
      */
     private boolean collect;
 
-    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, AliasManager aliasManager, DbmsDialect dbmsDialect) {
+    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate, AliasManager aliasManager, ParameterManager parameterManager, DbmsDialect dbmsDialect) {
         this.treatSizeAsAggregate = treatSizeAsAggregate;
         this.aliasManager = aliasManager;
+        this.parameterManager = parameterManager;
         this.dbmsDialect = dbmsDialect;
     }
 
     public void clear() {
         expressions.clear();
+        collect = false;
     }
 
     private boolean setCollect(boolean collect) {
@@ -93,73 +96,79 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         return oldCollect;
     }
 
-    public Set<Expression> extractGroupByExpressions(Expression expression) {
+    public Set<Expression> extractGroupByExpressions(Expression expression, ClauseType clauseType) {
         // grouping by a literal does not make sense and even causes errors in some DBs such as PostgreSQL
         if (expression instanceof LiteralExpression) {
             return Collections.emptySet();
         }
         clear();
-        if (!dbmsDialect.supportsGroupByExpressionInHavingMatching()) {
-            expression.accept(new VisitorAdapter() {
-                @Override
-                public void visit(FunctionExpression expression) {
-                    // Skip aggregate expressions
-                    if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression))) {
-                        return;
+        try {
+            // When having a predicate at the top level, we have to collect
+            collect = expression instanceof Predicate;
+            boolean expressionWasSplit = expression.accept(this);
+            // In the HAVING clause we additionally add the path expressions to the expression set for DBMS like MySQL that's don't support partial expression structure matching
+            if (clauseType == ClauseType.HAVING && !dbmsDialect.supportsGroupByExpressionInHavingMatching()) {
+                expression.accept(new VisitorAdapter() {
+                    @Override
+                    public void visit(FunctionExpression expression) {
+                        // Skip aggregate expressions
+                        if (expression instanceof AggregateExpression || (treatSizeAsAggregate && com.blazebit.persistence.parser.util.ExpressionUtils.isSizeFunction(expression))) {
+                            return;
+                        }
+                        super.visit(expression);
                     }
-                    super.visit(expression);
-                }
 
-                @Override
-                public void visit(SubqueryExpression expression) {
-                    GroupByExpressionGatheringVisitor.this.visit(expression);
-                }
+                    @Override
+                    public void visit(SubqueryExpression expression) {
+                        GroupByExpressionGatheringVisitor.this.visit(expression);
+                    }
 
-                @Override
-                public void visit(PathExpression expression) {
-                    if (expression.getBaseNode() == null) {
-                        ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression().accept(this);
-                    } else {
+                    @Override
+                    public void visit(PathExpression expression) {
+                        if (expression.getBaseNode() == null) {
+                            ((SelectInfo) aliasManager.getAliasInfo(expression.toString())).getExpression().accept(this);
+                        } else {
+                            expressions.add(expression);
+                        }
+                    }
+
+                    @Override
+                    public void visit(TreatExpression expression) {
                         expressions.add(expression);
                     }
-                }
 
-                @Override
-                public void visit(TreatExpression expression) {
-                    expressions.add(expression);
-                }
+                    @Override
+                    public void visit(PropertyExpression expression) {
+                        expressions.add(expression);
+                    }
 
-                @Override
-                public void visit(PropertyExpression expression) {
-                    expressions.add(expression);
-                }
+                    @Override
+                    public void visit(ListIndexExpression expression) {
+                        expressions.add(expression);
+                    }
 
-                @Override
-                public void visit(ListIndexExpression expression) {
-                    expressions.add(expression);
-                }
+                    @Override
+                    public void visit(MapEntryExpression expression) {
+                        expressions.add(expression);
+                    }
 
-                @Override
-                public void visit(MapEntryExpression expression) {
-                    expressions.add(expression);
-                }
+                    @Override
+                    public void visit(MapKeyExpression expression) {
+                        expressions.add(expression);
+                    }
 
-                @Override
-                public void visit(MapKeyExpression expression) {
-                    expressions.add(expression);
-                }
-
-                @Override
-                public void visit(MapValueExpression expression) {
-                    expressions.add(expression);
-                }
-            });
-            return expressions;
-        }
-        // When having a predicate at the top level, we have to collect
-        collect = expression instanceof Predicate;
-        if (expression.accept(this)) {
-            return expressions;
+                    @Override
+                    public void visit(MapValueExpression expression) {
+                        expressions.add(expression);
+                    }
+                });
+                return expressions;
+            }
+            if (expressionWasSplit) {
+                return expressions;
+            }
+        } catch (IllegalParameterException ex) {
+            throw new IllegalArgumentException("Can't use the expression '" + expression + "' as an implicit group by clause, because the parameter '" + ex.parameterExpression + "' can't be rendered as literal which is required!", ex);
         }
 
         return Collections.singleton(expression);
@@ -219,8 +228,18 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     @Override
     public Boolean visit(ParameterExpression expression) {
-        // TODO: reconsider parameters when we have figured out parameter as literal rendering
-        return true;
+        // Since the parameter expression is not collected, there is no need to mark it as "used in implicit group by"
+        if (collect) {
+            return false;
+        }
+        // For implicit group by expressions we must render literals because DBMS can't be sure two question marks i.e. parameter markers,
+        // will be assigned to the same value. To ensure that, we try to resolve the literal value and throw an exception if that's not possible
+        String literalParameterValue = parameterManager.getLiteralParameterValue(expression, true);
+        if (literalParameterValue == null) {
+            throw new IllegalParameterException(expression);
+        }
+        parameterManager.getParameter(expression.getName()).setUsedInImplicitGroupBy(true);
+        return false;
     }
 
     @Override
@@ -653,5 +672,19 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
             expressions.get(i).accept(this);
         }
         setCollect(oldCollect);
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.6.0
+     */
+    private static class IllegalParameterException extends RuntimeException {
+
+        private final ParameterExpression parameterExpression;
+
+        public IllegalParameterException(ParameterExpression parameterExpression) {
+            this.parameterExpression = parameterExpression;
+        }
     }
 }
