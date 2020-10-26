@@ -40,6 +40,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
@@ -118,14 +119,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     private JoinNode(TreatedJoinAliasInfo treatedJoinAliasInfo) {
         JoinNode treatedJoinNode = treatedJoinAliasInfo.getTreatedJoinNode();
-        this.parent = treatedJoinNode.parent;
-        this.parentTreeNode = treatedJoinNode.parentTreeNode;
-        this.joinType = treatedJoinNode.joinType;
-        this.correlationParent = treatedJoinNode.correlationParent;
-        this.correlationPath = treatedJoinNode.correlationPath;
+        this.parent = treatedJoinNode;
+        this.parentTreeNode = null;
+        this.joinType = JoinType.LEFT;
+        this.correlationParent = null;
+        this.correlationPath = null;
         this.nodeType = treatedJoinNode.nodeType;
         this.treatType = treatedJoinAliasInfo.getTreatType();
-        this.qualificationExpression = treatedJoinNode.qualificationExpression;
+        this.qualificationExpression = null;
         this.valuesTypeName = treatedJoinNode.valuesTypeName;
         this.valueCount = treatedJoinNode.valueCount;
         this.valueType = treatedJoinNode.valueType;
@@ -138,9 +139,20 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.valuesAttributes = treatedJoinNode.valuesAttributes;
         this.aliasInfo = treatedJoinAliasInfo;
         this.lateral = treatedJoinNode.lateral;
-        List<JoinNode> joinNodesForTreatConstraint = new ArrayList<>(treatedJoinNode.joinNodesForTreatConstraint.size() + 1);
-        joinNodesForTreatConstraint.addAll(treatedJoinNode.joinNodesForTreatConstraint);
-        joinNodesForTreatConstraint.add(this);
+        List<JoinNode> joinNodesForTreatConstraint;
+        if (treatedJoinNode.joinNodesForTreatConstraint.isEmpty()) {
+            joinNodesForTreatConstraint = Collections.singletonList(this);
+        } else {
+            joinNodesForTreatConstraint = new ArrayList<>(treatedJoinNode.joinNodesForTreatConstraint.size() + 1);
+            for (JoinNode joinNodeForTreatConstraint : treatedJoinNode.joinNodesForTreatConstraint) {
+                // if the join is based on an association defined by the treat subtype of the parent, we can omit the parent treat constraint
+                if (joinNodeForTreatConstraint == parent && !isJoinOnTreatSubtypeAssociation()) {
+                    joinNodesForTreatConstraint.add(joinNodeForTreatConstraint);
+                }
+            }
+
+            joinNodesForTreatConstraint.add(this);
+        }
         this.joinNodesForTreatConstraint = Collections.unmodifiableList(joinNodesForTreatConstraint);
     }
 
@@ -166,14 +178,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         this.qualificationExpression = qualificationExpression;
         this.aliasInfo = aliasInfo;
         if (treatType != null) {
-            if (parent != null) {
-                List<JoinNode> joinNodesForTreatConstraint = new ArrayList<>(parent.joinNodesForTreatConstraint.size() + 1);
-                joinNodesForTreatConstraint.addAll(parent.joinNodesForTreatConstraint);
-                joinNodesForTreatConstraint.add(this);
-                this.joinNodesForTreatConstraint = Collections.unmodifiableList(joinNodesForTreatConstraint);
-            } else {
-                this.joinNodesForTreatConstraint = Collections.singletonList(this);
-            }
+            this.joinNodesForTreatConstraint = Collections.singletonList(this);
         } else {
             if (parent != null) {
                 this.joinNodesForTreatConstraint = parent.joinNodesForTreatConstraint;
@@ -256,7 +261,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     public JoinNode cloneJoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo) {
         // NOTE: no cloning of onPredicate, treatedJoinNodes and entityJoinNodes is intentional
         JoinNode newNode;
-        if (parentTreeNode == null) {
+        if (parentTreeNode == null && treatType == null) {
             newNode = createEntityJoinNode(parent, joinType, (EntityType<?>) nodeType, aliasInfo, lateral);
         } else {
             newNode = createAssociationJoinNode(parent, parentTreeNode, joinType, nodeType, treatType, qualificationExpression, aliasInfo);
@@ -266,6 +271,22 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         newNode.getClauseDependencies().addAll(clauseDependencies);
 
         return newNode;
+    }
+
+    private boolean isJoinOnTreatSubtypeAssociation() {
+        if (parentTreeNode == null) {
+            return false;
+        }
+        ManagedType<?> declaringType = parentTreeNode.getAttribute().getDeclaringType();
+        Type<?> baseType = parent.getBaseType();
+        IdentifiableType<?> treatType = parent.getTreatType();
+        while (treatType != baseType) {
+            if (declaringType == treatType) {
+                return true;
+            }
+            treatType = treatType.getSupertype();
+        }
+        return false;
     }
     
     private void onUpdate(StateChange stateChange) {
@@ -470,8 +491,13 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             return treatedNode;
         }
 
-        TreatedJoinAliasInfo treatedJoinAliasInfo = new TreatedJoinAliasInfo(this, type);
+        String alias = aliasInfo.getAliasOwner().generateRootAlias(aliasInfo.getAlias());
+        TreatedJoinAliasInfo treatedJoinAliasInfo = new TreatedJoinAliasInfo(this, type, alias);
+        aliasInfo.getAliasOwner().registerAliasInfo(treatedJoinAliasInfo);
         treatedNode = new JoinNode(treatedJoinAliasInfo);
+        List<Predicate> predicates = new ArrayList<>(1);
+        predicates.add(new EqPredicate(createExpression(null), treatedNode.createExpression(null)));
+        treatedNode.onPredicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, predicates);
         treatedJoinAliasInfo.setJoinNode(treatedNode);
         treatedJoinNodes.put(typeName, treatedNode);
         return treatedNode;
@@ -971,11 +997,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
                 sb.append(qualificationExpression);
                 sb.append('(');
 
-                if (renderTreat) {
-                    parent.getAliasInfo().render(sb);
-                } else {
-                    sb.append(parent.getAlias());
-                }
+                parent.appendAlias(sb, false, externalRepresentation);
 
                 sb.append(')');
 
@@ -985,10 +1007,22 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
                     sb.append(')');
                 }
             } else {
-                if (renderTreat) {
-                    aliasInfo.render(sb);
+                if (aliasInfo instanceof TreatedJoinAliasInfo) {
+                    if (renderTreat) {
+                        sb.append("TREAT(");
+                    }
+                    parent.appendAlias(sb, false, externalRepresentation);
+                    if (renderTreat) {
+                        sb.append(" AS ");
+                        sb.append(treatType.getName());
+                        sb.append(')');
+                    }
                 } else {
-                    sb.append(aliasInfo.getAlias());
+                    if (renderTreat) {
+                        aliasInfo.render(sb);
+                    } else {
+                        sb.append(aliasInfo.getAlias());
+                    }
                 }
             }
         }

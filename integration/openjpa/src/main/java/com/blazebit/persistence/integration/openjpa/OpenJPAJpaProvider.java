@@ -379,6 +379,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsCaseWhenElseBranch() {
+        return true;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         if (query instanceof OpenJPAQuery) {
             ((OpenJPAQuery) query).getFetchPlan().setQueryResultCacheEnabled(true);

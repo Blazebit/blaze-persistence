@@ -68,7 +68,7 @@ public class TreatTest extends AbstractCoreTest {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("TREAT(p AS PolymorphicSub1).sub1Value");
-        assertEquals("SELECT " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase p", criteria.getQueryString());
+        assertEquals("SELECT " + treatRoot("p", PolymorphicSub1.class, "sub1Value", true) + " FROM PolymorphicBase p", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -81,10 +81,10 @@ public class TreatTest extends AbstractCoreTest {
         criteria.select("SUM(TREAT(p AS PolymorphicSub1).sub1Value)");
         criteria.groupBy("p.name");
         criteria.having("SUM(TREAT(p AS PolymorphicSub1).sub1Value)").gt(1L);
-        assertEquals("SELECT SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value") + ")" +
+        assertEquals("SELECT SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value", true) + ")" +
                 " FROM PolymorphicBase p" +
                 " GROUP BY p.name" +
-                " HAVING SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value") + ") > :param_0", criteria.getQueryString());
+                " HAVING SUM(" + treatRoot("p", PolymorphicSub1.class, "sub1Value", true) + ") > :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -96,7 +96,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("CASE WHEN TREAT(p AS PolymorphicSub1).sub1Value > 0 THEN 1 ELSE 0 END");
         assertEquals(
-                "SELECT CASE WHEN (TYPE(p) IN (" + PolymorphicSub1.class.getSimpleName() + ") AND " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " > 0) THEN 1 ELSE 0 END" +
+                "SELECT CASE WHEN " + treatRoot("p", PolymorphicSub1.class, "sub1Value", true) + " > 0 THEN 1 ELSE 0 END" +
                         " FROM PolymorphicBase p", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -109,7 +109,7 @@ public class TreatTest extends AbstractCoreTest {
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("CASE WHEN 1 > 0 THEN TREAT(p AS PolymorphicSub1).sub1Value ELSE 0 END");
         assertEquals(
-                "SELECT CASE WHEN 1 > 0 THEN " + treatRoot("p", PolymorphicSub1.class, "sub1Value") + " ELSE 0 END" +
+                "SELECT CASE WHEN 1 > 0 THEN " + treatRoot("p", PolymorphicSub1.class, "sub1Value", true) + " ELSE 0 END" +
                         " FROM PolymorphicBase p", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -148,7 +148,7 @@ public class TreatTest extends AbstractCoreTest {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("TREAT(p.parent AS PolymorphicSub1).sub1Value");
-        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase p LEFT JOIN p.parent parent_1", criteria.getQueryString());
+        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value", true) + " FROM PolymorphicBase p LEFT JOIN p.parent parent_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -160,7 +160,7 @@ public class TreatTest extends AbstractCoreTest {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "relation1");
         criteria.select("TREAT(parent AS PolymorphicSub1).relation1.id");
-        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "relation1.id") + " FROM PolymorphicBase relation1 LEFT JOIN relation1.parent parent_1", criteria.getQueryString());
+        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "relation1.id", true) + " FROM PolymorphicBase relation1 LEFT JOIN relation1.parent parent_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -173,7 +173,7 @@ public class TreatTest extends AbstractCoreTest {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1).sub1Value");
-        assertEquals("SELECT " + treatRoot("parent1_1", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase p LEFT JOIN " + treatRootJoin("p", PolymorphicSub1.class, "parent1") + " parent1_1", criteria.getQueryString());
+        assertEquals("SELECT " + treatRoot("parent1_1", PolymorphicSub1.class, "sub1Value", true) + " FROM PolymorphicBase p LEFT JOIN " + treatRootJoin("p", PolymorphicSub1.class, "parent1") + " parent1_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -260,7 +260,7 @@ public class TreatTest extends AbstractCoreTest {
                     "LEFT JOIN children_1.container container_1 " +
                     "LEFT JOIN container_1.child child_1 " +
                     "WHERE p.id = p_children_base.id " +
-                    "AND (TYPE(child_1) IN (" + PolymorphicSub1.class.getSimpleName() + ") AND " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id))",
+                    "AND " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id)",
                 crit.getQueryString()
         );
         crit.getResultList();

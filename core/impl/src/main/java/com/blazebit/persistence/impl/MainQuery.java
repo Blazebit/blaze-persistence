@@ -41,13 +41,14 @@ public class MainQuery {
     final JpaProvider jpaProvider;
     final DbmsDialect dbmsDialect;
     final Map<String, JpqlFunction> registeredFunctions;
+    final Map<String, String> registeredFunctionNames;
     final ParameterManager parameterManager;
     final CTEManager cteManager;
 
     private final JpqlMacroStorage macroStorage;
     private QueryConfiguration queryConfiguration;
 
-    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions, ParameterManager parameterManager) {
+    private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions, Map<String, String> registeredFunctionNames, ParameterManager parameterManager) {
         super();
         this.cbf = cbf;
         this.queryConfiguration = cbf.getQueryConfiguration();
@@ -60,6 +61,7 @@ public class MainQuery {
         this.jpaProvider = jpaProvider;
         this.dbmsDialect = dbmsDialect;
         this.registeredFunctions = registeredFunctions;
+        this.registeredFunctionNames = registeredFunctionNames;
         this.parameterManager = parameterManager;
         this.cteManager = new CTEManager(this);
 
@@ -70,7 +72,7 @@ public class MainQuery {
         }
     }
     
-    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions) {
+    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Map<String, JpqlFunction> registeredFunctions, Map<String, String> registeredFunctionNames) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -80,7 +82,7 @@ public class MainQuery {
 
         JpaProvider jpaProvider = cbf.getJpaProvider();
         ParameterManager parameterManager = new ParameterManager(jpaProvider, cbf.getMetamodel());
-        return new MainQuery(cbf, em, jpaProvider, dbmsDialect, registeredFunctions, parameterManager);
+        return new MainQuery(cbf, em, jpaProvider, dbmsDialect, registeredFunctions, registeredFunctionNames, parameterManager);
     }
 
     public final void registerMacro(String macroName, JpqlMacro jpqlMacro) {

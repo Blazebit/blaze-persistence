@@ -121,7 +121,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private final List<JoinNode> lateInlineNodes = new ArrayList<>();
     private final List<JoinNode> explicitJoinNodes = new ArrayList<>();
     // root entity class
-    private final String joinRestrictionKeyword;
     private final MainQuery mainQuery;
     private final AliasManager aliasManager;
     private final EntityMetamodelImpl metamodel; // needed for model-aware joins
@@ -151,7 +150,6 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         this.aliasManager = aliasManager;
         this.metamodel = mainQuery.metamodel;
         this.parent = parent;
-        this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
         this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, queryBuilder, aliasManager, this);
         this.expressionFactory = expressionFactory;
@@ -233,10 +231,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         JoinAliasInfo newAliasInfo;
         if (oldNode.getTreatType() == null) {
             newAliasInfo = new JoinAliasInfo(alias, oldNode.getAliasInfo().getAbsolutePath(), oldNode.getAliasInfo().isImplicit(), oldNode.getAliasInfo().isRootNode(), aliasManager);
-            aliasManager.registerAliasInfo(newAliasInfo);
         } else {
-            newAliasInfo = new TreatedJoinAliasInfo(nodeMapping.get(((TreatedJoinAliasInfo) oldNode.getAliasInfo()).getTreatedJoinNode()), oldNode.getTreatType());
+            newAliasInfo = new TreatedJoinAliasInfo(nodeMapping.get(((TreatedJoinAliasInfo) oldNode.getAliasInfo()).getTreatedJoinNode()), oldNode.getTreatType(), alias);
         }
+        aliasManager.registerAliasInfo(newAliasInfo);
 
         node = oldNode.cloneJoinNode(parent, treeNode, newAliasInfo);
         newAliasInfo.setJoinNode(node);
@@ -1419,6 +1417,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         List<JoinNode> stack = new ArrayList<>(explicitJoinNodes);
         Collections.reverse(stack);
         List<JoinNode> placeholderRequiringNodes = new ArrayList<>();
+        boolean renderTreatedJoinNodes = !mainQuery.jpaProvider.supportsRootTreat() && !mainQuery.jpaProvider.supportsSubtypeRelationResolving();
         boolean firstRootNode = true;
         while (!stack.isEmpty()) {
             JoinNode node = stack.remove(stack.size() - 1);
@@ -1590,9 +1589,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 if (!node.getNodes().isEmpty()) {
                     addDefaultJoins(stack, node.getNodes().descendingMap());
                 }
-                for (JoinNode treatedNode : node.getTreatedJoinNodes().values()) {
-                    if (!treatedNode.getNodes().isEmpty()) {
-                        addDefaultJoins(stack, treatedNode.getNodes().descendingMap());
+                if (renderTreatedJoinNodes) {
+                    for (JoinNode joinNode : node.getTreatedJoinNodes().descendingMap().values()) {
+                        stack.add(joinNode);
+                    }
+                } else {
+                    for (JoinNode treatedNode : node.getTreatedJoinNodes().values()) {
+                        if (!treatedNode.getNodes().isEmpty()) {
+                            addDefaultJoins(stack, treatedNode.getNodes().descendingMap());
+                        }
                     }
                 }
             } else {
@@ -1804,7 +1809,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 return;
             }
             // We only render treat joins, but not treated join nodes. These treats are just "optional casts" that don't affect joining
-            if (node.isTreatedJoinNode()) {
+            // For JPA providers that don't support these treats, we need to render them though as emulation
+            if (node.isTreatedJoinNode() && (mainQuery.jpaProvider.supportsRootTreat() || mainQuery.jpaProvider.supportsSubtypePropertyResolving())) {
                 renderedJoins.add(node);
                 return;
             }
@@ -1898,7 +1904,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 boolean onClause = !fetch && !placeholderRequiringNodes.isEmpty() && !externalRepresentation || realOnClause;
 
                 if (onClause) {
-                    sb.append(joinRestrictionKeyword);
+                    sb.append(" ").append(mainQuery.jpaProvider.getOnClause()).append(" ");
 
                     // Always render the ON condition in parenthesis to workaround an EclipseLink bug in entity join parsing
                     sb.append('(');
@@ -2067,7 +2073,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 sb.append(node.getTreatType().getName());
                 sb.append(')');
             } else if (mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
-                sb.append(joinBaseAliasInfo.getAlias()).append('.').append(correlationPath);
+                joinBaseAliasInfo.getJoinNode().appendAlias(sb, false, externalRepresentation);
+                sb.append('.').append(correlationPath);
             } else {
                 throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
             }
@@ -2097,36 +2104,38 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             // implicit relation resolving then there is no point in rendering the treat join. On the contrary, that might lead to wrong results
             final boolean renderTreat = mainQuery.jpaProvider.supportsTreatJoin() &&
                     (!mainQuery.jpaProvider.supportsSubtypeRelationResolving() || node.getJoinType() == JoinType.INNER);
-            final String onCondition;
             final JoinNode baseNode = joinBase.getJoinNode();
             final String treatType = node.getTreatType().getName();
-            final String relationName = node.getParentTreeNode().getRelationName();
-            JpaProvider.ConstraintType constraintType = mainQuery.jpaProvider.requiresTreatFilter(baseNode.getEntityType(), relationName, node.getJoinType());
-            if (constraintType != JpaProvider.ConstraintType.NONE) {
-                String constraint = "TYPE(" + node.getAlias() + ") = " + treatType;
-                if (constraintType == JpaProvider.ConstraintType.WHERE) {
-                    whereConjuncts.add(constraint);
-                    onCondition = null;
-                } else {
-                    onCondition = constraint;
-                }
-            } else {
-                onCondition = null;
-            }
-            if (renderTreat) {
-                sb.append("TREAT(");
-                renderAlias(sb, baseNode, mainQuery.jpaProvider.supportsRootTreatTreatJoin(), externalRepresentation);
-                sb.append('.');
-                sb.append(relationName);
-                sb.append(" AS ");
+            if (node.getParentTreeNode() == null) {
                 sb.append(treatType);
-                sb.append(')');
-            } else if (mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
-                sb.append(joinBase.getAlias()).append('.').append(node.getParentTreeNode().getRelationName());
             } else {
-                throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+                final String relationName = node.getParentTreeNode().getRelationName();
+                String onCondition = null;
+                JpaProvider.ConstraintType constraintType = mainQuery.jpaProvider.requiresTreatFilter(baseNode.getEntityType(), relationName, node.getJoinType());
+                if (constraintType != JpaProvider.ConstraintType.NONE) {
+                    String constraint = "TYPE(" + node.getAlias() + ") = " + treatType;
+                    if (constraintType == JpaProvider.ConstraintType.WHERE) {
+                        whereConjuncts.add(constraint);
+                    } else {
+                        onCondition = constraint;
+                    }
+                }
+                if (renderTreat) {
+                    sb.append("TREAT(");
+                    renderAlias(sb, baseNode, mainQuery.jpaProvider.supportsRootTreatTreatJoin(), externalRepresentation);
+                    sb.append('.');
+                    sb.append(relationName);
+                    sb.append(" AS ");
+                    sb.append(treatType);
+                    sb.append(')');
+                } else if (mainQuery.jpaProvider.supportsSubtypeRelationResolving()) {
+                    baseNode.appendAlias(sb, false, externalRepresentation);
+                    sb.append('.').append(node.getParentTreeNode().getRelationName());
+                } else {
+                    throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+                }
+                return onCondition;
             }
-            return onCondition;
         } else if (node.getCorrelationPath() == null && node.getAliasInfo().isRootNode() || node.getCorrelationPath() != null && node.isLateral()) {
             sb.append(node.getEntityType().getName());
             if (externalRepresentation && node.isInlineCte()) {

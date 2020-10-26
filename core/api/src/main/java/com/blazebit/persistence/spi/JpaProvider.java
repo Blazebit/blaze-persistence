@@ -566,6 +566,14 @@ public interface JpaProvider {
     public boolean needsUnproxyForFieldAccess();
 
     /**
+     * Indicates whether the provider always requires an else branch in a case when expression.
+     *
+     * @return true if needed, else false
+     * @since 1.6.0
+     */
+    public boolean needsCaseWhenElseBranch();
+
+    /**
      * Enables query result caching for the given query.
      *
      * @param query Enables query result caching for the query

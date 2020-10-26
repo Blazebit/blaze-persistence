@@ -72,6 +72,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final String configuredDbms;
     private final DbmsDialect configuredDbmsDialect;
     private final Map<String, JpqlFunction> configuredRegisteredFunctions;
+    private final Map<String, String> registeredFunctionNames;
     private final JpaProviderFactory configuredJpaProviderFactory;
     private final JpaProvider jpaProvider;
 
@@ -112,6 +113,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.transientEntityParameterTransformerFactory = new TransientEntityAssociationParameterTransformerFactory(metamodel, new AssociationToIdParameterTransformer(jpaProvider));
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.functions = resolveFunctions(config.getFunctions(), configuredRegisteredFunctions);
+        this.registeredFunctionNames = caseInsensitiveFunctions(configuredRegisteredFunctions);
         this.namedTypes = resolveNamedTypes(config.getNamedTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(functions, metamodel.getEntityTypes(), metamodel.getEnumTypes(), metamodel.getEnumTypesForLiterals(), !compatibleMode, optimize);
@@ -166,6 +168,14 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             default:
                 throw new IllegalArgumentException("Illegal function kind: " + kind);
         }
+    }
+
+    private static Map<String, String> caseInsensitiveFunctions(Map<String, JpqlFunction> registeredFunctions) {
+        Map<String, String> registeredFunctionsNames = new HashMap<>(registeredFunctions.size());
+        for (Map.Entry<String, JpqlFunction> registeredFunctionEntry : registeredFunctions.entrySet()) {
+            registeredFunctionsNames.put(registeredFunctionEntry.getKey().toLowerCase(), registeredFunctionEntry.getKey());
+        }
+        return registeredFunctionsNames;
     }
 
     private static Map<Class<?>, String> resolveNamedTypes(Map<String, Class<?>> namedTypes) {
@@ -236,7 +246,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
     
     public MainQuery createMainQuery(EntityManager entityManager) {
-        return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions);
+        return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions, registeredFunctionNames);
     }
 
     @Override

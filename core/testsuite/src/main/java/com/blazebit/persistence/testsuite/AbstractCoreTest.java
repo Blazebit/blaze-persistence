@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import java.util.*;
-
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.JoinType;
@@ -45,6 +43,15 @@ import com.blazebit.persistence.testsuite.tx.TxWork;
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ServiceLoader;
 
 /**
  *
@@ -261,11 +268,28 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String treatRoot(String path, Class<?> type, String property) {
+        return treatRoot(path, type, property, false);
+    }
+
+    protected String treatRoot(String path, Class<?> type, String property, boolean subtypeProperty) {
+        EntityType<?> entity = emf.getMetamodel().entity(type);
+        String treatPath = null;
         if (jpaProvider.supportsRootTreat()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
-            EntityType<?> entity = emf.getMetamodel().entity(type);
-            if (jpaProvider.needsTypeConstraintForColumnSharing() && jpaProvider.isColumnShared(entity, property)) {
+            treatPath = path + "." + property;
+        }
+        if (treatPath != null) {
+            boolean addTypeCaseWhen;
+            if (jpaProvider.isColumnShared(entity, property)) {
+                addTypeCaseWhen = jpaProvider.needsTypeConstraintForColumnSharing();
+            } else {
+                if (subtypeProperty && jpaProvider.supportsSubtypePropertyResolving()) {
+                    return treatPath;
+                }
+                addTypeCaseWhen = true;
+            }
+            if (addTypeCaseWhen) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("CASE WHEN ");
 
@@ -279,41 +303,32 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
                 sb.setLength(sb.length() - 2);
                 sb.append(") THEN ");
-                sb.append(path).append('.').append(property).append(" END");
+                sb.append(treatPath);
+
+                if (jpaProvider.needsCaseWhenElseBranch()) {
+                    sb.append(" ELSE NULL");
+                }
+                sb.append(" END");
                 return sb.toString();
             }
-            return path + "." + property;
         }
-
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
     }
 
-    protected String treatRootWhereFragment(String alias, Class<?> rootType, Class<?> treatType, String after, boolean negatedContext) {
+    protected String treatRootWhereFragment(String alias, Class<?> rootType, Class<?> treatType, String after) {
         String operator;
         String logicalOperator;
         String predicate;
         StringBuilder sb = new StringBuilder();
         sb.append("(TYPE(").append(alias).append(") IN (");
 
-        if (negatedContext) {
-            EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
-            for (EntityType<?> entitySubtype : metamodel.getEntitySubtypes(metamodel.entity(treatType))) {
-                sb.append(entitySubtype.getName()).append(", ");
-            }
-
-            sb.setLength(sb.length() - 2);
-            sb.append(") AND ");
-        } else {
-            EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
-            Set<EntityType<?>> types = new HashSet<>(metamodel.getEntitySubtypes(metamodel.entity(rootType)));
-            types.removeAll(metamodel.getEntitySubtypes(metamodel.entity(treatType)));
-            for (EntityType<?> entitySubtype : types) {
-                sb.append(entitySubtype.getName()).append(", ");
-            }
-
-            sb.setLength(sb.length() - 2);
-            sb.append(") OR ");
+        EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
+        for (EntityType<?> entitySubtype : metamodel.getEntitySubtypes(metamodel.entity(treatType))) {
+            sb.append(entitySubtype.getName()).append(", ");
         }
+
+        sb.setLength(sb.length() - 2);
+        sb.append(") AND ");
 
         if (jpaProvider.supportsRootTreat()) {
             predicate = "TREAT(" + alias + " AS " + treatType.getSimpleName() + ")" + after;
@@ -327,11 +342,11 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return sb.toString();
     }
 
-    protected String treatJoinedConstraintFragment(String alias, Class<?> treatType, String after, boolean negatedContext) {
-        if (jpaProvider.supportsTreatJoin()) {
+    protected String treatJoinedConstraintFragment(String alias, Class<?> treatType, String after, boolean subtypeProperty) {
+        if (jpaProvider.supportsTreatJoin() || subtypeProperty && jpaProvider.supportsSubtypePropertyResolving()) {
             return alias + after;
         }
-        return treatRootWhereFragment(alias, PolymorphicBase.class, treatType, after, negatedContext);
+        return treatRootWhereFragment(alias, PolymorphicBase.class, treatType, after);
     }
 
     protected String treatJoinWhereFragment(Class<?> sourceType, String attribute, String alias, Class<?> type, JoinType joinType, String whereFragment) {

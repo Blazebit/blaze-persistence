@@ -13,7 +13,20 @@
     <name>Blazebit Persistence Integration DeltaSpike Data Testsuite</name>
     <properties>
         <module.name>com.blazebit.persistence.integration.deltaspike.data.testsuite</module.name>
+        <version.deltaspike>${version.deltaspike-1.7}</version.deltaspike>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.deltaspike.distribution</groupId>
+                <artifactId>distributions-bom</artifactId>
+                <version>${version.deltaspike}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -2173,18 +2186,8 @@
             </activation>
             <properties>
                 <version.weld>2.4.5.Final</version.weld>
+                <version.deltaspike>${version.deltaspike-1.7}</version.deltaspike>
             </properties>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.deltaspike.distribution</groupId>
-                        <artifactId>distributions-bom</artifactId>
-                        <version>${version.deltaspike-1.7}</version>
-                        <type>pom</type>
-                        <scope>import</scope>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -2197,18 +2200,8 @@
             <id>deltaspike-1.8</id>
             <properties>
                 <version.weld>2.4.5.Final</version.weld>
+                <version.deltaspike>${version.deltaspike-1.8}</version.deltaspike>
             </properties>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.deltaspike.distribution</groupId>
-                        <artifactId>distributions-bom</artifactId>
-                        <version>${version.deltaspike-1.8}</version>
-                        <type>pom</type>
-                        <scope>import</scope>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -2219,17 +2212,9 @@
         </profile>
         <profile>
             <id>deltaspike-1.9</id>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.deltaspike.distribution</groupId>
-                        <artifactId>distributions-bom</artifactId>
-                        <version>${version.deltaspike-1.9}</version>
-                        <type>pom</type>
-                        <scope>import</scope>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
+            <properties>
+                <version.deltaspike>${version.deltaspike-1.9}</version.deltaspike>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

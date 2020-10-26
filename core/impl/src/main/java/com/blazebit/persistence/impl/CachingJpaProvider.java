@@ -370,6 +370,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsCaseWhenElseBranch() {
+        return jpaProvider.needsCaseWhenElseBranch();
+    }
+
+    @Override
     public void setCacheable(Query query) {
         jpaProvider.setCacheable(query);
     }

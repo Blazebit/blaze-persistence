@@ -70,8 +70,8 @@ public class TreatTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String whereFragment = "";
-        whereFragment += treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
-        whereFragment += " OR " + treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub2.class, ".sub2Value IS NOT NULL", false);
+        whereFragment += treatRoot("base", PolymorphicSub1.class, "sub1Value", true) + " IS NOT NULL";
+        whereFragment += " OR " + treatRoot("base", PolymorphicSub2.class, "sub2Value", true) + " IS NOT NULL";
         assertEquals("SELECT base FROM PolymorphicBase base" +
                 " WHERE " + whereFragment, criteriaBuilder.getQueryString());
     }
@@ -85,8 +85,8 @@ public class TreatTest extends AbstractCoreTest {
         cq.where(cb.treat(root, PolymorphicSub1.class).get("sub1Value").isNotNull());
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        String whereFragment = treatRootWhereFragment("base", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
-        assertEquals("SELECT " + treatRoot("base", PolymorphicSub1.class, "sub1Value") + " FROM PolymorphicBase base WHERE " + whereFragment, criteriaBuilder.getQueryString());
+        String whereFragment = treatRoot("base", PolymorphicSub1.class, "sub1Value", true) + " IS NOT NULL";
+        assertEquals("SELECT " + treatRoot("base", PolymorphicSub1.class, "sub1Value", true) + " FROM PolymorphicBase base WHERE " + whereFragment, criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -193,19 +193,19 @@ public class TreatTest extends AbstractCoreTest {
                 " LEFT JOIN base.parent parent_1" +
                 " LEFT JOIN parent_1.relation1 relation1_1" +
                 " JOIN " + treatJoin("base.parent", PolymorphicSub1.class, JoinType.INNER) + " parent" +
-                onClause(treatJoinedConstraintFragment("parent", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("parent", PolymorphicSub1.class, ".sub1Value IS NOT NULL", true)) +
                 " JOIN parent.relation1 parentRelation1" +
                 " JOIN " + treatJoin("base.parent", PolymorphicSub2.class, JoinType.INNER) + " parent2" +
-                onClause(treatJoinedConstraintFragment("parent2", PolymorphicSub2.class, ".sub2Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("parent2", PolymorphicSub2.class, ".sub2Value IS NOT NULL", true)) +
                 " JOIN parent2.relation2 parent2Relation2" +
                 " JOIN " + treatJoin("base.list", PolymorphicSub1.class, JoinType.INNER) + " list" +
-                onClause(treatJoinedConstraintFragment("list", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("list", PolymorphicSub1.class, ".sub1Value IS NOT NULL", true)) +
                 " JOIN list.relation1 listRelation1" +
                 " JOIN " + treatJoin("base.children", PolymorphicSub1.class, JoinType.INNER) + " child" +
-                onClause(treatJoinedConstraintFragment("child", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("child", PolymorphicSub1.class, ".sub1Value IS NOT NULL", true)) +
                 " JOIN child.relation1 setRelation1" +
                 " JOIN " + treatJoin("base.map", PolymorphicSub1.class, JoinType.INNER) + " map" +
-                onClause(treatJoinedConstraintFragment("map", PolymorphicSub1.class, ".sub1Value IS NOT NULL", false)) +
+                onClause(treatJoinedConstraintFragment("map", PolymorphicSub1.class, ".sub1Value IS NOT NULL", true)) +
                 " JOIN map.relation1 mapRelation1" +
                 whereFragment, criteriaBuilder.getQueryString());
     }
@@ -219,8 +219,8 @@ public class TreatTest extends AbstractCoreTest {
         cq.where(cb.treat(root.get(PolymorphicBase_.parent), PolymorphicSub1.class).get(PolymorphicSub1_.sub1Value).isNotNull());
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        String whereFragment = treatRootWhereFragment("parent_1", PolymorphicBase.class, PolymorphicSub1.class, ".sub1Value IS NOT NULL", false);
-        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value") +
+        String whereFragment = treatRoot("parent_1", PolymorphicSub1.class, "sub1Value", true) + " IS NOT NULL";
+        assertEquals("SELECT " + treatRoot("parent_1", PolymorphicSub1.class, "sub1Value", true) +
                 " FROM PolymorphicBase base" +
                 " LEFT JOIN base.parent parent_1" +
                 " WHERE " + whereFragment, criteriaBuilder.getQueryString());

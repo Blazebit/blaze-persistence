@@ -457,7 +457,7 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             PathReference pathReference = ((PathExpression) expression).getPathReference();
             if (pathReference == null) {
                 AliasInfo aliasInfo = aliasManager.getAliasInfo(expression.toString());
-                return aliasInfo != null && isConstant(((SelectInfo) aliasInfo).getExpression());
+                return aliasInfo instanceof SelectInfo && isConstant(((SelectInfo) aliasInfo).getExpression());
             }
             JoinNode baseNode = (JoinNode) pathReference.getBaseNode();
             do {
