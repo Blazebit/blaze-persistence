@@ -153,7 +153,7 @@ public abstract class AbstractEntityViewUpdateTest<T> extends AbstractEntityView
             mapping.setFlushStrategy(strategy);
         }
 
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(cfg);
         enableQueryCollecting();
     }
 

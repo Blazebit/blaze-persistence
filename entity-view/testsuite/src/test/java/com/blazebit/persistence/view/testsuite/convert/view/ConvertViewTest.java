@@ -59,17 +59,17 @@ public class ConvertViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentIdView.class);
-        cfg.addEntityView(DocumentCloneView.class);
-        cfg.addEntityView(DocumentCloneView2.class);
-        cfg.addEntityView(DocumentCloneParentView.class);
-        cfg.addEntityView(DocumentCloneUpdateView.class);
-        cfg.addEntityView(SimplePersonView.class);
-        cfg.addEntityView(CreatablePersonView.class);
-        cfg.addEntityView(CreatablePersonView2.class);
-        cfg.addEntityView(PersonView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                DocumentIdView.class,
+                DocumentCloneView.class,
+                DocumentCloneView2.class,
+                DocumentCloneParentView.class,
+                DocumentCloneUpdateView.class,
+                SimplePersonView.class,
+                CreatablePersonView.class,
+                CreatablePersonView2.class,
+                PersonView.class
+        );
     }
 
     private Document doc;

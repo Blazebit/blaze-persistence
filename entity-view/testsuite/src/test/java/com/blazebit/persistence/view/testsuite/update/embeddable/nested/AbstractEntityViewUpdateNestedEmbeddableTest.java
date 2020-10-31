@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.testsuite.update.embeddable.nested;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;

@@ -52,9 +52,7 @@ public class FlatViewPaginationTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonFlatView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(PersonFlatView.class);
     }
 
     @Before

@@ -39,10 +39,8 @@ public class EntityViewUpdateCreatableEmbeddableTest extends AbstractEntityViewT
 
     @Test
     public void testValidateInvalidConfiguration() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentEmbeddableView.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(UpdatableDocumentEmbeddableView.class);
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Cascading configuration for basic, embeddable or flat view type attributes is not allowed"));

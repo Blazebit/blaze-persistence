@@ -90,10 +90,10 @@ public class SingletonCollectionsTest extends AbstractEntityViewTest {
 
     @Test
     public void testSingletonCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SingletonDocumentCollectionsView.class);
-        cfg.addEntityView(SingletonPersonView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                SingletonDocumentCollectionsView.class,
+                SingletonPersonView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

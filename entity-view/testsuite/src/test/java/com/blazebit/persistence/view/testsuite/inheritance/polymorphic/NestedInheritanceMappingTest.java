@@ -218,12 +218,7 @@ public class NestedInheritanceMappingTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(AView.class);
-        cfg.addEntityView(BView.class);
-        cfg.addEntityView(CView.class);
-        cfg.addEntityView(DView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(AView.class, BView.class, CView.class, DView.class);
     }
 
     @Test

@@ -39,10 +39,8 @@ public class EntityViewUpdateMutableOnlyBasicMapsTest extends AbstractEntityView
 
     @Test
     public void testValidateInvalidConfiguration() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentBasicWithMapsView.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(UpdatableDocumentBasicWithMapsView.class);
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Cascading configuration for basic, embeddable or flat view type attributes is not allowed"));

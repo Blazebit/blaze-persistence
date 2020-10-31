@@ -33,11 +33,8 @@ public class ViewConstructorTest extends AbstractEntityViewTest {
 
     @Test
     public void testAbstractClass() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentViewWithMissingMappingParameter.class);
-        
         try {
-            cfg.createEntityViewManager(cbf);
+            build(DocumentViewWithMissingMappingParameter.class);
             Assert.fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ex) {
         }

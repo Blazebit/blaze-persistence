@@ -46,10 +46,8 @@ public class EntityViewUpdateInverseMappingEmbeddableCollectionsTest extends Abs
 
     @Test
     public void testValidateInvalidConfiguration1() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentEmbeddableWithCollectionsViewBase1.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(UpdatableDocumentEmbeddableWithCollectionsViewBase1.class);
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Found use of @MappingInverse on attribute that isn't an inverse relationship"));
@@ -71,11 +69,11 @@ public class EntityViewUpdateInverseMappingEmbeddableCollectionsTest extends Abs
 
     @Test
     public void testValidateInvalidConfiguration2() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(NameObjectView.class);
-        cfg.addEntityView(UpdatableDocumentEmbeddableWithCollectionsViewBase2.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(
+                    NameObjectView.class,
+                    UpdatableDocumentEmbeddableWithCollectionsViewBase2.class
+            );
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Found use of @MappingInverse on attribute that isn't an inverse relationship"));

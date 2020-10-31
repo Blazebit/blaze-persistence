@@ -68,10 +68,8 @@ public class TypeConverterTest extends AbstractEntityViewTest {
 
     @Test
     public void testWithoutTypeConverter() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentTypeConverterView.class);
         try {
-            cfg.createEntityViewManager(cbf);
+            build(DocumentTypeConverterView.class);
             Assert.fail("Building EntityViewManager should fail because of a type conflict!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("The resolved possible types [long] are not assignable to the given expression type 'java.lang.String'"));
@@ -81,7 +79,6 @@ public class TypeConverterTest extends AbstractEntityViewTest {
     @Test
     public void testTypeConverter() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentTypeConverterView.class);
         cfg.registerTypeConverter(long.class, String.class, new TypeConverter<Long, String>() {
             @Override
             public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
@@ -98,7 +95,7 @@ public class TypeConverterTest extends AbstractEntityViewTest {
                 return Long.valueOf(object);
             }
         });
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(cfg, DocumentTypeConverterView.class);
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         DocumentTypeConverterView documentView = evm.applySetting(EntityViewSetting.create(DocumentTypeConverterView.class), criteria)
                 .getSingleResult();
@@ -109,7 +106,6 @@ public class TypeConverterTest extends AbstractEntityViewTest {
     @Test
     public void testTypeConverterBoxed() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentTypeConverterView.class);
         cfg.registerTypeConverter(Long.class, String.class, new TypeConverter<Long, String>() {
             @Override
             public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
@@ -126,7 +122,7 @@ public class TypeConverterTest extends AbstractEntityViewTest {
                 return Long.valueOf(object);
             }
         });
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(cfg, DocumentTypeConverterView.class);
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         DocumentTypeConverterView documentView = evm.applySetting(EntityViewSetting.create(DocumentTypeConverterView.class), criteria)
                 .getSingleResult();
@@ -137,7 +133,6 @@ public class TypeConverterTest extends AbstractEntityViewTest {
     @Test
     public void testTypeConverterSubquery() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentSubqueryTypeConverterView.class);
         cfg.registerTypeConverter(Long.class, String.class, new TypeConverter<Long, String>() {
             @Override
             public Class<?> getUnderlyingType(Class<?> owningClass, Type declaredType) {
@@ -154,7 +149,7 @@ public class TypeConverterTest extends AbstractEntityViewTest {
                 return Long.valueOf(object);
             }
         });
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(cfg, DocumentSubqueryTypeConverterView.class);
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         DocumentSubqueryTypeConverterView documentView = evm.applySetting(EntityViewSetting.create(DocumentSubqueryTypeConverterView.class), criteria)
                 .getSingleResult();

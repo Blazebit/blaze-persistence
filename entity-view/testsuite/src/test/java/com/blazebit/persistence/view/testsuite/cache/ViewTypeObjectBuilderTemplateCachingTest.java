@@ -96,10 +96,7 @@ public class ViewTypeObjectBuilderTemplateCachingTest extends AbstractEntityView
 
     @Test
     public void testViewTypeObjectBuilderTemplateCaching() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentCorrelatingOwner1View.class);
-        cfg.addEntityView(PersonView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentCorrelatingOwner1View.class, PersonView.class);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         evm.applySetting(EntityViewSetting.create(DocumentCorrelatingOwner1View.class), cb).getResultList();

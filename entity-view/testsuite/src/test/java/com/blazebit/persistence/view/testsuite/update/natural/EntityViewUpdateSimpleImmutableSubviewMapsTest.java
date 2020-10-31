@@ -21,7 +21,6 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.NaturalIdJoinTableEntity;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;

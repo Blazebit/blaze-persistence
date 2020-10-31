@@ -106,11 +106,11 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
     // NOTE: DataNucleus does not support this yet: https://github.com/datanucleus/datanucleus-core/issues/182
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class })
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SubviewDocumentForEntityKeyMapsView.class);
-        cfg.addEntityView(SubviewSimpleDocumentForEntityKeyMapsView.class);
-        cfg.addEntityView(SubviewPersonForEntityKeyMapsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                SubviewDocumentForEntityKeyMapsView.class,
+                SubviewSimpleDocumentForEntityKeyMapsView.class,
+                SubviewPersonForEntityKeyMapsView.class
+        );
 
         CriteriaBuilder<DocumentForEntityKeyMaps> criteria = cbf.create(em, DocumentForEntityKeyMaps.class, "d")
                 .orderByAsc("id");

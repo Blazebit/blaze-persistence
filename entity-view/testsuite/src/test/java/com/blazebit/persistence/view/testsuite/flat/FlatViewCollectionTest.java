@@ -51,10 +51,10 @@ public class FlatViewCollectionTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithFlatCollectionView.class);
-        cfg.addEntityView(PersonFlatView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                DocumentWithFlatCollectionView.class,
+                PersonFlatView.class
+        );
     }
 
     private Document doc1;

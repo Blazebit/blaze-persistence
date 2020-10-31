@@ -53,9 +53,7 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCollectionQueryingFails() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCollection.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(FlatViewWithCollection.class);
         try {
             applySetting(evm, FlatViewWithCollection.class, cbf.create(em, Document.class));
             fail("Expected querying to fail!");
@@ -78,9 +76,7 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCollectionInConstructorQueryingFails() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCollectionInConstructor.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(FlatViewWithCollectionInConstructor.class);
         try {
             applySetting(evm, FlatViewWithCollectionInConstructor.class, cbf.create(em, Document.class));
             fail("Expected querying to fail!");
@@ -103,10 +99,10 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void nestedFlatViewWithCollectionQueryingFails() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCollection.class);
-        cfg.addEntityView(FlatViewWithCollectionHolder.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                FlatViewWithCollection.class,
+                FlatViewWithCollectionHolder.class
+        );
         try {
             applySetting(evm, FlatViewWithCollectionHolder.class, cbf.create(em, Document.class));
             fail("Expected querying to fail!");
@@ -128,11 +124,11 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCollectionAsNonIndexedCollectionSubviewBuildingFails() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCollection.class);
-        cfg.addEntityView(FlatViewWithCollectionParent.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(
+                    FlatViewWithCollection.class,
+                    FlatViewWithCollectionParent.class
+            );
             fail("Expected building to fail!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("flat view"));
@@ -158,10 +154,10 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCollectionSelectAsNonIndexedCollectionSubviewBuilds() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCollectionSelect.class);
-        cfg.addEntityView(FlatViewWithCollectionSelectParent.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                FlatViewWithCollectionSelect.class,
+                FlatViewWithCollectionSelectParent.class
+        );
     }
 
     /* **************************** *
@@ -181,11 +177,11 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCorrelationAsNonIndexedCollectionSubviewBuildingFails() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCorrelation.class);
-        cfg.addEntityView(FlatViewWithCorrelationParent.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(
+                    FlatViewWithCorrelation.class,
+                    FlatViewWithCorrelationParent.class
+            );
             fail("Expected building to fail!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("flat view"));
@@ -211,10 +207,10 @@ public class FlatViewValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void flatViewWithCorrelationSelectAsNonIndexedCollectionSubviewBuilds() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FlatViewWithCorrelationSelect.class);
-        cfg.addEntityView(FlatViewWithCorrelationSelectParent.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                FlatViewWithCorrelationSelect.class,
+                FlatViewWithCorrelationSelectParent.class
+        );
     }
 
 }

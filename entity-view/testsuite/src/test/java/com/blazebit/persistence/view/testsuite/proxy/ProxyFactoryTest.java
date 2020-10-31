@@ -18,6 +18,9 @@ package com.blazebit.persistence.view.testsuite.proxy;
 
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
@@ -27,6 +30,7 @@ import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentClassView;
 import com.blazebit.persistence.view.testsuite.proxy.model.DocumentCreateView;
@@ -55,15 +59,23 @@ import static org.junit.Assert.*;
 public class ProxyFactoryTest extends AbstractEntityViewTest {
 
     private final ProxyFactory proxyFactory = new ProxyFactory(false, false, PackageOpener.NOOP);
+    private final EntityViewConfiguration entityViewConfiguration;
+
+    {
+        entityViewConfiguration = EntityViews.createDefaultConfiguration();
+        entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        entityViewConfiguration.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+    }
 
     private ViewMetamodel getViewMetamodel() {
         return build(
+                entityViewConfiguration,
                 DocumentInterfaceView.class,
                 DocumentClassView.class,
                 UnsafeDocumentClassView.class,
                 DocumentCreateView.class,
                 NameObjectView.class
-        );
+        ).getMetamodel();
     }
 
     @Test
@@ -326,7 +338,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
     @Test
     public void testMutableProxyWithPrimitiveArray() throws Exception {
-        ManagedViewType<DocumentCreateViewWithPrimitiveArray> viewType = build(DocumentCreateViewWithPrimitiveArray.class).managedView(DocumentCreateViewWithPrimitiveArray.class);
+        ManagedViewType<DocumentCreateViewWithPrimitiveArray> viewType = build(entityViewConfiguration, DocumentCreateViewWithPrimitiveArray.class).getMetamodel().managedView(DocumentCreateViewWithPrimitiveArray.class);
         proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateViewWithPrimitiveArray>) viewType);
     }
 

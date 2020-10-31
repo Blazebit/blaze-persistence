@@ -74,11 +74,11 @@ public class SetAsListEntityViewTestTest extends AbstractEntityViewTest {
 
     @Test
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(IdClassEntityIdView.class);
-        cfg.addEntityView(IdClassEntityIdView.Id.class);
-        cfg.addEntityView(IdClassEntityWithMultipleSetsAsListView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                IdClassEntityIdView.class,
+                IdClassEntityIdView.Id.class,
+                IdClassEntityWithMultipleSetsAsListView.class
+        );
 
         CriteriaBuilder<IdClassEntity> criteria = cbf.create(em, IdClassEntity.class, "e")
             .where("key1").eq(entity.getKey1())

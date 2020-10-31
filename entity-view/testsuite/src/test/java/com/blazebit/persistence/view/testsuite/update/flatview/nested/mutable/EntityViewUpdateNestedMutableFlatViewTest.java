@@ -25,7 +25,6 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableDocumentView;
-import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectContainerView;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectContainerView2;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.mutable.model.UpdatableNameObjectView;
 import org.junit.Assert;

@@ -44,11 +44,11 @@ public class EmbeddedMappingCollectionTest extends AbstractEmbeddedMappingTest {
 
     @Before
     public void prepare() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentDetailCollectionView.class);
-        cfg.addEntityView(DocumentDetailEmbeddableCollectionView.class);
-        cfg.addEntityView(DocumentViewWithEmbeddedCollection.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                DocumentDetailCollectionView.class,
+                DocumentDetailEmbeddableCollectionView.class,
+                DocumentViewWithEmbeddedCollection.class
+        );
     }
 
     @Test

@@ -92,11 +92,11 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
     }
 
     protected <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView, Integer batchSize) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(entityView);
-        cfg.addEntityView(SimpleDocumentCorrelatedView.class);
-        cfg.addEntityView(SimplePersonCorrelatedSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                entityView,
+                SimpleDocumentCorrelatedView.class,
+                SimplePersonCorrelatedSubView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);

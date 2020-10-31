@@ -106,11 +106,11 @@ public abstract class AbstractFetchTest extends AbstractEntityViewTest {
     }
 
     protected <T extends DocumentFetchView> void testCorrelation(Class<T> entityView, Integer batchSize) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(entityView);
-        cfg.addEntityView(SimpleDocumentFetchView.class);
-        cfg.addEntityView(SimplePersonFetchSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                entityView,
+                SimpleDocumentFetchView.class,
+                SimplePersonFetchSubView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);

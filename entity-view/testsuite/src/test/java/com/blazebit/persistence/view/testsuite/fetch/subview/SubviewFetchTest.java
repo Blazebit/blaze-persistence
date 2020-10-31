@@ -83,10 +83,10 @@ public class SubviewFetchTest extends AbstractEntityViewTest {
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
     @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testSubqueryFetchOptional() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentSelectSubviewTestView.class);
-        cfg.addEntityView(PersonSelectSubview.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentSelectSubviewTestView.class,
+                PersonSelectSubview.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<DocumentSelectSubviewTestView, CriteriaBuilder<DocumentSelectSubviewTestView>> setting = EntityViewSetting.create(DocumentSelectSubviewTestView.class);
@@ -100,9 +100,7 @@ public class SubviewFetchTest extends AbstractEntityViewTest {
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
     @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testSubselectFetchWithSorter() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentSubselectSubviewTestView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentSubselectSubviewTestView.class);
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<DocumentSubselectSubviewTestView, CriteriaBuilder<DocumentSubselectSubviewTestView>> setting = EntityViewSetting.create(DocumentSubselectSubviewTestView.class);

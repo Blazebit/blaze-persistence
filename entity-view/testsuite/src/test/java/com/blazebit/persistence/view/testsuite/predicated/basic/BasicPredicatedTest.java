@@ -121,9 +121,7 @@ public class BasicPredicatedTest extends AbstractEntityViewTest {
     // Apparently EclipseLink just ignores any ON conditions when having join tables...
     @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void multipleBasicPredicatedCollectionsAreFetchedCorrectly() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(BasicPredicatedDocumentCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(BasicPredicatedDocumentCollectionsView.class);
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
                 .orderByAsc("id");

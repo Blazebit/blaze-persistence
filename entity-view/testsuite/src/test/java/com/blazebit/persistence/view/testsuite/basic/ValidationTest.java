@@ -40,19 +40,16 @@ public class ValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void testValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentValidationView.class);
-        cfg.addEntityView(PersonValidationView.class);
-        cfg.createEntityViewManager(cbf);
+        build(
+                DocumentValidationView.class,
+                PersonValidationView.class
+        );
     }
 
     @Test
     public void testValidationDuplicateCollection() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonDuplicateCollectionUsageValidationView.class);
-        
         try {
-            cfg.createEntityViewManager(cbf);
+            build(PersonDuplicateCollectionUsageValidationView.class);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("'ownedDocuments'")) {
@@ -63,11 +60,8 @@ public class ValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void testValidationInvalidMapping() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonInvalidMappingValidationView.class);
-        
         try {
-            cfg.createEntityViewManager(cbf);
+            build(PersonInvalidMappingValidationView.class);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains(PersonInvalidMappingValidationView.class.getSimpleName() + ".getName") || !ex.getMessage().contains("'defaultContact'")) {
@@ -78,11 +72,8 @@ public class ValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void testValidationInvalidCaseMapping() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonInvalidCaseMappingValidationView.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(PersonInvalidCaseMappingValidationView.class);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains(PersonInvalidCaseMappingValidationView.class.getSimpleName() + ".getValid") || !ex.getMessage().contains("'invalid'")) {

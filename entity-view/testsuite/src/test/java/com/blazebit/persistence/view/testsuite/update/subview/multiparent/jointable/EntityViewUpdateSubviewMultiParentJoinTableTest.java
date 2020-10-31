@@ -24,7 +24,6 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.ConfigurationProperties;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.subview.multiparent.jointable.model.DocumentIdView;

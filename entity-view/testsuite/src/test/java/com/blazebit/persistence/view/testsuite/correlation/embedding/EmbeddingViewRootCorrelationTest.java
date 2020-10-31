@@ -178,11 +178,11 @@ public class EmbeddingViewRootCorrelationTest extends AbstractEntityViewTest {
     }
 
     protected <T extends DocumentEmbeddingCorrelationView> void testCorrelation(Class<T> entityView, Integer batchSize) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(entityView);
-        cfg.addEntityView(SimpleDocumentEmbeddingCorrelatedView.class);
-        cfg.addEntityView(SimplePersonEmbeddingCorrelatedSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                entityView,
+                SimpleDocumentEmbeddingCorrelatedView.class,
+                SimplePersonEmbeddingCorrelatedSubView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").where("id").eq(doc1.getId());
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);

@@ -157,11 +157,7 @@ public class MultiLevelViewInheritanceTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(AView.class);
-        cfg.addEntityView(BView.class);
-        cfg.addEntityView(CView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(AView.class, BView.class, CView.class);
     }
 
     @Test

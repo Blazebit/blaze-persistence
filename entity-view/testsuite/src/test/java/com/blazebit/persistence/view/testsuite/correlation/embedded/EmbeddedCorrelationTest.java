@@ -82,11 +82,11 @@ public class EmbeddedCorrelationTest extends AbstractEntityViewTest {
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testEmbeddedCorrelation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(EmbeddableTestEntityCorrelationView.class);
-        cfg.addEntityView(EmbeddableTestEntityCorrelationView.Id.class);
-        cfg.addEntityView(EmbeddableTestEntityCorrelationView.SimpleEmbeddableTestEntityCorrelationView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                EmbeddableTestEntityCorrelationView.class,
+                EmbeddableTestEntityCorrelationView.Id.class,
+                EmbeddableTestEntityCorrelationView.SimpleEmbeddableTestEntityCorrelationView.class
+        );
 
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "d");
         EntityViewSetting<EmbeddableTestEntityCorrelationView, CriteriaBuilder<EmbeddableTestEntityCorrelationView>> setting =

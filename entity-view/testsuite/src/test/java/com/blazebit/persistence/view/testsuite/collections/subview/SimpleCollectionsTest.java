@@ -140,10 +140,10 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
 
     @Test
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(viewType);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                viewType,
+                SubviewPersonForCollectionsView.class
+        );
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");

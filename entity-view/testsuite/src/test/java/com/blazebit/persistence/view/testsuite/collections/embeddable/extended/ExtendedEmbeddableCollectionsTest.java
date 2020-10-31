@@ -144,9 +144,7 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
     @Category({NoHibernate.class, NoDatanucleus.class, NoEclipselink.class })
     // Eclipselink has a result set mapping bug in case of map keys
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(viewType);
 
         CriteriaBuilder<ExtendedDocumentForElementCollections> criteria = cbf.create(em, ExtendedDocumentForElementCollections.class, "d")
             .orderByAsc("id").where("id").gt(doc0.getId());

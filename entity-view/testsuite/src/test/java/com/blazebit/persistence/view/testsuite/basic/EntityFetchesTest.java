@@ -59,14 +59,14 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
     
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FetchesDocumentView1.class);
-        cfg.addEntityView(FetchesPersonView1.class);
-        cfg.addEntityView(FetchesDocumentView2.class);
-        cfg.addEntityView(FetchesPersonView2.class);
-        cfg.addEntityView(FetchesDocumentView3.class);
-        cfg.addEntityView(FetchesPersonView3.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                FetchesDocumentView1.class,
+                FetchesPersonView1.class,
+                FetchesDocumentView2.class,
+                FetchesPersonView2.class,
+                FetchesDocumentView3.class,
+                FetchesPersonView3.class
+        );
     }
 
     private Person pers1;

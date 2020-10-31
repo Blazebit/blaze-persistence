@@ -50,11 +50,11 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentViewInterface.class);
-        cfg.addEntityView(DocumentViewAbstractClass.class);
-        cfg.addEntityView(PersonView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                DocumentViewInterface.class,
+                DocumentViewAbstractClass.class,
+                PersonView.class
+        );
     }
 
     private Document doc1;

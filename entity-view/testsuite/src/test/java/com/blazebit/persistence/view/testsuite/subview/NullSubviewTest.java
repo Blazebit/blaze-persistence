@@ -81,12 +81,12 @@ public class NullSubviewTest extends AbstractEntityViewTest {
     @Category({ NoEclipselink.class })
     // Eclipselink has a result set mapping bug in case of map keys
     public void testSubview() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentMasterView.class);
-        cfg.addEntityView(SimpleDocumentView.class);
-        cfg.addEntityView(PersonSubView.class);
-        cfg.addEntityView(PersonSubViewFiltered.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentMasterView.class,
+                SimpleDocumentView.class,
+                PersonSubView.class,
+                PersonSubViewFiltered.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

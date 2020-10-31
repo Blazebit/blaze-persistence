@@ -45,9 +45,7 @@ public class ConstructorOnlyFlatViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(ConstructorOnlyPersonFlatView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(ConstructorOnlyPersonFlatView.class);
     }
 
     @Before

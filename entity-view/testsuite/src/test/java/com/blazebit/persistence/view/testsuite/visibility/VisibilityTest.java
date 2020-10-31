@@ -34,10 +34,10 @@ public class VisibilityTest extends AbstractEntityViewTest {
 
     @Test
     public void testVisibilityModifierAndDifferentPackages() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(IdHolderView.class);
-        cfg.addEntityView(DocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                IdHolderView.class,
+                DocumentView.class
+        );
 
         // Requires a class in the package where IdHolderView resides that overrides with public modifiers
         // Should also print a warning that equals can't support user types

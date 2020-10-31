@@ -47,9 +47,7 @@ public class CovariantViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(CovariantPersonView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(CovariantPersonView.class);
     }
 
     private Person pers1;

@@ -55,10 +55,10 @@ public class FlatViewAsEmbeddedIdTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentNamePerOwnerStatsIdView.class);
-        cfg.addEntityView(DocumentNamePerOwnerStatsView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                DocumentNamePerOwnerStatsIdView.class,
+                DocumentNamePerOwnerStatsView.class
+        );
     }
 
     @Test

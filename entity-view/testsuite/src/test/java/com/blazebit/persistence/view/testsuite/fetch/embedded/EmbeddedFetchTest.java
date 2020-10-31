@@ -250,14 +250,14 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
     }
 
     protected <T extends EmbeddableTestEntitySimpleFetchView> void testCorrelation(Class<T> entityView, Integer batchSize) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(entityView);
-        cfg.addEntityView(IntIdEntitySimpleSubView.class);
-        cfg.addEntityView(IntIdEntityFetchSubView.class);
-        cfg.addEntityView(EmbeddableTestEntitySimpleFetchView.class);
-        cfg.addEntityView(EmbeddableTestEntitySimpleFetchView.Id.class);
-        cfg.addEntityView(EmbeddableTestEntityEmbeddableFetchSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                entityView,
+                IntIdEntitySimpleSubView.class,
+                IntIdEntityFetchSubView.class,
+                EmbeddableTestEntitySimpleFetchView.class,
+                EmbeddableTestEntitySimpleFetchView.Id.class,
+                EmbeddableTestEntityEmbeddableFetchSubView.class
+        );
 
         CriteriaBuilder<EmbeddableTestEntity2> criteria = cbf.create(em, EmbeddableTestEntity2.class, "d").orderByAsc("id.key");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);
