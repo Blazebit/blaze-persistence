@@ -130,6 +130,7 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
         // NOTE: CTEs will only be added, if this is a subquery
         Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, affectedDmlTable, returningColumns, includedModificationStates);
         participatingQueries.add(baseQuery);
+        participatingQueries.add(exampleQuery);
 
         // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();

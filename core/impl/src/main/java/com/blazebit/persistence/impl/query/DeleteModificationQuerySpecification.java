@@ -124,6 +124,8 @@ public class DeleteModificationQuerySpecification<T> extends ModificationQuerySp
         // NOTE: CTEs will only be added, if this is a subquery
         Map<String, String> addedCtes = applyExtendedSql(sb, false, isEmbedded, withClause, tableToDelete, returningColumns, includedModificationStates);
         participatingQueries.add(baseQuery);
+        participatingQueries.add(exampleQuery);
+        participatingQueries.add(deleteExampleQuery);
 
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
         if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
