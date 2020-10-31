@@ -149,6 +149,8 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
         // NOTE: CTEs will only be added, if this is a subquery
         Map<String, String> addedCtes = applyExtendedSql(sb, false, isEmbedded, withClause, tableToUpdate, returningColumns, includedModificationStates);
         participatingQueries.add(baseQuery);
+        participatingQueries.add(exampleQuery);
+        participatingQueries.add(updateExampleQuery);
 
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
         if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {

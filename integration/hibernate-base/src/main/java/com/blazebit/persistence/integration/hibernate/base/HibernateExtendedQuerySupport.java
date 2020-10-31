@@ -96,7 +96,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     private static final String[] KNOWN_STATEMENTS = { "select ", "insert ", "update ", "delete " };
     
-    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue>> queryPlanCachesCache = new ConcurrentHashMap<>();
     private final ConcurrentMap<FieldKey, Field> fieldCache = new ConcurrentHashMap<>();
     private final HibernateAccess hibernateAccess;
     
@@ -372,14 +372,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, query, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
-        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings) : null;
-        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
-        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(finalSql, participatingQueries, queryStrings) : null;
+        CacheEntry<QueryPlanCacheValue> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
+        QueryPlanCacheValue queryPlanCacheValue = queryPlanEntry.getValue();
+        HQLQueryPlan queryPlan = queryPlanCacheValue.getQueryPlan();
         
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, null, false, serviceProvider.getService(DbmsDialect.class));
             if (queryPlanCacheEnabled) {
-                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+                putQueryPlanIfAbsent(sfi, cacheKey, queryPlanCacheValue);
             }
         }
 
@@ -414,14 +415,32 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, baseQuery, participatingQueries, queryStrings, querySpaces);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
-        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings, firstResult, maxResults) : null;
-        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
-        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(finalSql, participatingQueries, queryStrings, firstResult, maxResults) : null;
+        CacheEntry<QueryPlanCacheValue> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
+        QueryPlanCacheValue queryPlanCacheValue = queryPlanEntry.getValue();
+        HQLQueryPlan queryPlan = queryPlanCacheValue.getQueryPlan();
+
+        String[][] returningColumns;
+        int[] returningColumnTypes;
+        if (queryPlan.getReturnMetadata() == null) {
+            returningColumns = null;
+            returningColumnTypes = null;
+        } else {
+            if (queryPlanEntry.isFromCache()) {
+                returningColumns = queryPlanCacheValue.getReturningColumns();
+                returningColumnTypes = queryPlanCacheValue.getReturningColumnTypes();
+            } else {
+                String exampleQuerySql = queryPlanCacheValue.getQueryPlan().getSqlStrings()[0];
+                boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
+                returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
+                returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
+            }
+        }
 
         if (!queryPlanEntry.isFromCache()) {
             prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, baseQuery, true, dbmsDialect);
             if (queryPlanCacheEnabled) {
-                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+                putQueryPlanIfAbsent(sfi, cacheKey, new QueryPlanCacheValue(queryPlan, returningColumns, returningColumnTypes));
             }
         }
 
@@ -431,11 +450,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return hibernateAccess.performExecuteUpdate(queryPlan, session, queryParameters);
         }
 
-        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
-        String exampleQuerySql = queryPlan.getSqlStrings()[0];
-        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
-        int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
-        
         try {
             @SuppressWarnings("unchecked")
             List<Object> results = hibernateAccess.performList(queryPlan, wrapSession(session, dbmsDialect, returningColumns, returningColumnTypes, null), queryParameters);
@@ -478,17 +492,25 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         // Create plan for example query
-        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(participatingQueries, queryStrings) : null;
-        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, exampleQuery, cacheKey);
-        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
-        String exampleQuerySql = queryPlan.getSqlStrings()[0];
-        
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(sqlOverride, participatingQueries, queryStrings) : null;
+        CacheEntry<QueryPlanCacheValue> queryPlanEntry = getQueryPlan(sfi, exampleQuery, cacheKey);
+        QueryPlanCacheValue queryPlanCacheValue = queryPlanEntry.getValue();
+        HQLQueryPlan queryPlan = queryPlanCacheValue.getQueryPlan();
+
+        String[][] returningColumns;
+        int[] returningColumnTypes;
+        if (queryPlanEntry.isFromCache()) {
+            returningColumns = queryPlanCacheValue.getReturningColumns();
+            returningColumnTypes = queryPlanCacheValue.getReturningColumnTypes();
+        } else {
+            String exampleQuerySql = queryPlan.getSqlStrings()[0];
+            boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
+            returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
+            returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
+        }
+
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
-
-        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
-        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
-        int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(queryPlan, sfi) : null;
         String finalSql = sqlSb.toString();
         
         try {
@@ -496,7 +518,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (!queryPlanEntry.isFromCache()) {
                 prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, modificationBaseQuery, true, dbmsDialect);
                 if (queryPlanCacheEnabled) {
-                    queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+                    putQueryPlanIfAbsent(sfi, cacheKey, new QueryPlanCacheValue(queryPlan, returningColumns, returningColumnTypes));
                 }
             }
 
@@ -989,14 +1011,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return i;
     }
 
-    private CacheEntry<HQLQueryPlan> getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
-        HQLQueryPlan queryPlan;
+    private CacheEntry<QueryPlanCacheValue> getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
+        QueryPlanCacheValue queryPlan;
         boolean fromCache;
         if (cacheKey == null) {
             fromCache = false;
             queryPlan = createQueryPlan(sfi, query);
         } else {
-            BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
+            BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue> queryPlanCache = getQueryPlanCache(sfi);
             queryPlan = queryPlanCache.get(cacheKey);
             if (queryPlan == null) {
                 fromCache = false;
@@ -1009,27 +1031,22 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return new CacheEntry<>(queryPlan, fromCache);
     }
     
-    private HQLQueryPlan putQueryPlanIfAbsent(SessionFactoryImplementor sfi, QueryPlanCacheKey cacheKey, HQLQueryPlan queryPlan) {
-        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
-        HQLQueryPlan oldQueryPlan = queryPlanCache.putIfAbsent(cacheKey, queryPlan);
-        if (oldQueryPlan != null) {
-            queryPlan = oldQueryPlan;
-        }
-        
-        return queryPlan;
+    private QueryPlanCacheValue putQueryPlanIfAbsent(SessionFactoryImplementor sfi, QueryPlanCacheKey cacheKey, QueryPlanCacheValue queryPlan) {
+        BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue> queryPlanCache = getQueryPlanCache(sfi);
+        return queryPlanCache.putIfAbsent(cacheKey, queryPlan);
     }
     
-    private HQLQueryPlan createQueryPlan(SessionFactoryImplementor sfi, Query query) {
+    private QueryPlanCacheValue createQueryPlan(SessionFactoryImplementor sfi, Query query) {
         org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
         String queryString = hibernateQuery.getQueryString();
-        return new HQLQueryPlan(queryString, false, Collections.EMPTY_MAP, sfi);
+        return new QueryPlanCacheValue(new HQLQueryPlan(queryString, false, Collections.EMPTY_MAP, sfi), null, null);
     }
     
-    private BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> getQueryPlanCache(SessionFactoryImplementor sfi) {
-        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = queryPlanCachesCache.get(sfi);
+    private BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue> getQueryPlanCache(SessionFactoryImplementor sfi) {
+        BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue> queryPlanCache = queryPlanCachesCache.get(sfi);
         if (queryPlanCache == null) {
-            queryPlanCache = new BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>(QueryPlanCache.DEFAULT_QUERY_PLAN_MAX_COUNT, 20, BoundedConcurrentHashMap.Eviction.LIRS);
-            BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> oldQueryPlanCache = queryPlanCachesCache.putIfAbsent(sfi, queryPlanCache);
+            queryPlanCache = new BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue>(QueryPlanCache.DEFAULT_QUERY_PLAN_MAX_COUNT, 20, BoundedConcurrentHashMap.Eviction.LIRS);
+            BoundedConcurrentHashMap<QueryPlanCacheKey, QueryPlanCacheValue> oldQueryPlanCache = queryPlanCachesCache.putIfAbsent(sfi, queryPlanCache);
             if (oldQueryPlanCache != null) {
                 queryPlanCache = oldQueryPlanCache;
             }
@@ -1038,18 +1055,18 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return queryPlanCache;
     }
 
-    private QueryPlanCacheKey createCacheKey(List<Query> queries, List<String> queryStrings) {
-        return createCacheKey(queries, queryStrings, null, null);
+    private QueryPlanCacheKey createCacheKey(String sql, List<Query> queries, List<String> queryStrings) {
+        return createCacheKey(sql, queries, queryStrings, null, null);
     }
     
-    private QueryPlanCacheKey createCacheKey(List<Query> queries, List<String> queryStrings, Integer firstResult, Integer maxResults) {
+    private QueryPlanCacheKey createCacheKey(String sql, List<Query> queries, List<String> queryStrings, Integer firstResult, Integer maxResults) {
         List<QueryPlanCacheKeyComponent> cacheKeyComponents = new ArrayList<>(queries.size());
         for (int i = 0; i < queries.size(); i++) {
             Query query = queries.get(i);
             String queryString = queryStrings.get(i);
             cacheKeyComponents.add(new QueryPlanCacheKeyComponent(queryString, query.getFirstResult(), query.getMaxResults()));
         }
-        return new QueryPlanCacheKey(cacheKeyComponents, firstResult, maxResults);
+        return new QueryPlanCacheKey(sql, cacheKeyComponents, firstResult, maxResults);
     }
     
     private void addAll(List<Query> queries, List<String> parts) {
@@ -1085,17 +1102,20 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
      * @since 1.5.0
      */
     private static class QueryPlanCacheKey {
+        final String sql;
         final List<QueryPlanCacheKeyComponent> cacheKeyComponents;
         final Integer firstResult;
         final Integer maxResults;
 
-        public QueryPlanCacheKey(List<QueryPlanCacheKeyComponent> cacheKeyComponents) {
+        public QueryPlanCacheKey(String sql, List<QueryPlanCacheKeyComponent> cacheKeyComponents) {
+            this.sql = sql;
             this.cacheKeyComponents = cacheKeyComponents;
             this.firstResult = null;
             this.maxResults = null;
         }
 
-        public QueryPlanCacheKey(List<QueryPlanCacheKeyComponent> cacheKeyComponents, Integer firstResult, Integer maxResults) {
+        public QueryPlanCacheKey(String sql, List<QueryPlanCacheKeyComponent> cacheKeyComponents, Integer firstResult, Integer maxResults) {
+            this.sql = sql;
             this.cacheKeyComponents = cacheKeyComponents;
             this.firstResult = firstResult;
             this.maxResults = maxResults;
@@ -1110,14 +1130,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 return false;
             }
             QueryPlanCacheKey that = (QueryPlanCacheKey) o;
-            return cacheKeyComponents.equals(that.cacheKeyComponents) &&
+            return Objects.equals(sql, that.sql) &&
+                    cacheKeyComponents.equals(that.cacheKeyComponents) &&
                     Objects.equals(firstResult, that.firstResult) &&
                     Objects.equals(maxResults, that.maxResults);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(cacheKeyComponents, firstResult, maxResults);
+            return Objects.hash(sql, cacheKeyComponents, firstResult, maxResults);
         }
     }
 
@@ -1192,6 +1213,34 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         public boolean isFromCache() {
             return fromCache;
+        }
+    }
+
+    /**
+     * @author Moritz Becker
+     * @since 1.6.0
+     */
+    private static class QueryPlanCacheValue {
+        private final HQLQueryPlan queryPlan;
+        private final String[][] returningColumns;
+        private final int[] returningColumnTypes;
+
+        private QueryPlanCacheValue(HQLQueryPlan queryPlan, String[][] returningColumns, int[] returningColumnTypes) {
+            this.queryPlan = queryPlan;
+            this.returningColumns = returningColumns;
+            this.returningColumnTypes = returningColumnTypes;
+        }
+
+        public HQLQueryPlan getQueryPlan() {
+            return queryPlan;
+        }
+
+        public String[][] getReturningColumns() {
+            return returningColumns;
+        }
+
+        public int[] getReturningColumnTypes() {
+            return returningColumnTypes;
         }
     }
 
