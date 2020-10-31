@@ -89,9 +89,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSetting() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(FilteredDocument.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(FilteredDocument.class);
 
         // Base setting
         EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(
@@ -116,9 +114,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSettingWithEntityAttribute() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithEntityView.class);
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
@@ -139,9 +135,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     
     @Test
     public void testEntityViewSettingNotExistingFilterAttribute() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithEntityView.class);
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
@@ -162,9 +156,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSettingCustomRoot() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(CustomRootPersonView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(CustomRootPersonView.class);
 
         // Base setting
         EntityViewSetting<CustomRootPersonView, CriteriaBuilder<CustomRootPersonView>> setting = EntityViewSetting.create(CustomRootPersonView.class);
@@ -185,9 +177,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewFetches() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithEntityView.class);
 
         EntityViewSetting<DocumentWithEntityView, CriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting.create(DocumentWithEntityView.class);
         setting.fetch("id");

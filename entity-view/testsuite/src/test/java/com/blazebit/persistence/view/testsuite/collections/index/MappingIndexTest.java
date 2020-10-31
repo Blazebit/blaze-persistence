@@ -26,6 +26,8 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.collections.index.model.DocumentViewWithMappingIndex;
 import com.blazebit.persistence.view.testsuite.collections.index.model.DocumentViewWithMappingIndexJoin;
@@ -113,7 +115,10 @@ public class MappingIndexTest extends AbstractEntityViewTest {
     }
 
     private <T extends DocumentViewWithMappingIndex> void test(Class<T> clazz, Integer batchSize) {
-        build(clazz, VersionViewWithMappingIndex.class, VersionKeyView.class, VersionStaticKeyView.class);
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        build(cfg, clazz, VersionViewWithMappingIndex.class, VersionKeyView.class, VersionStaticKeyView.class);
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

@@ -39,10 +39,8 @@ public class EntityViewUpdateCreatableOnlyEntityMapsTest extends AbstractEntityV
 
     @Test
     public void testValidateInvalidConfiguration() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentEntityWithMapsView.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(UpdatableDocumentEntityWithMapsView.class);
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Persist cascading for non-updatable attributes is not allowed"));

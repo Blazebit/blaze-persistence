@@ -58,11 +58,11 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PrimitiveSimpleDocumentView.class);
-        cfg.addEntityView(PrimitiveDocumentView.class);
-        cfg.addEntityView(PrimitivePersonView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                PrimitiveSimpleDocumentView.class,
+                PrimitiveDocumentView.class,
+                PrimitivePersonView.class
+        );
     }
 
     private PrimitiveDocument doc1;
@@ -141,11 +141,11 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSubviewFetches() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PrimitiveSimpleDocumentView.class);
-        cfg.addEntityView(PrimitiveDocumentView.class);
-        cfg.addEntityView(PrimitivePersonView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                PrimitiveSimpleDocumentView.class,
+                PrimitiveDocumentView.class,
+                PrimitivePersonView.class
+        );
 
         EntityViewSetting<PrimitiveDocumentView, CriteriaBuilder<PrimitiveDocumentView>> setting = EntityViewSetting.create(PrimitiveDocumentView.class);
         setting.fetch("name");

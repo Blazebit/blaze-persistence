@@ -46,13 +46,13 @@ public class EmbeddedMappingNestedTest extends AbstractEmbeddedMappingTest {
 
     @Before
     public void prepare() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentDetailNestedView.class);
-        cfg.addEntityView(DocumentDetailEmbeddableNestedView.class);
-        cfg.addEntityView(DocumentViewNestedEmbedded.class);
-        cfg.addEntityView(DocumentViewNestedEmbeddedEmbeddable.class);
-        cfg.addEntityView(DocumentViewWithNestedEmbedded.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                DocumentDetailNestedView.class,
+                DocumentDetailEmbeddableNestedView.class,
+                DocumentViewNestedEmbedded.class,
+                DocumentViewNestedEmbeddedEmbeddable.class,
+                DocumentViewWithNestedEmbedded.class
+        );
     }
 
     @Test

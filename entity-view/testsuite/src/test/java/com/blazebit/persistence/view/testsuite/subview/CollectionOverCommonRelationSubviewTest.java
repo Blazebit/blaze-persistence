@@ -81,11 +81,11 @@ public class CollectionOverCommonRelationSubviewTest extends AbstractEntityViewT
 
     @Test
     public void testSubview() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithCollectionOverCommonRelationView.class);
-        cfg.addEntityView(DocumentRelatedView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentWithCollectionOverCommonRelationView.class,
+                DocumentRelatedView.class,
+                SimplePersonSubView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

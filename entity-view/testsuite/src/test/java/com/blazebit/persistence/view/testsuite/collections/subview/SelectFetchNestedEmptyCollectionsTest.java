@@ -103,13 +103,13 @@ public class SelectFetchNestedEmptyCollectionsTest<T extends PersonForCollection
     // NOTE: DataNucleus doesn't like CASE WHEN ... THEN '' ELSE NULL END because NULL apparently has a different type for DN..
     @Category({ NoDatanucleus.class })
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonForCollectionsSelectFetchNestedView.class);
-        cfg.addEntityView(SubviewDocumentSelectFetchView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsSelectFetchView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsSelectFetchView.Id.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                PersonForCollectionsSelectFetchNestedView.class,
+                SubviewDocumentSelectFetchView.class,
+                SubviewPersonForCollectionsSelectFetchView.class,
+                SubviewPersonForCollectionsSelectFetchView.Id.class,
+                SubviewPersonForCollectionsView.class
+        );
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())

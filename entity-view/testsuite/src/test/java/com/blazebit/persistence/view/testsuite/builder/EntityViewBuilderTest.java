@@ -39,10 +39,8 @@ public class EntityViewBuilderTest extends AbstractEntityViewTest {
     public void testBuilder() {
         Object global = new Object();
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentBuilderView.class);
-        cfg.addEntityView(PersonView.class);
         cfg.setOptionalParameter("test", global);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(cfg, DocumentBuilderView.class, PersonView.class);
         EntityViewBuilder<DocumentBuilderView> builder = evm.createBuilder(DocumentBuilderView.class);
         DocumentBuilderView view = builder.with("id", 10L)
             .with("name", "Test")

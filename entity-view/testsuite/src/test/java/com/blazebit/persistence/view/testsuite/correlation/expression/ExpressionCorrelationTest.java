@@ -184,11 +184,11 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     }
 
     private EntityViewManager buildEntityViewManagerForFilter() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentSimpleCorrelationViewJoinId.class);
-        cfg.addEntityView(SimpleDocumentCorrelatedView.class);
-        cfg.addEntityView(SimplePersonCorrelatedSubView.class);
-        return cfg.createEntityViewManager(cbf);
+        return build(
+                DocumentSimpleCorrelationViewJoinId.class,
+                SimpleDocumentCorrelatedView.class,
+                SimplePersonCorrelatedSubView.class
+        );
     }
 
 }

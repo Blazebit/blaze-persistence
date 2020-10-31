@@ -49,11 +49,11 @@ public class JoinableCorrelationTest extends AbstractEntityViewTest {
     @Test
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testNestedJoinCorrelation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentNestedJoinView.class);
-        cfg.addEntityView(PersonNestedJoinSubView.class);
-        cfg.addEntityView(SimpleDocumentView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentNestedJoinView.class,
+                PersonNestedJoinSubView.class,
+                SimpleDocumentView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         EntityViewSetting<DocumentNestedJoinView, CriteriaBuilder<DocumentNestedJoinView>> setting =

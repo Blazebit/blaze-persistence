@@ -139,20 +139,20 @@ public class MultisetFetchCollectionsBenchmarkTest extends AbstractEntityViewTes
     @Before
     public void setUp() {
         pers1 = cbf.create(em, PersonForCollections.class).where("name").eq("pers1").getSingleResult();
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
 
-        cfg.addEntityView(PersonForCollectionsMultisetFetchNestedViewJoin.class);
-        cfg.addEntityView(SubviewDocumentMultisetFetchViewJoin.class);
-        cfg.addEntityView(SubviewPersonForCollectionsMultisetFetchViewJoin.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        joinEvm = cfg.createEntityViewManager(cbf);
+        joinEvm = build(
+                PersonForCollectionsMultisetFetchNestedViewJoin.class,
+                SubviewDocumentMultisetFetchViewJoin.class,
+                SubviewPersonForCollectionsMultisetFetchViewJoin.class,
+                SubviewPersonForCollectionsView.class
+        );
 
-        cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonForCollectionsMultisetFetchNestedViewMultiset.class);
-        cfg.addEntityView(SubviewDocumentMultisetFetchViewMultiset.class);
-        cfg.addEntityView(SubviewPersonForCollectionsMultisetFetchViewMultiset.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        multisetEvm = cfg.createEntityViewManager(cbf);
+        multisetEvm = build(
+                PersonForCollectionsMultisetFetchNestedViewMultiset.class,
+                SubviewDocumentMultisetFetchViewMultiset.class,
+                SubviewPersonForCollectionsMultisetFetchViewMultiset.class,
+                SubviewPersonForCollectionsView.class
+        );
     }
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation

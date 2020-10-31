@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.base.jpa;
 
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.CriteriaBuilderConfigurationImpl;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -77,6 +78,7 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -101,9 +103,10 @@ public abstract class AbstractJpaPersistenceTest {
     private static DatabaseCleaner databaseCleaner;
     private static HikariDataSource dataSource;
     private static DataSource bootstrapDataSource;
-    private static CriteriaBuilderConfiguration lastCriteriaBuilderConfiguration;
+    private static CriteriaBuilderConfigurationEqualityWrapper lastCriteriaBuilderConfigurationEqualityWrapper;
     private static SchemaMode lastSchemaMode;
     private static CriteriaBuilderConfiguration defaultCbConfiguration;
+    private static CriteriaBuilderConfiguration activeCriteriaBuilderConfiguration;
     private static final Map<Class<?>, List<String>> PLURAL_DELETES = new HashMap<>();
     private static final List<DatabaseCleaner.Factory> DATABASE_CLEANERS = Arrays.asList(
             new H2DatabaseCleaner.Factory(),
@@ -116,7 +119,6 @@ public abstract class AbstractJpaPersistenceTest {
     );
 
     protected EntityManager em;
-    private CriteriaBuilderConfiguration criteriaBuilderConfiguration;
 
     static {
         System.setProperty("org.jboss.logging.provider", "jdk");
@@ -396,23 +398,26 @@ public abstract class AbstractJpaPersistenceTest {
             emf = createEntityManagerFactory("TestsuiteBase", createProperties("none"));
         }
 
-        if (criteriaBuilderConfiguration == null) {
+        if (activeCriteriaBuilderConfiguration == null) {
             if (requiresCriteriaBuilderConfigurationCustomization()) {
-                criteriaBuilderConfiguration = Criteria.getDefault();
-                configure(criteriaBuilderConfiguration);
+                activeCriteriaBuilderConfiguration = Criteria.getDefault();
+                configure(activeCriteriaBuilderConfiguration);
             } else {
                 if (defaultCbConfiguration == null) {
                     // We cannot initialize this statically due to static initializer in
                     // com.blazebit.persistence.testsuite.base.AbstractPersistenceTest (Hibernate)
                     defaultCbConfiguration = Criteria.getDefault();
                 }
-                criteriaBuilderConfiguration = defaultCbConfiguration;
+                activeCriteriaBuilderConfiguration = defaultCbConfiguration;
             }
         }
 
-        if (cbf == null || emfBefore != emf || !criteriaBuilderConfiguration.equals(lastCriteriaBuilderConfiguration)) {
-            cbf = criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
-            lastCriteriaBuilderConfiguration = criteriaBuilderConfiguration;
+        CriteriaBuilderConfigurationEqualityWrapper cfgEqualityWrapper = new CriteriaBuilderConfigurationEqualityWrapper(
+                (CriteriaBuilderConfigurationImpl) activeCriteriaBuilderConfiguration
+        );
+        if (cbf == null || emfBefore != emf || !cfgEqualityWrapper.equals(lastCriteriaBuilderConfigurationEqualityWrapper)) {
+            cbf = activeCriteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
+            lastCriteriaBuilderConfigurationEqualityWrapper = cfgEqualityWrapper;
             jpaProvider = cbf.getService(JpaProvider.class);
             dbmsDialect = cbf.getService(DbmsDialect.class);
         }
@@ -563,12 +568,17 @@ public abstract class AbstractJpaPersistenceTest {
         }
     }
 
-    @AfterClass
     public static void closeEmf() {
         if (emf != null && emf.isOpen()) {
             emf.close();
             emf = null;
         }
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        closeEmf();
+        activeCriteriaBuilderConfiguration = null;
     }
 
     protected String getTargetSchema() {
@@ -891,5 +901,36 @@ public abstract class AbstractJpaPersistenceTest {
         DATANUCLEUS,
         ECLIPSELINK,
         OPENJPA
+    }
+
+    private static class CriteriaBuilderConfigurationEqualityWrapper {
+        private final Properties properties;
+        private final Map<String, Class<?>> macros;
+        private final Map<String, Class<?>> functions;
+
+        private CriteriaBuilderConfigurationEqualityWrapper(CriteriaBuilderConfigurationImpl cfg) {
+            this.properties = cfg.getProperties();
+            this.macros = cfg.getMacros().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getClass()));
+            this.functions = cfg.getFunctions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getClass()));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            CriteriaBuilderConfigurationEqualityWrapper that = (CriteriaBuilderConfigurationEqualityWrapper) o;
+            return properties.equals(that.properties) &&
+                    macros.equals(that.macros) &&
+                    functions.equals(that.functions);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(properties, macros, functions);
+        }
     }
 }

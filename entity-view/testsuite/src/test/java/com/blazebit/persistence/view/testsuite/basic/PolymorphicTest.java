@@ -64,10 +64,10 @@ public class PolymorphicTest extends AbstractEntityViewTest {
 
     @Test
     public void testApplyParent() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(NamedView.class);
-        cfg.addEntityView(TestEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                NamedView.class,
+                TestEntityView.class
+        );
 
         // Base setting
         EntityViewSetting<NamedView, CriteriaBuilder<NamedView>> setting = EntityViewSetting.create(NamedView.class);

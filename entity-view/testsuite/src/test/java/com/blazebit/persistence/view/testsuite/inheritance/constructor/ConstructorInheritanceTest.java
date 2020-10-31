@@ -101,12 +101,12 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
         doc2 = cbf.create(em, Document.class).where("name").eq("doc2").getSingleResult();
         doc3 = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
 
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SimplePersonSubView.class);
-        cfg.addEntityView(DocumentBaseView.class);
-        cfg.addEntityView(NewDocumentView.class);
-        cfg.addEntityView(OldDocumentView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                SimplePersonSubView.class,
+                DocumentBaseView.class,
+                NewDocumentView.class,
+                OldDocumentView.class
+        );
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("name");
         CriteriaBuilder<DocumentBaseView> cb = evm.applySetting(EntityViewSetting.create(DocumentBaseView.class), criteria);
@@ -133,11 +133,11 @@ public class ConstructorInheritanceTest extends AbstractEntityViewTest {
         doc2 = cbf.create(em, Document.class).where("name").eq("doc2").getSingleResult();
         doc3 = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
 
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SuperTypeParameterDocumentBaseView.class);
-        cfg.addEntityView(ParameterNewDocumentView.class);
-        cfg.addEntityView(ParameterOldDocumentView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                SuperTypeParameterDocumentBaseView.class,
+                ParameterNewDocumentView.class,
+                ParameterOldDocumentView.class
+        );
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
                 .orderByAsc("name");
         CriteriaBuilder<SuperTypeParameterDocumentBaseView> cb = evm.applySetting(EntityViewSetting.create(SuperTypeParameterDocumentBaseView.class), criteria);

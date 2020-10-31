@@ -104,13 +104,13 @@ public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
         base1 = cbf.create(em, SingleTableSub1.class).where("name").eq("st1").getSingleResult();
         base2 = cbf.create(em, SingleTableSub2.class).where("name").eq("st2").getSingleResult();
 
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(IntIdEntityView.class);
-        cfg.addEntityView(SingleTableView.class);
-        cfg.addEntityView(SingleTableDetailsView.class);
-        cfg.addEntityView(SingleTableSub1DetailsView.class);
-        cfg.addEntityView(SingleTableSub2DetailsView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                IntIdEntityView.class,
+                SingleTableView.class,
+                SingleTableDetailsView.class,
+                SingleTableSub1DetailsView.class,
+                SingleTableSub2DetailsView.class
+        );
     }
 
     @Test

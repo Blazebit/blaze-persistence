@@ -144,10 +144,7 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     private void test(Class<? extends PersonLimitView> clazz, Integer batchSize) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentLimitView.class);
-        cfg.addEntityView(clazz);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentLimitView.class, clazz);
         if (batchSize == null) {
             batchSize = 1;
         }

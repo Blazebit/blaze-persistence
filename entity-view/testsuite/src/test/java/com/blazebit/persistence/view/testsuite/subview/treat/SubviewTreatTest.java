@@ -65,11 +65,11 @@ public class SubviewTreatTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubviewTreat() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(ContainerView.class);
-        cfg.addEntityView(BaseContainerItemView.class);
-        cfg.addEntityView(Container1ItemView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                ContainerView.class,
+                BaseContainerItemView.class,
+                Container1ItemView.class
+        );
 
         ContainerView containerView = evm.applySetting(EntityViewSetting.create(ContainerView.class), cbf.create(em, Container.class)).getSingleResult();
 

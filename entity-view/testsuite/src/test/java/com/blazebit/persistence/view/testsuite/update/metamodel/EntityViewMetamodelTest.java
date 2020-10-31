@@ -56,6 +56,14 @@ import static org.junit.Assert.*;
 @Category({ NoDatanucleus.class, NoEclipselink.class})
 public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
+    private final EntityViewConfiguration entityViewConfiguration;
+
+    {
+        entityViewConfiguration = EntityViews.createDefaultConfiguration();
+        entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        entityViewConfiguration.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+    }
+
     @UpdatableEntityView
     @EntityView(Document.class)
     public static interface DocumentViewWithoutId {
@@ -67,7 +75,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
     @Ignore("This got obsolete when fixing #869. Not sure anymore why we deferred the check to the runtime")
     public void updatableEntityViewRequiresId() {
         cleanDatabase();
-        build(DocumentViewWithoutId.class);
+        build(entityViewConfiguration, DocumentViewWithoutId.class);
         Long docId = transactional(new TxWork<Long>() {
             @Override
             public Long work(EntityManager em) {
@@ -147,7 +155,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void getReferenceForLongId() {
-        build(DocumentBaseView.class, PersonUpdateView.class, DocumentUpdateView.class);
+        build(entityViewConfiguration, DocumentBaseView.class, PersonUpdateView.class, DocumentUpdateView.class);
 
         DocumentBaseView docView = evm.getReference(DocumentBaseView.class, 1L);
         assertNotNull(docView);
@@ -165,14 +173,14 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
     @Test
     // Test for #613
     public void loadWithMultipleViewConstruct() {
-        build(DocumentBaseView.class, PersonUpdateView.class, DocumentUpdateView.class);
+        build(entityViewConfiguration, DocumentBaseView.class, PersonUpdateView.class, DocumentUpdateView.class);
 
         evm.find(em, DocumentUpdateView.class, 1L);
     }
 
     @Test
     public void nonUpdatableEntityAttributeDefaults() {
-        ViewMetamodel metamodel = build(DocumentViewWithEntityTypes.class);
+        ViewMetamodel metamodel = build(entityViewConfiguration, DocumentViewWithEntityTypes.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithEntityTypes.class);
         // By default, the collection relations are not updatable
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
@@ -196,7 +204,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void nonUpdatableViewAttributeDefaults() {
-        ViewMetamodel metamodel = build(DocumentViewWithImmutableViewTypes.class, PersonView.class);
+        ViewMetamodel metamodel = build(entityViewConfiguration, DocumentViewWithImmutableViewTypes.class, PersonView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithImmutableViewTypes.class);
         // By default, the collection relations are not updatable
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
@@ -226,7 +234,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void updatableViewAttributeDefaults() {
-        ViewMetamodel metamodel = build(DocumentViewWithUpdatableImmutableViewTypes.class, PersonView.class);
+        ViewMetamodel metamodel = build(entityViewConfiguration, DocumentViewWithUpdatableImmutableViewTypes.class, PersonView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableImmutableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -259,7 +267,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
-        ViewMetamodel metamodel = build(cfg, DocumentViewWithMutableViewTypes.class, PersonUpdateView.class);
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithMutableViewTypes.class, PersonUpdateView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithMutableViewTypes.class);
         // Collections are only considered being updatable if the element type is "persistable"
         assertFalse(docViewType.getAttribute("partners").isUpdatable());
@@ -297,7 +305,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
-        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypes.class, PersonUpdateView.class);
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypes.class, PersonUpdateView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -335,7 +343,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
-        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableAndCreatableViewTypes.class, PersonCreateAndUpdateView.class);
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableAndCreatableViewTypes.class, PersonCreateAndUpdateView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableAndCreatableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -376,7 +384,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void updatableCreatableView() {
-        ViewMetamodel metamodel = build(DocumentViewWithUpdatableCreatableViewTypes.class, PersonView.class, PersonCreateView.class);
+        ViewMetamodel metamodel = build(entityViewConfiguration, DocumentViewWithUpdatableCreatableViewTypes.class, PersonView.class, PersonCreateView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableCreatableViewTypes.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -416,7 +424,7 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, "false");
-        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class, PersonUpdateView.class);
+        ViewMetamodel metamodel = build(cfg, DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class, PersonUpdateView.class).getMetamodel();
         ManagedViewType<?> docViewType = metamodel.managedView(DocumentViewWithUpdatableMutableViewTypesAndCreateCascade.class);
         // By default, the collection relations are not updatable
         assertTrue(docViewType.getAttribute("partners").isUpdatable());
@@ -444,12 +452,12 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void inverseRemoveSetNullWhenOptional() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(InverseRemoveStrategyPersonUpdateView.class);
-        cfg.addEntityView(PersonUpdateView.class);
-        cfg.addEntityView(DocumentBaseView.class);
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    InverseRemoveStrategyPersonUpdateView.class,
+                    PersonUpdateView.class,
+                    DocumentBaseView.class
+            );
             fail("Expected validation failure because of invalid inverse remove strategy usage!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("'owner'"));
@@ -465,10 +473,8 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void missingIdMappingForUpdatable() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(InvalidPersonUpdateView.class);
         try {
-            cfg.createEntityViewManager(cbf);
+            build(InvalidPersonUpdateView.class);
             fail("Expected validation failure because of missing id mapping!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("@IdMapping"));
@@ -484,10 +490,8 @@ public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void missingIdMappingForCreatable() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(InvalidPersonCreateView.class);
         try {
-            cfg.createEntityViewManager(cbf);
+            build(InvalidPersonCreateView.class);
             fail("Expected validation failure because of missing id mapping!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("@IdMapping"));

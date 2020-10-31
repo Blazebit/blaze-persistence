@@ -47,10 +47,10 @@ public class JoinableCorrelationTest extends AbstractEntityViewTest {
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testJoinableCorrelation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentJoinableCorrelationView.class);
-        cfg.addEntityView(SimplePersonCorrelatedSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentJoinableCorrelationView.class,
+                SimplePersonCorrelatedSubView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         EntityViewSetting<DocumentJoinableCorrelationView, CriteriaBuilder<DocumentJoinableCorrelationView>> setting =

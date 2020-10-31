@@ -48,10 +48,10 @@ public class CustomClassViewTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(CustomDocumentView.class);
-        cfg.addEntityView(CustomSubDocumentView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                CustomDocumentView.class,
+                CustomSubDocumentView.class
+        );
     }
 
     @EntityView(Document.class)

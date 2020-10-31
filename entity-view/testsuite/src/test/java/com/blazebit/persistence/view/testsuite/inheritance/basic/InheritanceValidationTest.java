@@ -47,12 +47,11 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void missingInheritanceMappingValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocBase1.class);
-        cfg.addEntityView(DocBase1Sub1.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    DocBase1.class,
+                    DocBase1Sub1.class
+            );
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("@EntityViewInheritanceMapping")) {
@@ -74,12 +73,11 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void notASubtypeValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocBase2.class);
-        cfg.addEntityView(DocBase2Sub1.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    DocBase2.class,
+                    DocBase2Sub1.class
+            );
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("Java subtype")) {
@@ -96,11 +94,8 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void selfDeclarationValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocBase3.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(DocBase3.class);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("declared itself in @EntityViewInheritance")) {
@@ -118,11 +113,8 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void notUsedInInheritanceShouldHaveMappingValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocBase4.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(DocBase4.class);
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("@EntityViewInheritanceMapping but is never used as subtype")) {
@@ -145,12 +137,11 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void usedInInheritanceShouldHaveMappingValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocBase5.class);
-        cfg.addEntityView(DocBase5Sub1.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    DocBase5.class,
+                    DocBase5Sub1.class
+            );
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("no @EntityViewInheritanceMapping but is used as inheritance subtype")) {
@@ -184,14 +175,13 @@ public class InheritanceValidationTest extends AbstractEntityViewTest {
 
     @Test
     public void inheritanceIntroducedCycleValidation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersBase6.class);
-        cfg.addEntityView(DocBase6.class);
-        cfg.addEntityView(DocBase6Sub1.class);
-        cfg.addEntityView(DocBase6Sub2.class);
-
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    PersBase6.class,
+                    DocBase6.class,
+                    DocBase6Sub1.class,
+                    DocBase6Sub2.class
+            );
             Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
             if (!ex.getMessage().contains("circular dependency")) {

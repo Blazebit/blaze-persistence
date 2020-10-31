@@ -94,11 +94,11 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     // DataNucleus apparently thinks NULL has a specific type which isn't the one of other result arms of a CASE WHEN clause
     @Category({ NoDatanucleus.class })
     public void testAttributeFilterWithInheritance() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(AttributeFilterInheritancePrimitiveDocumentView.class);
-        cfg.addEntityView(AttributeFilterInheritancePrimitiveDocumentViewSub1.class);
-        cfg.addEntityView(AttributeFilterInheritancePrimitiveDocumentViewSub2.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                AttributeFilterInheritancePrimitiveDocumentView.class,
+                AttributeFilterInheritancePrimitiveDocumentViewSub1.class,
+                AttributeFilterInheritancePrimitiveDocumentViewSub2.class
+        );
 
         EntityViewSetting<AttributeFilterInheritancePrimitiveDocumentView, CriteriaBuilder<AttributeFilterInheritancePrimitiveDocumentView>> setting = EntityViewSetting.create(AttributeFilterInheritancePrimitiveDocumentView.class);
         setting.addAttributeFilter("name", "JACK");

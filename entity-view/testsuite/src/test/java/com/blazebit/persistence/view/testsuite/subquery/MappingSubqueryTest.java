@@ -109,9 +109,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubquery() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithSubquery.class);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         EntityViewSetting<DocumentWithSubquery, CriteriaBuilder<DocumentWithSubquery>> setting;
@@ -129,9 +127,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     @Test
     @Category(NoDB2.class)
     public void testSubqueryWithExpression() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithExpressionSubqueryView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithExpressionSubqueryView.class);
 
         // Base setting
         EntityViewSetting<DocumentWithExpressionSubqueryView, PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView>> setting = EntityViewSetting
@@ -160,9 +156,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryEntityViewSettings() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithSubquery.class);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting
@@ -179,9 +173,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryViewRootEntityViewSettings() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithSubqueryViewRoot.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithSubqueryViewRoot.class);
 
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class);
         EntityViewSetting<DocumentWithSubqueryViewRoot, CriteriaBuilder<DocumentWithSubqueryViewRoot>> setting = EntityViewSetting
@@ -212,10 +204,10 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryEmbeddingViewEntityViewSettings() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithSubqueryEmbeddingView.class);
-        cfg.addEntityView(PersonWithSubqueryEmbeddingViewSubview.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentWithSubqueryEmbeddingView.class,
+                PersonWithSubqueryEmbeddingViewSubview.class
+        );
 
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class);
         EntityViewSetting<PersonWithSubqueryEmbeddingViewSubview, CriteriaBuilder<PersonWithSubqueryEmbeddingViewSubview>> setting = EntityViewSetting
@@ -248,11 +240,11 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testDeepSubqueryEmbeddingViewEntityViewSettings() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithDeepSubqueryEmbeddingView.class);
-        cfg.addEntityView(DocumentWithSubqueryEmbeddingView.class);
-        cfg.addEntityView(PersonWithSubqueryEmbeddingViewSubview.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentWithDeepSubqueryEmbeddingView.class,
+                DocumentWithSubqueryEmbeddingView.class,
+                PersonWithSubqueryEmbeddingViewSubview.class
+        );
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         EntityViewSetting<DocumentWithDeepSubqueryEmbeddingView, CriteriaBuilder<DocumentWithDeepSubqueryEmbeddingView>> setting = EntityViewSetting

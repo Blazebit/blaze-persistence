@@ -69,19 +69,21 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
 
     private EntityViewManager getEntityViewManager() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(EmbeddableTestEntityView.class);
-        cfg.addEntityView(EmbeddableTestEntityView.Id.class);
-        cfg.addEntityView(UpdatableEmbeddableTestEntityView.class);
-        cfg.addEntityView(UpdatableEmbeddableTestEntityView.Id.class);
-        cfg.addEntityView(UpdatableEmbeddableTestEntityView.ReadOnlyEmbeddableTestEntityEmbeddableView.class);
-        cfg.addEntityView(UpdatableEmbeddableTestEntityView.EmbeddableTestEntityEmbeddableView.class);
-        cfg.addEntityView(EmbeddableTestEntityNestedEmbeddableView.class);
-        cfg.addEntityView(UpdatableEmbeddableTestEntityNestedEmbeddableView.class);
-        cfg.addEntityView(NameObjectView.class);
-        cfg.addEntityView(UpdatableNameObjectView.class);
-        cfg.addEntityView(IntIdEntityView.class);
         cfg.setOptionalParameter("test", "String");
-        return cfg.createEntityViewManager(cbf);
+        return build(
+                cfg,
+                EmbeddableTestEntityView.class,
+                EmbeddableTestEntityView.Id.class,
+                UpdatableEmbeddableTestEntityView.class,
+                UpdatableEmbeddableTestEntityView.Id.class,
+                UpdatableEmbeddableTestEntityView.ReadOnlyEmbeddableTestEntityEmbeddableView.class,
+                UpdatableEmbeddableTestEntityView.EmbeddableTestEntityEmbeddableView.class,
+                EmbeddableTestEntityNestedEmbeddableView.class,
+                UpdatableEmbeddableTestEntityNestedEmbeddableView.class,
+                NameObjectView.class,
+                UpdatableNameObjectView.class,
+                IntIdEntityView.class
+        );
     }
 
     @Test
@@ -116,13 +118,15 @@ public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
     public void testCreatableEmbeddableWithEmbeddableContainingConstructor() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
-        cfg.addEntityView(EmbeddableTestEntityView.class);
-        cfg.addEntityView(EmbeddableTestEntityView.Id.class);
-        cfg.addEntityView(CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.class);
-        cfg.addEntityView(CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.ReadOnlyEmbeddableTestEntityEmbeddableView.class);
 
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    cfg,
+                    EmbeddableTestEntityView.class,
+                    EmbeddableTestEntityView.Id.class,
+                    CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.class,
+                    CreatableEmbeddableTestEntityViewWithEmbeddableContainingConstructor.ReadOnlyEmbeddableTestEntityEmbeddableView.class
+            );
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("empty constructor"));
         }

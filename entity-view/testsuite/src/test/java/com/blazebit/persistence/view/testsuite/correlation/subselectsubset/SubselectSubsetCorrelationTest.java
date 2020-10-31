@@ -43,10 +43,10 @@ public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
 
     @Test
     public void testSubselectSubsetCorrelation() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonSubselectView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                PersonSubselectView.class,
+                SimplePersonSubView.class
+        );
 
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p")
                 .orderByDesc("name")
@@ -59,10 +59,10 @@ public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
 
     @Test
     public void testSubselectElementCollection() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentSubselectElementCollectionView.class);
-        cfg.addEntityView(NameObjectView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentSubselectElementCollectionView.class,
+                NameObjectView.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
                 .where("name").eq("doc1");
@@ -75,11 +75,11 @@ public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
 
     @Test
     public void testSubselectWithEmbeddingViewWithoutIdMapping() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentEmbeddingViewSubselectWithoutIdView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
         try {
-            cfg.createEntityViewManager(cbf);
+            build(
+                    DocumentEmbeddingViewSubselectWithoutIdView.class,
+                    SimplePersonSubView.class
+            );
             Assert.fail("Expected to fail because of missing @IdMapping which is required for the use of EMBEDDING_VIEW in SUBSELECT and SELECT correlations");
         } catch (IllegalArgumentException ex) {
             Assert.assertTrue(ex.getMessage().contains("does not declare a @IdMapping"));

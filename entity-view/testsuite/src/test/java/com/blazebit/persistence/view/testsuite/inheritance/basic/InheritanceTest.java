@@ -160,18 +160,18 @@ public class InheritanceTest extends AbstractEntityViewTest {
         doc5 = cbf.create(em, Document.class).where("name").eq("doc5").getSingleResult();
         doc6 = cbf.create(em, Document.class).where("name").eq("doc6").getSingleResult();
 
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SimplePersonSubView.class);
-        cfg.addEntityView(DocumentBaseView.class);
-        cfg.addEntityView(NewDocumentView.class);
-        cfg.addEntityView(NewSub1DocumentView.class);
-        cfg.addEntityView(NewSub2DocumentView.class);
-        cfg.addEntityView(OldDocumentView.class);
-        cfg.addEntityView(UnusedOldDocumentView.class);
-        cfg.addEntityView(UsedOldDocumentView.class);
-        cfg.addEntityView(NewSub1Sub1DocumentView.class);
-        cfg.addEntityView(UsedOldSub1DocumentView.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                SimplePersonSubView.class,
+                DocumentBaseView.class,
+                NewDocumentView.class,
+                NewSub1DocumentView.class,
+                NewSub2DocumentView.class,
+                OldDocumentView.class,
+                UnusedOldDocumentView.class,
+                UsedOldDocumentView.class,
+                NewSub1Sub1DocumentView.class,
+                UsedOldSub1DocumentView.class
+        );
     }
 
     @Test

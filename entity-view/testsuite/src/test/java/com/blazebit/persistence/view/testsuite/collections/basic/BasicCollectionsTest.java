@@ -144,9 +144,7 @@ public class BasicCollectionsTest<T extends BasicDocumentCollectionsView> extend
     // Eclipselink has a result set mapping bug in case of map keys
     @Category({ NoEclipselink.class, NoDatanucleus.class })
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(viewType);
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");

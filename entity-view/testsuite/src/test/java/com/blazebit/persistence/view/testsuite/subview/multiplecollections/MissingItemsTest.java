@@ -84,12 +84,12 @@ public class MissingItemsTest extends AbstractEntityViewTest {
 
     @Test
     public void test() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(AView.class);
-        cfg.addEntityView(BView.class);
-        cfg.addEntityView(CView.class);
-        cfg.addEntityView(CView.Id.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                AView.class,
+                BView.class,
+                CView.class,
+                CView.Id.class
+        );
 
         List<AView> aView = evm.applySetting(EntityViewSetting.create(AView.class), cbf.create(em, AView.class).from(A.class)).getResultList();
         assertEquals(2, aView.size());

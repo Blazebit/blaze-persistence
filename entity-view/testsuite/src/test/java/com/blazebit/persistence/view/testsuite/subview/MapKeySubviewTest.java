@@ -108,12 +108,12 @@ public class MapKeySubviewTest extends AbstractEntityViewTest {
 
     @Test
     public void test() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(RootEntityView.class);
-        cfg.addEntityView(MapContainerView.class);
-        cfg.addEntityView(MapKeyIdView.class);
-        cfg.addEntityView(MapValueIdView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                RootEntityView.class,
+                MapContainerView.class,
+                MapKeyIdView.class,
+                MapValueIdView.class
+        );
 
         RootEntityView rootView = evm.applySetting(EntityViewSetting.create(RootEntityView.class), cbf.create(em, RootEntity.class)).getSingleResult();
 

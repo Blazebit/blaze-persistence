@@ -24,6 +24,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -122,9 +123,9 @@ public class ArrayFilteredCollectionsTest<T extends SubviewDocumentCollectionsVi
     @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SubviewDocumentCollectionsView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
+        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
+        EntityViewManager evm = build(cfg, SubviewDocumentCollectionsView.class, SubviewPersonForCollectionsView.class);
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");

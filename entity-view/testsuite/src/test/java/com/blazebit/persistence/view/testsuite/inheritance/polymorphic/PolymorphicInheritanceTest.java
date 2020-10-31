@@ -101,14 +101,14 @@ public class PolymorphicInheritanceTest extends AbstractEntityViewTest {
         base1 = cbf.create(em, SingleTableSub1.class).where("name").eq("st1").getSingleResult();
         base2 = cbf.create(em, SingleTableSub2.class).where("name").eq("st2").getSingleResult();
 
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(SingleTableBaseView.class);
-        cfg.addEntityView(SingleTableSub1View.class);
-        cfg.addEntityView(SingleTableSub2View.class);
-        cfg.addEntityView(SingleTableSimpleBaseView.class);
-        cfg.addEntityView(SingleTableSimpleSub1View.class);
-        cfg.addEntityView(SingleTableSimpleSub2View.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                SingleTableBaseView.class,
+                SingleTableSub1View.class,
+                SingleTableSub2View.class,
+                SingleTableSimpleBaseView.class,
+                SingleTableSimpleSub1View.class,
+                SingleTableSimpleSub2View.class
+        );
     }
 
     @Test

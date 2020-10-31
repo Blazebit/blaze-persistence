@@ -46,7 +46,7 @@
         
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>net.ttddyy</groupId>

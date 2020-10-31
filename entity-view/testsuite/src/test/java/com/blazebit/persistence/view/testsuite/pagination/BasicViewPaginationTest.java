@@ -47,9 +47,7 @@ public class BasicViewPaginationTest extends AbstractEntityViewTest {
 
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentViewInterface.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(DocumentViewInterface.class);
     }
     
     @Override

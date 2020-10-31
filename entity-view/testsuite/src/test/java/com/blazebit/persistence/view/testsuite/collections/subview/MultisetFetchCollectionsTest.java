@@ -117,13 +117,13 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
     @Test
     @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PersonForCollectionsMultisetFetchNestedView.class);
-        cfg.addEntityView(SubviewSimpleDocumentMultisetFetchView.class);
-        cfg.addEntityView(SubviewDocumentMultisetFetchView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsMultisetFetchView.class);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                PersonForCollectionsMultisetFetchNestedView.class,
+                SubviewSimpleDocumentMultisetFetchView.class,
+                SubviewDocumentMultisetFetchView.class,
+                SubviewPersonForCollectionsMultisetFetchView.class,
+                SubviewPersonForCollectionsView.class
+        );
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())

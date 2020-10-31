@@ -135,12 +135,12 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
 
     @Test
     public void testCollections() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(viewType);
-        cfg.addEntityView(subviewType);
-        cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        cfg.addEntityView(PersonForCollectionsListNestedView.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                viewType,
+                subviewType,
+                SubviewPersonForCollectionsView.class,
+                PersonForCollectionsListNestedView.class
+        );
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())

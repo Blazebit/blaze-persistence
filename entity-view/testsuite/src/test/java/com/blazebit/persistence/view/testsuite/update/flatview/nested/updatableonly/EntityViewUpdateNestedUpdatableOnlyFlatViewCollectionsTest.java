@@ -44,12 +44,12 @@ public class EntityViewUpdateNestedUpdatableOnlyFlatViewCollectionsTest extends 
 
     @Test
     public void testValidateInvalidConfiguration() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentWithCollectionsView.class);
-        cfg.addEntityView(UpdatableNameObjectContainerView.class);
-        cfg.addEntityView(UpdatableNameObjectView.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(
+                    UpdatableDocumentWithCollectionsView.class,
+                    UpdatableNameObjectContainerView.class,
+                    UpdatableNameObjectView.class
+            );
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Cascading configuration for basic, embeddable or flat view type attributes is not allowed"));

@@ -162,12 +162,7 @@ public class CorrelatedSubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     public <T extends PersonBaseView> void inheritanceQuery(Class<? extends DocumentView> docViewClass, Class<T> baseView, Class<? extends T> oldView, Class<? extends T> youngView) {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(docViewClass);
-        cfg.addEntityView(baseView);
-        cfg.addEntityView(oldView);
-        cfg.addEntityView(youngView);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(docViewClass, baseView, oldView, youngView);
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

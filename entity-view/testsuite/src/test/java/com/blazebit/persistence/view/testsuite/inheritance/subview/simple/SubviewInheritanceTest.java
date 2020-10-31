@@ -176,14 +176,14 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
 
     @Test
     public void inheritanceQuery() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentView1.class);
-        cfg.addEntityView(SimpleDocumentView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
-        cfg.addEntityView(PersonBaseView1.class);
-        cfg.addEntityView(OldPersonView1.class);
-        cfg.addEntityView(YoungPersonView1.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                DocumentView1.class,
+                SimpleDocumentView.class,
+                SimplePersonSubView.class,
+                PersonBaseView1.class,
+                OldPersonView1.class,
+                YoungPersonView1.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
@@ -229,14 +229,14 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
 
     @Test
     public void inheritanceQuerySubviewInheritanceMapping() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentView2.class);
-        cfg.addEntityView(SimpleDocumentView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
-        cfg.addEntityView(PersonBaseView2.class);
-        cfg.addEntityView(OldPersonView2.class);
-        cfg.addEntityView(YoungPersonView2.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                DocumentView2.class,
+                SimpleDocumentView.class,
+                SimplePersonSubView.class,
+                PersonBaseView2.class,
+                OldPersonView2.class,
+                YoungPersonView2.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
                 .orderByAsc("id");
@@ -281,14 +281,14 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
     // TODO: report that datanucleus thinks a NULL literal is of type Integer and normal integral literals are of type Long
     @Category({ NoDatanucleus.class })
     public void inheritanceQuerySubviewInheritanceMappingWithoutBaseType() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentView3.class);
-        cfg.addEntityView(SimpleDocumentView.class);
-        cfg.addEntityView(SimplePersonSubView.class);
-        cfg.addEntityView(PersonBaseView3.class);
-        cfg.addEntityView(OldPersonView3.class);
-        cfg.addEntityView(YoungPersonView3.class);
-        this.evm = cfg.createEntityViewManager(cbf);
+        this.evm = build(
+                DocumentView3.class,
+                SimpleDocumentView.class,
+                SimplePersonSubView.class,
+                PersonBaseView3.class,
+                OldPersonView3.class,
+                YoungPersonView3.class
+        );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
                 .orderByAsc("id");

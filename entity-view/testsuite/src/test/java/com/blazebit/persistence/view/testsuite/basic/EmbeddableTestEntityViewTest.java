@@ -74,16 +74,16 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     
     @Before
     public void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(IntIdEntityView.class);
-        cfg.addEntityView(EmbeddableTestEntityView.class);
-        cfg.addEntityView(EmbeddableTestEntityIdView.class);
-        cfg.addEntityView(EmbeddableTestEntityIdView.Id.class);
-        cfg.addEntityView(EmbeddableTestEntityViewWithSubview.class);
-        cfg.addEntityView(EmbeddableTestEntityEmbeddableSubView.class);
-        cfg.addEntityView(EmbeddableTestEntitySimpleEmbeddableSubView.class);
-        cfg.addEntityView(EmbeddableTestEntitySubView.class);
-        evm = cfg.createEntityViewManager(cbf);
+        evm = build(
+                IntIdEntityView.class,
+                EmbeddableTestEntityView.class,
+                EmbeddableTestEntityIdView.class,
+                EmbeddableTestEntityIdView.Id.class,
+                EmbeddableTestEntityViewWithSubview.class,
+                EmbeddableTestEntityEmbeddableSubView.class,
+                EmbeddableTestEntitySimpleEmbeddableSubView.class,
+                EmbeddableTestEntitySubView.class
+        );
     }
 
     private EmbeddableTestEntity2 entity1;

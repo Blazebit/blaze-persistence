@@ -114,9 +114,7 @@ public class WithCTEMappingTest extends AbstractEntityViewTest {
 
     @Test
     public void testCteBinding() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithCTE.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(DocumentWithCTE.class);
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         EntityViewSetting<DocumentWithCTE, CriteriaBuilder<DocumentWithCTE>> setting;
@@ -133,12 +131,12 @@ public class WithCTEMappingTest extends AbstractEntityViewTest {
 
     @Test
     public void testCteBindingWithSubview() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(DocumentWithCTE.class);
-        cfg.addEntityView(PersonWithPartnerDocument.class);
-        cfg.addEntityView(PersonWithPartnerDocumentFullAged.class);
-        cfg.addEntityView(PersonWithPartnerDocumentUnderAged.class);
-        EntityViewManager evm = cfg.createEntityViewManager(cbf);
+        EntityViewManager evm = build(
+                DocumentWithCTE.class,
+                PersonWithPartnerDocument.class,
+                PersonWithPartnerDocumentFullAged.class,
+                PersonWithPartnerDocumentUnderAged.class
+        );
 
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class).orderByAsc("id");
         EntityViewSetting<PersonWithPartnerDocument, CriteriaBuilder<PersonWithPartnerDocument>> setting;

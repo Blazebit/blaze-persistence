@@ -39,10 +39,8 @@ public class EntityViewUpdateUpdatableOnlyEmbeddableMapsTest extends AbstractEnt
 
     @Test
     public void testValidateInvalidConfiguration() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(UpdatableDocumentEmbeddableWithMapsView.class);
         try {
-            evm = cfg.createEntityViewManager(cbf);
+            evm = build(UpdatableDocumentEmbeddableWithMapsView.class);
             fail("Expected failure because of invalid attribute definition!");
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("Cascading configuration for basic, embeddable or flat view type attributes is not allowed"));
