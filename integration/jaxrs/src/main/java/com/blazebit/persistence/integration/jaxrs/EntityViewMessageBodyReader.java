@@ -76,7 +76,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
     @Context
     private UriInfo uriInfo;
     @Context
-    protected Providers providers;
+    private Providers providers;
 
     private EntityViewAwareObjectMapper entityViewAwareObjectMapper;
     private final ThreadLocal<String> idValueHolder = new ThreadLocal<>();
