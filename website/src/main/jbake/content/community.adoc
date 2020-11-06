@@ -86,7 +86,7 @@ Development should be possible with any IDE but is probably easiest with https:/
 // 100% apparently doesn't work
 [.team,width="99%"]
 |===
-a| image::christian_head.png[Christian Beikov, nolightbox="true"]  | Christian Beikov | Project lead       | https://github.com/beikov[Github, window="_blank"] https://at.linkedin.com/in/christian-beikov-ba871a11[LinkedIn, window="_blank"] https://twitter.com/c_beikov[Twitter, window="_blank"]
-a| image::moritz_head.png[Moritz Becker, nolightbox="true"]        | Moritz Becker    | Committer          | https://github.com/Mobe91[Github, window="_blank"] https://www.linkedin.com/in/moritz-becker-4770a991[LinkedIn, window="_blank"] https://twitter.com/mobecker91[Twitter, window="_blank"]
-a| image::bernd_head.png[Bernd Artmüller, nolightbox="true"]       | Bernd Artmüller  | Designer, Frontend | https://github.com/berndartmueller[Github, window="_blank"] https://at.linkedin.com/in/berndartmueller[LinkedIn, window="_blank"] https://twitter.com/berndartmueller[Twitter, window="_blank"]
+a| image::christian_head.png[Christian Beikov, nolightbox="true"]       | Christian Beikov          | Project lead      | https://github.com/beikov[Github, window="_blank"] https://at.linkedin.com/in/christian-beikov-ba871a11[LinkedIn, window="_blank"] https://twitter.com/c_beikov[Twitter, window="_blank"]
+a| image::moritz_head.png[Moritz Becker, nolightbox="true"]             | Moritz Becker             | Committer         | https://github.com/Mobe91[Github, window="_blank"] https://www.linkedin.com/in/moritz-becker-4770a991[LinkedIn, window="_blank"] https://twitter.com/mobecker91[Twitter, window="_blank"]
+a| image::jan_head.png[Jan-Willem Gmelig Meyling, nolightbox="true"]  | Jan-Willem Gmelig Meyling | Committer         | https://github.com/jwgmeligmeyling[Github, window="_blank"] https://www.linkedin.com/in/jwgmeligmeyling[LinkedIn, window="_blank"] https://twitter.com/janwillemyme[Twitter, window="_blank"]
 |===

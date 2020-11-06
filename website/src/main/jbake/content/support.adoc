@@ -11,76 +11,231 @@
 [.tCenter]
 As with every software, you will sooner or later reach a point where you can't progress on your own anymore. For this reason we offer you multiple ways of support to help get your work done!
 
-=== Blaze-Persistence community support
+++++
+<section class="our-services-commercial clearfix">
+    <ul class="no-style clearfix">
+        <li>
+            <h3 class="tCenter"><a href="community.html#_get_help">Community</a></h3>
+            <h4 class="tCenter">Free</h4>
+            <p class="description tJustify">
+                <ul class="features">
+                    <li>Access to critical bug fix releases</li>
+                    <li>Best effort answers to issues</li>
+                </ul>
+            </p>
+        </li>
+        <li>
+            <h3 class="tCenter"><a href="support.html#pro-support">Pro</a></h3>
+            <h4 class="tCenter">€99 per developer/year</h4>
+            <p class="description tJustify">
+                <ul class="features">
+                    <li>Access all bug fix releases</li>
+                    <li>Higher priority issues</li>
+                </ul>
+            </p>
+        </li>
+        <li>
+            <h3 class="tCenter"><a href="support.html#premium-support">Premium</a></h3>
+            <h4 class="tCenter">€399 per developer/year</h4>
+            <p class="description tJustify">
+                <ul class="features">
+                    <li>Access all bug fix releases</li>
+                    <li>Higher priority issues</li>
+                    <li>Response time within 3 business days</li>
+                    <li>2 sponsoring hours included</li>
+                </ul>
+            </p>
+        </li>
+        <li>
+            <h3 class="tCenter"><a href="support.html#enterprise-support">Enterprise</a></h3>
+            <h4 class="tCenter">€799 per developer/year</h4>
+            <p class="description tJustify">
+                <ul class="features">
+                    <li>Access all bug fix releases</li>
+                    <li>Higher priority issues</li>
+                    <li>Response time within 1 business day</li>
+                    <li>10 sponsoring hours included</li>
+                </ul>
+            </p>
+        </li>
+    </ul>
+</section>
+++++
 
-If searching the Internet and the link:documentation.html[*documentation*] don't help you with your problem or question you have some other options.
+Apart from the licensing options, we also offer:
 
-Since Blaze-Persistence is an open source project, you can ask the community for free via the following channels:
+++++
+<section class="our-services-short clearfix">
+    <ul class="no-style clearfix">
+        <li>
+            <h3 class="tCenter"><a href="support.html#training">Training</a></h3>
+            <p class="description tJustify">
+                To get your developers up-to date with the latest developments of Blaze-Persistence and internal workings
+            </p>
+        </li>
+        <li>
+            <h3 class="tCenter"><a href="support.html#consulting">Consulting</a></h3>
+            <p class="description tJustify">
+                To help you with issues in your project remotely or on-site
+            </p>
+        </li>
+        <li>
+            <h3 class="tCenter"><a href="support.html#sponsoring-hours">Sponsoring hours</a></h3>
+            <p class="description tJustify">
+                If you want specific bugs to be fixed or features to be implemented faster you can sponsor development by buying and assigning sponsoring hours to specific issues
+            </p>
+        </li>
+    </ul>
+</section>
+++++
 
-. +++<a href="https://blazebit.herokuapp.com" target="_blank">Slack<img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++
-. https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow, window="_blank"]
-. https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues, window="_blank"]
+Interested in one of our offers or need a custom offer? Please mailto:office@blazebit.com[*contact Blazebit*] and we will find an arrangement that fits your needs!
 
-=== Blaze-Persistence commercial support
+[[pro-support]]
+=== Blaze-Persistence Pro support
 
-If all the community support didn't help or you require commercial services you can always mailto:office@blazebit.com[*contact Blazebit*] directly and we will find an arrangement that fits your needs.
-
-In general we offer the following commercial services
-
-*Training*::
-To get your developers up-to date with the latest developments of Blaze-Persistence and internal workings
-
-*Consulting*::
-To help you with issues in your project remotely or on-site
-
-*Blaze-Persistence sponsoring hours*::
-If you want specific bugs to be fixed or features to be implemented faster you can sponsor development by buying and assigning sponsoring hours to specific issues
-
-*Support*::
-Long term support via multiple channels, high priority bug fixes and low response times
-
-==== Blaze-Persistence PRO support
-
-The Blaze-Persistence PRO support is an annual subscription that gives access to commercial releases of Blaze-Persistence.
+The Blaze-Persistence Pro support is an annual subscription for small startups(up to 3 developers) or individuals that gives access to commercial releases of Blaze-Persistence.
 Community releases are limited to major, minor and critical bug fix releases only.
 
-The subscription is a floating license that is granted for a developer and costs EUR 99,- for one year.
+The subscription is a floating license that is granted for a developer and costs EUR 99,- excl. VAT for one year.
 You need one license for every developer of your team that uses Blaze-Persistence.
 
-The Blaze-Persistence PRO support includes:
+The Blaze-Persistence Pro support includes:
 
-* Access to all bug fix releases that are published for commercial customers
+* Access to all bug fix releases that are published for commercial customers under the link:CLA.txt[Blaze-Persistence Commercial License]
 * GitHub issues get higher priority than community issues
-* Response to GitHub issues within five business days
+* No guaranteed response time to GitHub issues, but usually within five business days
 
-To purchase Blaze-Persistence PRO support, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired subscriptions.
+To purchase Blaze-Persistence Pro support, please mailto:office@blazebit.com?subject=Pro%20support&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20purchase%20the%20Pro%20support.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0ASubscription%20amount%3A%20%0A[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired subscriptions.
 We will then send you an invoice and after payment, you will receive access to the Maven repository containing the commercial releases.
 
-==== Blaze-Persistence PREMIUM support
+[[premium-support]]
+=== Blaze-Persistence Premium support
 
-The Blaze-Persistence PREMIUM support is an annual subscription for companies that need a guaranteed response time for GitHub issues.
-The subscription costs EUR 699,- for one year and you need to have an active Blaze-Persistence PRO support subscription.
+The Blaze-Persistence Premium support is an annual subscription for small to medium-sized companies that need a guaranteed response time for GitHub issues.
 
-The Blaze-Persistence PREMIUM support includes:
+The subscription is a floating license that is granted for a developer and costs EUR 399,- excl. VAT for one year.
+You need one license for every developer of your team that uses Blaze-Persistence.
 
-* Access to all bug fix releases that are published for commercial customers
+The Blaze-Persistence Premium support includes:
+
+* Access to all bug fix releases that are published for commercial customers under the link:CLA.txt[Blaze-Persistence Commercial License]
 * GitHub issues get higher priority than community issues
-* Response to GitHub issues within one business day
-* 10 Blaze-Persistence sponsoring hours that can be used to e.g. sponsor the backporting of bug fixes
+* Response to GitHub issues within three business days
+* 2 Blaze-Persistence sponsoring hours per license that can be used to e.g. sponsor the backporting of bug fixes
 
-To purchase Blaze-Persistence PREMIUM support, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired PRO support licenses.
+To purchase Blaze-Persistence Premium support, please mailto:office@blazebit.com?subject=Premium%20support&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20purchase%20the%20Premium%20support.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0ASubscription%20amount%3A%20%0A[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired PRO support licenses.
 We will then send you an invoice and after payment, you can assign your sponsoring hours to Blaze-Persistence GitHub issues by sending us an email with the GitHub issue number and the amount of hours you want to assign.
 
+[[enterprise-support]]
+=== Blaze-Persistence Enterprise support
+
+The Blaze-Persistence Enterprise support is an annual subscription for large companies that need a guaranteed response time for GitHub issues.
+
+The subscription is a floating license that is granted for a developer and costs EUR 799,- excl. VAT for one year.
+You need one license for every developer of your team that uses Blaze-Persistence.
+
+The Blaze-Persistence Enterprise support includes:
+
+* Access to all bug fix releases that are published for commercial customers under the link:CLA.txt[Blaze-Persistence Commercial License]
+* GitHub issues get higher priority than community issues
+* Response to GitHub issues within one business day
+* 10 Blaze-Persistence sponsoring hours per license that can be used to e.g. sponsor the backporting of bug fixes
+
+To purchase Blaze-Persistence Enterprise support, please mailto:office@blazebit.com?subject=Enterprise%20support&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20purchase%20the%20Enterprise%20support.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0ASubscription%20amount%3A%20%0A[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired PRO support licenses.
+We will then send you an invoice and after payment, you can assign your sponsoring hours to Blaze-Persistence GitHub issues by sending us an email with the GitHub issue number and the amount of hours you want to assign.
+
+[[training]]
+=== Blaze-Persistence training
+
+You can book various different training sessions in which the creators of Blaze-Persistence present and explain the features of Blaze-Persistence and how you can best make use of them.
+We currently offer two standard trainings:
+
+Blaze-Persistence Core deep dive::
+One day deep dive training into the core querying parts of Blaze-Persistence. The presentation usually takes around 4 hours, excluding questions.
+It costs EUR 899,- excl. VAT. Traveling expenses for on-site excluded.
+
+You will learn:
+
+* What is Blaze-Persistence and why should I use it?
+* Overview of JPQL.next expressions
+* Select clause and ObjectBuilder API as enabler for Entity Views
+* From clause, Entity/Ad-hoc Joins and implicit/default joins
+* Predicate builder API and predicate overview
+* Implicit group by clause generation with examples
+* Window clause and window functions
+* Pagination concepts and how PaginatedCriteriaBuilder API supports it
+* Keyset seek API for custom keyset pagination
+* Polymorphism with a `TREAT` operator implementation that just works
+* DML with RETURNING clause support
+* Fetching tree structures with recursive CTEs
+* DML in CTEs to build data pipelines
+* Set operations(UNION, INTERSECT, EXCEPT) overview
+* Built-in JPQL functions overview
+* Defining custom JPQL functions
+* Defining custom JPQL macros
+* Q & A
+
++++<br>+++
+
+Blaze-Persistence Entity-Views deep dive::
+One day deep dive training into Blaze-Persistence Entity-Views. The presentation usually takes around 4 hours, excluding questions.
+It costs EUR 899,- excl. VAT. Traveling expenses for on-site excluded.
+
+You will learn:
+
+* The lazy initialization problem(N + 1 and LazyInitializationException)
+* Can't we cope with these problems with plain JPA/Hibernate?
+* What are Blaze-Persistence Entity Views and why should I use it?
+* Mapping examples and their JPQL translations
+* Polymorphism with Entity Views
+* Special methods and mapping expression extensions
+* Constructor mappings
+* Fetch strategies, when to use which?
+* Filter and Sorter API
+* Querying Entity Views
+* What are Updatable Entity Views?
+* Why use Updatable Entity Views instead of entities?
+* Creatable Entity Views and the problems they try to tackle
+* Entity View Convert API for use case specific views
+* Entity View Delete API for efficient deletion
+* Change Model API to query low level dirty tracking information
+* Spring Data and Deltaspike Data support
+* Q & A
+
+To book a standard training or get a quote on a custom training session, please mailto:office@blazebit.com?subject=Blaze-Persistence%20training&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20book%20a%20training.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0ATraining%3A%20%0APossible%20dates%3A%20%0A[*contact Blazebit*].
+
+[[consulting]]
+=== Blaze-Persistence Consulting
+
+The creators of Blaze-Persistence provide consulting for architecture and persistence aspects.
+You can book consulting hours for just EUR 100,- per hour excl. VAT. Traveling expenses for on-site excluded.
+
+Common topics for consulting are:
+
+* Audits for performance, design and potential issues
+** General architecture
+** JPA/Hibernate usage
+** Blaze-Persistence usage
+* General implementation design help (discuss and design based on requirements)
+* Analysis and implementation of persistence related issues
+** Performance issues in the persistence area
+** Implementation of persistence related code
+** Hibernate bug fixes and optimizations
+
+To book Blaze-Persistence consulting, please mailto:office@blazebit.com?subject=Blaze-Persistence%20consulting&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20book%20consulting%20hours.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0AConsulting%20hours%3A%20%0APossible%20dates%3A%20%0ARough%20description%20of%20problems%2Ftopics%20to%20discuss%3A%20%0A[*contact Blazebit*].
+
+[[sponsoring-hours]]
 === Blaze-Persistence sponsoring hours
 
 Blaze-Persistence sponsoring hours can be used to sponsor a fix for a bug or the implementation of a feature.
-One sponsoring hour costs EUR 60,- and is consumed by assigning it to a Blaze-Persistence GitHub issue.
+One sponsoring hour costs EUR 60,- excl. VAT and is consumed by assigning it to a Blaze-Persistence GitHub issue.
 
 By assigning sponsoring hours to an issue, the issue gets a higher priority.
 Issues with the highest priority are developed first
 
-* You get access to a worklog, showing how the hours have been spent
+* You will receive a worklog, showing how the hours have been spent
 * You will be listed as sponsor on the website and in the release notes
 
-To purchase Blaze-Persistence sponsoring hours, please mailto:office@blazebit.com[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired sponsoring hours.
+To purchase Blaze-Persistence sponsoring hours, please mailto:office@blazebit.com?subject=Sponosring%20hours&body=Hello%2C%0A%0Amy%20company%20would%20like%20to%20purchase%20sponsoring%20hours.%0A%0ACompany%20name%3A%20%0ABilling%20address%3A%20%0ATAX%2FVAT%20number%3A%20%0ASponsoring%20hours%3A%20%0A[*contact Blazebit*]. We need to know the company name, billing address, TAX/VAT number and amount of desired sponsoring hours.
 We will then send you an invoice and after payment, you can assign your sponsoring hours to Blaze-Persistence GitHub issues by sending us an email with the GitHub issue number and the amount of hours you want to assign.

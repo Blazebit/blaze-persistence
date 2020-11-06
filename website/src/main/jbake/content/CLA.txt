@@ -1,0 +1,44 @@
+Blaze-Persistence commercial license agreement
+
+This commercial license agreement (this "CLA") contains the terms and conditions for your use of "Blaze-Persistence", a persistence library that works on top of the Java Persistence API (the "Software"). This CLA is a binding agreement between you ("Licensee") and Christian Beikov. ("Licensor"); However, if you are acting as an agent for another, such as on behalf of your employer, then "you" means the other person. by installing, copying, using or otherwise accessing the software, you agree to be bound by these terms and conditions.
+
+The term "Software" includes all source and object code, in whole and/or part; all printed materials; "online" or electronic documentation; data, data engines, images; updates and upgrades; and anything provided for use with or in conjunction with the Software.
+
+Summary
+
+* Can be used on unlimited sites and servers
+* Source-code cannot be resold or distributed
+* Commercial use allowed
+* Can modify source-code but cannot distribute modifications (derivative works)
+
+Terms and Conditions
+
+1. License Grant: Licensor hereby grants Licensee a Personal, Non-assignable and non-transferable, Commercial, Royalty free, Including the rights to create but not distribute derivative works, Non-exclusive license identified with a unique key stated in section 3, all with accordance with the terms set forth and other legal restrictions set forth in 3rd party software used while running the Software.
+	1.1. Limited: Licensee may use the Software for the purpose of:
+	1.1.2. Running the Software on Licensee’s Website[s] and Server[s];
+	1.1.3. Allowing 3rd Parties to run the Software on Licensee’s Website[s] and Server[s];
+	1.1.4. Publishing the Software’s output to Licensee and 3rd Parties;
+	1.1.5. Distribute verbatim copies of the Software’s output (including compiled binaries);
+	1.1.6. Modify the Software to suit Licensee’s needs and specifications.
+	1.2. Non Assignable and Non-Transferable: Licensee may not assign or transfer his rights and duties under this license.
+	1.3. Commercial, Royalty Free: Licensee may use the Software for any purpose, including paid-services, without any royalties
+	1.4. Including the Right to Create Derivative Works: Licensee may create derivative works based on the Software, including amending the Software’s source code, modifying it, integrating it into a larger work or removing portions of the Software, as long as no distribution of the derivative works is made
+2. Term & Termination: The Term of this license shall be until terminated. Licensor may terminate this Agreement, including Licensee’s license in the case where Licensee:
+	2.1. became insolvent or otherwise entered into any liquidation process; or
+	2.2. exported the Software to any jurisdiction where licensor may not enforce his rights under this agreements in; or
+	2.3. Licensee was in breach of any of this license’s terms and conditions and such breach was not cured, immediately upon notification; or
+	2.4. Licensee in breach of any of the terms of section 2 to this license; or
+	2.5. Licensee otherwise entered into any arrangement which caused Licensor to be unable to enforce his rights under this License.
+3. Payment: In consideration of the License granted under section 2, Licensee shall pay Licensor a fee, via credit card or any other mean which Licensor may deem adequate. Failure to perform payment shall construe as material breach of this Agreement. Transaction id of the payment is the unique license key granted to Licensee.
+4. Upgrades, Updates and Fixes:
+	4.1 Fix: for the purpose of this license, a fix shall be a minor amendment in the Software, intended to remove bugs or alter minor features which impair the Software’s functionality. A fix shall be marked as a new sub-sub-version number. For example, should Licensee purchase Software under version 1.1.1, an upgrade shall commence under number 1.1.2.
+5. Support: Software is provided under an AS-IS basis and without any support, updates or maintenance. Nothing in this Agreement shall require Licensor to provide Licensee with support or fixes to any bug, failure, mis-performance or other defect in the Software.
+6. Liability:  To the extent permitted under Law, the Software is provided under an AS-IS basis. Licensor shall never, and without any limit, be liable for any damage, cost, expense or any other payment incurred by Licesee as a result of the Software’s actions, failure, bugs and/or any other interaction between the Software and Licesee’s end-equipment, computers, other software or any 3rd party, end-equipment, computer or services.  Moreover, Licensor shall never be liable for any defect in source code written by Licensee when relying on the Software or using the Software’s source code.
+7. Warranty:  
+	7.1. Intellectual Property: Licensor hereby warrants that the Software does not violate or infringe any 3rd party claims in regards to intellectual property, patents and/or trademarks and that to the best of its knowledge no legal action has been taken against it for any infringement or violation of any 3rd party intellectual property rights.
+	7.2. No-Warranty: The Software is provided without any warranty; Licensor hereby disclaims any warranty that the Software shall be error free, without defects or code which may cause damage to Licensee’s computers or to Licensee, and that the Software shall be functional. Licensee shall be solely liable to any damage, defect or loss incurred as a result of operating software and undertake the risks contained in running the Software on License’s Server[s] and Website[s].
+	7.3. Prior Inspection: Licensee hereby states that he inspected the Software thoroughly and found it satisfactory and adequate to his needs, that it does not interfere with his regular operation and that it does meet the standards and scope of his computer systems and architecture. Licensee found that the Software interacts with his development, website and server environment and that it does not infringe any of End User License Agreement of any software Licensee may use in performing his services. Licensee hereby waives any claims regarding the Software’s incompatibility, performance, results and features, and warrants that he inspected the Software.
+8. No Refunds: Licensee warrants that he inspected the Software according to section 7.3. and that it is adequate to his needs. Accordingly, as the Software is intangible goods, Licensee shall not be, ever, entitled to any refund, rebate, compensation or restitution for any reason whatsoever, even if the Software contains material flaws.
+9. Indemnification: Licensee hereby warrants to hold Licensor harmless and indemnify Licensor for any lawsuit brought against it in regards to Licensee’s use of the Software in means that violate, breach or otherwise circumvent this license, Licensor’s intellectual property rights or Licensor’s title in the Software. Licensor shall promptly notify Licensee in case of such legal action and request Licensee’s consent prior to any settlement in relation to such lawsuit or claim.
+10. Governing Law, Jurisdiction: Licensee hereby agrees not to initiate class-action lawsuits against Licensor in relation to this license and to compensate Licensor for any legal fees, cost or attorney fees should any claim brought by Licensee against Licensor be denied, in part or in full.
+
