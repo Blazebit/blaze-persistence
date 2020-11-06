@@ -475,6 +475,8 @@ h3 { font: normal normal 1.5em "Montserrat"; color: #0E87AD; letter-spacing: .05
 .tLeft { text-align: left; }
 ul.no-style { margin: 0; padding: 0; }
     ul.no-style li { list-style-type: none; list-style-image: none; }
+ul.features { margin: 0; padding: 0; }
+    ul.features li { list-style-type: initial; list-style-image: initial; margin-left: 14px; }
 a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 22px 5px 0; -webkit-transition: all .2s ease-in; }
     a.more:hover, a.more:focus {  }
 .skype { background: url(../images/icon_skype.png) no-repeat center; }
@@ -586,6 +588,14 @@ a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 
     background-size: contain;
 }
 
+.icon-efficiency {
+    background: url(../images/efficiency_icon.png) no-repeat center center;
+    width: 102px !important;
+    height: 38px !important;
+    margin-top: 0px !important;
+    background-size: contain;
+}
+
 .news-post .post-content {
   clear: left; 
   margin-top: 40px;
@@ -640,6 +650,12 @@ a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 
             .our-services li { margin-bottom: 20px; }
             .our-services-short h3, .our-services h3 { margin-bottom: 25px; }
             .our-services-short .sprite, .our-services .sprite { display: block; margin: 0px auto 17px auto; text-indent: -9999px; height: 38px; width: 56px; }
+    .our-services-commercial ul { margin-top: 10px; display: inline-block; float: left; }
+        .our-services-commercial li, .our-services li { float: left; width: 230px; margin-right: 40px; }
+        .our-services-commercial li:nth-child(4n), .our-services li:nth-child(4n) { margin-right: 0; }
+            .our-services-commercial li a, .our-services li { padding-top: 20px; display: block; font-style: normal; }
+            .our-services-commercial h3, .our-services h3 { margin-bottom: 25px; }
+            .our-services-commercial .sprite, .our-services .sprite { display: block; margin: 0px auto 17px auto; text-indent: -9999px; height: 38px; width: 56px; }
 
 .contactpage-wrapper form { display: inline-block; margin-top: 30px; width: 100%; }
 
@@ -753,6 +769,7 @@ a.more { background: url(../images/icon_more.png) no-repeat right; padding: 8px 
 .col3:last-child { margin-right: 0; }
 
 section.projects, section.our-services-short { margin-bottom: 90px; }
+section.projects, section.our-services-commercial { margin-bottom: 90px; }
 
 .sect2 {
   margin-bottom: 50px;
@@ -825,6 +842,11 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
     .our-services-short li:first-child { padding-right: 4%; }
     .our-services-short li:last-child { padding-left: 4%; }
     .our-services-short li:nth-child(2n) { padding-left: 2%; padding-right: 2%; }
+
+    .our-services-commercial li, .our-services li { width: 33.33%; box-sizing: border-box; margin-right: 0; }
+    .our-services-commercial li:first-child { padding-right: 4%; }
+    .our-services-commercial li:last-child { padding-left: 4%; }
+    .our-services-commercial li:nth-child(2n) { padding-left: 2%; padding-right: 2%; }
     
     .our-services { margin-top: 0; }
         .our-services li { padding: 0 3%; height: 270px; }
@@ -927,6 +949,7 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
     
     
     .our-services-short li { width: 100%; padding: 0 !important; }
+    .our-services-commercial li { width: 100%; padding: 0 !important; }
     
     #team-intro .single-person { width: 100%; padding: 0 !important; }
     #team-intro .single-person:first-child { margin-bottom: 50px; }
@@ -942,6 +965,7 @@ footer { padding-top: 0 !important; margin-top: 20px; margin-bottom: 25px !impor
             #project-meta .project-description p { float: none; width: 100%; }
     
     section.projects, section.our-services-short { margin-bottom: 40px; }
+    section.projects, section.our-services-commercial { margin-bottom: 40px; }
 }
 
 @media only screen and (max-width : 510px) {

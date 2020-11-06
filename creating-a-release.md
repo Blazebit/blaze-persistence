@@ -35,7 +35,7 @@ A private release involves the following steps
 
 . Make sure nobody pushes to the commercial branch during a release e.g. announce that you do a release
 . Make sure you have GPG installed and the executable is available on PATH
-. Make sure your Maven settings.xml has credentials for the server `blazebit    ` configured
+. Make sure your Maven settings.xml has credentials for the server `blazebit` configured
 . Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
 . Make sure you have `C:\Program Files\Java\jdk-14` and `C:\Program Files\Java\jdk1.8.0_181` installed or update the `deploy-project-release.bat` script
 . Checkout the commercial branch for the minor version e.g. `1.5-commercial`

@@ -36,4 +36,4 @@ One of these changes is that with Hibernate 5.4 you will now be able to leverage
 With version 1.3.0 a.k.a. _Fury_ being done, we will start working on 1.4.0 a.k.a. _Coulson_. We might port back critical fixes to 1.3, but in general we don't anticipate to do any further public 1.3 releases.
 Since 1.4 is backwards compatible, it should be no problem to work with 1.4.0 Alpha releases to get fixes that were done on master.
 
-If you need fixes back-ported, I would like to direct you to our https://persistence.blazebit.com/support.html#_blaze_persistence_commercial_support[*commercial support*, window="_blank"].
+If you need fixes back-ported, I would like to direct you to our https://persistence.blazebit.com/support.html#_blaze_persistence_support[*commercial support*, window="_blank"].
