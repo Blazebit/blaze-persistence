@@ -14,6 +14,7 @@ None yet
 
 * Fix generation of implicit group by expressions that contain parameters
 * Fix generation of implicit group by expressions when using MySQL
+* Allow overriding the `ObjectMapper` used for deserializing entity views in the JAX-RS integration
 
 ### Backwards-incompatible changes
 

@@ -37,10 +37,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
+import javax.ws.rs.ext.Providers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -67,10 +69,14 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
     @Inject
     private Instance<EntityViewManager> entityViewManager;
     @Inject
+    private Instance<ObjectMapper> objectMapper;
+    @Inject
     @Any
     private Instance<ParamConverterProvider> paramConverterProviders;
     @Context
     private UriInfo uriInfo;
+    @Context
+    protected Providers providers;
 
     private EntityViewAwareObjectMapper entityViewAwareObjectMapper;
     private final ThreadLocal<String> idValueHolder = new ThreadLocal<>();
@@ -80,7 +86,19 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
         if (entityViewManager.isUnsatisfied()) {
             this.entityViewAwareObjectMapper = null;
         } else {
-            this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager.get(), new ObjectMapper(), new EntityViewIdValueAccessor() {
+            ObjectMapper mapper = null;
+            ContextResolver<ObjectMapper> resolver;
+            if (providers != null && (resolver = providers.getContextResolver(ObjectMapper.class, MediaType.APPLICATION_JSON_TYPE)) != null) {
+                mapper = resolver.getContext(EntityViewMessageBodyReader.class);
+            }
+            if (mapper == null) {
+                if (objectMapper.isUnsatisfied()) {
+                    mapper = new ObjectMapper();
+                } else {
+                    mapper = objectMapper.get();
+                }
+            }
+            this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager.get(), mapper, new EntityViewIdValueAccessor() {
                 @Override
                 public <T> T getValue(JsonParser jsonParser, Class<T> idType) {
                     String value = idValueHolder.get();
