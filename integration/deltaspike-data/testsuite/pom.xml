@@ -71,6 +71,7 @@
         <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jandex</artifactId>
+            <version>${version.jandex}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

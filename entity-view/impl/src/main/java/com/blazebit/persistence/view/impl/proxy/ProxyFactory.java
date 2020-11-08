@@ -202,8 +202,9 @@ public class ProxyFactory {
     public void loadImplementation(Set<String> errors, ManagedViewType<?> managedView, EntityViewManager entityViewManager) {
         Class<?> javaType = managedView.getJavaType();
         Class<?> entityViewImplementationClass;
+        String implementationClassName = getImplementationClassName(javaType, managedView.getJavaType());
         try {
-            entityViewImplementationClass = javaType.getClassLoader().loadClass(getImplementationClassName(javaType, managedView.getJavaType()));
+            entityViewImplementationClass = javaType.getClassLoader().loadClass(implementationClassName);
             StaticImplementation annotation = entityViewImplementationClass.getAnnotation(StaticImplementation.class);
             if (annotation != null) {
                 if (annotation.value() != javaType) {
@@ -212,6 +213,7 @@ public class ProxyFactory {
                 }
             }
         } catch (ClassNotFoundException e) {
+            LOG.fine("Could not load static implementation class '" + implementationClassName + "'");
             // Ignore
             return;
         }

@@ -17,15 +17,21 @@
 package com.blazebit.persistence.integration.quarkus.runtime;
 
 import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.ConfigurationProperties;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import io.quarkus.arc.runtime.BeanContainerListener;
+import io.quarkus.arc.Arc;
+import io.quarkus.hibernate.orm.runtime.JPAConfig;
 import io.quarkus.runtime.annotations.Recorder;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.enterprise.inject.Default;
+import javax.persistence.EntityManagerFactory;
+import java.lang.annotation.Annotation;
+import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Moritz Becker
@@ -34,39 +40,52 @@ import java.util.List;
 @Recorder
 public class EntityViewRecorder {
 
-    private List<Class<?>> entityViews = new ArrayList<>();
-    private List<Class<?>> entityViewListeners = new ArrayList<>();
-
-    public void addEntityView(Class<?> entityView) {
-        this.entityViews.add(entityView);
-    }
-
-    public void addEntityViewListener(Class<?> entityViewListener) {
-        this.entityViewListeners.add(entityViewListener);
-    }
-
-    public BeanContainerListener setCriteriaBuilderConfiguration(BlazePersistenceConfiguration blazePersistenceConfig) {
-        return beanContainer -> {
+    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String persistenceUnitName) {
+        return () -> {
             CriteriaBuilderConfiguration criteriaBuilderConfiguration = Criteria.getDefault();
             blazePersistenceConfig.apply(criteriaBuilderConfiguration);
-            CriteriaBuilderConfigurationHolder configurationHolder = beanContainer.instance(CriteriaBuilderConfigurationHolder.class);
-            configurationHolder.setCriteriaBuilderConfiguration(criteriaBuilderConfiguration);
+            EntityManagerFactory emf = Arc.container().instance(JPAConfig.class, new Annotation[0]).get().getEntityManagerFactory(persistenceUnitName);
+            return criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
         };
     }
 
-    public BeanContainerListener setEntityViewConfiguration(BlazePersistenceConfiguration blazePersistenceConfig) {
-        return beanContainer -> {
-            EntityViewConfigurationHolder configurationHolder = beanContainer.instance(EntityViewConfigurationHolder.class);
+    public Supplier<EntityViewManager> entityViewManagerSupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig,
+                                                                 String blazePersistenceInstanceName,
+                                                                 Set<String> entityViewClasses,
+                                                                 Set<String> entityViewListenerClasses) {
+        return () -> {
             EntityViewConfiguration entityViewConfiguration = EntityViews.createDefaultConfiguration();
-            for (Class<?> entityView : entityViews) {
-                entityViewConfiguration.addEntityView(entityView);
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            for (String entityViewClass : entityViewClasses) {
+                try {
+                    entityViewConfiguration.addEntityView(
+                        classLoader.loadClass(entityViewClass)
+                    );
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            for (Class<?> entityViewListener : entityViewListeners) {
-                entityViewConfiguration.addEntityViewListener(entityViewListener);
+            for (String entityViewListenerClass : entityViewListenerClasses) {
+                try {
+                    entityViewConfiguration.addEntityViewListener(
+                            classLoader.loadClass(entityViewListenerClass)
+                    );
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
             blazePersistenceConfig.apply(entityViewConfiguration);
             entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, Boolean.FALSE.toString());
-            configurationHolder.setEntityViewConfiguration(entityViewConfiguration);
+
+            Annotation[] cbfQualifiers;
+            if (BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(blazePersistenceInstanceName)) {
+                cbfQualifiers = new Annotation[] { new Default.Literal() };
+            } else {
+                cbfQualifiers = new Annotation[] { new BlazePersistenceInstance.BlazePersistenceInstanceLiteral(blazePersistenceInstanceName) };
+            }
+
+            CriteriaBuilderFactory cbf = Arc.container().instance(CriteriaBuilderFactory.class, cbfQualifiers).get();
+            return entityViewConfiguration.createEntityViewManager(cbf);
         };
     }
 }
