@@ -32,16 +32,133 @@ The use in native images also requires a dependency on the entity view annotatio
 </profiles>
 ----
 
-[[quarkus-features]]
-=== Features
+[[quarkus-entity-view-discovery]]
+=== Entity view and entity view listener discovery
 
-The extension includes:
+The extension performs entity view and entity view listener scanning at deployment time while the remainder of the bootstrapping is performed
+at runtime.
 
-* entity view and entity view listener scanning at deployment time while the remainder of the bootstrapping is performed
-at runtime
+[[quarkus-cdi]]
+=== CDI support
 
-* default CDI producers for the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
-and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`] that can be overridden as documented
-in the https://quarkus.io/guides/cdi-reference#default_beans[Quarkus user guide]
+link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`]
+are injectable out of the box.
 
-* support for hot reload
+[[quarkus-multi-instance]]
+=== Multiple {projectname} instances
+
+In order to allow users to utilize the Hibernate ORM extension's support for https://quarkus.io/guides/hibernate-orm#multiple-persistence-units[multiple persistence units]
+the extension supports multiple {projectname} instances (i.e. link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`])
+that can use different persistence units using the Quarkus configuration properties approach.
+
+The properties at the root of the `quarkus.blaze-persistence.` namespace refer to the default {projectname} instance that
+is automatically created as long as no other named instances have been defined.
+
+==== Assigning persistence units to {projectname} instances
+
+If not specified otherwise, the default {projectname} uses the default persistence unit.
+
+Using a map based approach, it is possible to define named {projectname} instances. The used persistence units can be
+assigned using the `persistence-unit` property.
+
+```
+quarkus.blaze-persistence.persistence-unit=UserPU
+
+quarkus.blaze-persistence."order".persistence-unit=OrderPU
+```
+
+The above snippet assigns the persistence unit `UserPU` to the default {projectname} instance and the `OrderPU` to the
+instance named `order`.
+
+==== Attaching entity view and entity view listener classes to {projectname} instances
+
+When multiple {projectname} instances have been defined, it is required to specify packages for each instance that determine
+the attachment of discovered entity views and entity view listeners to the respective instances.
+
+There are two ways to do this which cannot be mixed:
+
+* Via the `packages` configuration property;
+* Via the `@com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance` package-level annotation.
+
+If mixed use is detected, the annotations are ignored and only the `packages` configuration properties are taken into account.
+
+Using the `packages` configuration property:
+
+```
+quarkus.blaze-persistence.packages=com.example.view.shared,com.example.view.user
+
+quarkus.blaze-persistence."order".packages=com.example.view.shared,com.example.view.order
+```
+
+The above snippet assigns all enity views under the `com.example.view.user` package to the default
+{projectname} instance and all entity views under the `com.example.view.order` package to the named "order" instance.
+Views under the `com.example.view.shared` package will be known to both instances.
+
+An alternative approach to attach entity view and entity view listener classes to {projectname} instances is to use
+package-level `@com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance` annotations.
+The two approaches cannot be mixed.
+
+To obtain a configuration similar to the one above with the `packages` configuration property, create package-info.java
+files with the following contents:
+
+```java
+@BlazePersistenceInstance("order")
+package com.example.view.order;
+
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
+```
+
+```java
+@BlazePersistenceInstance(BlazePersistenceInstance.DEFAULT)
+package com.example.view.user;
+
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
+```
+
+```java
+@BlazePersistenceInstance(BlazePersistenceInstance.DEFAULT)
+@BlazePersistenceInstance("order")
+package com.example.view.shared;
+
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
+```
+
+Both approaches take subpackages into account.
+
+==== CDI integration
+
+The CDI integration is straightforward and uses `@com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance`
+annotation to specify the {projectname} instance for injection.
+
+```
+@Inject
+CriteriaBuilderFactory cbf;
+@Inject
+EntityViewManage evm;
+```
+
+This will inject the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`]
+of the default {projectname} instance.
+
+```
+@Inject
+@BlazePersistenceInstance("order")
+CriteriaBuilderFactory cbf;
+@Inject
+@BlazePersistenceInstance("order")
+EntityViewManage evm;
+```
+
+This will inject the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] and link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`]
+of the named `order` instance.
+
+Be careful to not mix up the entity managers you pass to link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`]
+when performing operations. In the context of the above example, always pass the entity manager for the default persistence unit
+to the default link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] and the entity manager
+for the `orderPU` to the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] belonging to the
+`order` {projectname} instance.
+
+[[quarkus-hot-reload]]
+=== Hot reload
+
+The extension supports hot reload.

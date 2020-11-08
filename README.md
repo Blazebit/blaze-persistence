@@ -536,7 +536,7 @@ Since the JDBC driver is officially available in Maven central, you don't have t
 
 The general setup required for building native images with GraalVM is described in https://quarkus.io/guides/building-native-image.
 
-* Install GraalVM 20.0.0 and make sure you install the native-image tool and set `GRAALVM_HOME` environment variable
+* Install GraalVM 20.2.0 (Java 11) and make sure you install the native-image tool and set `GRAALVM_HOME` environment variable
 * Install required packages for a C development environment
   *  Under Windows, install [Visual Studio 2017 Visual C++ Build Tools](https://aka.ms/vs/15/release/vs_buildtools.exe)
 

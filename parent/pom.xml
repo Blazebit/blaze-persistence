@@ -107,7 +107,7 @@
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
         <version.weld>2.4.5.Final</version.weld>
-        <version.quarkus>1.7.0.Final</version.quarkus>
+        <version.quarkus>1.9.2.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
@@ -509,12 +509,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- Since we are including a module-info.class file, we need at least 2.0.4.Final -->
-            <dependency>
-                <groupId>org.jboss</groupId>
-                <artifactId>jandex</artifactId>
-                <version>${version.jandex}</version>
-            </dependency>
 
             <!-- Test -->
             <dependency>
@@ -527,6 +521,12 @@
                 <groupId>com.googlecode.catch-exception</groupId>
                 <artifactId>catch-exception</artifactId>
                 <version>1.2.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.18.0</version>
                 <scope>test</scope>
             </dependency>
 

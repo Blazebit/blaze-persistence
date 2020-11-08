@@ -16,9 +16,18 @@
 
 package com.blazebit.persistence.integration.jaxrs;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.integration.jackson.EntityViewAwareObjectMapper;
 import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
+import com.blazebit.persistence.view.ConvertOperationBuilder;
+import com.blazebit.persistence.view.ConvertOption;
+import com.blazebit.persistence.view.EntityViewBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.FlushOperationBuilder;
+import com.blazebit.persistence.view.change.SingularChangeModel;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +38,7 @@ import javax.annotation.Priority;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Priorities;
@@ -98,7 +108,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
                     mapper = objectMapper.get();
                 }
             }
-            this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager.get(), mapper, new EntityViewIdValueAccessor() {
+            this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(new LazyEntityViewManager(), mapper, new EntityViewIdValueAccessor() {
                 @Override
                 public <T> T getValue(JsonParser jsonParser, Class<T> idType) {
                     String value = idValueHolder.get();
@@ -354,6 +364,182 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
             public String toString(Character o) {
                 return o.toString();
             }
+        }
+    }
+
+    /**
+     * @author Moritz Becker
+     * @since 1.6.0
+     */
+    private final class LazyEntityViewManager implements EntityViewManager {
+        public ViewMetamodel getMetamodel() {
+            return entityViewManager.get().getMetamodel();
+        }
+
+        public Map<String, Object> getOptionalParameters() {
+            return entityViewManager.get().getOptionalParameters();
+        }
+
+        public <T> T find(EntityManager entityManager, Class<T> entityViewClass, Object entityId) {
+            return entityViewManager.get().find(entityManager, entityViewClass, entityId);
+        }
+
+        public <T> T find(EntityManager entityManager, EntityViewSetting<T, CriteriaBuilder<T>> entityViewSetting, Object entityId) {
+            return entityViewManager.get().find(entityManager, entityViewSetting, entityId);
+        }
+
+        public <T> T getReference(Class<T> entityViewClass, Object id) {
+            return entityViewManager.get().getReference(entityViewClass, id);
+        }
+
+        public <T> T getEntityReference(EntityManager entityManager, Object entityView) {
+            return entityViewManager.get().getEntityReference(entityManager, entityView);
+        }
+
+        public <T> SingularChangeModel<T> getChangeModel(T entityView) {
+            return entityViewManager.get().getChangeModel(entityView);
+        }
+
+        public <T> T create(Class<T> entityViewClass) {
+            return entityViewManager.get().create(entityViewClass);
+        }
+
+        public <T> T create(Class<T> entityViewClass, Map<String, Object> optionalParameters) {
+            return entityViewManager.get().create(entityViewClass, optionalParameters);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz) {
+            return entityViewManager.get().createBuilder(clazz);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, String constructorName) {
+            return entityViewManager.get().createBuilder(clazz, constructorName);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(X view) {
+            return entityViewManager.get().createBuilder(view);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(X view, String constructorName) {
+            return entityViewManager.get().createBuilder(view, constructorName);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters) {
+            return entityViewManager.get().createBuilder(clazz, optionalParameters);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(Class<X> clazz, Map<String, Object> optionalParameters, String constructorName) {
+            return entityViewManager.get().createBuilder(clazz, optionalParameters, constructorName);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters) {
+            return entityViewManager.get().createBuilder(view, optionalParameters);
+        }
+
+        public <X> EntityViewBuilder<X> createBuilder(X view, Map<String, Object> optionalParameters, String constructorName) {
+            return entityViewManager.get().createBuilder(view, optionalParameters, constructorName);
+        }
+
+        public <T> T convert(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
+            return entityViewManager.get().convert(source, entityViewClass, convertOptions);
+        }
+
+        public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+            return entityViewManager.get().convert(source, entityViewClass, constructorName, convertOptions);
+        }
+
+        public <T> T convert(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+            return entityViewManager.get().convert(source, entityViewClass, optionalParameters, convertOptions);
+        }
+
+        public <T> T convert(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+            return entityViewManager.get().convert(source, entityViewClass, constructorName, optionalParameters, convertOptions);
+        }
+
+        public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, ConvertOption... convertOptions) {
+            return entityViewManager.get().convertWith(source, entityViewClass, convertOptions);
+        }
+
+        public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, ConvertOption... convertOptions) {
+            return entityViewManager.get().convertWith(source, entityViewClass, constructorName, convertOptions);
+        }
+
+        public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+            return entityViewManager.get().convertWith(source, entityViewClass, optionalParameters, convertOptions);
+        }
+
+        public <T> ConvertOperationBuilder<T> convertWith(Object source, Class<T> entityViewClass, String constructorName, Map<String, Object> optionalParameters, ConvertOption... convertOptions) {
+            return entityViewManager.get().convertWith(source, entityViewClass, constructorName, optionalParameters, convertOptions);
+        }
+
+        public void save(EntityManager entityManager, Object view) {
+            entityViewManager.get().save(entityManager, view);
+        }
+
+        public void saveFull(EntityManager entityManager, Object view) {
+            entityViewManager.get().saveFull(entityManager, view);
+        }
+
+        public void saveTo(EntityManager entityManager, Object view, Object entity) {
+            entityViewManager.get().saveTo(entityManager, view, entity);
+        }
+
+        public void saveFullTo(EntityManager entityManager, Object view, Object entity) {
+            entityViewManager.get().saveFullTo(entityManager, view, entity);
+        }
+
+        @Deprecated
+        public void update(EntityManager entityManager, Object view) {
+            entityViewManager.get().update(entityManager, view);
+        }
+
+        @Deprecated
+        public void updateFull(EntityManager entityManager, Object view) {
+            entityViewManager.get().updateFull(entityManager, view);
+        }
+
+        public FlushOperationBuilder saveWith(EntityManager entityManager, Object view) {
+            return entityViewManager.get().saveWith(entityManager, view);
+        }
+
+        public FlushOperationBuilder saveFullWith(EntityManager entityManager, Object view) {
+            return entityViewManager.get().saveFullWith(entityManager, view);
+        }
+
+        public FlushOperationBuilder saveWithTo(EntityManager entityManager, Object view, Object entity) {
+            return entityViewManager.get().saveWithTo(entityManager, view, entity);
+        }
+
+        public FlushOperationBuilder saveFullWithTo(EntityManager entityManager, Object view, Object entity) {
+            return entityViewManager.get().saveFullWithTo(entityManager, view, entity);
+        }
+
+        public void remove(EntityManager entityManager, Object view) {
+            entityViewManager.get().remove(entityManager, view);
+        }
+
+        public FlushOperationBuilder removeWith(EntityManager entityManager, Object view) {
+            return entityViewManager.get().removeWith(entityManager, view);
+        }
+
+        public void remove(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
+            entityViewManager.get().remove(entityManager, entityViewClass, viewId);
+        }
+
+        public FlushOperationBuilder removeWith(EntityManager entityManager, Class<?> entityViewClass, Object viewId) {
+            return entityViewManager.get().removeWith(entityManager, entityViewClass, viewId);
+        }
+
+        public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
+            return entityViewManager.get().applySetting(setting, criteriaBuilder);
+        }
+
+        public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
+            return entityViewManager.get().applySetting(setting, criteriaBuilder, entityViewRoot);
+        }
+
+        public <T> T getService(Class<T> serviceClass) {
+            return entityViewManager.get().getService(serviceClass);
         }
     }
 }

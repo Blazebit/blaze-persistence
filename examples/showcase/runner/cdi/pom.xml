@@ -92,6 +92,7 @@
         <dependency>
             <groupId>org.jboss</groupId>
             <artifactId>jandex</artifactId>
+            <version>${version.jandex}</version>
         </dependency>
 
         <dependency>
