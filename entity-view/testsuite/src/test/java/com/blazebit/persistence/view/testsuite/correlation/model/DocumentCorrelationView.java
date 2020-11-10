@@ -16,9 +16,12 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.model;
 
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 
 import java.util.Set;
 
@@ -69,5 +72,11 @@ public interface DocumentCorrelationView {
     public Set<Document> getThisCorrelatedEntityList();
 
     public Set<SimpleDocumentCorrelatedView> getThisCorrelatedViewList();
+
+    public Set<Long> getThisCorrelatedEmptyIdList();
+
+    public Set<Version> getThisCorrelatedEmptyEntityList();
+
+    public Set<SimpleVersionCorrelatedView> getThisCorrelatedEmptyViewList();
 
 }

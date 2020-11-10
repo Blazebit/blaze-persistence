@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentC
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimpleVersionCorrelatedView;
 import org.junit.Assert;
 import org.junit.Before;
 
@@ -95,7 +96,8 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         EntityViewManager evm = build(
                 entityView,
                 SimpleDocumentCorrelatedView.class,
-                SimplePersonCorrelatedSubView.class
+                SimplePersonCorrelatedSubView.class,
+                SimpleVersionCorrelatedView.class
         );
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
@@ -119,6 +121,9 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertRemovedByName(doc1.getName(), results.get(0).getOwnerOnlyRelatedDocumentViews());
         assertEquals(1, results.get(0).getOwnerOnlyRelatedDocumentIds().size());
         assertRemoved(doc1.getId(), results.get(0).getOwnerOnlyRelatedDocumentIds());
+        assertEquals(0, results.get(0).getThisCorrelatedEmptyIdList().size());
+        assertEquals(0, results.get(0).getThisCorrelatedEmptyEntityList().size());
+        assertEquals(0, results.get(0).getThisCorrelatedEmptyViewList().size());
 
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -139,6 +144,9 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertRemoved(doc2.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc3.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc4.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertEquals(0, results.get(1).getThisCorrelatedEmptyIdList().size());
+        assertEquals(0, results.get(1).getThisCorrelatedEmptyEntityList().size());
+        assertEquals(0, results.get(1).getThisCorrelatedEmptyViewList().size());
 
         // Doc3
         assertEquals(doc3.getName(), results.get(2).getName());
@@ -159,6 +167,9 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertRemoved(doc2.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc3.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc4.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertEquals(0, results.get(2).getThisCorrelatedEmptyIdList().size());
+        assertEquals(0, results.get(2).getThisCorrelatedEmptyEntityList().size());
+        assertEquals(0, results.get(2).getThisCorrelatedEmptyViewList().size());
 
         // Doc4
         assertEquals(doc4.getName(), results.get(3).getName());
@@ -179,6 +190,9 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertRemoved(doc2.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc3.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
         assertRemoved(doc4.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertEquals(0, results.get(3).getThisCorrelatedEmptyIdList().size());
+        assertEquals(0, results.get(3).getThisCorrelatedEmptyEntityList().size());
+        assertEquals(0, results.get(3).getThisCorrelatedEmptyViewList().size());
     }
 
     private void assertRemovedByName(String expectedName, Collection<SimpleDocumentCorrelatedView> views) {
