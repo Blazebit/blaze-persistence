@@ -77,7 +77,7 @@ public abstract class AbstractParameterListAttribute<X, Y> extends AbstractParam
         this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
                 createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator()),
                 createValueContainerAccumulator(elementCollectionComparator),
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

@@ -78,7 +78,7 @@ public abstract class AbstractParameterMapAttribute<X, K, V> extends AbstractPar
         this.mapInstantiatorAccumulator = new MapInstantiatorAccumulator(
                 createMapInstantiator(context, null, isSorted(), isOrdered(), getComparator()),
                 createValueContainerAccumulator(elementCollectionComparator),
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

@@ -105,10 +105,20 @@ public class CollectionInstantiatorAccumulator implements ContainerAccumulator<C
     @Override
     public void addAll(Collection<?> container, Collection<?> collection, boolean recording) {
         if (!collectionInstantiator.isIndexed() || !(collection instanceof List<?>)) {
+            Collection<Object> target;
             if (recording) {
-                ((RecordingCollection<?, Object>) container).getDelegate().addAll(collection);
+                target = ((RecordingCollection<?, Object>) container).getDelegate();
             } else {
-                ((Collection<Object>) container).addAll(collection);
+                target = (Collection<Object>) container;
+            }
+            if (filterNulls) {
+                for (Object o : collection) {
+                    if (o != null) {
+                        target.add(o);
+                    }
+                }
+            } else {
+                target.addAll(collection);
             }
         } else {
             final List<Object> other = (List<Object>) collection;

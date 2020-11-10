@@ -15,6 +15,9 @@ None yet
 * Fix generation of implicit group by expressions that contain parameters
 * Fix generation of implicit group by expressions when using MySQL
 * Allow overriding the `ObjectMapper` used for deserializing entity views in the JAX-RS integration
+* Fix issues with query plan caching that manifest when using equal queries except for the set operation type
+* Support aliases in CTE binds
+* Always respect filterNulls in collection and map accumulators
 
 ### Backwards-incompatible changes
 

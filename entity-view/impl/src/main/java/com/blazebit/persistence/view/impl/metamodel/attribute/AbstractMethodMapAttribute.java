@@ -77,7 +77,7 @@ public abstract class AbstractMethodMapAttribute<X, K, V> extends AbstractMethod
         this.mapInstantiatorAccumulator = new MapInstantiatorAccumulator(
                 createMapInstantiator(context, createMapFactory(context), isSorted(), isOrdered(), getComparator()),
                 createValueContainerAccumulator(elementCollectionComparator),
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

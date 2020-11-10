@@ -660,6 +660,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return updateMappableAttribute;
     }
 
+    protected boolean isFilterNulls() {
+        return !isCorrelated() || getCorrelationProviderFactory() != null;
+    }
+
     public boolean isUpdateMappable() {
         // Since we can cascade correlated views, we consider them update mappable
         return hasDirtyStateIndex() || updateMappableAttribute != null;
@@ -1350,10 +1354,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 throw new UnsupportedOperationException("Unsupported element collection type: " + getElementCollectionType());
         }
         //CHECKSTYLE:ON: FallThrough
-        if (isCorrelated()) {
-            return new SimpleCollectionAccumulator(instance, forcedUnique, comparator);
-        } else {
+        if (isFilterNulls()) {
             return new NullFilteringCollectionAccumulator(instance, forcedUnique, comparator);
+        } else {
+            return new SimpleCollectionAccumulator(instance, forcedUnique, comparator);
         }
     }
 
