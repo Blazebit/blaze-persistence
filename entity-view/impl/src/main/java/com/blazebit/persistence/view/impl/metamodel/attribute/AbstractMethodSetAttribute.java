@@ -48,7 +48,7 @@ public abstract class AbstractMethodSetAttribute<X, Y> extends AbstractMethodPlu
         this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
                 createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator()),
                 null,
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

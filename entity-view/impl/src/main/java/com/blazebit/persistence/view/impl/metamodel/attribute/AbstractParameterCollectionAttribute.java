@@ -49,7 +49,7 @@ public abstract class AbstractParameterCollectionAttribute<X, Y> extends Abstrac
         this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
                 createCollectionInstantiator(context, null, isIndexed(), isSorted(), isOrdered(), getComparator()),
                 null,
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

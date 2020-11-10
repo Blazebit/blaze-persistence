@@ -48,7 +48,7 @@ public abstract class AbstractMethodCollectionAttribute<X, Y> extends AbstractMe
         this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
                 createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator()),
                 null,
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 

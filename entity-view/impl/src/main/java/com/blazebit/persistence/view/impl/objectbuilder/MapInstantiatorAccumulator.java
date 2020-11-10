@@ -90,7 +90,15 @@ public class MapInstantiatorAccumulator implements ContainerAccumulator<Map<?, ?
             map = (Map<Object, Object>) container;
         }
         if (valueAccumulator == null) {
-            map.putAll(value);
+            if (filterNulls) {
+                for (Map.Entry<?, ?> entry : value.entrySet()) {
+                    if (entry.getValue() != null) {
+                        map.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            } else {
+                map.putAll(value);
+            }
         } else {
             for (Map.Entry<?, ?> entry : value.entrySet()) {
                 Object valueContainer = map.get(entry.getKey());

@@ -76,7 +76,7 @@ public abstract class AbstractMethodListAttribute<X, Y> extends AbstractMethodPl
         this.collectionInstantiatorAccumulator = new CollectionInstantiatorAccumulator(
                 createCollectionInstantiator(context, createCollectionFactory(context), isIndexed(), isSorted(), isOrdered(), getComparator()),
                 createValueContainerAccumulator(elementCollectionComparator),
-                !isCorrelated()
+                isFilterNulls()
         );
     }
 
