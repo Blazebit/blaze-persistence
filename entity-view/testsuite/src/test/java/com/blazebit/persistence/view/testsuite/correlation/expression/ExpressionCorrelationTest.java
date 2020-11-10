@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.testsuite.correlation.expression.model.Docu
 import com.blazebit.persistence.view.testsuite.correlation.expression.model.DocumentSimpleCorrelationViewSubselectId;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimpleVersionCorrelatedView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -187,7 +188,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
         return build(
                 DocumentSimpleCorrelationViewJoinId.class,
                 SimpleDocumentCorrelatedView.class,
-                SimplePersonCorrelatedSubView.class
+                SimplePersonCorrelatedSubView.class,
+                SimpleVersionCorrelatedView.class
         );
     }
 

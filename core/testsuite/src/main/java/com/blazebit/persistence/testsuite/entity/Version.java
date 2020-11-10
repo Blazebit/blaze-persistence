@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import java.io.Serializable;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,8 +25,6 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
@@ -42,11 +39,10 @@ import javax.persistence.TemporalType;
  */
 @Entity
 @Table(name = "document_version")
-public class Version implements Serializable {
+public class Version extends LongSequenceEntity {
 
     private static final long serialVersionUID = 1L;
 
-    private Long id;
     private Document document;
     private Calendar date;
     private int idx;
@@ -58,16 +54,6 @@ public class Version implements Serializable {
 
     public Version(int idx) {
         this.idx = idx;
-    }
-
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -16,14 +16,17 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.general.model;
 
+import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimplePersonCorrelatedSubView;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.view.testsuite.correlation.model.SimpleVersionCorrelatedView;
 
 import java.util.Set;
 
@@ -91,5 +94,14 @@ public interface DocumentCorrelationViewSubselectId extends DocumentCorrelationV
 
     @MappingCorrelated(correlationBasis = "this", correlator = ThisCorrelationProviderNormal.class, fetch = FetchStrategy.SUBSELECT)
     public Set<SimpleDocumentCorrelatedView> getThisCorrelatedViewList();
+
+    @MappingCorrelated(correlationBasis = "this", correlationResult = "versions.id", correlator = ThisCorrelationProviderNormal.class, fetch = FetchStrategy.SUBSELECT)
+    public Set<Long> getThisCorrelatedEmptyIdList();
+
+    @MappingCorrelated(correlationBasis = "this", correlationResult = "versions", correlator = ThisCorrelationProviderNormal.class, fetch = FetchStrategy.SUBSELECT)
+    public Set<Version> getThisCorrelatedEmptyEntityList();
+
+    @MappingCorrelated(correlationBasis = "this", correlationResult = "versions", correlator = ThisCorrelationProviderNormal.class, fetch = FetchStrategy.SUBSELECT)
+    public Set<SimpleVersionCorrelatedView> getThisCorrelatedEmptyViewList();
 
 }

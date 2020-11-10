@@ -53,11 +53,10 @@ public class LongSequenceEntity implements Serializable {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof LongSequenceEntity)) {
+        if (getId() == null || !(o instanceof LongSequenceEntity)) {
             return false;
         }
-        LongSequenceEntity that = (LongSequenceEntity) o;
-        return getId() != null ? getId().equals(that.getId()) : that.getId() == null;
+        return getId().equals(((LongSequenceEntity) o).getId());
     }
 
     @Override
