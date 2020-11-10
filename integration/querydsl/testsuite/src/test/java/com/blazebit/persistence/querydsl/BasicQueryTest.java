@@ -450,6 +450,20 @@ public class BasicQueryTest extends AbstractCoreTest {
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testCTEWithBindsWithAlias() {
+        doInJPA(entityManager -> {
+            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+                    .with(idHolderCTE, select(new Binds<IdHolderCTE>().bind(idHolderCTE.id, document.id.as("alias"))).from(document))
+                    .select(idHolderCTE.id).from(idHolderCTE)
+                    .fetch();
+
+            assertNotNull(fetch);
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTEWithBinds2() {
         doInJPA(entityManager -> {
             List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)

@@ -295,26 +295,21 @@ public class BlazeCriteriaBuilderRenderer<T> {
                         } else {
                             for (int i = 0; i < projection.size(); i++) {
                                 Expression<?> projExpression = projection.get(i);
-                                Path<?> alias = null;
-                                Path<?> cteEntityPath = null;
 
-                                if (projExpression instanceof Operation) {
-                                    Operation<?> projOperation = (Operation<?>) projExpression;
-                                    if (projOperation.getOperator() == BIND) {
-                                        alias = (Path<?>) projOperation.getArg(1);
-                                        cteEntityPath = alias.getRoot();
-                                        projExpression = projOperation.getArg(0);
-                                    }
+                                BindResolverContext bindResolverContext = new BindResolverContext();
+                                projExpression = projExpression.accept(BindResolver.INSTANCE, bindResolverContext);
+                                Path<?> cteAttribute = bindResolverContext.getCteAttribute();
+                                String alias = bindResolverContext.getAliasString();
+
+                                if (cteAttribute == null && cteAliases != null) {
+                                    cteAttribute = cteAliases.get(i);
                                 }
 
-                                if (alias == null && cteAliases != null) {
-                                    alias = cteAliases.get(i);
-                                }
-
-                                if (alias != null) {
-                                    String aliasString = relativePathString(cteEntityPath, alias);
-                                    final SelectBuilder<?> bindBuilder = selectBaseCriteriaBuilder.bind(aliasString);
-                                    setExpressionSubqueries(projExpression, null,  bindBuilder, SelectBuilderExpressionSetter.INSTANCE);
+                                if (cteAttribute != null) {
+                                    Path<?> cteEntityPath = cteAttribute.getRoot();
+                                    String relativeCteAttributePath = relativePathString(cteEntityPath, cteAttribute);
+                                    final SelectBuilder<?> bindBuilder = selectBaseCriteriaBuilder.bind(relativeCteAttributePath);
+                                    setExpressionSubqueries(projExpression, alias,  bindBuilder, SelectBuilderExpressionSetter.INSTANCE);
                                 } else {
                                     throw new UnsupportedOperationException("Select statement should be bound to any CTE attribute");
                                 }
@@ -1342,4 +1337,92 @@ public class BlazeCriteriaBuilderRenderer<T> {
             return (X) windowContainerBuilder;
         }
     }
+
+
+    /**
+     * Context for the {@link BindResolver}
+     *
+     * @since 1.6.0
+     */
+    private static class BindResolverContext {
+
+        private Path<?> alias;
+        private Path<?> cteAttribute;
+
+        public Path<?> getAlias() {
+            return alias;
+        }
+
+        public String getAliasString() {
+            return alias == null ? null : alias.getMetadata().getName();
+        }
+
+        public void setAlias(Path<?> alias) {
+            this.alias = alias;
+        }
+
+        public Path<?> getCteAttribute() {
+            return cteAttribute;
+        }
+
+        public void setCteAttribute(Path<?> cteAttribute) {
+            this.cteAttribute = cteAttribute;
+        }
+
+    }
+
+    /**
+     * Resolve the bind and alias information for an expression.
+     *
+     * @since 1.6.0
+     */
+    private static class BindResolver implements Visitor<Expression<?>, BindResolverContext> {
+
+        private static final BindResolver INSTANCE = new BindResolver();
+
+        @Override
+        public Expression<?> visit(Constant<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+        @Override
+        public Expression<?> visit(FactoryExpression<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+        @Override
+        public Expression<?> visit(Operation<?> expr, BindResolverContext context) {
+            if (Ops.ALIAS.equals(expr.getOperator())) {
+                context.setAlias((Path<?>) expr.getArg(1));
+                return expr.getArg(0).accept(this, context);
+            } else if (BIND.equals(expr.getOperator())) {
+                context.setCteAttribute((Path<?>) expr.getArg(1));
+                return expr.getArg(0).accept(this, context);
+            } else {
+                return expr;
+            }
+        }
+
+        @Override
+        public Expression<?> visit(ParamExpression<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+        @Override
+        public Expression<?> visit(Path<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+        @Override
+        public Expression<?> visit(SubQueryExpression<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+        @Override
+        public Expression<?> visit(TemplateExpression<?> expr, BindResolverContext context) {
+            return expr;
+        }
+
+    }
+
 }
