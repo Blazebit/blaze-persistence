@@ -138,7 +138,7 @@ public class ParameterManager {
                     if (existingParameter.isCollectionValued() != param.isCollectionValued()) {
                         throw new IllegalStateException("Can't apply parameters! Parameter '" + oldParameterName + "' is collection valued in one query, but not the other!");
                     }
-                    if (existingParameter.getTranformer() != param.getTranformer()) {
+                    if (existingParameter.getTransformer() != param.getTransformer()) {
                         throw new IllegalStateException("Can't apply parameters! Parameter '" + oldParameterName + "' has a tranfsformer in one query, but not the other!");
                     }
                     if (param.isValueSet()) {
@@ -254,7 +254,7 @@ public class ParameterManager {
     public Map<String, ParameterValueTransformer> getTransformers() {
         Map<String, ParameterValueTransformer> transformers = new HashMap<>();
         for (Map.Entry<String, ParameterImpl<?>> entry : parameters.entrySet()) {
-            ParameterValueTransformer transformer = entry.getValue().getTranformer();
+            ParameterValueTransformer transformer = entry.getValue().getTransformer();
             if (transformer != null) {
                 transformers.put(entry.getKey(), transformer);
             }
@@ -304,7 +304,10 @@ public class ParameterManager {
         if (value == null) {
             value = getParameterValue(expression.getName());
         }
+        return getLiteralParameterValue(value, renderEnumAsLiteral);
+    }
 
+    public String getLiteralParameterValue(Object value, boolean renderEnumAsLiteral) {
         if (value != null) {
             final TypeConverter<Object> converter = (TypeConverter<Object>) TypeUtils.getConverter(value.getClass(), entityMetamodel.getEnumTypes().keySet());
             if (converter != null) {
@@ -483,7 +486,7 @@ public class ParameterManager {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    static final class ParameterImpl<T> implements ExtendedParameter<T> {
+    public static final class ParameterImpl<T> implements ExtendedParameter<T> {
 
         private final String name;
         private final Integer position;
@@ -494,7 +497,7 @@ public class ParameterManager {
         private Class<T> parameterType;
         private T value;
         private boolean valueSet;
-        private ParameterValueTransformer tranformer;
+        private ParameterValueTransformer transformer;
 
         public ParameterImpl(String name, boolean collectionValued, boolean implicit, ClauseType clause, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
             this.name = name;
@@ -609,7 +612,7 @@ public class ParameterManager {
         @SuppressWarnings({ "unchecked" })
         public void setValue(T value) {
             this.valueSet = true;
-            if (tranformer != null) {
+            if (transformer != null) {
                 value = transform(value);
             }
             if (this.value instanceof ParameterValue) {
@@ -632,26 +635,26 @@ public class ParameterManager {
                 Collection<?> values = (Collection<?>) value;
                 List<Object> list = new ArrayList<>(values.size());
                 for (Object o : values) {
-                    list.add(tranformer.transform(o));
+                    list.add(transformer.transform(o));
                 }
                 return (T) list;
             } else {
-                return (T) tranformer.transform(value);
+                return (T) transformer.transform(value);
             }
         }
 
-        public ParameterValueTransformer getTranformer() {
-            return tranformer;
+        public ParameterValueTransformer getTransformer() {
+            return transformer;
         }
 
-        public void setTranformer(ParameterValueTransformer tranformer) {
-            if (this.tranformer == null) {
-                this.tranformer = tranformer;
+        public void setTransformer(ParameterValueTransformer transformer) {
+            if (this.transformer == null) {
+                this.transformer = transformer;
                 if (valueSet) {
                     this.value = transform(value);
                 }
-            } else if (!this.tranformer.equals(tranformer)) {
-                throw new IllegalStateException("Tried to set parameter value transformer [" + tranformer + "] although a transformer [" + this.tranformer + "] is already set for parameter: " + name);
+            } else if (!this.transformer.equals(transformer)) {
+                throw new IllegalStateException("Tried to set parameter value transformer [" + transformer + "] although a transformer [" + this.transformer + "] is already set for parameter: " + name);
             }
         }
 

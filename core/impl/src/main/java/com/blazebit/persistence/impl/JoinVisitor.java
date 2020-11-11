@@ -536,7 +536,7 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
         }
         ParameterExpression parameterExpression = (ParameterExpression) expression;
         ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
-        param.setTranformer(tranformer);
+        param.setTransformer(tranformer);
         return true;
     }
 

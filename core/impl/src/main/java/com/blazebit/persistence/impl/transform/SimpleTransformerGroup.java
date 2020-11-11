@@ -38,6 +38,10 @@ public class SimpleTransformerGroup implements ExpressionTransformerGroup<Expres
     }
 
     @Override
+    public void beforeTransformationGroup() {
+    }
+
+    @Override
     public void afterTransformationGroup() {
     }
 

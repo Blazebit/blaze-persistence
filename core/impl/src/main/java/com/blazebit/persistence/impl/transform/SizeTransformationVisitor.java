@@ -82,6 +82,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     private final JpaProvider jpaProvider;
 
     // state
+    private boolean countTransformationDisabled;
     private boolean orderBySelectClause;
     private boolean distinctRequired;
     private ClauseType clause;
@@ -111,6 +112,14 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         this.clause = clause;
     }
 
+    public boolean isCountTransformationDisabled() {
+        return countTransformationDisabled;
+    }
+
+    public void setCountTransformationDisabled(boolean countTransformationDisabled) {
+        this.countTransformationDisabled = countTransformationDisabled;
+    }
+
     public void setOrderBySelectClause(boolean orderBySelectClause) {
         this.orderBySelectClause = orderBySelectClause;
     }
@@ -128,7 +137,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     }
 
     private boolean isCountTransformationEnabled() {
-        return mainQuery.getQueryConfiguration().isCountTransformationEnabled();
+        return !countTransformationDisabled && mainQuery.getQueryConfiguration().isCountTransformationEnabled();
     }
     
     @Override

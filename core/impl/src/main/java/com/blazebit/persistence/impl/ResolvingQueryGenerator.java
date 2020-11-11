@@ -801,7 +801,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                     String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
                     sb.append(operator);
                     sb.append(":").append(subParamName);
-                    if (parameter.getTranformer() == null) {
+                    if (parameter.getTransformer() == null) {
                         parameterManager.registerParameterName(subParamName, false, null, null);
                     }
                     parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
@@ -811,8 +811,8 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 sb.setLength(sb.length() - " AND ".length());
                 sb.append(')');
 
-                if (parameter.getTranformer() == null) {
-                    parameter.setTranformer(new SplittingParameterTransformer(parameterManager, entityMetamodel, embeddableType.getJavaType(), parameterAccessPaths));
+                if (parameter.getTransformer() == null) {
+                    parameter.setTransformer(new SplittingParameterTransformer(parameterManager, entityMetamodel, embeddableType.getJavaType(), parameterAccessPaths));
                 }
             }
         }
@@ -878,7 +878,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         ParameterExpression parameterExpression = (ParameterExpression) expression;
         ParameterManager.ParameterImpl<Object> param = (ParameterManager.ParameterImpl<Object>) parameterManager.getParameter(parameterExpression.getName());
-        param.setTranformer(parameterTransformerFactory.getToIdTransformer());
+        param.setTransformer(parameterTransformerFactory.getToIdTransformer());
     }
 
     @Override

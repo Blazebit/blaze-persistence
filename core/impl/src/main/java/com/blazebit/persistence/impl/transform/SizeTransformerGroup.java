@@ -16,11 +16,13 @@
 
 package com.blazebit.persistence.impl.transform;
 
+import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.AbstractManager;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.GroupByManager;
 import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.OrderByManager;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvedExpression;
 import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
@@ -40,19 +42,39 @@ import java.util.Set;
 public class SizeTransformerGroup implements ExpressionTransformerGroup<ExpressionModifier> {
 
     private final SizeTransformationVisitor sizeTransformationVisitor;
+    private final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder;
     private final SelectManager<?> selectManager;
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
+    private final ParameterManager parameterManager;
     private final SizeExpressionTransformer sizeExpressionTransformer;
     private final SizeSelectInfoTransformer sizeSelectExpressionTransformer;
 
-    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager, GroupByManager groupByManager) {
+    public SizeTransformerGroup(SizeTransformationVisitor sizeTransformationVisitor, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, OrderByManager orderByManager, SelectManager<?> selectManager, JoinManager joinManager, GroupByManager groupByManager, ParameterManager parameterManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
+        this.queryBuilder = queryBuilder;
         this.selectManager = selectManager;
         this.joinManager = joinManager;
         this.sizeExpressionTransformer = new SizeExpressionTransformer(sizeTransformationVisitor);
         this.groupByManager = groupByManager;
+        this.parameterManager = parameterManager;
         this.sizeSelectExpressionTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
+    }
+
+    @Override
+    public void beforeTransformationGroup() {
+        for (ParameterManager.ParameterImpl<?> parameter : (Set<ParameterManager.ParameterImpl<?>>) (Set<?>) parameterManager.getParameters()) {
+            Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> set;
+            // If a parameter is used in SELECT, ORDER BY or HAVING of our query builder,
+            // and the parameter can't be represented as literal, we have to disable the count transformation.
+            // Otherwise the implicit group by generation would fail later on
+            if (((set = parameter.getClauseTypes().get(ClauseType.SELECT)) != null && set.contains(queryBuilder)
+                    || (set = parameter.getClauseTypes().get(ClauseType.ORDER_BY)) != null && set.contains(queryBuilder)
+                    || (set = parameter.getClauseTypes().get(ClauseType.HAVING)) != null && set.contains(queryBuilder))
+                    && parameterManager.getLiteralParameterValue(parameter.getValue(), false) == null) {
+                sizeTransformationVisitor.setCountTransformationDisabled(true);
+            }
+        }
     }
 
     @Override
