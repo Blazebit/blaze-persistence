@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ConfigurationProperties;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
@@ -190,6 +190,20 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)");
 
         String expectedQuery = "SELECT " + function("COUNT_TUPLE", "ownedDocuments_1.id") + ", " + function("COUNT_TUPLE", "ownedDocuments_1.id") + " FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 GROUP BY p.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    // NOTE: DataNucleus renders the literal `(1)` for the byte array parameter on PostgreSQL which is wrong
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testDisableCountTransformationWhenParameterUsedInSelect() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("CASE WHEN d.age > 0 THEN d.byteArray ELSE :byteArray END")
+                .select("SIZE(d.contacts)")
+                .setParameter("byteArray", new byte[]{ 1 });
+
+        String expectedQuery = "SELECT CASE WHEN d.age > 0 THEN d.byteArray ELSE :byteArray END, (SELECT " + countStar() + " FROM d.contacts contacts) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

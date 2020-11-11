@@ -18,6 +18,7 @@ None yet
 * Fix issues with query plan caching that manifest when using equal queries except for the set operation type
 * Support aliases in CTE binds
 * Always respect filterNulls in collection and map accumulators
+* Avoid transforming `SIZE` to `COUNT` when implicit group by would fail
 
 ### Backwards-incompatible changes
 

@@ -247,7 +247,7 @@ public final class JpaUtils {
                         ParameterExpression parameterExpression = (ParameterExpression) selectExpression;
                         String parameterName = parameterExpression.getName();
                         Map<String, List<String>> parameterAccessPaths = new HashMap<>(embeddedPropertyNames.size());
-                        ParameterValueTransformer tranformer = parameterManager.getParameter(parameterName).getTranformer();
+                        ParameterValueTransformer tranformer = parameterManager.getParameter(parameterName).getTransformer();
                         if (tranformer instanceof SplittingParameterTransformer) {
                             for (String name : ((SplittingParameterTransformer) tranformer).getParameterNames()) {
                                 parameterManager.unregisterParameterName(name, clause, queryBuilder);
@@ -290,7 +290,7 @@ public final class JpaUtils {
                             offset++;
                         }
 
-                        parameterManager.getParameter(parameterName).setTranformer(new SplittingParameterTransformer(parameterManager, metamodel, elementType, parameterAccessPaths));
+                        parameterManager.getParameter(parameterName).setTransformer(new SplittingParameterTransformer(parameterManager, metamodel, elementType, parameterAccessPaths));
                     }
                 } else {
                     throw new IllegalArgumentException("Illegal expression '" + selectExpression.toString() + "' for binding relation '" + attributeName + "'!");

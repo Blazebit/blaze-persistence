@@ -29,6 +29,8 @@ public interface ExpressionTransformerGroup<T extends ExpressionModifier> {
 
     void applyExpressionTransformer(AbstractManager<? extends T> manager);
 
+    void beforeTransformationGroup();
+
     void afterTransformationGroup();
 
     void afterAllTransformations();

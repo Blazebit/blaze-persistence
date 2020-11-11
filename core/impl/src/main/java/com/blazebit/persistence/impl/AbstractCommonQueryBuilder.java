@@ -279,7 +279,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
-                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
+                new SizeTransformerGroup(sizeTransformationVisitor, this, orderByManager, selectManager, joinManager, groupByManager, parameterManager));
         this.resultType = builder.resultType;
 
         applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping, copyContext);
@@ -350,7 +350,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.transformerGroups = Arrays.<ExpressionTransformerGroup<?>>asList(
                 new SimpleTransformerGroup(new OuterFunctionVisitor(joinManager)),
                 new SimpleTransformerGroup(new SubqueryRecursiveExpressionVisitor()),
-                new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
+                new SizeTransformerGroup(sizeTransformationVisitor, this, orderByManager, selectManager, joinManager, groupByManager, parameterManager));
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -2673,6 +2673,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         for (int i = 0; i < size; i++) {
             @SuppressWarnings("unchecked")
             ExpressionTransformerGroup<ExpressionModifier> transformerGroup = (ExpressionTransformerGroup<ExpressionModifier>) transformerGroups.get(i);
+            transformerGroup.beforeTransformationGroup();
+
             transformerGroup.applyExpressionTransformer(joinManager);
             transformerGroup.applyExpressionTransformer(selectManager);
             transformerGroup.applyExpressionTransformer(whereManager);
