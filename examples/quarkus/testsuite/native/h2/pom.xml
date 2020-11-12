@@ -11,7 +11,7 @@
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native-h2</artifactId>
 
     <properties>
-        <module.name>com.blazebit.persistence.examples.quarkus.testsuite.native.h2</module.name>
+        <module.name>com.blazebit.persistence.quarkustestsuitenativeh2</module.name>
     </properties>
 
     <dependencies>
@@ -32,7 +32,6 @@
     </dependencies>
 
     <build>
-        <finalName>h2-test-app</finalName>
         <plugins>
             <plugin>
                 <groupId>io.quarkus</groupId>
@@ -61,6 +60,7 @@
                         <configuration>
                             <systemProperties>
                                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner${runnerExtension}</native.image.path>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                             </systemProperties>
                         </configuration>
                     </execution>
@@ -74,6 +74,26 @@
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} { }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
