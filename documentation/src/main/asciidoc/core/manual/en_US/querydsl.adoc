@@ -92,7 +92,7 @@ List<Tuple> fetch = query.fetch();
 
 [source,java]
 ----
-QAuthor = QAuthor.author;
+QAuthor author = QAuthor.author;
 QBook book = QBook.book;
 
 Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<>(entityManager, criteriaBuilderFactory)
@@ -105,16 +105,19 @@ Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<>(entityManager, crite
 
 [source,java]
 ----
-QAuthor otherAuthor = new QAuthor("otherAuthor");
-QBook otherBook = new QBook("otherBook");
+QAuthor author = new QAuthor("author");
+QBook book = new QBook("book");
 
-Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory)
-    .from(otherAuthor)
-    .innerJoin(otherBook).on(otherBook.author.eq(otherAuthor))
-    .transform(GroupBy.groupBy(otherAuthor).as(GroupBy.list(otherBook)));
+Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<>(entityManager, criteriaBuilderFactory)
+    .from(author)
+    .innerJoin(book).on(otherBook.author.eq(author))
+    .transform(GroupBy.groupBy(author).as(GroupBy.list(book)));
 ----
 
 === Managed type value clause
+
+Add a VALUES clause for values of the given value class to the from clause.
+This introduces a parameter named like the given alias.
 
 [source,java]
 ----
@@ -122,13 +125,16 @@ Cat theCat = new Cat();
 theCat.id = 1337L;
 theCat.name = "Fluffy";
 
-List<Book> fetch = new BlazeJPAQuery<Book>(entityManager, criteriaBuilderFactory)
+List<Cat> fetch = new BlazeJPAQuery<Cat>(entityManager, criteriaBuilderFactory)
     .fromValues(QCat.cat, Collections.singleton(theCat))
     .select(QCat.cat)
     .fetch();
 ----
 
 === Managed attribute value clause
+
+Add a VALUES clause for values of the type as determined by the given entity attribute to the from clause.
+This introduces a parameter named like the given alias.
 
 [source,java]
 ----
@@ -140,7 +146,7 @@ List<String> fetch = new BlazeJPAQuery<>(entityManager, cbf)
     .fetch();   
 ----
 
-==== Window functions
+=== Window functions
 
 Window functions are available through the various static utility methods in `JPQLNextExpressions`.
 For convenience, its recommended to add a star-import to `com.blazebit.persistence.querydsl.JPQLNextExpressions.*`.
@@ -155,7 +161,7 @@ BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBui
  List<Tuple> fetch = query.fetch();
 ----
 
-==== Named window functions
+=== Named window functions
 
 [source,java]
 ----
@@ -168,7 +174,7 @@ BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBui
  List<Tuple> fetch = query.fetch();
 ----
 
-==== Common Table Expressions
+=== Common Table Expressions
 
 First declare your CTE entity:
 
@@ -210,7 +216,7 @@ List<Long> fetch = new BlazeJPAQuery<TestEntity>(entityManager, cbf)
     .fetch();
 ----
 
-===== Recursive CTEs
+=== Recursive CTEs
 
 Set operations are also allowed in CTEs, and through set operations it is also possible to write recursive CTEs.
 
@@ -237,7 +243,7 @@ List<CatCte> result = new BlazeJPAQuery<CatCte>(entityManager, criteriaBuilderFa
     .fetch();
 ----
 
-==== Subquery joins
+=== Subquery joins
 
 A limitation of JPQL frequently stumbled opon, is that subqueries cannot be joined. With {projectname} however, this is perfectly possible:
 
@@ -245,12 +251,11 @@ A limitation of JPQL frequently stumbled opon, is that subqueries cannot be join
 ----
 QRecursiveEntity recursiveEntity = new QRecursiveEntity("t");
 
-List<RecursiveEntity> fetch = new BlazeJPAQuery<>(entityManager, cbf)
-    .select(recursiveEntity)
-    .from(select(recursiveEntity)
-        .from(recursiveEntity)
-        .where(recursiveEntity.parent.name.eq("root1"))
-        .orderBy(recursiveEntity.name.asc())
+List<Author> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+    .select(author)
+    .from(select(author)
+        .from(author)
+        .orderBy(author.name.asc())
         .limit(1L), recursiveEntity)
     .fetch();
 ----
@@ -261,7 +266,7 @@ Whenever the subquery projects an entity path that is also a join target, all ow
 if no different bindings are provided.
 
 
-==== Lateral joins
+=== Lateral joins
 
 Subquery joins may access outer query variables if a lateral join is used.
 
