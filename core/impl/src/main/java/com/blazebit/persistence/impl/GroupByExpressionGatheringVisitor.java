@@ -98,7 +98,8 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
 
     public Set<Expression> extractGroupByExpressions(Expression expression, ClauseType clauseType) {
         // grouping by a literal does not make sense and even causes errors in some DBs such as PostgreSQL
-        if (expression instanceof LiteralExpression) {
+        // Also, grouping by just a parameter does not make sense as the value is constant
+        if (expression instanceof LiteralExpression || expression instanceof ParameterExpression) {
             return Collections.emptySet();
         }
         clear();
@@ -168,7 +169,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
                 return expressions;
             }
         } catch (IllegalParameterException ex) {
-            throw new IllegalArgumentException("Can't use the expression '" + expression + "' as an implicit group by clause, because the parameter '" + ex.parameterExpression + "' can't be rendered as literal which is required!", ex);
+            throw new IllegalArgumentException("Can't use the expression '" + expression + "' as an implicit group by clause, because the parameter '" + ex.parameterExpression + "' with the value '" + ex.value + "' can't be rendered as literal which is required!", ex);
         }
 
         return Collections.singleton(expression);
@@ -236,7 +237,7 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
         // will be assigned to the same value. To ensure that, we try to resolve the literal value and throw an exception if that's not possible
         String literalParameterValue = parameterManager.getLiteralParameterValue(expression, true);
         if (literalParameterValue == null) {
-            throw new IllegalParameterException(expression);
+            throw new IllegalParameterException(expression, parameterManager.getParameterValue(expression.getName()));
         }
         parameterManager.getParameter(expression.getName()).setUsedInImplicitGroupBy(true);
         return false;
@@ -682,9 +683,11 @@ class GroupByExpressionGatheringVisitor extends AbortableVisitorAdapter {
     private static class IllegalParameterException extends RuntimeException {
 
         private final ParameterExpression parameterExpression;
+        private final Object value;
 
-        public IllegalParameterException(ParameterExpression parameterExpression) {
+        public IllegalParameterException(ParameterExpression parameterExpression, Object value) {
             this.parameterExpression = parameterExpression;
+            this.value = value;
         }
     }
 }

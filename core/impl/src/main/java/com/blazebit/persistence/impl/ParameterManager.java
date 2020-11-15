@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.util.LiteralFunctionTypeConverter;
 import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.AttributeAccessor;
@@ -50,6 +51,18 @@ import java.util.TreeMap;
 public class ParameterManager {
 
     private static final String PREFIX = "param_";
+    private static final Map<TypeConverter<?>, String> TEMPORAL_CONVERTER_LITERAL_FUNCTIONS;
+
+    static {
+        Map<TypeConverter<?>, String> literalFunctions = new HashMap<>();
+        literalFunctions.put(TypeUtils.TIME_CONVERTER, "literal_time");
+        literalFunctions.put(TypeUtils.DATE_CONVERTER, "literal_date");
+        literalFunctions.put(TypeUtils.TIMESTAMP_CONVERTER, "literal_timestamp");
+        literalFunctions.put(TypeUtils.DATE_TIMESTAMP_CONVERTER, "literal_util_date");
+        literalFunctions.put(TypeUtils.CALENDAR_CONVERTER, "literal_calendar");
+        TEMPORAL_CONVERTER_LITERAL_FUNCTIONS = literalFunctions;
+    }
+
     private int counter;
     private final JpaProvider jpaProvider;
     private final EntityMetamodel entityMetamodel;
@@ -315,7 +328,20 @@ public class ParameterManager {
                     if (renderEnumAsLiteral) {
                         return converter.toString(value);
                     }
-                } else if (jpaProvider.supportsTemporalLiteral() || !TypeUtils.isTemporalConverter(converter)) {
+                } else if (converter instanceof LiteralFunctionTypeConverter<?>) {
+                    if (TypeUtils.isTemporalConverter(converter)) {
+                        if (jpaProvider.supportsTemporalLiteral()) {
+                            return converter.toString(value);
+                        }
+                    }
+                    String functionInvocation = jpaProvider.getCustomFunctionInvocation(((LiteralFunctionTypeConverter<?>) converter).getLiteralFunctionName(), 1);
+                    String literalValue = converter.toString(value);
+                    StringBuilder sb = new StringBuilder(functionInvocation.length() + literalValue.length() + 5);
+                    sb.append(functionInvocation);
+                    TypeUtils.STRING_CONVERTER.appendTo(literalValue, sb);
+                    sb.append(')');
+                    return sb.toString();
+                } else {
                     return converter.toString(value);
                 }
             }

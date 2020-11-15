@@ -362,6 +362,18 @@ import com.blazebit.persistence.impl.function.least.DefaultLeastFunction;
 import com.blazebit.persistence.impl.function.least.MinLeastFunction;
 import com.blazebit.persistence.impl.function.least.SelectMinUnionLeastFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralCalendarFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralDateFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralDateTimestampFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralInstantFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralLocalDateFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralLocalDateTimeFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralLocalTimeFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralOffsetDateTimeFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralOffsetTimeFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralTimeFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralTimestampFunction;
+import com.blazebit.persistence.impl.function.literal.LiteralZonedDateTimeFunction;
 import com.blazebit.persistence.impl.function.nullfn.NullfnFunction;
 import com.blazebit.persistence.impl.function.nullsubquery.NullSubqueryFunction;
 import com.blazebit.persistence.impl.function.oragg.FallbackOrAggFunction;
@@ -580,43 +592,24 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(jpqlFunctionGroup);
 
         // entity_function
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(EntityFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new EntityFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(EntityFunction.FUNCTION_NAME, new EntityFunction());
 
         // nullfn
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(NullfnFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new NullfnFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(NullfnFunction.FUNCTION_NAME, new NullfnFunction());
 
         // collection_dml_support
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(CollectionDmlSupportFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new CollectionDmlSupportFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(CollectionDmlSupportFunction.FUNCTION_NAME, new CollectionDmlSupportFunction());
 
         // param
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(ParamFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new ParamFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(ParamFunction.FUNCTION_NAME, new ParamFunction());
 
         // exist
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(ExistFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new ExistFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(ExistFunction.FUNCTION_NAME, new ExistFunction());
 
         // replace
-
-        jpqlFunctionGroup = new JpqlFunctionGroup(ReplaceFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new ReplaceFunction());
-        registerFunction(jpqlFunctionGroup);
+        registerFunction(ReplaceFunction.FUNCTION_NAME, new ReplaceFunction());
 
         // chr
-
         jpqlFunctionGroup = new JpqlFunctionGroup(ChrFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new ChrFunction());
         jpqlFunctionGroup.add("mysql", new CharChrFunction());
@@ -626,7 +619,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(jpqlFunctionGroup);
 
         // base64
-
         jpqlFunctionGroup = new JpqlFunctionGroup(Base64Function.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new Base64Function());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLBase64Function());
@@ -644,9 +636,15 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             
             registerFunction(jpqlFunctionGroup);
         }
-        
-        // treat
 
+        // temporal literals
+        registerFunction(LiteralTimeFunction.FUNCTION_NAME, new LiteralTimeFunction());
+        registerFunction(LiteralDateFunction.FUNCTION_NAME, new LiteralDateFunction());
+        registerFunction(LiteralTimestampFunction.FUNCTION_NAME, new LiteralTimestampFunction());
+        registerFunction(LiteralDateTimestampFunction.FUNCTION_NAME, new LiteralDateTimestampFunction());
+        registerFunction(LiteralCalendarFunction.FUNCTION_NAME, new LiteralCalendarFunction());
+
+        // treat
         registerNamedType("Boolean", Boolean.class);
         registerNamedType("Byte", Byte.class);
         registerNamedType("Short", Short.class);
@@ -690,6 +688,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             registerNamedType("Period", Class.forName("java.time.Period"));
             registerNamedType("ZoneId", Class.forName("java.time.ZoneId"));
             registerNamedType("ZoneOffset", Class.forName("java.time.ZoneOffset"));
+            registerFunction(LiteralLocalDateFunction.FUNCTION_NAME, new LiteralLocalDateFunction());
+            registerFunction(LiteralLocalTimeFunction.FUNCTION_NAME, new LiteralLocalTimeFunction());
+            registerFunction(LiteralLocalDateTimeFunction.FUNCTION_NAME, new LiteralLocalDateTimeFunction());
+            registerFunction(LiteralInstantFunction.FUNCTION_NAME, new LiteralInstantFunction());
+            registerFunction(LiteralZonedDateTimeFunction.FUNCTION_NAME, new LiteralZonedDateTimeFunction());
+            registerFunction(LiteralOffsetTimeFunction.FUNCTION_NAME, new LiteralOffsetTimeFunction());
+            registerFunction(LiteralOffsetDateTimeFunction.FUNCTION_NAME, new LiteralOffsetDateTimeFunction());
         } catch (ClassNotFoundException ex) {
             // If they aren't found, we ignore them
         }
@@ -1779,7 +1784,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         registerFunction(jpqlFunctionGroup);
 
-        // json_get
+        // JSON_GET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonGetFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction());
         jpqlFunctionGroup.add("mysql8", new MySQL8JsonGetFunction());
@@ -1788,7 +1793,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLJsonGetFunction());
         registerFunction(jpqlFunctionGroup);
 
-        // json_set
+        // JSON_SET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonSetFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonSetFunction());
         jpqlFunctionGroup.add("mysql8", new MySQL8JsonSetFunction());
@@ -1796,6 +1801,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2JsonSetFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLJsonSetFunction());
         registerFunction(jpqlFunctionGroup);
+    }
+
+    private void registerFunction(String name, JpqlFunction function) {
+        String functionName = name.toLowerCase();
+        JpqlFunctionGroup jpqlFunctionGroup = new JpqlFunctionGroup(name, false);
+        functions.put(functionName, jpqlFunctionGroup);
+        jpqlFunctionGroup.add(null, function);
     }
 
     private <T extends JpqlFunction> T findFunction(String name, String dbms) {

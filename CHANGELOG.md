@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Implement emulation for temporal literals through functions also for Java 8 types
 
 ### Bug fixes
 

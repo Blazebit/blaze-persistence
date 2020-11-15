@@ -49,7 +49,7 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class ArrayFilteredCollectionsTest<T extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {
+public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
 
     private DocumentForCollections doc1;
     private DocumentForCollections doc2;
@@ -121,7 +121,7 @@ public class ArrayFilteredCollectionsTest<T extends SubviewDocumentCollectionsVi
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
     @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
-    public void testCollections() {
+    public void testArrayExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
         cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");

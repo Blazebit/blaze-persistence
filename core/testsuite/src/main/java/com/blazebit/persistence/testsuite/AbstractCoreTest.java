@@ -22,6 +22,7 @@ import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -405,7 +406,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return joinAliasValue(STATIC_JPA_PROVIDER, alias, field);
     }
     
-    protected String function(String name, String... args) {
+    protected static String function(String name, String... args) {
         String registeredFunctionName;
         if ((registeredFunctionName = resolveRegisteredFunctionName(name)) != null) {
             StringBuilder sb = new StringBuilder();
@@ -460,11 +461,20 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         }
     }
 
-    protected String resolveRegisteredFunctionName(String functionName) {
+    protected static String tsLiteral(Calendar value) {
+        String literalValue = TypeUtils.CALENDAR_CONVERTER.toString(value);
+        if (jpaProvider.supportsTemporalLiteral()) {
+            return literalValue;
+        } else {
+            return function("LITERAL_CALENDAR", TypeUtils.STRING_CONVERTER.toString(literalValue) );
+        }
+    }
+
+    protected static String resolveRegisteredFunctionName(String functionName) {
         return getIgnoreCase(STATIC_EMF_INTEGRATOR.getRegisteredFunctions(emf).keySet(), functionName);
     }
     
-    private String getIgnoreCase(Collection<String> list, String string) {
+    private static String getIgnoreCase(Collection<String> list, String string) {
         for (String s : list) {
             if (s.equalsIgnoreCase(string)) {
                 return s;
