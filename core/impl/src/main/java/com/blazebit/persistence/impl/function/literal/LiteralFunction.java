@@ -13,19 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.jsonset;
+
+package com.blazebit.persistence.impl.function.literal;
 
 import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
- * @author Moritz Becker
- * @since 1.5.0
+ *
+ * @author Christian Beikov
+ * @since 1.6.0
  */
-public abstract class AbstractJsonSetFunction implements JpqlFunction {
+public abstract class LiteralFunction implements JpqlFunction {
 
-    public static final String FUNCTION_NAME = "JSON_SET";
+    protected static Class<?> loadClass(String className) {
+        Class<?> clazz = null;
+        try {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            // Ignore
+        }
+        return clazz;
+    }
 
     @Override
     public boolean hasArguments() {
@@ -37,22 +47,14 @@ public abstract class AbstractJsonSetFunction implements JpqlFunction {
         return true;
     }
 
-    @Override
-    public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return String.class;
-    }
+    protected abstract String getFunctionName();
 
     @Override
-    public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() < 3) {
-            throw new RuntimeException("The " + FUNCTION_NAME + " function requires at least 3 arguments <jsonField>, <newValue>, <key1|arrayIndex1>, ..., <keyN|arrayIndexN>! args=" + context);
+    public void render(FunctionRenderContext functionRenderContext) {
+        if (functionRenderContext.getArgumentsSize() != 1) {
+            throw new RuntimeException("The " + getFunctionName() + " function needs exactly one argument <jdbc_timestamp_literal>! args=" + functionRenderContext);
         }
-        render0(context);
+        functionRenderContext.addChunk(JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(0)));
     }
 
-    protected abstract void render0(FunctionRenderContext context);
-
-    protected void addUnquotedArgument(FunctionRenderContext context, int argIndex) {
-        context.addChunk(JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(argIndex)));
-    }
 }

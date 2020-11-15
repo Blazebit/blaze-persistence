@@ -28,7 +28,7 @@ import java.util.List;
  */
 public abstract class AbstractJsonGetFunction implements JpqlFunction {
 
-    public static final String FUNCTION_NAME = "json_get";
+    public static final String FUNCTION_NAME = "JSON_GET";
 
     @Override
     public boolean hasArguments() {

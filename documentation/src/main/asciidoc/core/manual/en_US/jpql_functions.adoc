@@ -208,11 +208,44 @@ There are multiple different treat functions for different data types.
 * `java.sql.Date` - `TREAT_DATE`
 * `java.sql.Timestamp` - `TREAT_TIMESTAMP`
 * `java.util.Calendar` - `TREAT_CALENDAR`
+* `java.time.Instant` - `TREAT_INSTANT`
+* `java.time.LocalDate` - `TREAT_LOCALDATE`
+* `java.time.LocalDateTime` - `TREAT_LOCALDATETIME`
+* `java.time.LocalTime` - `TREAT_LOCALTIME`
+* `java.time.OffsetDateTime` - `TREAT_OFFSETDATETIME`
+* `java.time.OffsetTime` - `TREAT_OFFSETTIME`
+* `java.time.ZonedDateTime` - `TREAT_ZONEDDATETIME`
 
 A treat invocation will *only* adjust the type of the expression in the JPQL expression and not cause an explicit cast on the DBMS side.
 This can be used for cases when the type of an expression is actually known but can't be inferred.
 
 WARNING: This is an internal function that is used to implement the <<values-clause,`VALUES` clause>> for _basic_ types. It is not intended for direct use and might change without notice.
+
+==== LITERAL functions
+
+Syntax: `LITERAL_XXX ( argument )`
+
+WARNING: This function is used internally and no user should ever have the need for this!
+
+There are multiple different literal functions for different data types.
+
+* `java.util.Calendar` - `LITERAL_CALENDAR`
+* `java.sql.Time` - `LITERAL_TIME`
+* `java.sql.Date` - `LITERAL_DATE`
+* `java.sql.Timestamp` - `LITERAL_TIMESTAMP`
+* `java.util.Date` - `LITERAL_UTILDATE`
+* `java.time.Instant` - `LITERAL_INSTANT`
+* `java.time.LocalDate` - `LITERAL_LOCALDATE`
+* `java.time.LocalDateTime` - `LITERAL_LOCALDATETIME`
+* `java.time.LocalTime` - `LITERAL_LOCALTIME`
+* `java.time.OffsetDateTime` - `LITERAL_OFFSETDATETIME`
+* `java.time.OffsetTime` - `LITERAL_OFFSETTIME`
+* `java.time.ZonedDateTime` - `LITERAL_ZONEDDATETIME`
+
+A literal invocation will render through the first argument to SQL and adjust the type of the expression in the JPQL expression.
+This can be used for cases when parameter inlining is necessary due to e.g. implicit group by generation.
+
+WARNING: This is an internal function that is used to implement parameter inlining. It is not intended for direct use and might change without notice.
 
 ==== Temporal DIFF functions
 

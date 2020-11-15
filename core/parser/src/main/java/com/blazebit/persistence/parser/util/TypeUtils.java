@@ -298,7 +298,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.sql.Time> TIME_CONVERTER = new AbstractTypeConverter<java.sql.Time>() {
+    public static final TypeConverter<java.sql.Time> TIME_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.sql.Time>("literal_time") {
 
         private static final long serialVersionUID = 1L;
 
@@ -334,7 +334,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.util.Date> DATE_AS_TIME_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+    public static final TypeConverter<java.util.Date> DATE_AS_TIME_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.util.Date>("literal_util_date") {
 
         private static final long serialVersionUID = 1L;
 
@@ -354,7 +354,7 @@ public class TypeUtils {
             } else if (value instanceof String) {
                 return java.sql.Time.valueOf((String) value);
             }
-            throw unknownConversion(value, java.sql.Time.class);
+            throw unknownConversion(value, java.util.Date.class);
         }
 
         @Override
@@ -370,7 +370,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.sql.Date> DATE_CONVERTER = new AbstractTypeConverter<java.sql.Date>() {
+    public static final TypeConverter<java.sql.Date> DATE_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.sql.Date>("literal_date") {
 
         private static final long serialVersionUID = 1L;
 
@@ -406,7 +406,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.util.Date> DATE_AS_DATE_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+    public static final TypeConverter<java.util.Date> DATE_AS_DATE_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.util.Date>("literal_date") {
 
         private static final long serialVersionUID = 1L;
 
@@ -442,7 +442,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.sql.Timestamp> TIMESTAMP_CONVERTER = new AbstractTypeConverter<java.sql.Timestamp>() {
+    public static final TypeConverter<java.sql.Timestamp> TIMESTAMP_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.sql.Timestamp>("literal_timestamp") {
 
         private static final long serialVersionUID = 1L;
 
@@ -494,7 +494,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.util.Date> DATE_TIMESTAMP_CONVERTER = new AbstractTypeConverter<java.util.Date>() {
+    public static final TypeConverter<java.util.Date> DATE_TIMESTAMP_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.util.Date>("literal_util_date") {
 
         private static final long serialVersionUID = 1L;
 
@@ -513,7 +513,7 @@ public class TypeUtils {
             } else if (value instanceof String) {
                 return java.sql.Timestamp.valueOf((String) value);
             }
-            throw unknownConversion(value, java.sql.Timestamp.class);
+            throw unknownConversion(value, java.util.Date.class);
         }
 
         @Override
@@ -546,7 +546,7 @@ public class TypeUtils {
         }
     };
 
-    public static final TypeConverter<java.util.Calendar> CALENDAR_CONVERTER = new AbstractTypeConverter<java.util.Calendar>() {
+    public static final TypeConverter<java.util.Calendar> CALENDAR_CONVERTER = new AbstractLiteralFunctionTypeConverter<java.util.Calendar>("literal_calendar") {
 
         private static final long serialVersionUID = 1L;
 
@@ -608,7 +608,7 @@ public class TypeUtils {
      * @author Christian Beikov
      * @since 1.2.0
      */
-    private abstract static class AbstractTypeConverter<T> implements TypeConverter<T>, Serializable {
+    abstract static class AbstractTypeConverter<T> implements TypeConverter<T>, Serializable {
 
         private static final long serialVersionUID = 1L;
 
@@ -618,18 +618,46 @@ public class TypeUtils {
             appendTo(value, sb);
             return sb.toString();
         }
+
+        protected static IllegalArgumentException unknownConversion(Object value, Class<?> targetType) {
+            String type = value == null ? "unknown" : value.getClass().getName();
+            return new IllegalArgumentException("Could not convert '" + value + "' of type '" + type + "' to the type '" + targetType.getName() + "'!");
+        }
+    }
+
+    /**
+     * Abstract type converter.
+     *
+     * @param <T> The converted type
+     * @author Christian Beikov
+     * @since 1.6.0
+     */
+    abstract static class AbstractLiteralFunctionTypeConverter<T> extends AbstractTypeConverter<T> implements LiteralFunctionTypeConverter<T> {
+
+        private static final long serialVersionUID = 1L;
+
+        private final String literalFunctionName;
+
+        public AbstractLiteralFunctionTypeConverter(String literalFunctionName) {
+            this.literalFunctionName = literalFunctionName;
+        }
+
+        @Override
+        public String getLiteralFunctionName() {
+            return literalFunctionName;
+        }
     }
 
     private TypeUtils() {
     }
 
-    private static String jdbcTimestamp(int year, int month, int date, int hour, int minute, int second, int nanos) {
+    static String jdbcTimestamp(int year, int month, int date, int hour, int minute, int second, int nanos) {
         StringBuilder sb = new StringBuilder(36);
         appendJdbcTimestamp(sb, year, month, date, hour, minute, second, nanos);
         return sb.toString();
     }
 
-    private static void appendJdbcTimestamp(StringBuilder sb, int year, int month, int date, int hour, int minute, int second, int nanos) {
+    static void appendJdbcTimestamp(StringBuilder sb, int year, int month, int date, int hour, int minute, int second, int nanos) {
         sb.append("{ts '");
         
         sb.append(year);
@@ -681,13 +709,13 @@ public class TypeUtils {
         sb.append("'}");
     }
 
-    private static String jdbcDate(int year, int month, int date) {
+    static String jdbcDate(int year, int month, int date) {
         StringBuilder sb = new StringBuilder(16);
         appendJdbcDate(sb, year, month, date);
         return sb.toString();
     }
 
-    private static void appendJdbcDate(StringBuilder sb, int year, int month, int date) {
+    static void appendJdbcDate(StringBuilder sb, int year, int month, int date) {
         sb.append("{d '");
 
         sb.append(year);
@@ -709,13 +737,13 @@ public class TypeUtils {
         sb.append("'}");
     }
 
-    private static String jdbcTime(int hour, int minute, int second) {
+    static String jdbcTime(int hour, int minute, int second) {
         StringBuilder sb = new StringBuilder(14);
         appendJdbcTime(sb, hour, minute, second);
         return sb.toString();
     }
 
-    private static void appendJdbcTime(StringBuilder sb, int hour, int minute, int second) {
+    static void appendJdbcTime(StringBuilder sb, int hour, int minute, int second) {
         sb.append("{t '");
 
         if (hour < 10) {
@@ -771,8 +799,18 @@ public class TypeUtils {
         temporalConverters.add(TIMESTAMP_CONVERTER);
         temporalConverters.add(DATE_TIMESTAMP_CONVERTER);
         temporalConverters.add(CALENDAR_CONVERTER);
-        // Maybe support Java 8 time types if JPA provider can handle it? See https://github.com/Blazebit/blaze-persistence/issues/1050
-        // LocalDate, LocalTime, LocalDateTime, Instant, ZoneDateTime, OffsetDateTime, OffsetTime
+
+        try {
+            c.put(Class.forName("java.time.LocalDate"), LocalDateTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.LocalTime"), LocalTimeTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.Instant"), InstantTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.OffsetTime"), OffsetTimeTypeConverter.INSTANCE);
+            c.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeTypeConverter.INSTANCE);
+        } catch (Exception ex) {
+            // Ignore
+        }
         Set<TypeConverterContributor> contributors = new TreeSet<>(new TypeConverterContributorComparator());
         for (Iterator<TypeConverterContributor> iterator = ServiceLoader.load(TypeConverterContributor.class).iterator(); iterator.hasNext(); ) {
             try {
