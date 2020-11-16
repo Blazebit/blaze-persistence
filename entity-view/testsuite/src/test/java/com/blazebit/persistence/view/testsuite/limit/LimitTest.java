@@ -25,7 +25,6 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -80,18 +79,16 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoMySQLOld.class, NoOracle.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // H2 and the MySQL before 8 didn't support lateral joins which are required here
-    // Our Oracle version does not support lateral yet, only after 12c
     // EclipseLink, Datanucleus and OpenJPA don't support extended SQL
     public void testLimitMultiset() {
         test(PersonLimitMultisetView.class, null);
     }
 
     @Test
-    @Category({ NoOracle.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // We need a left entity join for this so Hibernate < 5.1 can't be used
-    // Our Oracle version does not support lateral yet, only after 12c
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
     // Datanucleus fails because of a NPE?
@@ -101,9 +98,8 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // We need a left entity join for this so Hibernate < 5.1 can't be used
-    // Our Oracle version does not support lateral yet, only after 12c
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
     // Datanucleus fails because of a NPE?
@@ -122,8 +118,7 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
-    // Our Oracle version does not support lateral yet, only after 12c
+    @Category({ NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
     // Datanucleus fails because of a NPE?
@@ -133,8 +128,7 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
-    // Our Oracle version does not support lateral yet, only after 12c
+    @Category({ NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
     // Datanucleus fails because of a NPE?

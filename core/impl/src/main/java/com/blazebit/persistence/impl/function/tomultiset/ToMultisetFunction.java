@@ -84,7 +84,13 @@ public class ToMultisetFunction implements JpqlFunction, JpqlFunctionProcessor<C
 
         String subquery = context.getArgument(0);
         int fromIndex = SqlUtils.indexOfFrom(subquery, 1);
-        String[] selectItemExpressions = SqlUtils.getSelectItemExpressions(subquery, SqlUtils.SELECT_FINDER.indexIn(subquery));
+        String[] selectItemExpressions;
+        if (subquery.startsWith("(select * from (")) {
+            // For Oracle we need a select wrapper with rownum calculation for for LIMIT/OFFSET support
+            selectItemExpressions = SqlUtils.getSelectItemAliases(subquery, SqlUtils.SELECT_FINDER.indexIn(subquery, "(select * from (".length()));
+        } else {
+            selectItemExpressions = SqlUtils.getSelectItemExpressions(subquery, SqlUtils.SELECT_FINDER.indexIn(subquery, 1));
+        }
         String[] fields = createFields(selectItemExpressions.length);
         if (toJsonFunction == null) {
             toXmlFunction.render(context, fields, selectItemExpressions, subquery, fromIndex);

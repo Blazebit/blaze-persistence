@@ -36,6 +36,7 @@ import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -525,10 +526,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Our Oracle version does not support lateral yet, only after 12c
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinLateralEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromValues(RecursiveEntity.class, "name", "val", Collections.singletonList("child1_1"))
@@ -551,10 +551,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Our Oracle version does not support lateral yet, only after 12c
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinLateralCorrelationEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
@@ -576,10 +575,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Our Oracle version does not support lateral yet, only after 12c
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinLateralCorrelationEntityJoinTableWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
@@ -592,6 +590,48 @@ public class InlineCTETest extends AbstractCoreTest {
                 .end()
                 .select("t");
         String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM x.children2 r ORDER BY r.name ASC LIMIT 1";
+        String expected = ""
+                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
+
+        assertEquals(expected, cb.getQueryString());
+        List<RecursiveEntity> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+    }
+
+    // Test for #1193
+    // NOTE: H2 and old MySQL do not support lateral joins
+    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testJoinLateralWithArrayExpressionImplicitJoin() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
+                .from(RecursiveEntity.class, "x")
+                .leftJoinLateralEntitySubquery("RecursiveEntity[name = x.parent.name]", "t", "r").end()
+                .where("x.name").eq("root1")
+                .select("t");
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity r, RecursiveEntity x_parent_base LEFT JOIN x_parent_base.parent parent_1 WHERE r.name = parent_1.name AND x.id = x_parent_base.id";
+        String expected = ""
+                + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
+
+        assertEquals(expected, cb.getQueryString());
+        List<RecursiveEntity> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+    }
+
+    // Additional test for #1193
+    // NOTE: H2 and old MySQL do not support lateral joins
+    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    @Test
+//    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    // NOTE: This requires joins to be ordered correctly which is only fixed in Hibernate 5.4.22+. Also see https://hibernate.atlassian.net/browse/HHH-14201
+    @Ignore
+    public void testJoinLateralWithElementArrayExpressionImplicitJoin() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
+                .from(RecursiveEntity.class, "x")
+                .leftJoinLateralEntitySubquery("x.children[name = x.parent.name]", "t", "r").end()
+                .where("x.name").eq("root1")
+                .select("t");
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity x_children_base, RecursiveEntity x_parent_base LEFT JOIN x_parent_base.parent parent_1 JOIN x_children_base.children r ON (r.name = parent_1.name) WHERE x.id = x_children_base.id AND x.id = x_parent_base.id";
         String expected = ""
                 + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
 

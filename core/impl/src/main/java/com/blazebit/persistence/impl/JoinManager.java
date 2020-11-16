@@ -663,9 +663,13 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 JoinNode matchingNode = implicitCorrelation ? findNode(null, null, arrayExpression) : null;
                 if (matchingNode == null) {
                     rootAlias = addRoot(metamodel.entity(((EntityLiteral) arrayExpression.getBase()).getValue()), rootAlias, lateral && pathElements.size() == 1);
-                    implicitJoinIndex(arrayExpression);
                     correlationParent = ((JoinAliasInfo) aliasManager.getAliasInfo(rootAlias)).getJoinNode();
-                    generateAndApplyOnPredicate(correlationParent, arrayExpression);
+                    // We don't need to implicit join the array index expression in the lateral join node
+                    // This is only necessary in the CTE query where the lateral flag is set to false
+                    if (!lateral) {
+                        implicitJoinIndex(arrayExpression);
+                        generateAndApplyOnPredicate(correlationParent, arrayExpression);
+                    }
                 } else {
                     rootAlias = matchingNode.getAliasExpression();
                     correlationParent = matchingNode;
@@ -1035,11 +1039,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             } else {
                 JoinResult node = createOrUpdateNode(joinNode, Collections.singletonList(correlatedAttribute), treatType == null ? null : treatType.getName(), rootAlias, JoinType.INNER, null, false, false, true, true);
                 correlationRootNode = node.baseNode;
-                generateAndApplyOnPredicate(correlationRootNode, (ArrayExpression) correlatedAttributeExpr);
+                ArrayExpression arrayExpression = (ArrayExpression) correlatedAttributeExpr;
+                implicitJoinIndex(arrayExpression);
+                generateAndApplyOnPredicate(correlationRootNode, arrayExpression);
                 // In case we introduce a synthetic subquery for the ON clause predicate, we need to replace uses of the outer query with a subquery alias
                 correlationRootNode.getOnPredicate().accept(new CorrelationReplacementVisitor(result.baseNode, joinNode));
-                joinNode.getOnPredicate().getChildren().addAll(correlationRootNode.getOnPredicate().getChildren());
-                correlationRootNode.setOnPredicate(null);
             }
         }
 
