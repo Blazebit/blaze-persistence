@@ -19,6 +19,7 @@ Not yet released
 * Support aliases in CTE binds
 * Always respect filterNulls in collection and map accumulators
 * Avoid transforming `SIZE` to `COUNT` when implicit group by would fail
+* Fix for implicit join in lateral join correlation path array expression index
 
 ### Backwards-incompatible changes
 
