@@ -665,8 +665,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         JoinVisitor joinVisitor = applyImplicitJoins(null);
-        // We pass true here to always generate implicit group bys for select and order by clauses. We filter these out later if necessary
-        applyExpressionTransformersAndBuildGroupByClauses(true, joinVisitor);
+        applyExpressionTransformersAndBuildGroupByClauses(joinVisitor);
         analyzeConstantifiedJoinNodes();
         hasCollections = joinManager.hasCollections();
 
@@ -761,6 +760,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         // No need to do the check again if no mutation occurs
         needsCheck = false;
+    }
+
+    @Override
+    protected void buildImplicitGroupByClauses(JoinVisitor joinVisitor) {
+        // We only need to build the implicit group by items for the select items if we definitely use group bys
+        // Otherwise there is no need for this. The implicit group by clauses for the order by items are sufficient
+        if (hasGroupBy) {
+            selectManager.buildImplicitGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy, joinVisitor);
+        }
+        // We always need the implicit group by clauses for pagination
+        havingManager.buildImplicitGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
+        orderByManager.buildImplicitGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
     }
 
     private void initializeOrderByAliasesWithIdentifierToUse(List<OrderByExpression> orderByExpressions) {

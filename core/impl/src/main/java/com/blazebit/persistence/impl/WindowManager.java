@@ -98,12 +98,6 @@ public class WindowManager<T> extends AbstractManager<ExpressionModifier> {
         return ClauseType.WINDOW;
     }
 
-    void init(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
-        if (queryContext == null) {
-            this.queryContext = new QueryContext(queryBuilder, ClauseType.WINDOW);
-        }
-    }
-
     void applyFrom(WindowManager<?> windowManager, ExpressionCopyContext copyContext) {
         for (Map.Entry<String, WindowDefinition> entry : windowManager.windows.entrySet()) {
             WindowDefinition windowDefinition = entry.getValue();
