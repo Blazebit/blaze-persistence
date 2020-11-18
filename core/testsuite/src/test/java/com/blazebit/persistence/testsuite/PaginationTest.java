@@ -1225,4 +1225,19 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals("doc1", result.get(0).getName());
         assertEquals(2, result.getTotalSize());
     }
+
+    // Test for #1209
+    // NOTE: DataNucleus renders the literal `(1)` for the byte array parameter on PostgreSQL which is wrong
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testPaginationImplicitGroupByWithParameter() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("CASE WHEN d.age > 1 THEN d.byteArray ELSE :param END")
+                .orderByAsc("d.id")
+                .page(0, 10)
+                .setParameter("param", new byte[]{ 1 });
+
+        cb.getResultList();
+    }
 }

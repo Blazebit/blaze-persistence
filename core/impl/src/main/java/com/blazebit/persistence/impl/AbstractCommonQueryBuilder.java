@@ -2663,7 +2663,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.acceptVisitor(expressionVisitor);
     }
 
-    public void applyExpressionTransformersAndBuildGroupByClauses(boolean addsGroupBy, JoinVisitor joinVisitor) {
+    public void applyExpressionTransformersAndBuildGroupByClauses(JoinVisitor joinVisitor) {
         groupByManager.resetCollected();
         groupByManager.collectGroupByClauses(joinVisitor);
 
@@ -2693,7 +2693,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(orderByManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE, true));
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(AggregateDetectionVisitor.INSTANCE));
 
-        if (hasGroupBy || addsGroupBy) {
+        buildImplicitGroupByClauses(joinVisitor);
+
+        for (int i = 0; i < size; i++) {
+            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
+            transformerGroup.afterAllTransformations();
+        }
+    }
+
+    protected void buildImplicitGroupByClauses(JoinVisitor joinVisitor) {
+        if (hasGroupBy) {
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromSelectEnabled()) {
                 selectManager.buildImplicitGroupByClauses(cbf.getMetamodel(), groupByManager, hasGroupBy, joinVisitor);
             }
@@ -2703,11 +2712,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             if (mainQuery.getQueryConfiguration().isImplicitGroupByFromOrderByEnabled()) {
                 orderByManager.buildImplicitGroupByClauses(groupByManager, hasGroupBy, joinVisitor);
             }
-        }
-
-        for (int i = 0; i < size; i++) {
-            ExpressionTransformerGroup<?> transformerGroup = transformerGroups.get(i);
-            transformerGroup.afterAllTransformations();
         }
     }
 
@@ -3505,7 +3509,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // join("a.b", "b").where("b.c")
         // in the first case
         JoinVisitor joinVisitor = applyImplicitJoins(null);
-        applyExpressionTransformersAndBuildGroupByClauses(false, joinVisitor);
+        applyExpressionTransformersAndBuildGroupByClauses(joinVisitor);
         analyzeConstantifiedJoinNodes();
         hasCollections = joinManager.hasCollections();
 
