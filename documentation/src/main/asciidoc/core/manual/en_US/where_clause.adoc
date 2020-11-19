@@ -7,7 +7,7 @@ therefore it is advised to move relation access to an exists subquery in DML sta
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.update(em, Cat.class, "c")
-    .setExpression("age", "age + 1")
+    .setExpression("c.age", "c.age + 1")
     .whereExists()
         .from(Cat.class, "subCat")
         .where("subCat.id").eqExpression("c.id")
