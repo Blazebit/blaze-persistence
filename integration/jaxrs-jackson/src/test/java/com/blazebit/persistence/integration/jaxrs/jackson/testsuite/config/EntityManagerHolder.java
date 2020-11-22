@@ -35,8 +35,10 @@ public class EntityManagerHolder {
     private EntityManager em;
 
     @Inject
+    private EntityManagerFactory emf;
+
     @PostConstruct
-    public void init(EntityManagerFactory emf) {
+    public void init() {
         em = emf.createEntityManager();
     }
 

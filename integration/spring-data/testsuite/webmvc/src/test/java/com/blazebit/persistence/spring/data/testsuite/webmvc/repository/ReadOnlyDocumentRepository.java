@@ -47,7 +47,22 @@ public interface ReadOnlyDocumentRepository<T> extends EntityViewRepository<T, L
 
     @EntityGraph(attributePaths = "owner")
     @Query("select d from Document d where d.name = 'D1'")
-    Document findD1();
+    Document findD1EntityGraph();
+
+    @Query(name = "findD1")
+    Document findD1NamedQuery();
+
+    @Query(value = "select * from Document d where d.name = 'D1'", nativeQuery = true)
+    Document findD1Native();
+
+    @Query("select d.id from Document d where d.name = 'D1'")
+    Long findD1Projection();
+
+    @Query(name = "findIdOfD1")
+    Long findD1NamedQueryProjection();
+
+    @Query(value = "select d.id from Document d where d.name = 'D1'", nativeQuery = true)
+    Long findD1NativeProjection();
 
     List<?> findByDescription(String description);
 
