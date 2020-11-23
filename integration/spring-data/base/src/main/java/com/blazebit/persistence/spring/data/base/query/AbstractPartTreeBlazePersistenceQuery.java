@@ -342,20 +342,21 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
         }
 
         @SuppressWarnings("unchecked")
-        protected <T> EntityViewSetting<T, ?> processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
+        protected <T> EntityViewSetting<? extends T, ?> processSetting(EntityViewSetting<T, ?> setting, Object[] values) {
+            EntityViewSetting<? extends T, ?> processedSetting = setting;
             int entityViewSettingProcessorIndex = parameters.getEntityViewSettingProcessorIndex();
             if (entityViewSettingProcessorIndex >= 0) {
                 EntityViewSettingProcessor<T> processor = (EntityViewSettingProcessor<T>) values[entityViewSettingProcessorIndex];
                 if (processor != null) {
-                    setting = processor.acceptEntityViewSetting(setting);
+                    processedSetting = processor.acceptEntityViewSetting(setting);
                 }
             }
             for (JpaParameter parameter : parameters.getOptionalParameters()) {
                 String parameterName = parameter.getParameterName();
                 Object parameterValue = values[parameter.getIndex()];
-                setting.addOptionalParameter(parameterName, parameterValue);
+                processedSetting.addOptionalParameter(parameterName, parameterValue);
             }
-            return setting;
+            return processedSetting;
         }
 
         protected void processSort(FullQueryBuilder<?, ?> cb, Object[] values, Class<?> entityViewClass, Map<String, Sorter> evsAttributeSorter) {

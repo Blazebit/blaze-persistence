@@ -30,5 +30,5 @@ public interface EntityViewSettingProcessor<T> {
      * @param setting the {@link EntityViewSetting} to be processed
      * @return the final {@link EntityViewSetting} to allow further processing
      */
-    EntityViewSetting<T, ?> acceptEntityViewSetting(EntityViewSetting<T, ?> setting);
+    EntityViewSetting<? extends T, ?> acceptEntityViewSetting(EntityViewSetting<T, ?> setting);
 }
