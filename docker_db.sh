@@ -26,22 +26,6 @@ db2() {
         OUTPUT=$(docker logs db2)
     done
     docker exec -t db2 su - db2inst1 bash -c ". /database/config/db2inst1/sqllib/db2profile && /database/config/db2inst1/sqllib/bin/db2 'connect to test' && /database/config/db2inst1/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
-
-  # Linux
-	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar db2jcc4.jar
-	#mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
-	#rm -f db2jcc4.jar
-	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar db2jcc_license_cu.jar
-	#mvn -q install:install-file -Dfile=db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
-	#rm -f db2jcc_license_cu.jar
-
-  # Windows
-	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar db2jcc4.jar
-	#mvn -q install:install-file -D"file=db2jcc4.jar" -D"groupId=com.ibm.db2" -D"artifactId=db2jcc4" -D"version=9.7" -D"packaging=jar" -D"generatePom=true"
-	#rm -Force db2jcc4.jar
-	#docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar db2jcc_license_cu.jar
-	#mvn -q install:install-file -D"file=db2jcc_license_cu.jar" -D"groupId=com.ibm.db2" -D"artifactId=db2jcc_license_cu" -D"version=9.7" -D"packaging=jar" -D"generatePom=true"
-	#rm -Force db2jcc_license_cu.jar
 }
 
 mssql() {

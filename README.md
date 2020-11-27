@@ -536,29 +536,9 @@ During installation use the password "oracle" which is also the default password
 
 When using the DB2 docker container via `docker_db.sh db2` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:db2://192.168.99.100:50000/test -Djdbc.user=db2inst1 -Djdbc.password=db2inst1-pwd`
 
-### JDBC Driver
-
-You have to install the JDBC driver manually. If you install DB2 Express locally, you can take it from $DB2_HOME/sqllib/java otherwise download it from http://www-01.ibm.com/support/docview.wss?uid=swg21363866
-
-When using the docker container, you can find in the copy script to extract the JDBC driver from the container in `docker_db.sh`.
-
-`docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc4.jar ~/db2jcc4.jar`
-
-`docker cp db2:/database/config/db2inst1/sqllib/java/db2jcc_license_cu.jar ~/db2jcc_license_cu.jar`
-
-Install via the following commands.
-
-`mvn -q install:install-file -Dfile=db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true`
-
-`mvn -q install:install-file -Dfile=db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true`
-
 ## SQL Server
 
 When using the DB2 docker container via `docker_db.sh mssql` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:sqlserver://192.168.99.100:1433`
-
-### JDBC Driver
-
-Since the JDBC driver is officially available in Maven central, you don't have to separately install it.
 
 ## GraalVM for native images with Quarkus
 

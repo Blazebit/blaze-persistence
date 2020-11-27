@@ -1,0 +1,508 @@
+name: "Blaze-Persistence CI"
+on: [push, pull_request]
+env:
+  MAVEN_SKIP_RC: true
+jobs:
+  build:
+    name: Test
+    runs-on: ubuntu-latest
+    # We want to know the test results of all matrix entries
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+# When GitHub Actions supports it: https://github.com/actions/toolkit/issues/399
+# We will use the experimental flag as indicator whether a failure should cause a workflow failure
+        include:
+################################################
+# hibernate-5.2
+################################################
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: mysql8
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: oracle
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: db2
+            provider: hibernate-5.2
+            jdk: 8
+          - rdbms: mssql
+            provider: hibernate-5.2
+            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate-5.2
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.2
+#            jdk: 8
+# Test different spring-data and deltaspike versions
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.0.x
+            deltaspike: deltaspike-1.8
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.1.x
+            deltaspike: deltaspike-1.8
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.2.x
+            deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.3.x
+            deltaspike: deltaspike-1.9
+          - rdbms: postgresql
+            provider: hibernate-apt
+            jdk: 8
+            spring-data: spring-data-2.3.x
+            deltaspike: deltaspike-1.9
+            
+################################################
+# datanucleus-5
+################################################
+          - rdbms: h2
+            provider: datanucleus-5
+            jdk: 8
+          - rdbms: mysql
+            provider: datanucleus-5
+            jdk: 8
+          - rdbms: postgresql
+            provider: datanucleus-5
+            jdk: 8
+#          - rdbms: mssql
+#            provider: datanucleus-5
+#            jdk: 8
+#          - rdbms: db2
+#            provider: datanucleus-5
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: datanucleus-5
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: datanucleus-5
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: datanucleus-5
+#            jdk: 8
+
+################################################
+# eclipselink
+################################################
+          - rdbms: h2
+            provider: eclipselink
+            jdk: 8
+#          - rdbms: mysql
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: postgresql
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: db2
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: eclipselink
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: eclipselink
+#            jdk: 8
+
+################################################
+# openjpa
+################################################
+#          - rdbms: h2
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: mysql
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: postgresql
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: db2
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: openjpa
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: openjpa
+#            jdk: 8
+
+################################################
+# hibernate-5.3
+################################################
+          - rdbms: h2
+            provider: hibernate-5.3
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate-5.3
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate-5.3
+            jdk: 8
+          - rdbms: oracle
+            provider: hibernate-5.3
+            jdk: 8
+          - rdbms: db2
+            provider: hibernate-5.3
+            jdk: 8
+          - rdbms: mssql
+            provider: hibernate-5.3
+            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate-5.3
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.3
+#            jdk: 8
+
+################################################
+# hibernate-5.4
+################################################
+          - rdbms: h2
+            provider: hibernate-5.4
+            jdk: 8
+            native: true
+          - rdbms: mysql8
+            provider: hibernate-5.4
+            jdk: 8
+            native: true
+          - rdbms: postgresql
+            provider: hibernate-5.4
+            jdk: 8
+            native: true
+          - rdbms: oracle
+            provider: hibernate-5.4
+            jdk: 8
+          - rdbms: db2
+            provider: hibernate-5.4
+            jdk: 8
+          - rdbms: mssql
+            provider: hibernate-5.4
+            jdk: 8
+            native: true
+#          - rdbms: sqlite
+#            provider: hibernate-5.4
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.4
+#            jdk: 8
+
+################################################
+# datanucleus-5.1
+################################################
+#          - rdbms: h2
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: mysql
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: postgresql
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: db2
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: datanucleus-5.1
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: datanucleus-5.1
+#            jdk: 8
+
+################################################
+# hibernate-5.1
+################################################
+          - rdbms: h2
+            provider: hibernate-5.1
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate-5.1
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate-5.1
+            jdk: 8
+#          - rdbms: mysql8
+#            provider: hibernate-5.1
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: hibernate-5.1
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate-5.1
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: hibernate-5.1
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate-5.1
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.1
+#            jdk: 8
+
+################################################
+# hibernate-5.0
+################################################
+          - rdbms: h2
+            provider: hibernate-5.0
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate-5.0
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate-5.0
+            jdk: 8
+#          - rdbms: mysql8
+#            provider: hibernate-5.0
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: hibernate-5.0
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate-5.0
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: hibernate-5.0
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate-5.0
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.0
+#            jdk: 8
+
+################################################
+# hibernate-4.3
+################################################
+          - rdbms: h2
+            provider: hibernate-4.3
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate-4.3
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate-4.3
+            jdk: 8
+#          - rdbms: mysql8
+#            provider: hibernate-4.3
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: hibernate-4.3
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate-4.3
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: hibernate-4.3
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate-4.3
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-4.3
+#            jdk: 8
+
+################################################
+# hibernate-4.2
+################################################
+          - rdbms: h2
+            provider: hibernate
+            jdk: 8
+          - rdbms: mysql
+            provider: hibernate
+            jdk: 8
+          - rdbms: postgresql
+            provider: hibernate
+            jdk: 8
+#          - rdbms: mysql8
+#            provider: hibernate
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: hibernate
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: hibernate
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: hibernate
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate
+#            jdk: 8
+            
+################################################
+# datanucleus-4
+################################################
+          - rdbms: h2
+            provider: datanucleus-4
+            jdk: 8
+#          - rdbms: mysql
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: postgresql
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: mssql
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: db2
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: oracle
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: sqlite
+#            provider: datanucleus-4
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: datanucleus-4
+#            jdk: 8
+            
+################################################
+# hibernate-6.0
+################################################
+#          - rdbms: h2
+#            provider: hibernate-6.0
+#            jdk: 8
+
+################################################
+# JDK 9+
+################################################
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 11
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 14
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 15
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 16
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 9
+            build-jdk: 9
+            deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 11
+            build-jdk: 11
+            deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 14
+            build-jdk: 14
+            deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 15
+            build-jdk: 15
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.3.x
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 16
+            build-jdk: 16
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.3.x
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DeLaGuardo/setup-graalvm@master
+        if: ${{ matrix.native }}
+        with:
+          graalvm-version: '20.1.0.java11'
+      - name: Set up Java 8
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: 8
+          targets: JDK8_HOME;JAVA_HOME
+      - name: Download Requested JDK
+        uses: sormuras/download-jdk@1.1
+        id: jdk
+        if: ${{ matrix.jdk != 8 }}
+        with:
+          feature: ${{ matrix.jdk }}
+      - name: Set up Requested JDK
+        uses: actions/setup-java@v1.4.3
+        if: ${{ matrix.jdk != 8 }}
+        with:
+          java-version: ${{ matrix.jdk }}
+          jdkFile: ${{ env.JDK_FILE }}
+
+      - name: Get year/month for cache key
+        id: get-date
+        run: |
+          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
+        shell: bash
+      - name: Cache Maven local repository
+        uses: actions/cache@v2
+        id: cache-maven
+        with:
+          path: |
+            ~/.m2/repository
+          # refresh cache every month to avoid unlimited growth
+          key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
+      - name: Set up Maven
+        run: ./mvnw -v
+
+      - name: Run build script
+        env:
+          JDK8_HOME: ${{ env.JDK8_HOME }}
+          RDBMS: ${{ matrix.rdbms }}
+          JPAPROVIDER: ${{ matrix.provider }}
+          JDK: ${{ matrix.jdk }}
+          BUILD_JDK: ${{ matrix.build-jdk }}
+          NATIVE: ${{ matrix.native }}
+          DELTASPIKE: ${{ matrix.deltaspike }}
+          SPRING_DATA: ${{ matrix.spring-data }}
+        run: ./ci/build-github.sh
+        shell: bash
+
+      - name: Upload test reports (if Maven failed)
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: test-reports-${{ matrix.provider }}-${{ matrix.rdbms }}-jdk${{ matrix.jdk }}-build-jdk${{ matrix.build-jdk }}-${{ matrix.deltaspike }}-${{ matrix.spring-data }}
+          path: './**/*-reports/'
+
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh

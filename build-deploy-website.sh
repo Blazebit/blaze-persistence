@@ -29,5 +29,5 @@ else
 	exit 1
 fi
 
-mvn -P $STAGE --projects website -am clean compile "$@"
-mvn -P $STAGE --projects website site:deploy -DrepositoryId=$REPO "$@"
+./mvnw -P $STAGE --projects website -am clean compile "$@"
+./mvnw -P $STAGE --projects website site:deploy -DrepositoryId=$REPO "$@"

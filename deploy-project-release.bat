@@ -16,4 +16,4 @@ if "%jdk_path%" == "" (
 set JAVA_HOME=%jdk_path%
 echo "Using JAVA_HOME=%JAVA_HOME%"
 set MAVEN_OPTS="-Xmx1024m"
-mvn "-Pblazebit-release" -f %project_path%\pom.xml install deploy:deploy -DskipTests -DskipITs "-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181" -DaltDeploymentRepository=blazebit::default::https://nexus.blazebit.com/repository/maven-releases/ %*
+./mvnw "-Pblazebit-release" -f %project_path%\pom.xml install deploy:deploy -DskipTests -DskipITs "-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181" -DaltDeploymentRepository=blazebit::default::https://nexus.blazebit.com/repository/maven-releases/ %*

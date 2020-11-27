@@ -304,11 +304,6 @@
         </profile>
         <profile>
             <id>db2</id>
-            <!-- In order to use this profile, you have to install the db2 driver
-                jars via: mvn -q install:install-file -Dfile=/PATH/TO/db2jcc4.jar -DgroupId=com.ibm.db2
-                -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true mvn
-                -q install:install-file -Dfile=/PATH/TO/db2jcc_license_cu.jar -DgroupId=com.ibm.db2
-                -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true -->
             <build>
                 <plugins>
                     <plugin>
@@ -337,14 +332,8 @@
             <dependencies>
                 <dependency>
                     <groupId>com.ibm.db2</groupId>
-                    <artifactId>db2jcc4</artifactId>
-                    <version>9.7</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>com.ibm.db2</groupId>
-                    <artifactId>db2jcc_license_cu</artifactId>
-                    <version>9.7</version>
+                    <artifactId>jcc</artifactId>
+                    <version>11.5.5.0</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

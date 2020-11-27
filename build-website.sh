@@ -19,4 +19,4 @@ else
 	fi
 fi
 
-mvn -P $STAGE --projects website -am clean compile
+./mvnw -P $STAGE --projects website -am clean compile

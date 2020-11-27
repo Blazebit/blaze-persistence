@@ -1,4 +1,5 @@
-#!/usr/bin/env sh
+#! /bin/bash
+
 echo "Current directory is $(pwd)"
 echo "\n=== SUREFIRE REPORTS ===\n"
 

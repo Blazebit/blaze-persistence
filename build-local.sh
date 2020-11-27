@@ -56,7 +56,7 @@ fi
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en"
 
 if [ "$BUILD" == "test" ]; then
-	eval exec mvn -P "$PROFILES" --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am clean test $PROPERTIES
+	eval exec ./mvnw -P "$PROFILES" --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am clean test $PROPERTIES
 else
-	eval exec mvn -P "$PROFILES" clean test $PROPERTIES
+	eval exec ./mvnw -P "$PROFILES" clean test $PROPERTIES
 fi

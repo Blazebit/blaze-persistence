@@ -140,11 +140,11 @@ public final class ForeignPackageAdapterClassWriter {
                 List<? extends VariableElement> parameters = executableElement.getParameters();
                 if (!parameters.isEmpty()) {
                     isGeneric = parameters.get(0).asType().getKind() == TypeKind.TYPEVAR;
-                    printParameter(sb, entity, parameters.get(0), context);
+                    printParameter(sb, entity, parameters.get(0), 0, context);
                     for (int i = 1; i < parameters.size(); i++) {
                         isGeneric = isGeneric || parameters.get(i).asType().getKind() == TypeKind.TYPEVAR;
                         sb.append(", ");
-                        printParameter(sb, entity, parameters.get(i), context);
+                        printParameter(sb, entity, parameters.get(i), i, context);
                     }
                 }
 
@@ -158,13 +158,12 @@ public final class ForeignPackageAdapterClassWriter {
                             .append("(");
                     if (!parameters.isEmpty()) {
                         sb.append(parameters.get(0).asType())
-                                .append(" ")
-                                .append(parameters.get(0));
+                                .append(" arg0");
                         for (int i = 1; i < parameters.size(); i++) {
                             sb.append(", ");
                             sb.append(parameters.get(i).asType())
-                                    .append(" ")
-                                    .append(parameters.get(i));
+                                    .append(" arg")
+                                    .append(i);
                         }
                     }
 
@@ -179,10 +178,10 @@ public final class ForeignPackageAdapterClassWriter {
         sb.append(NEW_LINE);
     }
 
-    private static void printParameter(StringBuilder sb, MetaEntityView entity, VariableElement variableElement, Context context) {
+    private static void printParameter(StringBuilder sb, MetaEntityView entity, VariableElement variableElement, int index, Context context) {
         sb.append(TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), variableElement.asType(), context))
-                .append(" ")
-                .append(variableElement);
+                .append(" arg")
+                .append(index);
     }
 
     private static void printTypeVariable(StringBuilder sb, TypeVariable t) {

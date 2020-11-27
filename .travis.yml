@@ -1,41 +1,24 @@
 language: java
 sudo: false
 dist: trusty
-notifications:
-  slack: "blazebit:$SLACK_API_TOKEN"
 cache:
   directories:
     - '$HOME/.m2/repository'
-before_install:
-  - bash -c "if [ '$RDBMS' = 'firebird' ]; then bash travis/before_install_firebird.sh; fi"
 install:
 # Skip the first maven execution for downloading dependencies by using this command
   - /bin/true
-before_script:
-  - |
-    if [ "$NATIVE" = "true" ]; then
-      sudo add-apt-repository -y ppa:jonathonf/python-3.6
-      sudo apt-get update
-      sudo apt-get install -y python3-pip
-      yes | sudo pip3 install git+https://github.com/naftulikay/travis-pls
-      source setup-graalvm.sh
-    fi
-  - bash -c "if [ '$RDBMS' = 'mysql' ]; then MYSQL_VERSION=5.7 bash travis/before_script_mysql.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'mysql8' ]; then MYSQL_VERSION=8.0.21 bash travis/before_script_mysql.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
-  - bash -c "if [ '$RDBMS' = 'db2' ]; then bash travis/before_script_db2.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'firebird' ]; then bash travis/before_script_firebird.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'oracle' ]; then bash travis/before_script_oracle.sh; fi"
-  - bash -c "if [ '$RDBMS' = 'mssql' ]; then bash travis/before_script_mssql.sh; fi"
 after_failure:
-  - bash travis/print_surefire_reports.sh
+  - ./ci/print_surefire_reports.sh
 script:
-  - ./build.sh
+  - ./ci/build-travis.sh
+before_cache:
+  - ./ci/before-cache.sh
 after_success:
-  - "bash ./.travis-deploy.sh"
+  - ./ci/deploy-snapshot-travis.sh
 env:
   global:
     - MAVEN_SKIP_RC=true
+    - JDK8_HOME=/usr/lib/jvm/java-8-oracle
 matrix:
   fast_finish: true
   include:
@@ -253,9 +236,9 @@ matrix:
       sudo: true
       services:
         - docker
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=sqlite
+#    - env: JPAPROVIDER=hibernate-5.4 RDBMS=sqlite
 #      jdk: oraclejdk8
-#    - env: JPAPROVIDER=hibernate-5.3 RDBMS=firebird
+#    - env: JPAPROVIDER=hibernate-5.4 RDBMS=firebird
 #      jdk: oraclejdk8
 #      sudo: true
 

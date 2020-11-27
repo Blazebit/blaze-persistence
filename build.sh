@@ -18,25 +18,21 @@ else
   export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m $MAVEN_OPTS"
 fi
 
-if [ "$JDK" = "9" ]; then
-  export JAVA_HOME="/usr/lib/jvm/java-9-oracle/"
-fi
-
-mvn -version
+$DIR/mvnw -version
 
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en -Dmaven.javadoc.skip"
 
 if [ "$BUILD_JDK" != "" ]; then
-  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=/usr/lib/jvm/java-8-oracle"
+  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
 fi
 
 if [ "$JDK" != "" ]; then
-  PROPERTIES="$PROPERTIES -Djdk8.home=/usr/lib/jvm/java-8-oracle"
+  PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
 fi
 
-if [ [ "$JPAPROVIDER" == "hibernate-5.2" ] || [ "$JPAPROVIDER" == "hibernate-apt" ] ] &&
+if { [ "$JPAPROVIDER" == "hibernate-5.2" ] || [ "$JPAPROVIDER" == "hibernate-apt" ]; } &&
     [ "$RDBMS" == "h2" ]; then
-  exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
+  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install -V $PROPERTIES
 else
   PROJECT_LIST="core/testsuite,entity-view/testsuite,jpa-criteria/testsuite,integration/deltaspike-data/testsuite,integration/jaxrs,integration/spring-data/testsuite/webflux,integration/spring-data/testsuite/webmvc,examples/spring-data-webmvc,examples/spring-data-webflux,examples/showcase/runner/spring,examples/showcase/runner/cdi,integration/querydsl/testsuite,integration/spring-hateoas/webmvc"
   if [ "$JPAPROVIDER" == "hibernate-6.0" ] &&
@@ -54,11 +50,11 @@ else
       else
         PROJECT_LIST="$PROJECT_LIST,examples/quarkus/testsuite/native/$RDBMS"
       fi
-      exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7},native clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+      exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7},native clean install --projects $PROJECT_LIST -am -V $PROPERTIES
     else
-      exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+      exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
     fi
   else
-    exec mvn -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
+    exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
   fi
 fi

@@ -7,7 +7,7 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-mvn --projects documentation -am clean compile
+./mvnw --projects documentation -am clean compile
 
 if [ $(uname -s) == "Linux" ]; then
   URL="file://$DIR/documentation/target/generated-docs/core/manual/en_US/index.html"
