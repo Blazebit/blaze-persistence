@@ -70,6 +70,8 @@
                         <configuration>
                             <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                             </systemProperties>
                             <systemPropertyVariables>
                                 <quarkus.test.profile>postgresql</quarkus.test.profile>
@@ -95,6 +97,8 @@
                         <configuration>
                             <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                             </systemProperties>
                             <systemPropertyVariables>
                                 <quarkus.test.profile>mysql8</quarkus.test.profile>
@@ -120,6 +124,8 @@
                         <configuration>
                             <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                             </systemProperties>
                             <systemPropertyVariables>
                                 <quarkus.test.profile>mssql</quarkus.test.profile>
@@ -203,6 +209,8 @@
                         <configuration>
                             <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                             </systemProperties>
                             <systemPropertyVariables>
                                 <quarkus.test.profile>h2</quarkus.test.profile>
