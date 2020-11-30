@@ -110,7 +110,7 @@ Defines whether expressions should be optimized.
 [[EXPRESSION_CACHE_CLASS]]
 ==== EXPRESSION_CACHE_CLASS
 
-The full qualified expression cache implementation class name.
+The fully qualified expression cache implementation class name.
 
 [width="100%",cols="2,10",options="header,footer"]
 |====================

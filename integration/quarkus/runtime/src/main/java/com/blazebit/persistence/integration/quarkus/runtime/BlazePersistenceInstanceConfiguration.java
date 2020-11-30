@@ -51,16 +51,16 @@ public class BlazePersistenceInstanceConfiguration {
      * By default the eager loading of the view templates is disabled to have a better startup performance.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem
-    public Optional<Boolean> templateEagerLoading;
+    @ConfigItem(defaultValue = "false")
+    public boolean templateEagerLoading;
 
     /**
      * An integer value that defines the default batch size for entity view attributes.
      * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
      * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
      */
-    @ConfigItem
-    public Optional<Integer> defaultBatchSize;
+    @ConfigItem(defaultValue = "1")
+    public int defaultBatchSize;
 
     /**
      * A mode specifying if correlation value, view root or embedded view batching is expected.
@@ -72,24 +72,24 @@ public class BlazePersistenceInstanceConfiguration {
      *  <li><code>embedding_views</code></li>
      * </ul>
      */
-    @ConfigItem
-    public Optional<String> expectBatchMode;
+    @ConfigItem(defaultValue = "values")
+    public String expectBatchMode;
 
     /**
      * A boolean flag to make it possible to prepare the entity view updater cache on startup.
      * By default the eager loading of entity view updates is disabled to have a better startup performance.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem(name = "updater.eager-loading")
-    public Optional<Boolean> updaterEagerLoading;
+    @ConfigItem(name = "updater.eager-loading", defaultValue = "false")
+    public boolean updaterEagerLoading;
 
     /**
      * A boolean flag to make it possible to disable the strict validation that disallows the use of an updatable entity view type for owned relationships.
      * By default the use is disallowed i.e. the default value is <code>true</code>, but since there might be strange models out there, it possible to allow this.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem(name = "updater.disallow-owned-updatable-subview")
-    public Optional<Boolean> updaterDisallowOwnedUpdatableSubview;
+    @ConfigItem(name = "updater.disallow-owned-updatable-subview", defaultValue = "true")
+    public boolean updaterDisallowOwnedUpdatableSubview;
 
     /**
      * A boolean flag to make it possible to disable the strict cascading check that disallows setting updatable or creatable entity views on non-cascading attributes
@@ -98,8 +98,8 @@ public class BlazePersistenceInstanceConfiguration {
      * By default the use is enabled i.e. the default value is <code>true</code>.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem(name = "updater.strict-cascading-check")
-    public Optional<Boolean> updaterStrictCascadingCheck;
+    @ConfigItem(name = "updater.strict-cascading-check", defaultValue = "true")
+    public boolean updaterStrictCascadingCheck;
 
     /**
      * A boolean flag that allows to switch from warnings to boot time validation errors when invalid plural attribute setters are encountered while the strict cascading check is enabled.
@@ -108,22 +108,22 @@ public class BlazePersistenceInstanceConfiguration {
      * By default the use is disabled i.e. the default value is <code>false</code>.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem(name = "updater.error-on-invalid-plural-setter")
-    public Optional<Boolean> updaterErrorOnInvalidPluralSetter;
+    @ConfigItem(name = "updater.error-on-invalid-plural-setter", defaultValue = "false")
+    public boolean updaterErrorOnInvalidPluralSetter;
 
     /**
      * A boolean flag that allows to specify if empty flat views should be created by default if not specified via {@link EmptyFlatViewCreation}.
      * By default the creation of empty flat views is enabled i.e. the default value is <code>true</code>.
      * Valid values for this property are <code>true</code> or <code>false</code>.
      */
-    @ConfigItem
-    public Optional<Boolean> createEmptyFlatViews;
+    @ConfigItem(defaultValue = "true")
+    public boolean createEmptyFlatViews;
 
     /**
-     * The full qualified expression cache implementation class name.
+     * The fully qualified expression cache implementation class name.
      */
-    @ConfigItem
-    public Optional<String> expressionCacheClass;
+    @ConfigItem(defaultValue = "com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache")
+    public String expressionCacheClass;
 
     /**
      * If set to true, the CTE queries are inlined by default.
@@ -136,57 +136,50 @@ public class BlazePersistenceInstanceConfiguration {
      * @see CTEBuilder#with(Class, boolean)
      * @see CTEBuilder#with(Class, CriteriaBuilder, boolean)
      */
-    @ConfigItem
-    public Optional<Boolean> inlineCtes;
+    @ConfigItem(defaultValue = "true")
+    public boolean inlineCtes;
+
+    /**
+     * If set to true, the query plans are cached and reused.
+     * Valid values for this property are <code>true</code> and <code>false</code>.
+     * Default is <code>true</code>.
+     * This configuration option currently only takes effect when Hibernate is used as JPA provider.
+     *
+     * The property can be changed for a criteria builder before constructing a query.
+     */
+    @ConfigItem(defaultValue = "true")
+    public boolean queryPlanCacheEnabled;
 
     public void apply(CriteriaBuilderConfiguration criteriaBuilderConfiguration) {
-        expressionCacheClass.ifPresent(value ->
-                criteriaBuilderConfiguration.setProperty(ConfigurationProperties.EXPRESSION_CACHE_CLASS, value)
-        );
-        inlineCtes.ifPresent(value ->
-                criteriaBuilderConfiguration.setProperty(ConfigurationProperties.INLINE_CTES, value.toString())
-        );
+        criteriaBuilderConfiguration.setProperty(ConfigurationProperties.EXPRESSION_CACHE_CLASS, expressionCacheClass);
+        criteriaBuilderConfiguration.setProperty(ConfigurationProperties.INLINE_CTES, Boolean.toString(inlineCtes));
+        criteriaBuilderConfiguration.setProperty(ConfigurationProperties.QUERY_PLAN_CACHE_ENABLED, Boolean.toString(queryPlanCacheEnabled));
     }
 
     public void apply(EntityViewConfiguration entityViewConfiguration) {
-        templateEagerLoading.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.TEMPLATE_EAGER_LOADING, value.toString())
-        );
-        defaultBatchSize.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.DEFAULT_BATCH_SIZE, value.toString())
-        );
-        expectBatchMode.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.EXPECT_BATCH_MODE, value)
-        );
-        updaterEagerLoading.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_EAGER_LOADING, value.toString())
-        );
-        updaterDisallowOwnedUpdatableSubview.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, value.toString())
-        );
-        updaterStrictCascadingCheck.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, value.toString())
-        );
-        updaterErrorOnInvalidPluralSetter.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_ERROR_ON_INVALID_PLURAL_SETTER, value.toString())
-        );
-        createEmptyFlatViews.ifPresent(value ->
-                entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.CREATE_EMPTY_FLAT_VIEWS, value.toString())
-        );
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.TEMPLATE_EAGER_LOADING, Boolean.toString(templateEagerLoading));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.DEFAULT_BATCH_SIZE, Integer.toString(defaultBatchSize));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.EXPECT_BATCH_MODE, expectBatchMode);
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_EAGER_LOADING, Boolean.toString(updaterEagerLoading));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_DISALLOW_OWNED_UPDATABLE_SUBVIEW, Boolean.toString(updaterDisallowOwnedUpdatableSubview));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_STRICT_CASCADING_CHECK, Boolean.toString(updaterStrictCascadingCheck));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_ERROR_ON_INVALID_PLURAL_SETTER, Boolean.toString(updaterErrorOnInvalidPluralSetter));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.CREATE_EMPTY_FLAT_VIEWS, Boolean.toString(createEmptyFlatViews));
     }
 
     public boolean isAnyPropertySet() {
-        return createEmptyFlatViews.isPresent() ||
-                defaultBatchSize.isPresent() ||
-                expectBatchMode.isPresent() ||
-                expressionCacheClass.isPresent() ||
-                inlineCtes.isPresent() ||
+        return !createEmptyFlatViews ||
+                defaultBatchSize != 1 ||
+                !"values".equals(expectBatchMode) ||
+                !"com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache".equals(expressionCacheClass) ||
+                !queryPlanCacheEnabled ||
+                !inlineCtes ||
                 persistenceUnit.isPresent() ||
                 packages.isPresent() ||
-                templateEagerLoading.isPresent() ||
-                updaterDisallowOwnedUpdatableSubview.isPresent() ||
-                updaterEagerLoading.isPresent() ||
-                updaterErrorOnInvalidPluralSetter.isPresent() ||
-                updaterStrictCascadingCheck.isPresent();
+                templateEagerLoading ||
+                !updaterDisallowOwnedUpdatableSubview ||
+                updaterEagerLoading ||
+                updaterErrorOnInvalidPluralSetter ||
+                !updaterStrictCascadingCheck;
     }
 }

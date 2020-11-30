@@ -102,7 +102,7 @@ public final class ConfigurationProperties {
     public static final String EXPRESSION_OPTIMIZATION = "com.blazebit.persistence.expression_optimization";
 
     /**
-     * The full qualified expression cache implementation class name.
+     * The fully qualified expression cache implementation class name.
      *
      * @since 1.2.0
      */
