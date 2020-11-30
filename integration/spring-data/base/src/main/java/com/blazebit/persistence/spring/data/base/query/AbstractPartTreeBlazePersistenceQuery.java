@@ -155,6 +155,8 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
     protected abstract ParameterBinder createCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions);
 
+    protected abstract Map<String, Object> tryGetFetchGraphHints(JpaEntityGraph entityGraph, Class<?> entityType);
+
     public Query doCreateQuery(Object[] values) {
         return query.createQuery(values);
     }
@@ -167,7 +169,7 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
 
         JpaEntityGraph entityGraph = method.getEntityGraph();
         if (entityGraph != null) {
-            Map<String, Object> hints = Jpa21Utils.tryGetFetchGraphHints(this.getEntityManager(), method.getEntityGraph(), this.getQueryMethod().getEntityInformation().getJavaType());
+            Map<String, Object> hints = tryGetFetchGraphHints(method.getEntityGraph(), this.getQueryMethod().getEntityInformation().getJavaType());
             for (Map.Entry<String, Object> entry : hints.entrySet()) {
                 paginatedQuery.setHint(entry.getKey(), entry.getValue());
             }

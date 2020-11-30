@@ -30,6 +30,8 @@ import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
+import org.springframework.data.jpa.repository.query.Jpa21Utils;
+import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.JpaQueryExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
@@ -41,6 +43,7 @@ import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -220,5 +223,10 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
     @Override
     protected ParameterBinder createCriteriaQueryParameterBinder(JpaParameters parameters, Object[] values, List<ParameterMetadataProvider.ParameterMetadata<?>> expressions) {
         return new CriteriaQueryParameterBinder(getEntityManager(), evm, parameters, values, expressions);
+    }
+
+    @Override
+    protected Map<String, Object> tryGetFetchGraphHints(JpaEntityGraph entityGraph, Class<?> entityType) {
+        return Jpa21Utils.tryGetFetchGraphHints(this.getEntityManager(), entityGraph, this.getQueryMethod().getEntityInformation().getJavaType());
     }
 }

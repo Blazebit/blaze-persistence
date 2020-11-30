@@ -9,6 +9,11 @@ Not yet released
 ### New features
 
 * Implement emulation for temporal literals through functions also for Java 8 types
+* Support alternative constructors for subquery providers
+* Change EntityViewSettingProcessor API to allow subtyped EntityViewSetting to be returned
+* Upgrade Javassist to 3.27.0-GA
+* Support Spring Boot and Data 2.4 along with Spring Framework 5.3
+* Support for Java 16 EA
 
 ### Bug fixes
 

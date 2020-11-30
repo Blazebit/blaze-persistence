@@ -26,6 +26,8 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.Jpa21Utils;
+import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaRepositoryImplementation;
@@ -34,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -89,5 +92,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
         } else {
             return (int) pageable.getOffset();
         }
+    }
+
+    @Override
+    protected Map<String, Object> tryGetFetchGraphHints(EntityManager entityManager, JpaEntityGraph entityGraph, Class<?> entityType) {
+        return Jpa21Utils.tryGetFetchGraphHints(entityManager, entityGraph, entityType);
     }
 }

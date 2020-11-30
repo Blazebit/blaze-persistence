@@ -161,6 +161,10 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
         </dependency>
         <dependency>
