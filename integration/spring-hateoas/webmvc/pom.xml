@@ -18,6 +18,7 @@
         <version.spring />
         <version.spring.boot />
         <version.spring.data />
+        <version.spring.hateoas>1.0.2.RELEASE</version.spring.hateoas>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
@@ -50,7 +51,7 @@
         <dependency>
             <groupId>org.springframework.hateoas</groupId>
             <artifactId>spring-hateoas</artifactId>
-            <version>1.0.2.RELEASE</version>
+            <version>${version.spring.hateoas}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -364,6 +365,22 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.4.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.4-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.4-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-2.4}</version.spring.data>
+                <version.spring.hateoas>1.2.1</version.spring.hateoas>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

@@ -100,13 +100,13 @@ When you work with Spring Data you can additionally have first class integration
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
 ----
 
-For Spring-Data version 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.2`, `2.1`, `2.0`, `1.x`.
+For Spring-Data version 2.3, 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.3`, `2.2`, `2.1`, `2.0`, `1.x`.
 
 NOTE: The Spring Data integration depends on the _jpa-criteria_ module
 

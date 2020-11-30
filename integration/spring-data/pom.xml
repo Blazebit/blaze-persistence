@@ -37,6 +37,7 @@
         <module>2.1</module>
         <module>2.2</module>
         <module>2.3</module>
+        <module>2.4</module>
         <module>webmvc</module>
         <module>webflux</module>
         <module>testsuite</module>

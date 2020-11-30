@@ -40,7 +40,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.convert.QueryByExamplePredicateBuilder;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.query.Jpa21Utils;
 import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -108,6 +107,8 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         return entityInformation.getJavaType();
     }
 
+    protected abstract Map<String, Object> tryGetFetchGraphHints(EntityManager entityManager, JpaEntityGraph entityGraph, Class<?> entityType);
+
     protected Map<String, Object> getQueryHints(boolean applyFetchGraph) {
         if (metadata == null) {
             return Collections.emptyMap();
@@ -120,7 +121,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         Map<String, Object> hints = new HashMap<String, Object>();
         hints.putAll(metadata.getQueryHints());
 
-        hints.putAll(Jpa21Utils.tryGetFetchGraphHints(entityManager, getEntityGraph(), getDomainClass()));
+        hints.putAll(tryGetFetchGraphHints(entityManager, getEntityGraph(), getDomainClass()));
 
         return hints;
     }

@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,7 +53,9 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
 
     @Override
     protected Map<String, Object> tryGetFetchGraphHints(EntityManager entityManager, JpaEntityGraph entityGraph, Class<?> entityType) {
-        return Jpa21Utils.tryGetFetchGraphHints(entityManager, entityGraph, entityType);
+        Map<String, Object> map = new HashMap<>();
+        Jpa21Utils.getFetchGraphHint(entityManager, entityGraph, entityType).forEach( map::put );
+        return map;
     }
 
     @Override

@@ -68,7 +68,7 @@ jobs:
           - rdbms: postgresql
             provider: hibernate-apt
             jdk: 8
-            spring-data: spring-data-2.3.x
+            spring-data: spring-data-2.4.x
             deltaspike: deltaspike-1.9
             
 ################################################
@@ -419,31 +419,21 @@ jobs:
             jdk: 16
           - rdbms: h2
             provider: hibernate-5.2
-            jdk: 9
-            build-jdk: 9
-            deltaspike: deltaspike-1.9
-          - rdbms: h2
-            provider: hibernate-5.2
             jdk: 11
             build-jdk: 11
-            deltaspike: deltaspike-1.9
-          - rdbms: h2
-            provider: hibernate-5.2
-            jdk: 14
-            build-jdk: 14
             deltaspike: deltaspike-1.9
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 15
             build-jdk: 15
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.3.x
+            spring-data: spring-data-2.4.x
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 16
             build-jdk: 16
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.3.x
+            spring-data: spring-data-2.4.x
     steps:
       - uses: actions/checkout@v2
       - uses: DeLaGuardo/setup-graalvm@master

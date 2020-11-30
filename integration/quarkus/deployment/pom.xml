@@ -147,9 +147,11 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
-                            <systemPropertyVariables>
+                            <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                            </systemPropertyVariables>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                            </systemProperties>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -278,9 +280,11 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
-                            <systemPropertyVariables>
+                            <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                            </systemPropertyVariables>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                            </systemProperties>
                         </configuration>
                     </plugin>
                 </plugins>

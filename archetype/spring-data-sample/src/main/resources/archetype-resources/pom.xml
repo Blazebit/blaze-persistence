@@ -31,8 +31,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.blaze-persistence>${project.version}</version.blaze-persistence>
-        <version.spring-data-2.2>2.3.0.RELEASE</version.spring-data-2.2>
-        <version.spring>${version.spring-data-2.3-spring}</version.spring>
+        <version.spring>${version.spring-data-2.4-spring}</version.spring>
     </properties>
 
     <dependencyManagement>
@@ -107,12 +106,12 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.3}</version>
+            <version>${version.spring-data-2.4}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
         </dependency>
 
         <!-- JDK9+ dependencies -->

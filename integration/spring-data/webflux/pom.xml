@@ -182,6 +182,20 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>spring-data-2.4.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.4-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.4}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>
