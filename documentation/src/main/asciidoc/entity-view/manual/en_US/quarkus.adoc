@@ -162,3 +162,105 @@ for the `orderPU` to the link:{core_jdoc}/persistence/CriteriaBuilderFactory.htm
 === Hot reload
 
 The extension supports hot reload.
+
+[[quarkus-configuration-properties]]
+=== Configuration properties
+
+There are various optional properties useful to refine your link:{entity_view_jdoc}/persistence/view/EntityViewManager.html[`EntityViewManager`] and link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`] or guide guesses of Quarkus.
+
+There are no required properties, as long as the Hibernate ORM extension is configured properly.
+
+When no property is set, the {projectname} defaults apply.
+
+The configuration properties listed here allow you to override such defaults, and customize and tune various aspects.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.template-eager-loading
+| Type | boolean
+| Default | false
+| Description | A boolean flag to make it possible to prepare all view template caches on startup. By default the eager loading of the view templates is disabled to have a better startup performance. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.default-batch-size
+| Type | int
+| Default | 1
+| Description | An integer value that defines the default batch size for entity view attributes. By default the value is 1 and can be overridden either via `com.blazebit.persistence.view.BatchFetch#size()` or by setting this property via `com.blazebit.persistence.view.EntityViewSetting#setProperty`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.expect-batch-mode
+| Type | String
+| Default | "values"
+| Description | A mode specifying if correlation value, view root or embedded view batching is expected. By default the value is `values` and can be overridden by setting this property via `com.blazebit.persistence.view.EntityViewSetting#setProperty`. Valid values are
+ - `values`
+ - `view_roots`
+ - `embedding_views`
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.updater.eager-loading
+| Type | boolean
+| Default | false
+| Description | A boolean flag to make it possible to prepare the entity view updater cache on startup. By default the eager loading of entity view updates is disabled to have a better startup performance. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.updater.disallow-owned-updatable-subview
+| Type | boolean
+| Default | true
+| Description | A boolean flag to make it possible to disable the strict validation that disallows the use of an updatable entity view type for owned relationships. By default the use is disallowed i.e. the default value is `true`, but since there might be strange models out there, it possible to allow this. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.updater.strict-cascading-check
+| Type | boolean
+| Default | true
+| Description | A boolean flag to make it possible to disable the strict cascading check that disallows setting updatable or creatable entity views on non-cascading attributes before being associated with a cascading attribute. When disabled, it is possible, like in JPA, that the changes done to an updatable entity view are not flushed when it is not associated with an attribute that cascades updates. By default the use is enabled i.e. the default value is `true`. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.updater.error-on-invalid-plural-setter
+| Type | boolean
+| Default | false
+| Description | A boolean flag that allows to switch from warnings to boot time validation errors when invalid plural attribute setters are encountered while the strict cascading check is enabled. When `true`, a boot time validation error is thrown when encountering an invalid setter, otherwise just a warning. This configuration has no effect when the strict cascading check is disabled. By default the use is disabled i.e. the default value is `false`. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.create-empty-flat-views
+| Type | boolean
+| Default | true
+| Description | A boolean flag that allows to specify if empty flat views should be created by default if not specified via `EmptyFlatViewCreation`. By default the creation of empty flat views is enabled i.e. the default value is `true`. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.expression-cache-class
+| Type | String
+| Default | "com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache"
+| Description | The fully qualified expression cache implementation class name.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.inline-ctes
+| Type | boolean
+| Default | true
+| Description | If set to true, the CTE queries are inlined by default. Valid values for this property are `true`, `false` or `auto`. Default is `true` which will always inline non-recursive CTEs. The `auto` configuration will only make use of inlining if the JPA provider and DBMS dialect support/require it. The property can be changed for a criteria builder before constructing a query.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | quarkus.blaze-persistence.query-plan-cache-enabled
+| Type | boolean
+| Default | true
+| Description | If set to true, the query plans are cached and reused. Valid values for this property are `true` and `false`. Default is `true`. This configuration option currently only takes effect when Hibernate is used as JPA provider. The property can be changed for a criteria builder before constructing a query.
+|====================
