@@ -1031,6 +1031,13 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     Collection<Object> newCollection;
                     if (value == null) {
                         newCollection = (Collection<Object>) createJpaCollection(0);
+                        if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.REMOVE) {
+                            Collection<Object> oldCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
+                            EntityManager entityManager = context.getEntityManager();
+                            for (Object o : oldCollection) {
+                                entityManager.remove(o);
+                            }
+                        }
                     } else {
                         newCollection = (Collection<Object>) createJpaCollection(value.size());
                         final ViewToEntityMapper viewToEntityMapper = elementDescriptor.getViewToEntityMapper();
@@ -1042,6 +1049,15 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             }
                         } finally {
                             resetRecordingIterator(value);
+                        }
+                        Collection<Object> oldCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
+                        EntityManager entityManager = context.getEntityManager();
+                        if (inverseRemoveStrategy == InverseCollectionElementAttributeFlusher.Strategy.REMOVE) {
+                            for (Object o : oldCollection) {
+                                if (!newCollection.contains(o)) {
+                                    entityManager.remove(o);
+                                }
+                            }
                         }
                     }
                     entityAttributeAccessor.setValue(entity, newCollection);
@@ -1220,7 +1236,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 }
                 // If the initial collection is empty, we also don't need to load the old one
                 if (initial == null && replaceWithReferenceContents || initial != null && ((Collection<?>) initial).isEmpty()) {
-                    // Always reset the actions as that indicates changes
                     if (inverseFlusher != null) {
                         // TODO: Should "replace" mean that we also remove values that were added in the meantime?
                         Map<Object, Object> added = new IdentityHashMap<>();
@@ -1230,9 +1245,18 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
 
                         List<CollectionElementAttributeFlusher<E, V>> elementFlushers = getInverseElementFlushersForActions(context, (Collection<?>) current, added, removed);
-                        return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+                        if (initial == null) {
+                            // A null initial collection means we are working on a reference view
+                            return partialFlusher(fetch, PluralFlushOperation.COLLECTION_REPLACE_AND_ELEMENT, Collections.EMPTY_LIST, elementFlushers);
+                        } else {
+                            return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+                        }
                     }
-                    return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
+                    if (elementDescriptor.shouldFlushMutations()) {
+                        return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_AND_ELEMENT, Collections.EMPTY_LIST, getElementFlushers(context, (V) current, replaceActions((V) current)));
+                    } else {
+                        return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E,V>>emptyList());
+                    }
                 }
                 if (initial instanceof RecordingCollection<?, ?>) {
                     initial = ((RecordingCollection<?, ?>) initial).getInitialVersion();
@@ -1759,26 +1783,28 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             for (Object element : removed.values()) {
                 listener.onRemovedInverseElement(element);
             }
-            final Iterator<Object> iter = getRecordingIterator((V) current);
-            try {
-                while (iter.hasNext()) {
-                    Object elem = iter.next();
-                    if (elem instanceof MutableStateTrackable) {
-                        MutableStateTrackable element = (MutableStateTrackable) elem;
-                        @SuppressWarnings("unchecked")
-                        DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
-                        if (flusher != null) {
-                            Object addedElement = added.remove(element);
-                            if (addedElement != null) {
-                                listener.onAddedAndUpdatedInverseElement(flusher, element);
-                            } else {
-                                listener.onUpdatedInverseElement(flusher, element);
+            if (elementDescriptor.shouldFlushMutations()) {
+                final Iterator<Object> iter = getRecordingIterator((V) current);
+                try {
+                    while (iter.hasNext()) {
+                        Object elem = iter.next();
+                        if (elem instanceof MutableStateTrackable) {
+                            MutableStateTrackable element = (MutableStateTrackable) elem;
+                            @SuppressWarnings("unchecked")
+                            DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
+                            if (flusher != null) {
+                                Object addedElement = added.remove(element);
+                                if (addedElement != null) {
+                                    listener.onAddedAndUpdatedInverseElement(flusher, element);
+                                } else {
+                                    listener.onUpdatedInverseElement(flusher, element);
+                                }
                             }
                         }
                     }
+                } finally {
+                    resetRecordingIterator((V) current);
                 }
-            } finally {
-                resetRecordingIterator((V) current);
             }
             // Non-dirty added values
             for (Object element : added.values()) {

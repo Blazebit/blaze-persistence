@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.entity;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,6 +41,7 @@ public class LegacyOrderPosition implements Serializable {
     private LegacyOrder order;
     private String articleNumber;
     private Calendar creationDate;
+    private LegacyOrderPositionEmbeddable embeddable = new LegacyOrderPositionEmbeddable();
     private Set<LegacyOrderPositionDefault> defaults = new HashSet<>();
     private Set<LegacyOrderPositionElement> elems = new HashSet<>();
 
@@ -99,6 +101,15 @@ public class LegacyOrderPosition implements Serializable {
 
     public void setCreationDate(Calendar creationDate) {
         this.creationDate = creationDate;
+    }
+
+    @Embedded
+    public LegacyOrderPositionEmbeddable getEmbeddable() {
+        return embeddable;
+    }
+
+    public void setEmbeddable(LegacyOrderPositionEmbeddable embeddable) {
+        this.embeddable = embeddable;
     }
 
     @OneToMany

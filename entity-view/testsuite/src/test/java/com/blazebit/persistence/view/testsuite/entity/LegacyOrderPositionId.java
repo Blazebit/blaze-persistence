@@ -73,4 +73,12 @@ public class LegacyOrderPositionId implements Serializable {
         result = 31 * result + (positionId != null ? positionId.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "LegacyOrderPositionId{" +
+                "orderId=" + orderId +
+                ", positionId=" + positionId +
+                '}';
+    }
 }

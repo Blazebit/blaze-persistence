@@ -127,6 +127,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
     private final CompositeAttributeFlusher fullFlusher;
     private final String updatePrefixString;
     private final String updatePostfixString;
+    private final String versionedUpdatePostfixString;
     private final String fullUpdateQueryString;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -144,6 +145,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         final EntityTupleizer tupleizer;
         final ObjectBuilder<Object> idViewBuilder;
         final EntityLoader jpaIdInstantiator;
+        final String lockOwner;
         boolean persistable = entityType != null;
         ViewMapper<Object, Object> persistViewMapper;
         if (persistable && viewType instanceof ViewType<?>) {
@@ -151,6 +153,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             // Otherwise we can't load the object itself
             ViewType<?> view = (ViewType<?>) viewType;
             this.rootUpdateAllowed = true;
+            lockOwner = view.getLockOwner();
             viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, false);
             com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?> viewIdAttribute = (com.blazebit.persistence.view.metamodel.SingularAttribute<?, ?>) view.getIdAttribute();
             if (view.getIdAttribute().isSubview()) {
@@ -185,6 +188,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             this.idFlusher = createIdFlusher(evm, localCache, view, viewIdMapper);
         } else {
             this.rootUpdateAllowed = false;
+            lockOwner = null;
             viewIdAccessor = null;
             tupleizer = null;
             idViewBuilder = null;
@@ -234,17 +238,21 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
             StringBuilder tmpSb = new StringBuilder();
             tmpSb.append(" WHERE ");
             idFlusher.appendUpdateQueryFragment(null, tmpSb, "e.", WHERE_CLAUSE_PREFIX, " AND ");
+            this.updatePostfixString = tmpSb.toString();
             if (versionAttribute != null) {
                 tmpSb.append(" AND ");
                 versionFlusher.appendUpdateQueryFragment(null, tmpSb, "e.", WHERE_CLAUSE_PREFIX, " AND ");
+                this.versionedUpdatePostfixString = tmpSb.toString();
+            } else {
+                this.versionedUpdatePostfixString = null;
             }
-            this.updatePostfixString = tmpSb.toString();
-            sb = new StringBuilder(updatePrefixString.length() + updatePostfixString.length() + attributes.size() * 50);
+            sb = new StringBuilder(updatePrefixString.length() + tmpSb.length() + attributes.size() * 50);
             sb.append(updatePrefixString);
             clauseEndIndex = sb.length();
         } else {
             this.updatePrefixString = null;
             this.updatePostfixString = null;
+            this.versionedUpdatePostfixString = null;
         }
 
         if (versionFlusher != null && sb != null) {
@@ -395,6 +403,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 idViewBuilder,
                 idFlusher,
                 versionFlusher,
+                lockOwner,
                 cascadeDeleteUnmappedFlushers,
                 flusherWiseCascadeDeleteUnmappedFlushers,
                 flushers.toArray(new DirtyAttributeFlusher[flushers.size()]),
@@ -406,7 +415,11 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 // Remove the last comma
                 sb.setLength(clauseEndIndex);
             }
-            sb.append(updatePostfixString);
+            if (versionedUpdatePostfixString == null) {
+                sb.append(updatePostfixString);
+            } else {
+                sb.append(versionedUpdatePostfixString);
+            }
             this.fullUpdateQueryString = sb.toString();
         } else {
             this.fullUpdateQueryString = null;
@@ -648,16 +661,18 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 // If we still need optimistic locking, we just append a flush for the version increment
                 if (needsOptimisticLocking = fullFlusher.hasVersionFlusher() && flusher.isOptimisticLockProtected()) {
                     versionFlusher.appendUpdateQueryFragment(context, sb, "e.", "", ", ");
-                    sb.append(updatePostfixString);
+                    sb.append(versionedUpdatePostfixString);
                     queryString = sb.toString();
                 } else {
                     queryString = null;
-                    needsOptimisticLocking = false;
                 }
             } else {
-                sb.append(updatePostfixString);
+                if (needsOptimisticLocking = fullFlusher.hasVersionFlusher() && flusher.isOptimisticLockProtected()) {
+                    sb.append(versionedUpdatePostfixString);
+                } else {
+                    sb.append(updatePostfixString);
+                }
                 queryString = sb.toString();
-                needsOptimisticLocking = fullFlusher.hasVersionFlusher() && flusher.isOptimisticLockProtected();
             }
         }
 

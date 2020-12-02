@@ -533,19 +533,24 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
     }
 
     @Override
+    public String getLockOwner() {
+        return null;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
-        // TODO: the nested graph node could have a different lock owner, we have to handle that
         // If the lock owner isn't INHERIT/AUTO, we should return false
         if (flushOperation != null) {
             if (update && optimisticLockProtected) {
                 return true;
             } else if (flushOperation == ViewFlushOperation.CASCADE) {
-                return nestedFlusher != null && nestedFlusher.isOptimisticLockProtected();
+                // A null lock owner means, that the lock owner is inherited
+                return nestedFlusher != null && nestedFlusher.getLockOwner() == null;
             }
 
             return false;
         }
-        return optimisticLockProtected || nestedFlusher != null && nestedFlusher.isOptimisticLockProtected();
+        return optimisticLockProtected || nestedFlusher != null && nestedFlusher.getLockOwner() == null;
     }
 
     @Override

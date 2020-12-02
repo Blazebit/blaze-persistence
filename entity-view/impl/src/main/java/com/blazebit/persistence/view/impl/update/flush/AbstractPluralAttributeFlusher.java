@@ -321,6 +321,11 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
     }
 
     @Override
+    public String getLockOwner() {
+        return null;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

@@ -31,6 +31,7 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionElement;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionEmbeddable;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.entityid.model.LegacyOrderIdView;
@@ -39,6 +40,8 @@ import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.e
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.entityid.model.UpdatableLegacyOrderPositionDefaultView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.entityid.model.UpdatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.entityid.model.UpdatableLegacyOrderView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionEmbeddableView;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -65,7 +68,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedEntityIdTest extends Abstract
                 LegacyOrderPositionId.class,
                 LegacyOrderPositionDefault.class,
                 LegacyOrderPositionDefaultId.class,
-                LegacyOrderPositionElement.class
+                LegacyOrderPositionElement.class,
+                LegacyOrderPositionEmbeddable.class
         };
     }
 
@@ -86,6 +90,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedEntityIdTest extends Abstract
         cfg.addEntityView(UpdatableLegacyOrderView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionDefaultView.class);
+        cfg.addEntityView( UpdatableLegacyOrderPositionEmbeddableView.class);
     }
 
     @Test

@@ -26,8 +26,10 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatableNameObjectView;
 import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatablePersonView;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -60,7 +62,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
 
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
-        cfg.addEntityView(UpdatablePersonView.class);
+        cfg.addEntityView(UpdatablePersonView.class).addEntityView(UpdatableNameObjectView.class);
     }
 
     @Override
@@ -161,6 +163,41 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
 
         assertNoUpdateAndReload(docView, true);
         assertSubviewEquals(doc1.getPeople(), docView.getPeople());
+    }
+
+    @Test
+    public void testUpdateReferenceAddToCollection() {
+        Assume.assumeFalse("Partial reference updates don't work in full mode", isFullMode());
+
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = evm.getReference(viewType, doc1.getId());
+        UpdatablePersonView newPerson = evm.getReference(UpdatablePersonView.class, p2.getId());
+        clearQueries();
+
+        // When
+        newPerson.setNameObject(evm.create(UpdatableNameObjectView.class));
+        newPerson.setName("new-p2");
+        newPerson.getNameObject().setPrimaryName("p2-test");
+        docView.getPeople().add(newPerson);
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded, but only a relation insert is done
+        // The full mode also has to load the person that is added and apply the changes
+        // But since nothing is changed, no update is subsequently generated
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (!isQueryStrategy()) {
+            builder.select(Document.class).select(Person.class);
+        }
+
+        builder.update(Person.class)
+                .delete(Document.class, "people")
+                .insert(Document.class, "people")
+                .validate();
+
+        assertNoUpdateAndReload(docView, false);
+        assertSubviewEquals(doc1.getPeople(), getDoc1View().getPeople());
     }
 
     @Test
@@ -384,6 +421,7 @@ public class EntityViewUpdateSimpleMutableSubviewCollectionsTest extends Abstrac
             for (UpdatablePersonView pSub : personSubviews) {
                 if (p.getName().equals(pSub.getName())) {
                     found = true;
+                    assertEquals(p.getNameObject().getPrimaryName(), pSub.getNameObject().getPrimaryName());
                     break;
                 }
             }
