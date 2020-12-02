@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatableDocumentView;
+import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatableNameObjectView;
 import com.blazebit.persistence.view.testsuite.update.subview.simple.mutable.model.UpdatablePersonView;
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,7 +57,7 @@ public class EntityViewUpdateSimpleMutableSubviewTest extends AbstractEntityView
 
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
-        cfg.addEntityView(UpdatablePersonView.class);
+        cfg.addEntityView(UpdatablePersonView.class).addEntityView(UpdatableNameObjectView.class);
     }
 
     @Test

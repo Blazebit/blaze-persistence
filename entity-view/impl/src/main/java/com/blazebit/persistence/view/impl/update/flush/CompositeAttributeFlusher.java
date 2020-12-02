@@ -97,6 +97,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final EntityLoader referenceEntityLoader;
     private final String deleteQuery;
     private final String versionedDeleteQuery;
+    private final String lockOwner;
     private final boolean supportsQueryFlush;
     private final boolean loadForEntityFlush;
     private final boolean hasPassThroughFlushers;
@@ -106,8 +107,8 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @SuppressWarnings("unchecked")
     public CompositeAttributeFlusher(EntityViewManagerImpl evm, Class<?> viewType, Class<?> entityClass, ManagedType<?> managedType, boolean persistable, ViewMapper<Object, Object> persistViewMapper, SingularAttribute<?, ?> jpaIdAttribute, SingularAttribute<?, ?> viewIdMappingAttribute, AttributeAccessor entityIdAccessor,
-                                     ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, EntityLoader jpaIdInstantiator, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher,
-                                     VersionAttributeFlusher<Object, Object> versionFlusher, UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers, UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
+                                     ViewToEntityMapper viewIdMapper, AttributeAccessor viewIdAccessor, EntityTupleizer tupleizer, EntityLoader jpaIdInstantiator, ObjectBuilder<Object> idViewBuilder, DirtyAttributeFlusher<?, Object, Object> idFlusher, VersionAttributeFlusher<Object, Object> versionFlusher,
+                                     String lockOwner, UnmappedAttributeCascadeDeleter[] cascadeDeleteUnmappedFlushers, UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers, DirtyAttributeFlusher[] flushers, FlushMode flushMode, FlushStrategy flushStrategy) {
         super(viewType, flushers, null);
         this.entityClass = entityClass;
         this.persistable = persistable;
@@ -127,6 +128,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.unmappedOwnerAwareCascadeDeleters = getOwnerAwareDeleters(flusherWiseCascadeDeleteUnmappedFlushers);
         this.flushMode = flushMode;
         this.flushStrategy = flushStrategy;
+        this.lockOwner = lockOwner;
         this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         this.referenceEntityLoader = new ReferenceEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor);
         this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
@@ -152,23 +154,30 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.jpaIdInstantiator = original.jpaIdInstantiator;
         this.idViewBuilder = original.idViewBuilder;
         this.idFlusher = original.idFlusher;
-        this.versionFlusher = original.versionFlusher;
         this.fullFlushers = original.fullFlushers;
         this.unmappedPreRemoveCascadeDeleters = original.unmappedPreRemoveCascadeDeleters;
         this.unmappedPostRemoveCascadeDeleters = original.unmappedPostRemoveCascadeDeleters;
         this.unmappedOwnerAwareCascadeDeleters = original.unmappedOwnerAwareCascadeDeleters;
         this.flushMode = original.flushMode;
         this.flushStrategy = original.flushStrategy;
+        this.lockOwner = original.lockOwner;
         this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         this.referenceEntityLoader = original.referenceEntityLoader;
         this.deleteQuery = original.deleteQuery;
-        this.versionedDeleteQuery = original.versionedDeleteQuery;
         boolean[] features = determineFeatures(flushStrategy, flushers);
         this.supportsQueryFlush = features[FEATURE_SUPPORTS_QUERY_FLUSH];
         this.loadForEntityFlush = features[FEATURE_LOAD_FOR_ENTITY_FLUSH];
         this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
-        this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
         this.element = element;
+        // When flushing references that have no version set, we do a normal flush, not a versioned one
+        if (original.versionFlusher == null || original.versionFlusher.getViewAttributeAccessor().getValue(element) == null) {
+            this.versionedDeleteQuery = null;
+            this.optimisticLockProtected = false;
+        } else {
+            this.versionedDeleteQuery = original.versionedDeleteQuery;
+            this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
+        }
+        this.versionFlusher = original.versionFlusher;
     }
 
     private UnmappedOwnerAwareDeleter[] getOwnerAwareDeleters(UnmappedAttributeCascadeDeleter[][] flusherWiseCascadeDeleteUnmappedFlushers) {
@@ -396,7 +405,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             return null;
         }
         // Object persisting only works via entity flushing
-        boolean shouldPersist = persist == Boolean.TRUE || persist == null && element.$$_isNew();
+        boolean shouldPersist = persistable && (persist == Boolean.TRUE || persist == null && element.$$_isNew());
         if (shouldPersist) {
             flushEntity(context, null, ownerView, value, value, null);
             return null;
@@ -718,7 +727,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     }
                 }
             }
-            if (versionFlusher != null && optimisticLock) {
+            if (versionFlusher != null && optimisticLockProtected && optimisticLock) {
                 context.getInitialStateResetter().addVersionedView(updatableProxy, updatableProxy.$$_getVersion());
                 // We might have to load the entity for optimistic locking
                 if (!entityClass.isInstance(entity)) {
@@ -1006,7 +1015,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     if (context.getEntityViewManager().getDbmsDialect().supportsReturningColumns()) {
                         DeleteCriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().delete(context.getEntityManager(), entityClass);
                         cb.where(idFlusher.getMapping()).eq(entityId);
-                        if (version != null && versionFlusher != null) {
+                        if (version != null && optimisticLockProtected && versionFlusher != null) {
                             cb.where(versionFlusher.getMapping()).eq(version);
                         }
 
@@ -1038,7 +1047,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
 
             if (doDelete) {
-                if (version != null && versionFlusher != null) {
+                if (version != null && optimisticLockProtected && versionFlusher != null) {
                     Query query = context.getEntityManager().createQuery(versionedDeleteQuery);
                     idFlusher.flushQuery(context, EntityViewUpdaterImpl.WHERE_CLAUSE_PREFIX, null, query, ownerView, view, viewId, null, null);
                     versionFlusher.flushQueryInitialVersion(context, EntityViewUpdaterImpl.WHERE_CLAUSE_PREFIX, query, view, version);
@@ -1119,6 +1128,11 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     @Override
     public AttributeAccessor getEntityAttributeAccessor() {
         return null;
+    }
+
+    @Override
+    public String getLockOwner() {
+        return lockOwner;
     }
 
     @Override

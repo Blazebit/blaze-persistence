@@ -25,6 +25,7 @@ Not yet released
 * Always respect filterNulls in collection and map accumulators
 * Avoid transforming `SIZE` to `COUNT` when implicit group by would fail
 * Fix for implicit join in lateral join correlation path array expression index
+* Fix issues with flushing of embeddables/flat views for entity views retrieved by `EntityViewManager.getReference()`
 
 ### Backwards-incompatible changes
 

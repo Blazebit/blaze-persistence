@@ -493,6 +493,11 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     }
 
     @Override
+    public String getLockOwner() {
+        return null;
+    }
+
+    @Override
     public boolean isOptimisticLockProtected() {
         return optimisticLockProtected;
     }

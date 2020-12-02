@@ -32,15 +32,18 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPosition;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefaultId;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionElement;
+import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionEmbeddable;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderPositionDefaultIdView;
+import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionEmbeddableView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.LegacyOrderPositionIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionDefaultView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderPositionView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple.model.UpdatableLegacyOrderView;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -74,7 +77,8 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
                 LegacyOrderPositionId.class,
                 LegacyOrderPositionDefault.class,
                 LegacyOrderPositionDefaultId.class,
-                LegacyOrderPositionElement.class
+                LegacyOrderPositionElement.class,
+                LegacyOrderPositionEmbeddable.class
         };
     }
 
@@ -97,6 +101,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         cfg.addEntityView(UpdatableLegacyOrderView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionView.class);
         cfg.addEntityView(UpdatableLegacyOrderPositionDefaultView.class);
+        cfg.addEntityView(UpdatableLegacyOrderPositionEmbeddableView.class);
     }
 
     @Test
@@ -155,7 +160,7 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
 
         // Then
         // After update, the position is replaced with the declaration type
-       assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
+        assertFalse(newOrder.getPositions().iterator().next() instanceof UpdatableLegacyOrderPositionView);
         em.clear();
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
@@ -179,6 +184,49 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
         Assert.assertEquals(1, legacyOrder.getPositions().size());
         Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrder.getPositions().iterator().next().getId());
+    }
+
+    @Test
+    public void testUpdateReferenceEmbeddable() {
+        Assume.assumeFalse( "Partial reference updates don't work in full mode", isFullMode());
+
+        // Given
+        UpdatableLegacyOrderView order1 = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        position.getEmbeddable().setName("123");
+        order1.getPositions().add(position);
+        update(order1);
+
+        UpdatableLegacyOrderView order2 = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position1 = evm.create(UpdatableLegacyOrderPositionView.class);
+        position1.getId().setPositionId(0);
+        position1.setArticleNumber("123");
+        position1.getEmbeddable().setName("123");
+        order2.getPositions().add(position1);
+        UpdatableLegacyOrderPositionView position2 = evm.create(UpdatableLegacyOrderPositionView.class);
+        position2.getId().setPositionId(1);
+        position2.setArticleNumber("456");
+        position2.getEmbeddable().setName("456");
+        order2.getPositions().add(position2);
+        update(order2);
+
+        // When
+        UpdatableLegacyOrderView order = evm.getReference(UpdatableLegacyOrderView.class, order2.getId());
+        position = evm.getReference(UpdatableLegacyOrderPositionView.class, position2.getId());
+        position.setEmbeddable(evm.create(UpdatableLegacyOrderPositionEmbeddableView.class));
+        position.getEmbeddable().setName("test");
+        order.getPositions().add(position);
+        update(order);
+
+        // Then
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, order2.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        LegacyOrderPosition orderPosition = legacyOrder.getPositions().iterator().next();
+        Assert.assertEquals(new LegacyOrderPositionId(order2.getId(), position2.getId().getPositionId()), orderPosition.getId());
+        assertEquals("456", orderPosition.getArticleNumber());
+        assertEquals("test", orderPosition.getEmbeddable().getName());
     }
 
     @Test
