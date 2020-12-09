@@ -60,15 +60,13 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
         int size = list.size();
         List<X> newList = new ArrayList<X>(size);
 
-        Object[] singleObjectTuple = new Object[1];
         for (int i = 0; i < size; i++) {
             Object tuple = list.get(i);
             
             if (tuple instanceof Object[]) {
                 newList.add(builder.build((Object[]) tuple));
             } else {
-                singleObjectTuple[0] = tuple;
-                newList.add(builder.build(singleObjectTuple));
+                newList.add(builder.build(new Object[] { tuple }));
             }
         }
         
