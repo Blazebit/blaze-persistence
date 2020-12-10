@@ -54,7 +54,11 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
 
     @Override
     public ConvertOperationBuilder<T> excludeAttribute(String attributePath) {
-        if (!key.getSourceType().getRecursiveAttributes().containsKey(attributePath) && !key.getSourceType().getRecursiveSubviewAttributes().containsKey(attributePath)) {
+        if (
+                (key.getSourceType() != null)
+                && !key.getSourceType().getRecursiveAttributes().containsKey(attributePath)
+                && !key.getSourceType().getRecursiveSubviewAttributes().containsKey(attributePath)
+        ) {
             throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getSourceType().getJavaType().getName());
         }
         subMappers.put(attributePath, ViewMapper.Key.EXCLUDE_MARKER);
@@ -83,6 +87,11 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
 
     @Override
     public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, String constructorName, ConvertOption... convertOptions) {
+        if (key.getSourceType() == null) {
+            subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), null, attributeViewClass, constructorName, convertOptions));
+            return this;
+        }
+
         AbstractMethodAttribute<? super Object, ?> sourceAttribute = key.getSourceType().getRecursiveSubviewAttributes().get(attributePath);
         if (sourceAttribute == null) {
             throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getSourceType().getJavaType().getName());

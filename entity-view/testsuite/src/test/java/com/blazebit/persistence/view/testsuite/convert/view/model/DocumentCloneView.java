@@ -52,12 +52,12 @@ public interface DocumentCloneView extends Serializable {
     public Map<Integer, Person> getContacts();
 
     @MappingParameter("source")
-    public DocumentCloneView getSource();
+    public Object getSource();
 
-    public void setSource(DocumentCloneView source);
+    public void setSource(Object source);
 
     @PostConvert
     default void postConvert(Object source) {
-        setSource((DocumentCloneView) source);
+        setSource(source);
     }
 }
