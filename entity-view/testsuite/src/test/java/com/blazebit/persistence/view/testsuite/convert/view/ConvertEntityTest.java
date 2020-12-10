@@ -33,6 +33,7 @@ import com.blazebit.persistence.view.testsuite.convert.view.model.DocumentIdView
 import com.blazebit.persistence.view.testsuite.convert.view.model.PersonView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.SimplePersonView;
 import com.blazebit.persistence.view.testsuite.convert.view.model.sub.DocumentCloneParentView;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -152,5 +153,17 @@ public class ConvertEntityTest extends AbstractEntityViewTest {
         assertEquals(doc.getId(), idView.getId());
         assertEquals(ownerView, idView.getOwner());
         assertEquals(doc.getOwner().getName(), idView.getOwner().getName());
+    }
+
+    @Test
+    public void testCloneConvertFromOtherEntity() {
+        try {
+            evm.convert(doc.getOwner(), DocumentCloneView.class);
+            Assert.fail("Expected validation exception!");
+        } catch (IllegalArgumentException ex) {
+            if (!ex.getMessage().contains("is not an instance of the target")) {
+                throw ex;
+            }
+        }
     }
 }

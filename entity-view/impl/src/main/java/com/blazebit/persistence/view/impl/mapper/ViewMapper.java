@@ -187,23 +187,29 @@ public class ViewMapper<S, T> {
         }
 
         // Try to find a source attribute
-        MethodAttribute<?, ?> sourceAttribute = (sourceType == null) ? null : sourceType.getAttribute(targetAttribute.getName());
-        AttributeAccessor accessor = (sourceAttribute == null)
-                ? Accessors.forEntityMapping((EntityViewManagerImpl) entityViewManager, targetAttribute)
-                : Accessors.forViewAttribute(null, sourceAttribute, true);
-        if (accessor == null) {
-            return null;
-        }
-
-        if ((sourceType != null) && (sourceAttribute == null)) {
-            if (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
-                return new ParameterObjectMapper(((MappingAttribute<?, ?>) targetAttribute).getMapping());
-            }
-            // Optionally ignore missing attributes
-            if (ignoreMissing) {
+        MethodAttribute<?, ?> sourceAttribute;
+        AttributeAccessor accessor;
+        if (sourceType == null) {
+            sourceAttribute = null;
+            accessor = Accessors.forEntityMapping((EntityViewManagerImpl) entityViewManager, targetAttribute);
+            if (ignoreMissing || (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER)) {
                 return null;
+            } else if (accessor == null) {
+                throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type is missing in source type!", targetType);
             }
-            throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type is missing in source type!", sourceType, targetType);
+        } else {
+            sourceAttribute = sourceType.getAttribute(targetAttribute.getName());
+            if (sourceAttribute == null) {
+                if (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                    return new ParameterObjectMapper(((MappingAttribute<?, ?>) targetAttribute).getMapping());
+                }
+                // Optionally ignore missing attributes
+                if (ignoreMissing) {
+                    return null;
+                }
+                throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type is missing in source type!", sourceType, targetType);
+            }
+            accessor = Accessors.forViewAttribute(null, sourceAttribute, true);
         }
 
         // Handle conversion from one type to another
@@ -305,6 +311,10 @@ public class ViewMapper<S, T> {
         return new IllegalArgumentException("Can't convert from '" + sourceType.getJavaType().getName() + "' to '" + targetType.getJavaType().getName() + "'! " + reason);
     }
 
+    private RuntimeException inconvertible(String reason, ManagedViewType<T> targetType) {
+        return new IllegalArgumentException("Can't convert from '" + targetType.getEntityClass().getName() + "' to '" + targetType.getJavaType().getName() + "'! " + reason);
+    }
+
     public T map(S source, Map<String, Object> optionalParameters) {
         Object[] tuple = new Object[objectMappers.length];
         for (int i = 0; i < objectMappers.length; i++) {
@@ -393,46 +403,28 @@ public class ViewMapper<S, T> {
         public static <Y> Key<Object, Y> create(ViewMetamodel metamodel, Object source, Class<Y> targetEntityViewClass, String constructorName, ConvertOption... convertOptions) {
             if (source instanceof EntityViewProxy) {
                 EntityViewProxy sourceProxy = (EntityViewProxy) source;
-                return (Key<Object, Y>) create(metamodel, sourceProxy.$$_getEntityViewClass(), targetEntityViewClass, constructorName, convertOptions);
+                return (Key<Object, Y>) createWithConvertOptions(metamodel, sourceProxy.$$_getEntityViewClass(), targetEntityViewClass, constructorName, false, convertOptions);
             } else {
-                return (Key<Object, Y>) create(metamodel, null, targetEntityViewClass, constructorName, convertOptions);
+                ManagedViewType<Y> targetViewType = metamodel.managedView(targetEntityViewClass);
+                if (targetViewType == null) {
+                    throw new IllegalArgumentException("Unknown target view type: " + targetEntityViewClass.getName());
+                } else if (!targetViewType.getEntityClass().isInstance(source)) {
+                    throw new IllegalArgumentException("The source object is not an instance of the target views entity type " + targetViewType.getEntityClass().getName() + ": " + source.getClass().getName());
+                }
+                return createWithConvertOptions(metamodel, null, targetEntityViewClass, constructorName, true, convertOptions);
             }
-
         }
 
         public static <X, Y> Key<X, Y> create(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> targetEntityViewClass, String constructorName, ConvertOption... convertOptions) {
-            boolean ignoreMissingAttributes = false;
-            boolean markNew = false;
-            for (ConvertOption copyOption : convertOptions) {
-                switch (copyOption) {
-                    case CREATE_NEW:
-                        markNew = true;
-                        break;
-                    case IGNORE_MISSING_ATTRIBUTES:
-                        ignoreMissingAttributes = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return create(metamodel, sourceEntityViewClass, targetEntityViewClass, constructorName, ignoreMissingAttributes, markNew);
+            return createWithConvertOptions(metamodel, sourceEntityViewClass, targetEntityViewClass, constructorName, false, convertOptions);
+        }
+
+        public static <X, Y> Key<X, Y> create(ViewMetamodel metamodel, Class<Y> targetEntityViewClass, String constructorName, ConvertOption... convertOptions) {
+            return createWithConvertOptions(metamodel, null, targetEntityViewClass, constructorName, true, convertOptions);
         }
 
         public static <X, Y> Key<X, Y> create(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> targetEntityViewClass, String targetConstructorName, boolean ignoreMissingAttributes, boolean markNew) {
-            ManagedViewTypeImplementor<X> sourceViewType = (ManagedViewTypeImplementor<X>) metamodel.managedView(sourceEntityViewClass);
-            ManagedViewTypeImplementor<Y> targetViewType = (ManagedViewTypeImplementor<Y>) metamodel.managedView(targetEntityViewClass);
-            if (targetViewType == null) {
-                throw new IllegalArgumentException("Unknown target view type: " + targetEntityViewClass.getName());
-            }
-            MappingConstructorImpl<Y> constructor = null;
-            if (targetConstructorName != null) {
-                constructor = (MappingConstructorImpl<Y>) targetViewType.getConstructor(targetConstructorName);
-                if (constructor == null) {
-                    throw new IllegalArgumentException("Unknown constructor '" + targetConstructorName + "' on target view type: " + targetEntityViewClass.getName());
-                }
-            }
-
-            return new ViewMapper.Key<>(sourceViewType, targetViewType, constructor, ignoreMissingAttributes, markNew);
+            return createWithFlags(metamodel, sourceEntityViewClass, targetEntityViewClass, targetConstructorName, false, ignoreMissingAttributes, markNew);
         }
 
         public ManagedViewTypeImplementor<S> getSourceType() {
@@ -486,6 +478,44 @@ public class ViewMapper<S, T> {
             result = 31 * result + (ignoreMissing ? 1 : 0);
             result = 31 * result + (markNew ? 1 : 0);
             return result;
+        }
+
+        private static <X, Y> Key<X, Y> createWithConvertOptions(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> targetEntityViewClass, String constructorName, boolean useEntityAsSource, ConvertOption... convertOptions) {
+            boolean ignoreMissingAttributes = false;
+            boolean markNew = false;
+            for (ConvertOption copyOption : convertOptions) {
+                switch (copyOption) {
+                    case CREATE_NEW:
+                        markNew = true;
+                        break;
+                    case IGNORE_MISSING_ATTRIBUTES:
+                        ignoreMissingAttributes = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return createWithFlags(metamodel, sourceEntityViewClass, targetEntityViewClass, constructorName, useEntityAsSource, ignoreMissingAttributes, markNew);
+        }
+
+        private static <X, Y> Key<X, Y> createWithFlags(ViewMetamodel metamodel, Class<X> sourceEntityViewClass, Class<Y> targetEntityViewClass, String targetConstructorName, boolean useEntityAsSource, boolean ignoreMissingAttributes, boolean markNew) {
+            ManagedViewTypeImplementor<X> sourceViewType = (ManagedViewTypeImplementor<X>) metamodel.managedView(sourceEntityViewClass);
+            if (!useEntityAsSource && (sourceViewType == null)) {
+                throw new IllegalArgumentException("Unknown source view type: " + sourceEntityViewClass.getName());
+            }
+            ManagedViewTypeImplementor<Y> targetViewType = (ManagedViewTypeImplementor<Y>) metamodel.managedView(targetEntityViewClass);
+            if (targetViewType == null) {
+                throw new IllegalArgumentException("Unknown target view type: " + targetEntityViewClass.getName());
+            }
+            MappingConstructorImpl<Y> constructor = null;
+            if (targetConstructorName != null) {
+                constructor = (MappingConstructorImpl<Y>) targetViewType.getConstructor(targetConstructorName);
+                if (constructor == null) {
+                    throw new IllegalArgumentException("Unknown constructor '" + targetConstructorName + "' on target view type: " + targetEntityViewClass.getName());
+                }
+            }
+
+            return new ViewMapper.Key<>(sourceViewType, targetViewType, constructor, ignoreMissingAttributes, markNew);
         }
     }
 

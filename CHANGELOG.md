@@ -14,6 +14,7 @@ Not yet released
 * Upgrade Javassist to 3.27.0-GA
 * Support Spring Boot and Data 2.4 along with Spring Framework 5.3
 * Support for Java 16 EA
+* Support for converting entities to entity views
 
 ### Bug fixes
 

@@ -54,12 +54,8 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
 
     @Override
     public ConvertOperationBuilder<T> excludeAttribute(String attributePath) {
-        if (
-                (key.getSourceType() != null)
-                && !key.getSourceType().getRecursiveAttributes().containsKey(attributePath)
-                && !key.getSourceType().getRecursiveSubviewAttributes().containsKey(attributePath)
-        ) {
-            throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getSourceType().getJavaType().getName());
+        if (!key.getTargetType().getRecursiveAttributes().containsKey(attributePath) && !key.getTargetType().getRecursiveSubviewAttributes().containsKey(attributePath)) {
+            throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getTargetType().getJavaType().getName());
         }
         subMappers.put(attributePath, ViewMapper.Key.EXCLUDE_MARKER);
         return this;
@@ -87,8 +83,20 @@ public class ConvertOperationBuilderImpl<T> implements ConvertOperationBuilder<T
 
     @Override
     public ConvertOperationBuilder<T> convertAttribute(String attributePath, Class<?> attributeViewClass, String constructorName, ConvertOption... convertOptions) {
+        AbstractMethodAttribute<?, ?> targetAttribute = key.getTargetType().getRecursiveSubviewAttributes().get(attributePath);
+        if (targetAttribute == null) {
+            throw new IllegalArgumentException("Attribute '" + attributePath + "' could not be found on type: " + key.getTargetType().getJavaType().getName());
+        }
+        Class<?> targetType = targetAttribute.getConvertedJavaType();
+        if (targetAttribute instanceof PluralAttribute<?, ?, ?>) {
+            targetType = ((PluralAttribute<?, ?, ?>) targetAttribute).getElementType().getJavaType();
+        }
+        if (!targetType.isAssignableFrom(attributeViewClass)) {
+            throw new IllegalArgumentException("The given type '" + attributeViewClass.getName() + "' is not assignable to the declared type of '" + key.getTargetType().getJavaType().getName() + "." + attributePath + "': " + targetType.getName());
+        }
+
         if (key.getSourceType() == null) {
-            subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), null, attributeViewClass, constructorName, convertOptions));
+            subMappers.put(attributePath, (ViewMapper.Key<Object, Object>) ViewMapper.Key.create(entityViewManager.getMetamodel(), attributeViewClass, constructorName, convertOptions));
             return this;
         }
 
