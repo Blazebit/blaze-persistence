@@ -2079,3 +2079,10 @@ catBaseView = entityViewManager.convertWith(CatCloneView.class, catView, Convert
 ----
 
 The resulting object could then be persisted via `EntityViewManager.save()` which represents a duplicate of the original.
+
+It is also possible to convert an entity to a view
+
+[source,java]
+----
+Cat cat = //...
+catView = entityViewManager.convert(cat, CatView.class)
