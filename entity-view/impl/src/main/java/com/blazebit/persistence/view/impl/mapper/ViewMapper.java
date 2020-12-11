@@ -191,10 +191,14 @@ public class ViewMapper<S, T> {
         AttributeAccessor accessor;
         if (sourceType == null) {
             sourceAttribute = null;
+            if (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
+                return new ParameterObjectMapper(((MappingAttribute<?, ?>) targetAttribute).getMapping());
+            }
             accessor = Accessors.forEntityMapping((EntityViewManagerImpl) entityViewManager, targetAttribute);
-            if (ignoreMissing || (targetAttribute.getMappingType() == Attribute.MappingType.PARAMETER)) {
-                return null;
-            } else if (accessor == null) {
+            if (accessor == null) {
+                if (ignoreMissing) {
+                    return null;
+                }
                 throw inconvertible("Attribute '" + targetAttribute.getName() + "' from target type is missing in source type!", targetType);
             }
         } else {

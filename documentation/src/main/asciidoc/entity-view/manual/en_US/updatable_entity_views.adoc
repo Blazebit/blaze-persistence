@@ -2085,4 +2085,4 @@ It is also possible to convert an entity to a view
 [source,java]
 ----
 Cat cat = //...
-catBaseView = entityViewManager.convert(cat, CatView.class)
+catView = entityViewManager.convert(cat, CatView.class)
