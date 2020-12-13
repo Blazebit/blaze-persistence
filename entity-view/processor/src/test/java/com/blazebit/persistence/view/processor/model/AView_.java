@@ -40,4 +40,8 @@ public abstract class AView_ {
         return EntityViewSetting.create(AView.class, firstResult, maxResults, "init");
     }
 
+    public static void applyTest(EntityViewSetting<AView, ?> setting, Object myParam) {
+        setting.withViewFilter("test").withOptionalParameter("myParam", myParam);
+    }
+
 }
