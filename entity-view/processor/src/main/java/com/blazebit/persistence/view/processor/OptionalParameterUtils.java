@@ -49,14 +49,16 @@ public final class OptionalParameterUtils {
                     break;
                 }
             }
-            String name = sb.toString();
-            TypeElement existingTypeElement = context.getOptionalParameters().get(name);
-            if (existingTypeElement == null) {
-                if (!optionalParameters.containsKey(name)) {
-                    optionalParameters.put(name, objectTypeElement);
+            if (sb.length() != 0) {
+                String name = sb.toString();
+                TypeElement existingTypeElement = context.getOptionalParameters().get(name);
+                if (existingTypeElement == null) {
+                    if (!optionalParameters.containsKey(name)) {
+                        optionalParameters.put(name, objectTypeElement);
+                    }
+                } else {
+                    optionalParameters.put(name, existingTypeElement);
                 }
-            } else {
-                optionalParameters.put(name, existingTypeElement);
             }
         }
     }

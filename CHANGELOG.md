@@ -27,7 +27,8 @@ Not yet released
 * Avoid transforming `SIZE` to `COUNT` when implicit group by would fail
 * Fix for implicit join in lateral join correlation path array expression index
 * Fix issues with flushing of embeddables/flat views for entity views retrieved by `EntityViewManager.getReference()`
-* Fix issues with tuple query with single scalar select returning same value for each row.
+* Fix issues with tuple query with single scalar select returning same value for each row
+* Support constant concatenation in optional parameter detection for entity view annotation processor
 
 ### Backwards-incompatible changes
 
