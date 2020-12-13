@@ -29,6 +29,7 @@ Not yet released
 * Fix issues with flushing of embeddables/flat views for entity views retrieved by `EntityViewManager.getReference()`
 * Fix issues with tuple query with single scalar select returning same value for each row
 * Support constant concatenation in optional parameter detection for entity view annotation processor
+* Fix issues with `EntityViewManager.getEntityReference` when used with embedded id entity types
 
 ### Backwards-incompatible changes
 

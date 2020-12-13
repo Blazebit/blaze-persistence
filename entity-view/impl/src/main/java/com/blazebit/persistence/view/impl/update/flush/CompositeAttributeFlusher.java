@@ -530,7 +530,19 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     }
 
     public Object getEntityIdCopy(UpdateContext context, EntityViewProxy updatableProxy) {
-        return determineOldId(context, updatableProxy, EMPTY_RUNNABLE);
+        if (jpaIdInstantiator != null) {
+            Object oldId = jpaIdInstantiator.toEntity(context, null, null);
+            if (idFlusher instanceof BasicAttributeFlusher<?, ?>) {
+                ((BasicAttributeFlusher<Object, Object>) idFlusher).flushEntityComponents(context, oldId, updatableProxy.$$_getId());
+            } else if (idFlusher instanceof EmbeddableAttributeFlusher<?, ?>) {
+                ((EmbeddableAttributeFlusher<Object, Object>) idFlusher).getViewToEntityMapper().flushToEntity(context, oldId, updatableProxy.$$_getId());
+            } else {
+                idFlusher.flushEntity(context, oldId, updatableProxy, updatableProxy.$$_getId(), updatableProxy.$$_getId(), null);
+            }
+            return oldId;
+        } else {
+            return updatableProxy.$$_getId();
+        }
     }
 
     public Object createViewIdByEntityId(Object id) {

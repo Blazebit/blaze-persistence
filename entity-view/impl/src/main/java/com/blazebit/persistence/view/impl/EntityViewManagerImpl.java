@@ -825,7 +825,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public <T> T getEntityReference(EntityManager entityManager, Object view) {
         if (!(view instanceof EntityViewProxy)) {
-            throw new IllegalArgumentException("Can't remove non entity view object: " + view);
+            throw new IllegalArgumentException("Can't retrieve entity reference for non entity view object: " + view);
         }
         EntityViewProxy proxy = (EntityViewProxy) view;
         return (T) entityManager.getReference(proxy.$$_getJpaManagedClass(), getEntityId(entityManager, proxy));

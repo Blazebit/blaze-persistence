@@ -125,6 +125,23 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
     }
 
     @Test
+    public void testConvertEmbeddedIdEntityViewToEntityReference() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        newOrder.getPositions().add(position);
+        update(newOrder);
+
+        // When
+        LegacyOrderPosition legacyOrderPosition = evm.getEntityReference(em, position);
+
+        // Then
+        Assert.assertEquals(new LegacyOrderPositionId(newOrder.getId(), 0), legacyOrderPosition.getId());
+    }
+
+    @Test
     public void testRemoveReadOnlyElementFromCollection() {
         // Given
         UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
