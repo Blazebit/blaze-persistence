@@ -173,7 +173,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                             new MutableEmbeddingViewJpqlMacro(),
                             0
                     ).createObjectBuilder(null, null, null, 0, false, false);
-                    jpaIdInstantiator = null;
+                    jpaIdInstantiator = new EntityIdLoader(viewIdType.getJpaManagedType().getJavaType());
                 } else {
                     tupleizer = null;
                     idViewBuilder = null;
