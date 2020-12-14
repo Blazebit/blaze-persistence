@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
@@ -163,34 +162,34 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).where(null);
+        verifyException(criteria, NullPointerException.class, r -> r.where(null));
     }
 
     @Test
     public void testWhereEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, IllegalArgumentException.class).where("");
+        verifyException(criteria, IllegalArgumentException.class, r -> r.where(""));
     }
 
     @Test
     public void testWhereNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age");
-        verifyException(criteria, BuilderChainingException.class).where("d.owner");
+        verifyException(criteria, BuilderChainingException.class, r -> r.where("d.owner"));
     }
 
     @Test
     public void testWhereOrNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.whereOr().where("d.partners.age").gt(0L);
-        verifyException(criteria, BuilderChainingException.class).where("d.partners.name");
+        verifyException(criteria, BuilderChainingException.class, r -> r.where("d.partners.name"));
     }
 
     @Test
     public void testWhereAndNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.partners.age").gt(0L);
-        verifyException(criteria, BuilderChainingException.class).where("d.partners.name");
+        verifyException(criteria, BuilderChainingException.class, r -> r.where("d.partners.name"));
     }
 
     @Test
@@ -547,9 +546,9 @@ public class WhereTest extends AbstractCoreTest {
     }
     
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
-        verifyException(crit, BuilderChainingException.class).whereCase();
-        verifyException(crit, BuilderChainingException.class).whereSimpleCase("d.id");
-        verifyException(crit, BuilderChainingException.class).where("d.id");
-        verifyException(crit, BuilderChainingException.class).getQueryString();
+        verifyException(crit, BuilderChainingException.class, r -> r.whereCase());
+        verifyException(crit, BuilderChainingException.class, r -> r.whereSimpleCase("d.id"));
+        verifyException(crit, BuilderChainingException.class, r -> r.where("d.id"));
+        verifyException(crit, BuilderChainingException.class, r -> r.getQueryString());
     }
 }

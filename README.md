@@ -1,6 +1,6 @@
 <img src="https://persistence.blazebit.com/images/blaze_persistence_logo_colors_render.png" width="200" />
 
-[![Build Status](https://travis-ci.com/Blazebit/blaze-persistence.svg?branch=master)](https://travis-ci.com/Blazebit/blaze-persistence)
+[![Build Status](https://github.com/Blazebit/blaze-persistence/workflows/Blaze-Persistence%20CI/badge.svg)](https://github.com/Blazebit/blaze-persistence/actions)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl)
 [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com)
@@ -133,17 +133,17 @@ This will also work when running on Java 8. We suggest you add the following dep
 <dependency>
     <groupId>javax.xml.bind</groupId>
     <artifactId>jaxb-api</artifactId>
-    <version>2.2.11</version>
+    <version>2.3.1</version>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
     <artifactId>jaxb-core</artifactId>
-    <version>2.2.11</version>
+    <version>2.3.0.1</version>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
     <artifactId>jaxb-impl</artifactId>
-    <version>2.2.11</version>
+    <version>2.3.3</version>
 </dependency>
 <dependency>
     <groupId>javax.transaction</groupId>

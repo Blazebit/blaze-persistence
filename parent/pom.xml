@@ -36,7 +36,9 @@
         <blaze-persistence.codename>Lockjaw</blaze-persistence.codename>
 
         <version.servlet>4.0.1</version.servlet>
-        <version.jaxb>2.2.11</version.jaxb>
+        <version.jaxb-api>2.3.1</version.jaxb-api>
+        <version.jaxb-core>2.3.0.1</version.jaxb-core>
+        <version.jaxb>2.3.3</version.jaxb>
         <version.jta>1.2</version.jta>
         <version.validation>2.0.1.Final</version.validation>
         <version.activation>1.1.1</version.activation>
@@ -109,7 +111,7 @@
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
-        <version.weld>2.4.5.Final</version.weld>
+        <version.weld>3.1.5.Final</version.weld>
         <version.quarkus>1.9.2.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
@@ -523,12 +525,6 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${version.junit}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.googlecode.catch-exception</groupId>
-                <artifactId>catch-exception</artifactId>
-                <version>1.2.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

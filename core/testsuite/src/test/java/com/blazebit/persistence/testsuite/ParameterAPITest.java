@@ -29,7 +29,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.*;
 
 /**
@@ -110,7 +109,7 @@ public class ParameterAPITest extends AbstractCoreTest {
     @Test
     public void testReservedParameterName1() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
-        verifyException(criteria, IllegalArgumentException.class).select("contacts[:ids]");
+        verifyException(criteria, IllegalArgumentException.class, r -> r.select("contacts[:ids]"));
     }
 
     @Test

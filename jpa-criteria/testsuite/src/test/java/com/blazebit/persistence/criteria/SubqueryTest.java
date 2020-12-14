@@ -22,7 +22,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Person_;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -145,7 +144,7 @@ public class SubqueryTest extends AbstractCoreTest {
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document WHERE document.owner = ALL(SELECT subPerson FROM Person subPerson)", criteriaBuilder.getQueryString());
         assertEquals(0, subquery.getCorrelatedJoins().size());
-        CatchException.verifyException(subFrom, IllegalStateException.class).getCorrelationParent();
+        verifyException(subFrom, IllegalStateException.class, r -> r.getCorrelationParent());
         assertFalse(subFrom.isCorrelated());
         assertFalse(root.isCorrelated());
     }
@@ -167,7 +166,7 @@ public class SubqueryTest extends AbstractCoreTest {
         assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT subPerson FROM Person subPerson WHERE subPerson.age = document.age)", criteriaBuilder.getQueryString());
         // TODO: not quite sure what the outcome should be
         assertEquals(0, subquery.getCorrelatedJoins().size());
-        CatchException.verifyException(subFrom, IllegalStateException.class).getCorrelationParent();
+        verifyException(subFrom, IllegalStateException.class, r -> r.getCorrelationParent());
         assertFalse(subFrom.isCorrelated());
         assertFalse(root.isCorrelated());
     }

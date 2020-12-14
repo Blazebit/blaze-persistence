@@ -33,7 +33,6 @@ import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1104,7 +1103,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 .from(Document.class, "d2")
                 .select("d2.id");
 
-        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -1116,7 +1115,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 .select("d1.id")
                 .startUnionAll();
 
-        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -1128,7 +1127,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 .select("d1.id")
                 .startUnionAll().endSet();
 
-        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -1140,7 +1139,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 .select("d1.id")
                 .startUnionAll().endSetWith();
 
-        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -1152,7 +1151,7 @@ public class SetOperationTest extends AbstractCoreTest {
                 .select("d1.id")
                 .startUnionAll().endSetWith().endSet();
 
-        CatchException.verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -1169,6 +1168,6 @@ public class SetOperationTest extends AbstractCoreTest {
                     .select("dSub.id")
                     .endSet();
 
-        CatchException.verifyException(cb, BuilderChainingException.class).getQueryString();
+        verifyException(cb, BuilderChainingException.class, r -> r.getQueryString());
     }
 }

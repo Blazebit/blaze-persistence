@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.criteria.JoinType;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -53,7 +52,7 @@ public class JoinTest extends AbstractCoreTest {
         BlazeJoin<Document, Person> p1 = root.join(Document_.owner, "owner1", JoinType.INNER);
         BlazeJoin<Document, Person> p2 = root.join(Document_.owner, "owner2", JoinType.LEFT);
         // Right join is not supported
-        CatchException.verifyException(root, UnsupportedOperationException.class).join(Document_.owner, "owner3", JoinType.RIGHT);
+        verifyException(root, UnsupportedOperationException.class, r -> r.join(Document_.owner, "owner3", JoinType.RIGHT));
 
         BlazeJoin<Person, Document> p1_1 = p1.join(Person_.partnerDocument, "partnerDoc", JoinType.INNER);
         

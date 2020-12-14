@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -151,12 +150,12 @@ public class SelectNewTest extends AbstractCoreTest {
     @Test
     public void testSelectNewNullClass() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).selectNew((Class<Document>) null);
+        verifyException(criteria, NullPointerException.class, r -> r.selectNew((Class<Document>) null));
     }
 
     @Test
     public void testSelectNewNullConstructor() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).selectNew((Constructor<Document>) null);
+        verifyException(criteria, NullPointerException.class, r -> r.selectNew((Constructor<Document>) null));
     }
 }

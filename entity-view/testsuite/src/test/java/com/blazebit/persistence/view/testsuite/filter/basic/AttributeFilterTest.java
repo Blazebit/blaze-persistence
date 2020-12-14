@@ -36,8 +36,6 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import java.util.List;
 
-import static com.googlecode.catchexception.CatchException.caughtException;
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -95,14 +93,14 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
 
     @Test
     public void testMultipleDefaultFilters() {
-        verifyException(this, IllegalArgumentException.class).build(MultipleDefaultAttributeFiltersView.class);
-        assertMessageContains("Illegal duplicate filter name mapping ''", caughtException());
+        IllegalArgumentException e = verifyException(this, IllegalArgumentException.class, r -> r.build(MultipleDefaultAttributeFiltersView.class));
+        assertMessageContains("Illegal duplicate filter name mapping ''", e);
     }
 
     @Test
     public void testFilterNameClash() {
-        verifyException(this, IllegalArgumentException.class).build(AttributeFilterNameClashView.class);
-        assertMessageContains("Illegal duplicate filter name mapping 'filter'", caughtException());
+        IllegalArgumentException e = verifyException(this, IllegalArgumentException.class, r -> r.build(AttributeFilterNameClashView.class));
+        assertMessageContains("Illegal duplicate filter name mapping 'filter'", e);
     }
 
     @Test

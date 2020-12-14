@@ -22,7 +22,6 @@ import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -56,9 +55,9 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
     // Eclipselink does not support polymorphic queries
     public void testJoinSubRelations() {
         CriteriaBuilder<PolymorphicBase> cb = cbf.create(em, PolymorphicBase.class, "base");
-        CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("relation1", "rel1");
+        IllegalArgumentException e = verifyException(cb, IllegalArgumentException.class, r -> r.leftJoin("relation1", "rel1"));
 
-        String message = CatchException.caughtException().getMessage();
+        String message = e.getMessage();
         assertTrue(message.contains("relation1"));
         assertTrue(message.contains(PolymorphicBase.class.getSimpleName()));
     }
@@ -72,8 +71,8 @@ public class PolymorphicJoinTest extends AbstractCoreTest {
         cb.select("relation1.name");
         cb.select("relation2.name");
 
-        CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
-        String message = CatchException.caughtException().getMessage();
+        IllegalArgumentException e = verifyException(cb, IllegalArgumentException.class, r -> r.getQueryString());
+        String message = e.getMessage();
         assertTrue(message.contains("relation1"));
         assertTrue(message.contains(PolymorphicBase.class.getSimpleName()));
     }

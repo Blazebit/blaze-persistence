@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
@@ -48,13 +47,13 @@ public class IsMemberOfTest extends AbstractCoreTest {
     @Test
     public void testIsMemberOfNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name"), NullPointerException.class).isMemberOf(null);
+        verifyException(criteria.where("d.name"), NullPointerException.class, r -> r.isMemberOf(null));
     }
 
     @Test
     public void testIsMemberOfEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name"), IllegalArgumentException.class).isMemberOf("");
+        verifyException(criteria.where("d.name"), IllegalArgumentException.class, r -> r.isMemberOf(""));
     }
 
     @Test
@@ -73,12 +72,12 @@ public class IsMemberOfTest extends AbstractCoreTest {
     @Test
     public void testIsNotMemberOfNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name"), NullPointerException.class).isNotMemberOf(null);
+        verifyException(criteria.where("d.name"), NullPointerException.class, r -> r.isNotMemberOf(null));
     }
 
     @Test
     public void testIsNotMemberOfEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name"), IllegalArgumentException.class).isNotMemberOf("");
+        verifyException(criteria.where("d.name"), IllegalArgumentException.class, r -> r.isNotMemberOf(""));
     }
 }

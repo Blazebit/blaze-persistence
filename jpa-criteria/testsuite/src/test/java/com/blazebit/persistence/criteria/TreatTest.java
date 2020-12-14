@@ -22,7 +22,6 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.*;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -113,7 +112,7 @@ public class TreatTest extends AbstractCoreTest {
         BlazeJoin<PolymorphicBase, PolymorphicBase> join = root.join(PolymorphicBase_.parent, "p1");
 
         cb.treat(join, PolymorphicSub1.class);
-        CatchException.verifyException(cb, IllegalArgumentException.class).treat(join, PolymorphicSub2.class);
+        verifyException(cb, IllegalArgumentException.class, r -> r.treat(join, PolymorphicSub2.class));
     }
 
     @Test

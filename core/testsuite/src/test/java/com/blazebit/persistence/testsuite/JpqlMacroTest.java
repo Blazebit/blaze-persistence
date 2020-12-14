@@ -21,7 +21,6 @@ import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.entity.Document;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +45,7 @@ public class JpqlMacroTest extends AbstractCoreTest {
     @Test
     public void testScopedMacro() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
-        CatchException.verifyException(cb, SyntaxErrorException.class).where("ID(d)");
+        verifyException(cb, SyntaxErrorException.class, r -> r.where("ID(d)"));
 
         cb.registerMacro("id", new JpqlMacro() {
             @Override
@@ -60,6 +59,6 @@ public class JpqlMacroTest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
 
         CriteriaBuilder<Document> newCb = cbf.create(em, Document.class, "d");
-        CatchException.verifyException(newCb, SyntaxErrorException.class).where("ID(d)");
+        verifyException(newCb, SyntaxErrorException.class, r -> r.where("ID(d)"));
     }
 }

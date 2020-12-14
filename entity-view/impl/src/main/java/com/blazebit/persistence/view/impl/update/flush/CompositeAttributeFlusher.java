@@ -422,7 +422,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 query = queryFactory.createUpdateQuery(context, (MutableStateTrackable) ownerView, ownerFlusher);
                 if (oldQuery != null) {
                     for (Parameter<?> parameter : oldQuery.getParameters()) {
-                        query.setParameter(parameter.getName(), oldQuery.getParameterValue(parameter));
+                        if (oldQuery.isBound(parameter)) {
+                            query.setParameter(parameter.getName(), oldQuery.getParameterValue(parameter));
+                        }
                     }
                 }
             }
@@ -457,7 +459,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 query = queryFactory.createUpdateQuery(context, (MutableStateTrackable) ownerView, ownerFlusher);
                 if (oldQuery != null) {
                     for (Parameter<?> parameter : oldQuery.getParameters()) {
-                        query.setParameter(parameter.getName(), oldQuery.getParameterValue(parameter));
+                        if (oldQuery.isBound(parameter)) {
+                            query.setParameter(parameter.getName(), oldQuery.getParameterValue(parameter));
+                        }
                     }
                 }
             }

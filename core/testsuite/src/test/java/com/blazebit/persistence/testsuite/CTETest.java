@@ -41,8 +41,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import java.util.List;
 
-import static com.googlecode.catchexception.CatchException.caughtException;
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -109,10 +107,10 @@ public class CTETest extends AbstractCoreTest {
                 .from(RecursiveEntity.class, "e")
                 .bind("id").select("e.id");
 
-        verifyException(fullSelectCTECriteriaBuilder, IllegalStateException.class).end();
+        IllegalStateException e = verifyException(fullSelectCTECriteriaBuilder, IllegalStateException.class, r -> r.end());
         // Assert that these columns haven't been bound
-        assertTrue(caughtException().getMessage().contains("name"));
-        assertTrue(caughtException().getMessage().contains("nesting_level"));
+        assertTrue(e.getMessage().contains("name"));
+        assertTrue(e.getMessage().contains("nesting_level"));
     }
 
     @Test
@@ -124,7 +122,7 @@ public class CTETest extends AbstractCoreTest {
                 .bind("id").select("e.id")
                 .bind("name").select("e.name")
                 .where("e.parent").isNull();
-        verifyException(builder, IllegalStateException.class).unionAll();
+        verifyException(builder, IllegalStateException.class, r -> r.unionAll());
     }
 
     @Test
@@ -143,7 +141,7 @@ public class CTETest extends AbstractCoreTest {
                     .bind("name").select("e.name")
                     .where("e.parent").isNull()
                 ;
-        verifyException(builder, IllegalStateException.class).endSet();
+        verifyException(builder, IllegalStateException.class, r -> r.endSet());
     }
 
     @Test
@@ -151,9 +149,9 @@ public class CTETest extends AbstractCoreTest {
     public void testNotDefinedCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
 
-        verifyException(cb, IllegalStateException.class).getQueryString();
+        IllegalStateException e = verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
         // Assert the undefined cte
-        assertTrue(caughtException().getMessage().contains(TestCTE.class.getName()));
+        assertTrue(e.getMessage().contains(TestCTE.class.getName()));
     }
     
     @Test
@@ -801,7 +799,7 @@ public class CTETest extends AbstractCoreTest {
             .bind("level").select("0")
         .endSet();
 
-        verifyException(cb, BuilderChainingException.class).end();
+        verifyException(cb, BuilderChainingException.class, r -> r.end());
     }
 
     // from issue #513

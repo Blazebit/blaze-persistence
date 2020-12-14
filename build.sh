@@ -24,6 +24,18 @@ PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en -Dmaven.javadoc.ski
 
 if [ "$BUILD_JDK" != "" ]; then
   PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
+  if [ "$BUILD_JDK" == "16" ]; then
+    # Until Deltaspike releases a version with ASM 9, we have to exclude these parts from the build
+    PROPERTIES="-pl !integration/deltaspike-data/testsuite,!examples/deltaspike-data-rest,!integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
+  else
+    # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
+    PROPERTIES="-pl !integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
+  fi
+else
+  if [ "$JPAPROVIDER" == "hibernate-5.2" ] && [ "$JDK" != "8" ]; then
+    # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
+    PROPERTIES="-pl !integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
+  fi
 fi
 
 if [ "$JDK" != "" ]; then

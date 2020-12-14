@@ -798,6 +798,22 @@ public abstract class AbstractJpaPersistenceTest {
         return assertOrderedQuerySequence().unordered();
     }
 
+    protected static <T, E extends Throwable> E verifyException(T object, Consumer<T> action) {
+        return (E) verifyException(object, Throwable.class, action);
+    }
+
+    protected static <T, E extends Throwable> E verifyException(T object, Class<E> throwableClass, Consumer<T> action) {
+        try {
+            action.accept(object);
+            throw new AssertionError("Neither an exception of type " + throwableClass.getName() + " nor another exception was thrown");
+        } catch (Throwable ex) {
+            if (!throwableClass.isInstance(ex)) {
+                throw new AssertionError("Exception of type " + throwableClass.getName() + " expected but was not thrown. " + "Instead an exception of type " + ex.getClass() + " with message '" + ex.getMessage() + "' was thrown.", ex);
+            }
+            return (E) ex;
+        }
+    }
+
     protected RelationalModelAccessor getRelationalModelAccessor() {
         return null;
     }

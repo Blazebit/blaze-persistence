@@ -26,7 +26,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.NameObject_;
 import com.blazebit.persistence.testsuite.entity.Person;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -133,9 +132,9 @@ public class WhereTest extends AbstractCoreTest {
         Root<Document> subRoot = subquery.from(Document.class, "sub");
         subquery.select(zero);
 
-        CatchException.verifyException(root.get(Document_.id), NullPointerException.class).in((Collection<?>) null);
-        CatchException.verifyException(root.get(Document_.id), IllegalArgumentException.class).in((Expression<?>) null);
-        CatchException.verifyException(root.get(Document_.id), IllegalArgumentException.class).in((Expression<Collection<?>>) null);
+        verifyException(root.get(Document_.id), NullPointerException.class, r -> r.in((Collection<?>) null));
+        verifyException(root.get(Document_.id), IllegalArgumentException.class, r -> r.in((Expression<?>) null));
+        verifyException(root.get(Document_.id), IllegalArgumentException.class, r -> r.in((Expression<Collection<?>>) null));
 
         cq.select(root.get(Document_.id));
         cq.where(cb.and(
@@ -151,7 +150,7 @@ public class WhereTest extends AbstractCoreTest {
                 subquery.in(Arrays.asList(0L))
         ));
 
-        CatchException.verifyException(cb.parameter(Integer.class, "p"), IllegalArgumentException.class).in();
+        verifyException(cb.parameter(Integer.class, "p"), IllegalArgumentException.class, r -> r.in());
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         assertEquals("SELECT document.id FROM Document document " +

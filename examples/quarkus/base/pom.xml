@@ -103,27 +103,27 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>2.2.11</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>2.2.11</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-impl</artifactId>
-                                <version>2.2.11</version>
+                                <version>${version.jaxb}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.transaction</groupId>
                                 <artifactId>javax.transaction-api</artifactId>
-                                <version>1.2</version>
+                                <version>${version.jta}</version>
                             </dependency>
                             <dependency>
                                 <groupId>javax.activation</groupId>
                                 <artifactId>activation</artifactId>
-                                <version>1.1.1</version>
+                                <version>${version.activation}</version>
                             </dependency>
                         </dependencies>
                     </plugin>

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -67,7 +66,7 @@ public class LikeTest extends AbstractCoreTest {
     @Test
     public void testLikeNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name").like(), NullPointerException.class).value(null);
+        verifyException(criteria.where("d.name").like(), NullPointerException.class, r -> r.value(null));
     }
 
     @Test
@@ -101,7 +100,7 @@ public class LikeTest extends AbstractCoreTest {
     @Test
     public void testLikeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name").like(), NullPointerException.class).expression(null);
+        verifyException(criteria.where("d.name").like(), NullPointerException.class, r -> r.expression(null));
     }
 
     /** *** NOT LIKE **** */
@@ -138,7 +137,7 @@ public class LikeTest extends AbstractCoreTest {
     @Test
     public void testNotLikeNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name").notLike(), NullPointerException.class).value(null);
+        verifyException(criteria.where("d.name").notLike(), NullPointerException.class, r -> r.value(null));
     }
 
     @Test
@@ -192,7 +191,7 @@ public class LikeTest extends AbstractCoreTest {
     @Test
     public void testNotLikeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.name").notLike(), NullPointerException.class).expression(null);
+        verifyException(criteria.where("d.name").notLike(), NullPointerException.class, r -> r.expression(null));
     }
 
     private String getCaseInsensitiveLike(String property, String likeParam, Character escape) {

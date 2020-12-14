@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Assert;
@@ -47,7 +46,7 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).eq((Object) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.eq((Object) null));
     }
 
     @Test
@@ -63,13 +62,13 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualToEmptyExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), IllegalArgumentException.class).eqExpression("");
+        verifyException(criteria.where("d.age"), IllegalArgumentException.class, r -> r.eqExpression(""));
     }
 
     @Test
     public void testEqualToNullExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).eqExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.eqExpression(null));
     }
 
     @Test
@@ -84,7 +83,7 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testNotEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).notEq((Object) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.notEq((Object) null));
     }
 
     @Test
@@ -99,13 +98,13 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testNotEqualToEmptyExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), IllegalArgumentException.class).notEqExpression("");
+        verifyException(criteria.where("d.age"), IllegalArgumentException.class, r -> r.notEqExpression(""));
     }
 
     @Test
     public void testNotEqualToNullExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).notEqExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.notEqExpression(null));
     }
 
     @Test

@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
-import static com.googlecode.catchexception.CatchException.caughtException;
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -68,7 +66,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void testCircularViews() {
-        verifyException(this, IllegalArgumentException.class).build(CircularDocument.class, CircularPerson.class);
+        verifyException(this, IllegalArgumentException.class, r -> r.build(CircularDocument.class, CircularPerson.class));
     }
 
     @Test
@@ -397,8 +395,7 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
 
     @Test
     public void testConflictingMapping() {
-        verifyException(this, IllegalArgumentException.class).build(ConflictingDoc.class);
-        Throwable t = caughtException();
+        IllegalArgumentException t = verifyException(this, IllegalArgumentException.class, r -> r.build(ConflictingDoc.class));
         assertTrue(t.getMessage().contains("'name'"));
         assertTrue(t.getMessage().contains(ConflictingDoc1.class.getName() + ".getName"));
         assertTrue(t.getMessage().contains(ConflictingDoc2.class.getName() + ".getName"));

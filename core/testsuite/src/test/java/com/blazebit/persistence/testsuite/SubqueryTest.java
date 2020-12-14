@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -99,7 +98,7 @@ public class SubqueryTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.selectSubquery("subquery", "MAX(subquery)");
         
-        verifyException(crit, BuilderChainingException.class).getResultList();
+        verifyException(crit, BuilderChainingException.class, r -> r.getResultList());
     }
 
     @Test
@@ -583,7 +582,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .page(0, 1)
                 .withInlineIdQuery(false);
         // In a paginated query access to outer collections is disallowed in the order by clause
-        verifyException(cb, IllegalStateException.class).getPageIdQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getPageIdQueryString());
     }
 
     @Test
@@ -651,7 +650,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end();
 
         // It is disallowed to refer to implicitly refer to attributes of the outer query root
-        verifyException(cb, IllegalArgumentException.class).getQueryString();
+        verifyException(cb, IllegalArgumentException.class, r -> r.getQueryString());
     }
 
     @Test

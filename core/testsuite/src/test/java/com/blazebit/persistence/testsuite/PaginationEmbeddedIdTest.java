@@ -26,7 +26,6 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -223,7 +222,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e");
         crit.where("e.embeddable.elementCollection.primaryName").eq("test");
         crit.orderByAsc("e.id.key");
-        CatchException.verifyException(crit.page(0, 1), IllegalStateException.class).getQueryString();
+        verifyException(crit.page(0, 1), IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test

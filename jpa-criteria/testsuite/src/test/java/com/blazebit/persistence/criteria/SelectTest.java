@@ -34,7 +34,6 @@ import javax.persistence.criteria.Root;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.tx.TxWork;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
@@ -163,13 +162,13 @@ public class SelectTest extends AbstractCoreTest {
         Tuple t = list.get(0);
 
         assertEquals(2, t.getElements().size());
-        CatchException.verifyException(t).get((String) null);
+        verifyException(t, r -> r.get((String) null));
         assertEquals(docId, t.get("docId"));
-        CatchException.verifyException(t).get(-1);
+        verifyException(t, r -> r.get(-1));
         assertEquals(docId, t.get(0));
         assertEquals(docId, t.get(1));
-        CatchException.verifyException(t).get(2);
-        CatchException.verifyException(t).get((TupleElement<?>) null);
+        verifyException(t, r -> r.get(2));
+        verifyException(t, r -> r.get((TupleElement<?>) null));
         assertEquals(docId, t.get(t.getElements().get(0)));
         assertEquals(docId, t.get(t.getElements().get(1)));
         assertNull(t.getElements().get(0).getAlias());
@@ -189,7 +188,7 @@ public class SelectTest extends AbstractCoreTest {
                 root.get(Document_.id).alias("docId")
         );
 
-        CatchException.verifyException(cq).createCriteriaBuilder(em);
+        verifyException(cq, r -> r.createCriteriaBuilder(em));
     }
 
     @Test
