@@ -14,6 +14,8 @@ Not yet released
 * Support plural attribute key/index access in `@Limit(order = "")` expression
 * Automatically fetch attributes necessary for attribute sorters/filters
 * Ensure graphql-java 9.2 - 16.2 work properly and add a Netflix DGS sample application
+* Add support for SmallRye GraphQL in the GraphQL integration
+* Add support for Netflix DGS `@DgsData` and MicroProfile GraphQL annotations
 
 ### Bug fixes
 
@@ -21,6 +23,7 @@ Not yet released
 * Fix issues with persisting updatable non-PK subview mapping referring to PK-Id view
 * Fix issues with entity-view annotation processor and type use annotations
 * Get rid of static dialect references to avoid eager initialization causing issues with native compilation
+* Make entity view subview ids non-null in the GraphQL model
 
 ### Backwards-incompatible changes
 

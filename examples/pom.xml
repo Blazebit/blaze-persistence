@@ -37,6 +37,7 @@
         <module>spring-hateoas</module>
         <module>it-service-management</module>
         <module>quarkus</module>
+        <module>microprofile-graphql</module>
     </modules>
 
 </project>

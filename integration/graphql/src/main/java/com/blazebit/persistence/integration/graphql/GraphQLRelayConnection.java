@@ -22,6 +22,7 @@ import com.blazebit.persistence.PagedList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,6 +38,15 @@ public class GraphQLRelayConnection<T> implements Serializable {
     private final List<GraphQLRelayEdge<T>> edges;
     private final GraphQLRelayPageInfo pageInfo;
     private final long totalCount;
+
+    /**
+     * Creates an empty GraphQL page.
+     */
+    public GraphQLRelayConnection() {
+        this.edges = Collections.emptyList();
+        this.pageInfo = GraphQLRelayPageInfo.EMPTY;
+        this.totalCount = 0;
+    }
 
     /**
      * Creates a new GraphQL page from the given list.
@@ -93,7 +103,7 @@ public class GraphQLRelayConnection<T> implements Serializable {
      *
      * @return the elements
      */
-    public List<GraphQLRelayEdge<T>> getElements() {
+    public List<GraphQLRelayEdge<T>> getEdges() {
         return edges;
     }
 

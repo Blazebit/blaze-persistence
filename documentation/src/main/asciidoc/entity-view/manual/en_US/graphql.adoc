@@ -5,7 +5,7 @@ GraphQL is a language for data communication that requires a schema. Defining th
 This is where the GraphQL integration comes to rescue as it is capable of contributing entity view types to the GraphQL schema
 and also create a `EntityViewSetting` object from a GraphQL `DataFetchingEnvironment` with full support for partial loading as defined by selection lists.
 
-In addition it also has support for the Relay pagination specification to allow easy keyset pagination.
+In addition, it also has support for the Relay pagination specification to allow easy keyset pagination.
 
 [[graphql-setup]]
 === Setup
@@ -26,19 +26,9 @@ Note that the integration works with the de facto standard runtime for GraphQL w
 
 === Usage
 
-The integration works by contributing entity view type as GraphQL types to a GraphQL `TypeDefinitionRegistry`.
-In general, the idea is that you define a custom GraphQL schema for your queries in which you use entity view types.
+The integration works by contributing entity view type as GraphQL types to a GraphQL `TypeDefinitionRegistry` or `GraphQLSchema.Builder`.
 
-Let's consider the following sample schema
-
-[source,graphql]
-----
-type Query {
-    catById(id: ID!): CatWithOwnerView
-}
-----
-
-With the following entity views
+Let's consider the following entity views
 
 [source,java]
 ----
@@ -63,26 +53,6 @@ public interface CatWithOwnerView extends CatSimpleView {
 }
 ----
 
-The integration happens through the class `GraphQLEntityViewSupportFactory` like so:
-
-[source,java]
-----
-EntityViewManager evm = ...
-
-// Read in the GraphQL schema
-URL url = Resources.getResource("schema.graphqls");
-String sdl = Resources.toString(url, StandardCharsets.UTF_8);
-TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
-
-// Configure how to integrate entity views
-boolean defineNormalTypes = true;
-boolean defineRelayTypes = false;
-GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
-
-// Integrate and create the support class for extraction of EntityViewSetting objects
-GraphQLEntityViewSupport graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(typeRegistry, evm);
-----
-
 This will generate the following GraphQL types
 
 [source,graphql]
@@ -105,8 +75,48 @@ type PersonSimpleView {
 }
 ----
 
+The integration happens through the class `GraphQLEntityViewSupportFactory`, which produces a `GraphQLEntityViewSupport` which you can then use.
 The created `GraphQLEntityViewSupport` object is a singleton that should only be created during boot
 and can be used for creating `EntityViewSetting` objects in GraphQL `DataFetcher` implementations.
+Usually, the object is exposed as `@Bean` in Spring or `@ApplicationScoped` bean in CDI.
+
+The `GraphQLEntityViewSupport.createSetting()` and `GraphQLEntityViewSupport.createPaginatedSetting()` methods inspect the data fetching environment and know which entity view type is needed,
+but you can also provide a custom `EntityViewSetting` with a custom entity view type or some prepared filters/sorters.
+In addition, these methods will determine what to fetch according to the `DataFetchingEnvironment.getSelectionList()`.
+This will lead to the optimal query to be generated for the fields that are requested. This is not only about skipping select items, but also about avoiding unnecessary joins!
+
+==== Plain graphql-java setup
+
+With just graphql-java, you have to provide a schema and do the runtime-wiring. This could look like the following with a sample schema:
+
+[source,graphql]
+----
+type Query {
+    catById(id: ID!): CatWithOwnerView
+}
+----
+
+and the setup logic:
+
+[source,java]
+----
+EntityViewManager evm = ...
+
+// Read in the GraphQL schema
+URL url = Resources.getResource("schema.graphqls");
+String sdl = Resources.toString(url, StandardCharsets.UTF_8);
+TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
+
+// Configure how to integrate entity views
+boolean defineNormalTypes = true;
+boolean defineRelayTypes = true;
+GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
+graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
+
+// Integrate and create the support class for extraction of EntityViewSetting objects
+GraphQLEntityViewSupport graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(typeRegistry, evm);
+----
 
 Next, one needs to define a `DataFetcher` for the defined query `catById` like so
 
@@ -129,10 +139,6 @@ RuntimeWiring.newRuntimeWiring()
     .build();
 ----
 
-The `GraphQLEntityViewSupport.createSetting()` method inspects the data fetching environment and knows which entity view type is needed.
-In addition, it will fill the `fetches` according to the `DataFetchingEnvironment.getSelectionList()`.
-This will lead to the optimal query to be generated for the fields that are requested. This is not only about skipping select items, but also avoids unnecessary joins!
-
 Finally, the `RuntimeWiring` and `TypeDefinitionRegistry` are joined together to a `GraphQL` schema which is required for the GraphQL runtime.
 
 [source,java]
@@ -141,7 +147,166 @@ SchemaGenerator schemaGenerator = new SchemaGenerator();
 return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
 ----
 
-The repository could look like this:
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+
+==== Netflix DGS setup
+
+The Netflix DGS setup is similar to the plain graphql-java one, as you have to provide a schema as well, although you have to follow a convention.
+A schema must be located in a `schema` folder and have a suffix of `*.graphls` according to the https://netflix.github.io/dgs/configuration/[documentation].
+The runtime-wiring looks different though as it supports an annotation based model.
+This could look like the following with a sample schema:
+
+[source,graphql]
+----
+type Query {
+    catById(id: ID!): CatWithOwnerView
+}
+----
+
+and the setup logic:
+
+[source,java]
+----
+@DgsComponent
+public class GraphQLProvider {
+
+    @Autowired
+    EntityViewManager evm;
+
+    private TypeDefinitionRegistry typeRegistry;
+    private GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    @PostConstruct
+    public void init() {
+        // Create a new type definition registry
+        this.typeRegistry = new TypeDefinitionRegistry();
+        // Configure how to integrate entity views
+        boolean defineNormalTypes = true;
+        boolean defineRelayTypes = true;
+        GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
+        graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+        graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
+        // Integrate and create the support class for extraction of EntityViewSetting objects
+        this.graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(typeRegistry, evm);
+    }
+
+    @DgsTypeDefinitionRegistry
+    public TypeDefinitionRegistry registry() {
+        return typeRegistry;
+    }
+
+    @Bean
+    public GraphQLEntityViewSupport getSchema() {
+        return graphQLEntityViewSupport;
+    }
+
+}
+----
+
+Note that the class must be annotated with `@DgsComponent` and the created `TypeDefinitionRegistry` must be exposed through a `@DgsTypeDefinitionRegistry` annotated method.
+
+Next, one needs to define a `DataFetcher` for the defined query `catById` like so
+
+[source,java]
+----
+@DgsComponent
+public class CatFetcher {
+
+    @Autowired
+    CatViewRepository repository;
+    @Autowired
+    GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    @DgsQuery
+    public CatWithOwnerView catById(@InputArgument("id") Long id, DataFetchingEnvironment dataFetchingEnvironment) {
+        return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), Long.valueOf(dataFetchingEnvironment.getArgument("id")));
+    }
+}
+----
+
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+
+==== MicroProfile GraphQL - SmallRye
+
+MicroProfile GraphQL (version 1.1 at the time of writing) has a completely different approach, as it is completely annotation based.
+At the moment, only the SmallRye implementation is supported and unfortunately, not yet within Quarkus.
+
+Let's consider the following sample schema
+
+[source,graphql]
+----
+type Query {
+    catById(id: ID!): CatWithOwnerView
+}
+----
+
+and the setup logic:
+
+[source,java]
+----
+@ApplicationScoped
+public class GraphQLProducer {
+
+    @Inject
+    EntityViewManager evm;
+
+    GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    void configure(@Observes GraphQLSchema.Builder schemaBuilder) {
+        // Option 1: As of SmallRye GraphQL 1.3.1 you can disable the generation of GraphQL types and annotate all entity views with @Type instead
+        // boolean defineNormalTypes = false;
+        // boolean defineRelayTypes = false;
+
+        // Option 2: Let the integration replace the entity view GraphQL types
+        boolean defineNormalTypes = true;
+        boolean defineRelayTypes = true;
+
+        // Configure how to integrate entity views
+        GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);
+
+        graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+        graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
+        graphQLEntityViewSupportFactory.setScalarTypeMap(GraphQLScalarTypes.getScalarMap());
+        // Integrate and create the support class for extraction of EntityViewSetting objects
+        this.graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(schemaBuilder, evm);
+    }
+
+    @Produces
+    @ApplicationScoped
+    GraphQLEntityViewSupport graphQLEntityViewSupport() {
+        return graphQLEntityViewSupport;
+    }
+}
+----
+
+Note that you need a `microprofile-config.properties` file in `META-INF` with the config option `smallrye.graphql.events.enabled=true` to enable the events.
+
+Next, one needs to define a `DataFetcher` for the defined query `catById` like so
+
+[source,java]
+----
+@GraphQLApi
+public class CatFetcher {
+
+    @Inject
+    CatViewRepository repository;
+    @Inject
+    Context context;
+    @Inject
+    GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    @Query
+    public CatWithOwnerView catById(@Input("id") Long id) {
+        return repository.findById(graphQLEntityViewSupport.createSetting(context.unwrap(DataFetchingEnvironment.class)), id);
+    }
+}
+----
+
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[example project].
+
+==== Sample query
+
+The repository for the previously presented setups could look like this:
 
 [source,java]
 ----
@@ -186,7 +351,7 @@ FROM Cat c
 WHERE c.id = :param
 ----
 
-It does not select or join the owner information although it is specified in the entity view!
+It does not select or join the owner information, although it is specified in the entity view!
 This optimization works through applying the selection list of the `DataFetchingEnvironment` via `EntityViewSetting.fetch()`.
 
 === Pagination support
@@ -235,7 +400,7 @@ type PersonSimpleView {
 }
 ----
 
-To use these type, the static GraphQL Schema needs to be extended
+To use these type, the static GraphQL Schema needs to be extended. Note that you can skip this for MicroProfile GraphQL.
 
 [source,graphql]
 ----
@@ -250,29 +415,35 @@ Using `last` will fetch the last X elements _before_ the given reference point o
 
 If you can't use keyset pagination, the GraphQL integration also allows to use an `offset` argument, but it is not recommended as offset based pagination has scalability problems.
 
-In order to use this, a `RuntimeWiring` that executes a query is required.
-
+A data fetcher for using this, could look like the following
 
 [source,java]
 ----
-CatViewRepository repository;
+CatViewRepository repository = ...
+DataFetchingEnvironment dataFetchingEnvironment = ...
 
-RuntimeWiring.newRuntimeWiring()
-    .type(TypeRuntimeWiring.newTypeWiring("Query")
-        .dataFetcher("findAll", new DataFetcher() {
-            @Override
-            public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
-                EntityViewSetting<Object, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(dataFetchingEnvironment);
-                // The last order by item must be a unique expression for deterministic ordering
-                setting.addAttributeSorter("id", Sorters.ascending());
-                if (setting.getMaxResults() == 0) {
-                    return new GraphQLRelayConnection<>(Collections.emptyList());
-                }
-                return new GraphQLRelayConnection<>(repository.findAll(setting));
-            }
-        })
-    )
-    .build();
+EntityViewSetting<Object, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(dataFetchingEnvironment);
+// The last order by item must be a unique expression for deterministic ordering
+setting.addAttributeSorter("id", Sorters.ascending());
+if (setting.getMaxResults() == 0) {
+    return new GraphQLRelayConnection<>(Collections.emptyList());
+}
+return new GraphQLRelayConnection<>(repository.findAll(setting));
+----
+
+Note that in case of MicroProfile GraphQL, you will have to define the various input arguments in the method signature of the data fetcher:
+
+[source,java]
+----
+@Query
+public GraphQLRelayConnection<CatWithOwnerView> findAll(
+        @Name("first") Integer first,
+        @Name("last") Integer last,
+        @Name("offset") Integer offset,
+        @Name("before") String before,
+        @Name("after") String after) {
+    // ...
+}
 ----
 
 The `GraphQLEntityViewSupport.createPaginatedSetting()` method is capable of reading all necessary information from the `DataFetchingEnvironment` and the schema.
@@ -388,4 +559,8 @@ query: {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see one of the following example projects:
+
+* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[Plain graphql-java]
+* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-dgs/[Netflix DGS]
+* https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[MicroProfile GraphQL]
