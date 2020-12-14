@@ -33,12 +33,12 @@ import java.util.Base64;
  */
 public class GraphQLRelayPageInfo implements Serializable {
 
-    public static final GraphQLRelayPageInfo EMPTY = new GraphQLRelayPageInfo();
+    public static final transient GraphQLRelayPageInfo EMPTY = new GraphQLRelayPageInfo();
 
     private final boolean hasNextPage;
     private final boolean hasPreviousPage;
-    private final GraphQLCursor startCursor;
-    private final GraphQLCursor endCursor;
+    private final String startCursor;
+    private final String endCursor;
 
     private GraphQLRelayPageInfo() {
         this.hasNextPage = true;
@@ -57,12 +57,12 @@ public class GraphQLRelayPageInfo implements Serializable {
         this.hasNextPage = data.getTotalSize() == -1 || data.getFirstResult() + data.getMaxResults() < data.getTotalSize();
         KeysetPage keysetPage = data.getKeysetPage();
         if (keysetPage != null && keysetPage.getLowest() != null) {
-            this.startCursor = new GraphQLCursor(data.getFirstResult(), data.getMaxResults(), keysetPage.getLowest().getTuple());
+            this.startCursor = Base64.getEncoder().encodeToString(serialize(data.getFirstResult(), data.getMaxResults(), keysetPage.getLowest().getTuple()));
         } else {
             this.startCursor = null;
         }
         if (keysetPage != null && keysetPage.getHighest() != null) {
-            this.endCursor = new GraphQLCursor(data.getFirstResult(), data.getMaxResults(), keysetPage.getHighest().getTuple());
+            this.endCursor = Base64.getEncoder().encodeToString(serialize(data.getFirstResult(), data.getMaxResults(), keysetPage.getHighest().getTuple()));
         } else {
             this.endCursor = null;
         }
@@ -92,10 +92,7 @@ public class GraphQLRelayPageInfo implements Serializable {
      * @return the start cursor or <code>null</code>
      */
     public String getStartCursor() {
-        if (startCursor == null) {
-            return null;
-        }
-        return Base64.getEncoder().encodeToString(serialize(startCursor));
+        return startCursor;
     }
 
     /**
@@ -104,10 +101,7 @@ public class GraphQLRelayPageInfo implements Serializable {
      * @return the end cursor or <code>null</code>
      */
     public String getEndCursor() {
-        if (endCursor == null) {
-            return null;
-        }
-        return Base64.getEncoder().encodeToString(serialize(endCursor));
+        return endCursor;
     }
 
     /**

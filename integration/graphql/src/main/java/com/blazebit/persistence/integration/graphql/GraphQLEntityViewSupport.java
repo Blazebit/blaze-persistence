@@ -25,6 +25,8 @@ import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldsContainer;
+import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
@@ -37,9 +39,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * A support class to interact with entity views in a GraphQL environment.
@@ -112,7 +117,9 @@ public class GraphQLEntityViewSupport {
     }
 
     private final Map<String, Class<?>> typeNameToClass;
+    private final Map<String, Map<String, String>> typeNameToFieldMapping;
     private final Set<String> serializableBasicTypes;
+    private final ConcurrentMap<TypeRootCacheKey, GraphQLType> typeReferenceCache = new ConcurrentHashMap<>();
 
     private final String pageSizeName;
     private final String offsetName;
@@ -124,6 +131,13 @@ public class GraphQLEntityViewSupport {
     private final String elementCursorName;
 
     /**
+     * A default constructor to make this class proxyable.
+     */
+    GraphQLEntityViewSupport() {
+        this(null, null, null, null, null, null, null, null, null, null, null);
+    }
+
+    /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
      * It uses the GraphQL Relay specification names for accessing page info fields for paginated settings.
      *
@@ -132,6 +146,18 @@ public class GraphQLEntityViewSupport {
      */
     public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Set<String> serializableBasicTypes) {
         this(typeNameToClass, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+    }
+
+    /**
+     * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     * It uses the GraphQL Relay specification names for accessing page info fields for paginated settings.
+     *
+     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
+     * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     */
+    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes) {
+        this(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
     }
 
     /**
@@ -148,6 +174,24 @@ public class GraphQLEntityViewSupport {
      * @param elementCursorName The name of the cursor field within elements
      */
     public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
+        this(typeNameToClass, Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
+    }
+
+    /**
+     * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
+     * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     * @param pageSizeName The name of the page size field
+     * @param offsetName The name of the offset field
+     * @param beforeCursorName The name of the beforeCursor field
+     * @param afterCursorName The name of the afterCursor field
+     * @param totalCountName The name of the totalCount field
+     * @param pageElementsName The name of the elements field
+     * @param pageElementObjectName The name of the element object field within elements
+     * @param elementCursorName The name of the cursor field within elements
+     */
+    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
         this.pageSizeName = pageSizeName;
         this.offsetName = offsetName;
         this.beforeCursorName = beforeCursorName;
@@ -155,6 +199,7 @@ public class GraphQLEntityViewSupport {
         this.totalCountName = totalCountName;
         this.pageElementsName = pageElementsName;
         this.typeNameToClass = typeNameToClass;
+        this.typeNameToFieldMapping = typeNameToFieldMapping;
         this.serializableBasicTypes = serializableBasicTypes;
         this.pageElementObjectName = pageElementObjectName;
         this.elementCursorName = elementCursorName;
@@ -180,7 +225,15 @@ public class GraphQLEntityViewSupport {
      * @return the entity view setting
      */
     public <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> createPaginatedSetting(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
-        String typeName = getElementTypeName(dataFetchingEnvironment, elementRoot);
+        String objectRoot;
+        if (pageElementObjectName == null || pageElementObjectName.isEmpty()) {
+            objectRoot = elementRoot;
+        } else if (elementRoot == null || elementRoot.isEmpty()) {
+            objectRoot = pageElementObjectName;
+        } else {
+            objectRoot = elementRoot + "/" + pageElementObjectName;
+        }
+        String typeName = getElementTypeName(dataFetchingEnvironment, objectRoot);
         Class<?> entityViewClass = typeNameToClass.get(typeName);
         if (entityViewClass == null) {
             throw new IllegalArgumentException("No entity view type is registered for the name: " + typeName);
@@ -270,38 +323,52 @@ public class GraphQLEntityViewSupport {
     }
 
     public String getElementTypeName(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
+        GraphQLType type = getElementType(dataFetchingEnvironment, elementRoot);
+        if (type instanceof GraphQLObjectType) {
+            return ((GraphQLObjectType) type).getName();
+        } else {
+            return ((GraphQLInterfaceType) type).getName();
+        }
+    }
+
+    public GraphQLType getElementType(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
         GraphQLType type = dataFetchingEnvironment.getFieldDefinition().getType();
+        TypeRootCacheKey cacheKey = new TypeRootCacheKey(type, elementRoot);
+        GraphQLType cachedType = typeReferenceCache.get(cacheKey);
+        if (cachedType != null) {
+            return cachedType;
+        }
         if (type instanceof GraphQLNonNull) {
             type = ((GraphQLNonNull) type).getWrappedType();
         }
         if (type instanceof GraphQLList) {
             type = ((GraphQLList) type).getWrappedType();
-        }
-        if (type instanceof GraphQLNonNull) {
-            type = ((GraphQLNonNull) type).getWrappedType();
+            if (type instanceof GraphQLNonNull) {
+                type = ((GraphQLNonNull) type).getWrappedType();
+            }
         }
 
         String[] parts = elementRoot.split("/");
         for (int i = 0; i < parts.length; i++) {
-            if (type instanceof GraphQLObjectType) {
+            if (type instanceof GraphQLFieldsContainer) {
                 if (parts[i].length() > 0) {
-                    type = ((GraphQLObjectType) type).getFieldDefinition(parts[i]).getType();
+                    type = ((GraphQLFieldsContainer) type).getFieldDefinition(parts[i]).getType();
                 }
                 if (type instanceof GraphQLNonNull) {
                     type = ((GraphQLNonNull) type).getWrappedType();
                 }
                 if (type instanceof GraphQLList) {
                     type = ((GraphQLList) type).getWrappedType();
-                }
-                if (type instanceof GraphQLNonNull) {
-                    type = ((GraphQLNonNull) type).getWrappedType();
+                    if (type instanceof GraphQLNonNull) {
+                        type = ((GraphQLNonNull) type).getWrappedType();
+                    }
                 }
             } else {
                 throw new IllegalArgumentException("The element root part '" + parts[i] + "' wasn't found on type: " + type);
             }
         }
-
-        return ((GraphQLObjectType) type).getName();
+        typeReferenceCache.putIfAbsent(cacheKey, type);
+        return type;
     }
 
     /**
@@ -446,10 +513,19 @@ public class GraphQLEntityViewSupport {
         String prefix = elementRoot == null || elementRoot.isEmpty() ? "" : elementRoot + "/";
         StringBuilder sb = new StringBuilder();
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
+        GraphQLFieldsContainer baseType;
+        if (typeNameToFieldMapping.isEmpty()) {
+            baseType = null;
+        } else {
+            baseType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
+        }
         try {
             if (GET_QUALIFIED_NAME == null) {
                 Collection<String> keys = ((Map<String, ?>) GET_FIELDS.invoke(selectionSet)).keySet();
                 OUTER: for (String key : keys) {
+                    if (key.length() < prefix.length()) {
+                        continue;
+                    }
                     sb.setLength(0);
                     int fieldStartIndex = 0;
                     for (int i = 0; i < key.length(); i++) {
@@ -462,6 +538,7 @@ public class GraphQLEntityViewSupport {
                             }
                         }
                         if (c == '/') {
+                            baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex);
                             sb.append('.');
                             fieldStartIndex = sb.length();
                         } else {
@@ -469,15 +546,19 @@ public class GraphQLEntityViewSupport {
                         }
                     }
                     if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                        applyFieldMapping(sb, baseType, fieldStartIndex);
                         setting.fetch(sb.toString());
                     }
                 }
             } else {
                 Collection<Object> fields = (Collection<Object>) GET_FIELDS.invoke(selectionSet);
                 OUTER: for (Object field : fields) {
+                    String key = (String) GET_QUALIFIED_NAME.invoke(field);
+                    if (key.length() < prefix.length()) {
+                        continue;
+                    }
                     sb.setLength(0);
                     int fieldStartIndex = 0;
-                    String key = (String) GET_QUALIFIED_NAME.invoke(field);
                     for (int i = 0; i < key.length(); i++) {
                         final char c = key.charAt(i);
                         if (i < prefix.length()) {
@@ -488,6 +569,7 @@ public class GraphQLEntityViewSupport {
                             }
                         }
                         if (c == '/') {
+                            baseType = (GraphQLObjectType) applyFieldMapping(sb, baseType, fieldStartIndex);
                             sb.append('.');
                             fieldStartIndex = sb.length();
                         } else {
@@ -495,6 +577,7 @@ public class GraphQLEntityViewSupport {
                         }
                     }
                     if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                        applyFieldMapping(sb, baseType, fieldStartIndex);
                         setting.fetch(sb.toString());
                     }
                 }
@@ -502,6 +585,38 @@ public class GraphQLEntityViewSupport {
         } catch (Exception e) {
             throw new RuntimeException("Could not apply fetches", e);
         }
+    }
+
+    private GraphQLType applyFieldMapping(StringBuilder sb, GraphQLFieldsContainer baseType, int fieldStartIndex) {
+        if (baseType == null) {
+            return null;
+        }
+        String typeName;
+        if (baseType instanceof GraphQLObjectType) {
+            typeName = ((GraphQLObjectType) baseType).getName();
+        } else {
+            typeName = ((GraphQLInterfaceType) baseType).getName();
+        }
+        Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
+        String fieldName = sb.substring(fieldStartIndex);
+        if (fieldMapping != null) {
+            String mapping = fieldMapping.get(fieldName);
+            if (mapping != null) {
+                sb.setLength(fieldStartIndex);
+                sb.append(mapping);
+            }
+        }
+        GraphQLType type = baseType.getFieldDefinition(fieldName).getType();
+        if (type instanceof GraphQLNonNull) {
+            type = ((GraphQLNonNull) type).getWrappedType();
+        }
+        if (type instanceof GraphQLList) {
+            type = ((GraphQLList) type).getWrappedType();
+            if (type instanceof GraphQLNonNull) {
+                type = ((GraphQLNonNull) type).getWrappedType();
+            }
+        }
+        return type;
     }
 
     /**
@@ -529,6 +644,36 @@ public class GraphQLEntityViewSupport {
      */
     public Class<?> getEntityViewClass(String typeName) {
         return typeNameToClass.get(typeName);
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.6.2
+     */
+    private static class TypeRootCacheKey {
+        private final GraphQLType baseType;
+        private final String root;
+
+        public TypeRootCacheKey(GraphQLType baseType, String root) {
+            this.baseType = baseType;
+            this.root = root;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (getClass() != o.getClass()) {
+                return false;
+            }
+            TypeRootCacheKey that = (TypeRootCacheKey) o;
+            return baseType.equals(that.baseType) && root.equals(that.root);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = baseType.hashCode();
+            result = 31 * result + root.hashCode();
+            return result;
+        }
     }
 
 }
