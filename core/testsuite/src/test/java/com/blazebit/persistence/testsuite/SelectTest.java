@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
@@ -240,25 +239,25 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectSingleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, IllegalArgumentException.class).select("");
+        verifyException(criteria, IllegalArgumentException.class, r -> r.select(""));
     }
 
     @Test
     public void testSelectMultipleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, IllegalArgumentException.class).select("", "");
+        verifyException(criteria, IllegalArgumentException.class, r -> r.select("", ""));
     }
 
     @Test
     public void testSelectNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).select((String) null);
+        verifyException(criteria, NullPointerException.class, r -> r.select((String) null));
     }
 
     @Test
     public void testSelectArrayNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).select((String) null);
+        verifyException(criteria, NullPointerException.class, r -> r.select((String) null));
     }
 
     @Test

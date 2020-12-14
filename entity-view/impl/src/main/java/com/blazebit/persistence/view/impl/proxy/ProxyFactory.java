@@ -326,7 +326,7 @@ public class ProxyFactory {
                     cc.addMethod(CtMethod.make(methodInfo, cc));
                 }
 
-                proxyClass = defineOrGetClass(proxyClass, cc);
+                proxyClass = defineOrGetClass(proxyClass, classOfPackage, cc);
             }
 
             return proxyClass;
@@ -571,7 +571,7 @@ public class ProxyFactory {
                 cc.addConstructor(createTupleConstructor(managedViewType, constructor, cc, attributeFields.length, constructorAttributeTypes.length, attributeFields, constructorAttributeTypes, initialStateField, mutableStateField, methodAttributes, mutableAttributeCount, true, alwaysDirtyMask, unsafe));
             }
 
-            return defineOrGetClass(entityViewManager, unsafe, clazz, cc);
+            return defineOrGetClass(entityViewManager, unsafe, clazz, clazz, cc);
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
@@ -666,7 +666,7 @@ public class ProxyFactory {
         CtField emptyBytesField = new CtField(pool.get("byte[]"), "EMPTY_INSTANCE_BYTES", serializableClass);
         emptyBytesField.setModifiers(Modifier.STATIC | Modifier.FINAL);
         serializableClass.addField(emptyBytesField, CtField.Initializer.byExpr(emptyInstanceByteBuilder.toString()));
-        defineOrGetClass(clazz, serializableClass);
+        defineOrGetClass(clazz, clazz, serializableClass);
     }
 
     private static void appendBytesAsHex(StringBuilder sb, byte[] bytes) {
@@ -955,11 +955,11 @@ public class ProxyFactory {
         return managedViewType.getEntityClass();
     }
 
-    private <T> Class<? extends T> defineOrGetClass(Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
-        return defineOrGetClass(null, false, clazz, cc);
+    private <T> Class<? extends T> defineOrGetClass(Class<?> clazz, Class<?> neighbourClazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+        return defineOrGetClass(null, false, clazz, neighbourClazz, cc);
     }
 
-    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, Class<?> neighbourClazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         try {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
             if (clazz.getPackage() != null) {
@@ -970,12 +970,7 @@ public class ProxyFactory {
                 cc.writeFile(DEBUG_DUMP_DIRECTORY.toString());
             }
 
-            Class<? extends T> c;
-            if (unsafe) {
-                c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
-            } else {
-                c = (Class<? extends T>) cc.toClass(clazz.getClassLoader(), null);
-            }
+            Class<? extends T> c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), neighbourClazz);
 
             if (entityViewManager != null) {
                 c.getField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, entityViewManager);

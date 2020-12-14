@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.caughtException;
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -233,36 +231,36 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testConstructorClassNull() {
-        verifyException(cbf, NullPointerException.class).create(em, null, "d");
+        verifyException(cbf, NullPointerException.class, r -> r.create(em, null, "d"));
     }
 
     @Test
     public void testConstructorEntityManagerNull() {
-        verifyException(cbf, NullPointerException.class).create(null, Document.class, "d");
+        verifyException(cbf, NullPointerException.class, r -> r.create(null, Document.class, "d"));
     }
 
     @Test
     public void testJoinNullPath() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
-        verifyException(criteria, NullPointerException.class).join(null, "o", JoinType.LEFT, true);
+        verifyException(criteria, NullPointerException.class, r -> r.join(null, "o", JoinType.LEFT, true));
     }
 
     @Test
     public void testJoinNullAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
-        verifyException(criteria, NullPointerException.class).join("owner", null, JoinType.LEFT, true);
+        verifyException(criteria, NullPointerException.class, r -> r.join("owner", null, JoinType.LEFT, true));
     }
 
     @Test
     public void testJoinNullJoinType() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
-        verifyException(criteria, NullPointerException.class).join("owner", "o", null, true);
+        verifyException(criteria, NullPointerException.class, r -> r.join("owner", "o", null, true));
     }
 
     @Test
     public void testJoinEmptyAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
-        verifyException(criteria, IllegalArgumentException.class).join("owner", "", JoinType.LEFT, true);
+        verifyException(criteria, IllegalArgumentException.class, r -> r.join("owner", "", JoinType.LEFT, true));
     }
 
     @Test
@@ -270,7 +268,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("z.c.x").eq(0).leftJoin("d.partners", "p");
 
-        verifyException(criteria, IllegalArgumentException.class).getQueryString();
+        verifyException(criteria, IllegalArgumentException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -278,7 +276,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "a");
         criteria.where("z").eq(0);
 
-        verifyException(criteria, IllegalArgumentException.class).getQueryString();
+        verifyException(criteria, IllegalArgumentException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -286,7 +284,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "a");
         criteria.orderByAsc("z");
 
-        verifyException(criteria, IllegalArgumentException.class).getQueryString();
+        verifyException(criteria, IllegalArgumentException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -323,8 +321,8 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
         crit.join("d.versions", "versions", JoinType.LEFT, true);
-        verifyException(crit, IllegalStateException.class).getQueryString();
-        String message = caughtException().getMessage();
+        IllegalStateException e = verifyException(crit, IllegalStateException.class, r -> r.getQueryString());
+        String message = e.getMessage();
         assertTrue(message.contains("Missing fetch owners: [d]"));
     }
     
@@ -333,8 +331,8 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
         crit.fetch("d.versions");
-        verifyException(crit, IllegalStateException.class).getQueryString();
-        String message = caughtException().getMessage();
+        IllegalStateException e = verifyException(crit, IllegalStateException.class, r -> r.getQueryString());
+        String message = e.getMessage();
         assertTrue(message.contains("Missing fetch owners: [d]"));
     }
 
@@ -413,7 +411,7 @@ public class JoinTest extends AbstractCoreTest {
     public void selectWithFetchNonExistingSubRelation() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.select("owner");
-        verifyException(crit, IllegalArgumentException.class).fetch("owner.intIdEntity");
+        verifyException(crit, IllegalArgumentException.class, r -> r.fetch("owner.intIdEntity"));
     }
 
     @Test
@@ -421,8 +419,8 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.select("owner.id");
         crit.fetch("owner");
-        verifyException(crit, IllegalStateException.class).getQueryString();
-        String message = caughtException().getMessage();
+        IllegalStateException e = verifyException(crit, IllegalStateException.class, r -> r.getQueryString());
+        String message = e.getMessage();
         assertTrue(message.contains("Missing fetch owners: [a]"));
     }
     
@@ -442,8 +440,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("owner", "o1").on("o1.name").eqExpression("o2.name").end()
             .leftJoinOn("owner", "o2").on("o2.name").eqExpression("o1.name").end();
-        verifyException(crit, IllegalStateException.class).getQueryString();
-        IllegalStateException e = caughtException();
+        IllegalStateException e = verifyException(crit, IllegalStateException.class, r -> r.getQueryString());
         assertTrue(e.getMessage().contains("Cyclic"));
     }
     

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGtNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).gt((Object) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.gt((Object) null));
     }
 
     @Test
@@ -61,7 +60,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGtExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).gtExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.gtExpression(null));
     }
 
     @Test
@@ -76,7 +75,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGeNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).ge((Object) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.ge((Object) null));
     }
 
     @Test
@@ -91,7 +90,7 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).geExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.geExpression(null));
     }
 
     @Test

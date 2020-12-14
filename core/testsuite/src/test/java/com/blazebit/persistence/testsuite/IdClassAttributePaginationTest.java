@@ -24,7 +24,6 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -100,6 +99,6 @@ public class IdClassAttributePaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<IdClassEntity> cb = cbf.create(em, IdClassEntity.class, "d")
                 .orderByAsc("value").orderByAsc("key1")
                 .page(0, 1);
-        verifyException(cb, IllegalStateException.class).getQueryString();
+        verifyException(cb, IllegalStateException.class, r -> r.getQueryString());
     }
 }

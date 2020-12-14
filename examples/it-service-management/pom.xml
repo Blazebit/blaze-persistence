@@ -169,12 +169,12 @@
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>${version.jaxb}</version>
+            <version>${version.jaxb-api}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-core</artifactId>
-            <version>${version.jaxb}</version>
+            <version>${version.jaxb-core}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
@@ -278,12 +278,12 @@
                     <dependency>
                         <groupId>javax.xml.bind</groupId>
                         <artifactId>jaxb-api</artifactId>
-                        <version>${version.jaxb}</version>
+                        <version>${version.jaxb-api}</version>
                     </dependency>
                     <dependency>
                         <groupId>com.sun.xml.bind</groupId>
                         <artifactId>jaxb-core</artifactId>
-                        <version>${version.jaxb}</version>
+                        <version>${version.jaxb-core}</version>
                     </dependency>
                     <dependency>
                         <groupId>com.sun.xml.bind</groupId>
@@ -382,12 +382,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
@@ -99,14 +98,14 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testGeneralCaseWhenNoAndClauses() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
-        verifyException(criteria.selectCase().whenAnd(), IllegalStateException.class).thenExpression("d.name");
+        verifyException(criteria.selectCase().whenAnd(), IllegalStateException.class, r -> r.thenExpression("d.name"));
     }
 
     @Test
     public void testGeneralCaseWhenNoOrClauses() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
-        verifyException(criteria.selectCase().whenOr(), IllegalStateException.class).thenExpression("d.name");
+        verifyException(criteria.selectCase().whenOr(), IllegalStateException.class, r -> r.thenExpression("d.name"));
     }
 
     @Test
@@ -115,14 +114,14 @@ public class CaseWhenTest extends AbstractCoreTest {
         CaseWhenStarterBuilder<?> caseWhenBuilder = criteria.selectCase();
         caseWhenBuilder.whenOr().or("x").ltExpression("y").thenExpression("2").whenOr();
 
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenAnd();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenOr();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).when("test");
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenExists();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenNotExists();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenSubquery();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenSubquery("test", "test");
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenAnd());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenOr());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.when("test"));
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenExists());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenNotExists());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenSubquery());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenSubquery("test", "test"));
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -131,14 +130,14 @@ public class CaseWhenTest extends AbstractCoreTest {
         CaseWhenStarterBuilder<?> caseWhenBuilder = criteria.selectCase();
         caseWhenBuilder.whenAnd().and("x").ltExpression("y").thenExpression("2").whenAnd();
 
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenAnd();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenOr();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).when("test");
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenExists();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenNotExists();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenSubquery();
-        verifyException(caseWhenBuilder, BuilderChainingException.class).whenSubquery("test", "test");
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenAnd());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenOr());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.when("test"));
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenExists());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenNotExists());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenSubquery());
+        verifyException(caseWhenBuilder, BuilderChainingException.class, r -> r.whenSubquery("test", "test"));
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -147,14 +146,14 @@ public class CaseWhenTest extends AbstractCoreTest {
         CaseWhenOrThenBuilder<?> caseWhenOrThenBuilder = criteria.selectCase().whenOr();
         caseWhenOrThenBuilder.and();
 
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).and();
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).or("test");
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orExists();
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orNotExists();
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orSubquery();
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orSubquery("test", "test");
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).thenExpression("2");
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.and());
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.or("test"));
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.orExists());
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.orNotExists());
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.orSubquery());
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.orSubquery("test", "test"));
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class, r -> r.thenExpression("2"));
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -163,14 +162,14 @@ public class CaseWhenTest extends AbstractCoreTest {
         CaseWhenAndThenBuilder<?> caseWhenAndThenBuilder = criteria.selectCase().whenAnd();
         caseWhenAndThenBuilder.or();
 
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).or();
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).and("test");
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andExists();
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andNotExists();
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andSubquery();
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andSubquery("test", "test");
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).thenExpression("2");
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.or());
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.and("test"));
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.andExists());
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.andNotExists());
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.andSubquery());
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.andSubquery("test", "test"));
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class, r -> r.thenExpression("2"));
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -178,7 +177,7 @@ public class CaseWhenTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectCase().whenExists().from(Person.class, "p");
 
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -186,7 +185,7 @@ public class CaseWhenTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectSimpleCase("d.name");
 
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test

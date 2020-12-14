@@ -111,6 +111,9 @@
                     <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
                 </file>
             </activation>
+            <properties>
+                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -137,6 +140,9 @@
                     <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
                 </file>
             </activation>
+            <properties>
+                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
+            </properties>
             <build>
                 <plugins>
                     <plugin>

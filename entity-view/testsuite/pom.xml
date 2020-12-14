@@ -93,26 +93,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.catch-exception</groupId>
-            <artifactId>catch-exception</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
+            <version>3.6.28</version>
         </dependency>
 
         <!-- Preparation for Java 9+, include a dependency on the JAXB APIs -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>${version.jaxb}</version>
+            <version>${version.jaxb-api}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
             <artifactId>jaxb-core</artifactId>
-            <version>${version.jaxb}</version>
+            <version>${version.jaxb-core}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
@@ -596,12 +591,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -701,12 +696,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -806,12 +801,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -911,12 +906,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1025,12 +1020,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1130,12 +1125,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1245,12 +1240,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1357,12 +1352,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1467,12 +1462,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1623,12 +1618,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1770,12 +1765,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -1936,12 +1931,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -2013,12 +2008,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
@@ -2145,12 +2140,12 @@
                             <dependency>
                                 <groupId>javax.xml.bind</groupId>
                                 <artifactId>jaxb-api</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-api}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>
                                 <artifactId>jaxb-core</artifactId>
-                                <version>${version.jaxb}</version>
+                                <version>${version.jaxb-core}</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.sun.xml.bind</groupId>

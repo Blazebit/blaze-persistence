@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -165,7 +164,7 @@ public class OrderByTest extends AbstractCoreTest {
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
         CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, SyntaxErrorException.class).orderByAsc("SIZE(d.partners)");
+        verifyException(criteria, SyntaxErrorException.class, r -> r.orderByAsc("SIZE(d.partners)"));
     }
     
     @Test

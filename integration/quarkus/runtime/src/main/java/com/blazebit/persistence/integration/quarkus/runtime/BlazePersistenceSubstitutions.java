@@ -31,7 +31,7 @@ import java.io.IOException;
 final class ProxyFactory {
 
     @Substitute
-    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+    private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, Class<?> neighbourClazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         throw new RuntimeException("Unsupported in the native compiler.");
     }
 

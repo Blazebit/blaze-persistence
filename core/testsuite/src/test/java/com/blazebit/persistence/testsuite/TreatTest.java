@@ -27,7 +27,6 @@ import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -52,14 +51,14 @@ public class TreatTest extends AbstractCoreTest {
     public void treatAsExpressionRootNotAllowed() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
-        verifyException(criteria, SyntaxErrorException.class).select("TREAT(p AS PolymorphicSub1)");
+        verifyException(criteria, SyntaxErrorException.class, r -> r.select("TREAT(p AS PolymorphicSub1)"));
     }
 
     @Test
     public void treatOfTreatAsExpressionRootNotAllowed() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
-        verifyException(criteria, SyntaxErrorException.class).select("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)");
+        verifyException(criteria, SyntaxErrorException.class, r -> r.select("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)"));
     }
 
     @Test

@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -25,7 +24,6 @@ import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
@@ -49,13 +47,13 @@ public class BetweenTest extends AbstractCoreTest {
     @Test
     public void testBetweenValueAndNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age").between(1), NullPointerException.class).and(null);
+        verifyException(criteria.where("d.age").between(1), NullPointerException.class, r -> r.and(null));
     }
 
     @Test
     public void testBetweenNullAndValue() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).between(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.between(null));
     }
 
     @Test
@@ -70,13 +68,13 @@ public class BetweenTest extends AbstractCoreTest {
     @Test
     public void testNotBetweenValueAndNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age").notBetween(1), NullPointerException.class).and(null);
+        verifyException(criteria.where("d.age").notBetween(1), NullPointerException.class, r -> r.and(null));
     }
 
     @Test
     public void testNotBetweenNullAndValue() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).notBetween(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.notBetween(null));
     }
 
     /* builder ended tests */
@@ -86,7 +84,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.between(1);
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -95,7 +93,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetween(1);
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -104,7 +102,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenExpression("1");
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -113,7 +111,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenExpression("1");
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -122,7 +120,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenSubquery();
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -131,7 +129,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenSubquery();
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
     
     @Test
@@ -140,7 +138,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenSubquery("s", "s+1");
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -149,7 +147,7 @@ public class BetweenTest extends AbstractCoreTest {
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenSubquery("s", "s+1");
         verifyBuilderChainingException(restrictionBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -158,7 +156,7 @@ public class BetweenTest extends AbstractCoreTest {
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.andSubqery();
         verifyBuilderChainingException(betweenBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -167,7 +165,7 @@ public class BetweenTest extends AbstractCoreTest {
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.andSubqery("s", "s+1");
         verifyBuilderChainingException(betweenBuilder);
-        verifyException(criteria, BuilderChainingException.class).getQueryString();
+        verifyException(criteria, BuilderChainingException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -187,28 +185,28 @@ public class BetweenTest extends AbstractCoreTest {
     }
     
     private void verifyBuilderChainingException(RestrictionBuilder<?> restrictionBuilder) {
-        verifyException(restrictionBuilder, BuilderChainingException.class).betweenExpression("1");
-        verifyException(restrictionBuilder, BuilderChainingException.class).notBetweenExpression("1");
-        verifyException(restrictionBuilder, BuilderChainingException.class).between(1);
-        verifyException(restrictionBuilder, BuilderChainingException.class).notBetween(1);
-        verifyException(restrictionBuilder, BuilderChainingException.class).betweenSubquery();
-        verifyException(restrictionBuilder, BuilderChainingException.class).notBetweenSubquery();
-        verifyException(restrictionBuilder, BuilderChainingException.class).betweenSubquery("s", "s+1");
-        verifyException(restrictionBuilder, BuilderChainingException.class).notBetweenSubquery("s", "s+1");
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.betweenExpression("1"));
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.notBetweenExpression("1"));
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.between(1));
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.notBetween(1));
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.betweenSubquery());
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.notBetweenSubquery());
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.betweenSubquery("s", "s+1"));
+        verifyException(restrictionBuilder, BuilderChainingException.class, r -> r.notBetweenSubquery("s", "s+1"));
     }
     
     private void verifyBuilderChainingException(BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder) {
-        verifyException(betweenBuilder, BuilderChainingException.class).and(1);
-        verifyException(betweenBuilder, BuilderChainingException.class).andExpression("1");
-        verifyException(betweenBuilder, BuilderChainingException.class).andSubqery();
-        verifyException(betweenBuilder, BuilderChainingException.class).andSubqery("s", "s+1");
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.and(1));
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.andExpression("1"));
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.andSubqery());
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.andSubqery("s", "s+1"));
     }
     
     private void verifyBuilderChainingExceptionWithEndedBuilder(BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder) {
-        verifyException(betweenBuilder, BuilderChainingException.class).and(1);
-        verifyException(betweenBuilder, BuilderChainingException.class).andExpression("1");
-        verifyException(betweenBuilder.andSubqery().from(Person.class), BuilderChainingException.class).end();
-        verifyException(betweenBuilder.andSubqery("s", "s+1").from(Person.class), BuilderChainingException.class).end();
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.and(1));
+        verifyException(betweenBuilder, BuilderChainingException.class, r -> r.andExpression("1"));
+        verifyException(betweenBuilder.andSubqery().from(Person.class), BuilderChainingException.class, r -> r.end());
+        verifyException(betweenBuilder.andSubqery("s", "s+1").from(Person.class), BuilderChainingException.class, r -> r.end());
     }
 
 }

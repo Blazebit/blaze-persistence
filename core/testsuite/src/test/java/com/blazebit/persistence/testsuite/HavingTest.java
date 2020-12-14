@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -182,13 +181,13 @@ public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHavingWithoutGroupBy() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, IllegalStateException.class).having("d.partners.name");
+        verifyException(criteria, IllegalStateException.class, r -> r.having("d.partners.name"));
     }
 
     @Test
     public void testHavingNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.groupBy("d.owner"), NullPointerException.class).having(null);
+        verifyException(criteria.groupBy("d.owner"), NullPointerException.class, r -> r.having(null));
     }
 
     @Test
@@ -596,9 +595,9 @@ public class HavingTest extends AbstractCoreTest {
     }
     
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
-        verifyException(crit, BuilderChainingException.class).havingCase();
-        verifyException(crit, BuilderChainingException.class).havingSimpleCase("d.id");
-        verifyException(crit, BuilderChainingException.class).having("d.id");
-        verifyException(crit, BuilderChainingException.class).getQueryString();
+        verifyException(crit, BuilderChainingException.class, r -> r.havingCase());
+        verifyException(crit, BuilderChainingException.class, r -> r.havingSimpleCase("d.id"));
+        verifyException(crit, BuilderChainingException.class, r -> r.having("d.id"));
+        verifyException(crit, BuilderChainingException.class, r -> r.getQueryString());
     }
 }

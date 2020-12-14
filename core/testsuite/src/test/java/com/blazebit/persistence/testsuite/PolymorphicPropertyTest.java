@@ -25,7 +25,6 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
-import com.googlecode.catchexception.CatchException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -58,8 +57,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
         cb.select("propBase.base.relation1");
         cb.where("TYPE(base)").eq(PolymorphicSub1.class);
 
-        CatchException.verifyException(cb, IllegalArgumentException.class).getQueryString();
-        String message = CatchException.caughtException().getMessage();
+        IllegalArgumentException e = verifyException(cb, IllegalArgumentException.class, r -> r.getQueryString());
+        String message = e.getMessage();
         assertTrue(message.contains("base"));
         assertTrue(message.contains(PolymorphicPropertyBase.class.getSimpleName()));
     }
@@ -68,8 +67,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     public void testSelectSubPropertyWithTreat() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("relation1");
-        CatchException.verifyException(cb, IllegalArgumentException.class).leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1");
-        String message = CatchException.caughtException().getMessage();
+        IllegalArgumentException e = verifyException(cb, IllegalArgumentException.class, r -> r.leftJoin("TREAT(propBase.base AS PolymorphicSub1)", "base1"));
+        String message = e.getMessage();
         assertTrue(message.contains("base"));
         assertTrue(message.contains(PolymorphicPropertyBase.class.getSimpleName()));
     }

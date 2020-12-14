@@ -35,7 +35,6 @@ import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.googlecode.catchexception.CatchException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -527,19 +526,14 @@ public class ValuesClauseTest extends AbstractCoreTest {
         List<Tuple> resultList;
 
         // Didn't bind parameters
-        CatchException.verifyException(cb, IllegalArgumentException.class).getResultList();
+        verifyException(cb, IllegalArgumentException.class, r -> r.getResultList());
 
         // Bind wrong values parameter type
-        try {
-            // Unfortunately the setParameter method does not seem to get proxied..
-//            CatchException.verifyException(cb, IllegalArgumentException.class).setParameter("intEntity", Collections.emptyList());
-            cb.setParameter("intEntity", 1L);
-            Assert.fail("Expected IllegalArgumentException!");
-        } catch (IllegalArgumentException ex) {}
+        verifyException(cb, IllegalArgumentException.class, r -> r.setParameter("intEntity", 1L));
 
         // Bind wrong parameter types
         cb.setParameter("intEntity", Arrays.asList(1L));
-        CatchException.verifyException(cb, IllegalArgumentException.class).getResultList();
+        verifyException(cb, IllegalArgumentException.class, r -> r.getResultList());
 
         // Values with matching entry
         cb.setParameter("intEntity", Arrays.asList(new IntIdEntity("doc1")));

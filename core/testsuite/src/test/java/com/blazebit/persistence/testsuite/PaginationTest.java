@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -702,7 +701,7 @@ public class PaginationTest extends AbstractCoreTest {
 
         // No unique ordering
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
-        verifyException(pcb, IllegalStateException.class).getQueryString();
+        verifyException(pcb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -733,7 +732,7 @@ public class PaginationTest extends AbstractCoreTest {
         cb.page(0, 1);
         cb.groupBy("d.name").orderByAsc("d.name").orderByAsc("d.age");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
-        verifyException(pcb, IllegalStateException.class).getQueryString();
+        verifyException(pcb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -759,7 +758,7 @@ public class PaginationTest extends AbstractCoreTest {
         cb.orderByAsc("d.name").orderByAsc("d.age");
 
         PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 1, "d.id");
-        verifyException(pcb, IllegalStateException.class).getQueryString();
+        verifyException(pcb, IllegalStateException.class, r -> r.getQueryString());
     }
 
     @Test
@@ -769,14 +768,13 @@ public class PaginationTest extends AbstractCoreTest {
         cb.page(0, 1);
         cb.orderByAsc("d.name").orderByAsc("d.age");
         cb.pageBy(0, 1, "d.id");
-        verifyException(cb, IllegalStateException.class);
     }
 
     @Test
     public void testPaginatedWithDistinct1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)").distinct();
-        verifyException(cb, IllegalStateException.class).page(0, 1);
+        verifyException(cb, IllegalStateException.class, r -> r.page(0, 1));
     }
 
     @Test
@@ -990,14 +988,14 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testPaginationWithoutOrderBy() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d").page(0, 10);
-        verifyException(cb, IllegalStateException.class).getResultList();
+        verifyException(cb, IllegalStateException.class, r -> r.getResultList());
     }
 
     @Test
     public void testPaginationWithoutUniqueOrderBy() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .orderByAsc("d.name").page(0, 10);
-        verifyException(cb, IllegalStateException.class).getResultList();
+        verifyException(cb, IllegalStateException.class, r -> r.getResultList());
     }
     
     @Test

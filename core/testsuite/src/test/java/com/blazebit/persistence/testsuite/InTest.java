@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -89,7 +88,7 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testInNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).in((List<?>) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.in((List<?>) null));
     }
 
     @Test
@@ -104,7 +103,7 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testNotInNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria.where("d.age"), NullPointerException.class).notIn((List<?>) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class, r -> r.notIn((List<?>) null));
     }
     
     @Test
