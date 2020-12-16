@@ -85,12 +85,15 @@ public class Hibernate43Integrator implements ServiceContributingIntegrator, Typ
             @Override
             public <T> T resolveStrategy(Class<T> aClass, Object o) {
                 if (MultiTableBulkIdStrategy.class == aClass) {
-                    if (o == null) {
-                        ServiceRegistry serviceRegistry = SERVICE_REGISTRY_ACCESS.get();
+                    try {
+                        if (o == null) {
+                            ServiceRegistry serviceRegistry = SERVICE_REGISTRY_ACCESS.get();
+                            return (T) new CustomMultiTableBulkIdStrategy(serviceRegistry.getService(JdbcServices.class).getDialect().supportsTemporaryTables() ? TemporaryTableBulkIdStrategy.INSTANCE : new PersistentTableBulkIdStrategy());
+                        } else {
+                            LOG.warning("Can't replace hibernate.hql.bulk_id_strategy because it was overridden by the user with: " + o);
+                        }
+                    } finally {
                         SERVICE_REGISTRY_ACCESS.remove();
-                        return (T) new CustomMultiTableBulkIdStrategy(serviceRegistry.getService(JdbcServices.class).getDialect().supportsTemporaryTables() ? TemporaryTableBulkIdStrategy.INSTANCE : new PersistentTableBulkIdStrategy());
-                    } else {
-                        LOG.warning("Can't replace hibernate.hql.bulk_id_strategy because it was overridden by the user with: " + o);
                     }
                 }
                 return strategySelector.resolveStrategy(aClass, o);

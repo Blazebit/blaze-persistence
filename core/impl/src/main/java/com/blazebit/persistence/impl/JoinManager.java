@@ -3752,7 +3752,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
     private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred, String elementAlias) {
         if (compoundPredicate != null) {
-            EqualityCheckingVisitor equalityCheckingVisitor = EqualityCheckingVisitor.INSTANCE.get();
+            EqualityCheckingVisitor equalityCheckingVisitor = new EqualityCheckingVisitor();
             List<Predicate> children = compoundPredicate.getChildren();
             int size = children.size();
             for (int i = 0; i < size; i++) {

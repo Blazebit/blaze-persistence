@@ -33,31 +33,22 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class SynchronizationRegistry implements Synchronization, TransactionAccess {
 
-    private static final ThreadLocal<Object> THREAD_LOCAL_KEY = new ThreadLocal<Object>() {
-        @Override
-        protected Object initialValue() {
-            return new Object();
-        }
-    };
-    private static final ConcurrentMap<Object, SynchronizationRegistry> REGISTRY = new ConcurrentHashMap<>();
+    // We don't use a thread local because a TX could be rolled back from a different thread
+    private static final ConcurrentMap<Thread, SynchronizationRegistry> REGISTRY = new ConcurrentHashMap<>();
     private final TransactionAccess transactionAccess;
     private final List<Synchronization> synchronizations;
-    private final Object key;
+    private final Thread key;
 
     public SynchronizationRegistry(TransactionAccess transactionAccess) {
-        this(transactionAccess, THREAD_LOCAL_KEY.get());
-    }
-
-    private SynchronizationRegistry(TransactionAccess transactionAccess, Object key) {
         this.transactionAccess = transactionAccess;
         this.synchronizations = new ArrayList<>(1);
-        this.key = key;
+        this.key = Thread.currentThread();
         transactionAccess.registerSynchronization(this);
         REGISTRY.put(key, this);
     }
 
     public static SynchronizationRegistry getRegistry() {
-        return REGISTRY.get(THREAD_LOCAL_KEY.get());
+        return REGISTRY.get(Thread.currentThread());
     }
 
     public TransactionAccess getTransactionAccess() {
@@ -110,7 +101,6 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
 
     @Override
     public void afterCompletion(int status) {
-        THREAD_LOCAL_KEY.remove();
         List<Exception> suppressedExceptions = null;
         switch (status) {
             // We don't care about these statuses, only about committed and rolled back
