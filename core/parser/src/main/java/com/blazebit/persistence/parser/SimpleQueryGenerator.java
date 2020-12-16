@@ -70,6 +70,7 @@ import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPre
 import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
+import java.lang.ref.WeakReference;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
@@ -84,12 +85,7 @@ import java.util.Set;
  */
 public class SimpleQueryGenerator implements Expression.Visitor {
 
-    private static final ThreadLocal<SimpleQueryGenerator> INSTANCE_CACHE = new ThreadLocal<SimpleQueryGenerator>() {
-        @Override
-        protected SimpleQueryGenerator initialValue() {
-            return new SimpleQueryGenerator(new StringBuilder());
-        }
-    };
+    private static final ThreadLocal<WeakReference<SimpleQueryGenerator>> INSTANCE_CACHE = new ThreadLocal<>();
 
     protected StringBuilder sb;
 
@@ -112,7 +108,13 @@ public class SimpleQueryGenerator implements Expression.Visitor {
      * @return the thread local instance
      */
     public static SimpleQueryGenerator getThreadLocalInstance() {
-        return INSTANCE_CACHE.get();
+        WeakReference<SimpleQueryGenerator> weakReference = INSTANCE_CACHE.get();
+        SimpleQueryGenerator simpleQueryGenerator;
+        if (weakReference == null || (simpleQueryGenerator = weakReference.get()) == null) {
+            simpleQueryGenerator = new SimpleQueryGenerator(new StringBuilder());
+            INSTANCE_CACHE.set(new WeakReference<>(simpleQueryGenerator));
+        }
+        return simpleQueryGenerator;
     }
 
     public void generate(Expression expression) {

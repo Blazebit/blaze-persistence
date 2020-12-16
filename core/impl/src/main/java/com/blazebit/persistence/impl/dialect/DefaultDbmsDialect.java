@@ -26,7 +26,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
-import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
@@ -46,15 +45,6 @@ import com.blazebit.persistence.spi.ValuesStrategy;
  * @since 1.2.0
  */
 public class DefaultDbmsDialect implements DbmsDialect {
-
-    protected static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
-
-        @Override
-        protected CyclicUnsignedCounter initialValue() {
-            return new CyclicUnsignedCounter(-1);
-        }
-
-    };
 
     private final Map<Class<?>, String> sqlTypes;
 
@@ -397,8 +387,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
     private void closeFromClause(StringBuilder sqlSb) {
         sqlSb.append(')');
         if (needsAliasForFromClause()) {
-            sqlSb.append(" set_op_");
-            sqlSb.append(threadLocalCounter.get().incrementAndGet());
+            sqlSb.append(" set_op");
         }
     }
 
