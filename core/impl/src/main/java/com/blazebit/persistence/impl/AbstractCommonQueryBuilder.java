@@ -2541,6 +2541,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinVisitor.reset();
         joinVisitor.setFromClause(ClauseType.JOIN);
         joinManager.acceptVisitor(joinVisitor);
+
+        // We try to honor the order in which explicit joins were added, but this could conflict with "table references"
+        // So we have to reorder these joins to be moved into the appropriate "table reference"
+        // See https://github.com/Blazebit/blaze-persistence/issues/1240 for more details
+        joinManager.reorderExplicitJoins();
+
         // carry out implicit joins
         joinVisitor.setFromClause(ClauseType.SELECT);
         // There might be clauses for which joins are not required

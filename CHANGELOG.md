@@ -30,6 +30,7 @@ Not yet released
 * Fix issues with tuple query with single scalar select returning same value for each row
 * Support constant concatenation in optional parameter detection for entity view annotation processor
 * Fix issues with `EntityViewManager.getEntityReference` when used with embedded id entity types
+* Reorder explicit join nodes into the appropriate table references according to their dependencies
 
 ### Backwards-incompatible changes
 
