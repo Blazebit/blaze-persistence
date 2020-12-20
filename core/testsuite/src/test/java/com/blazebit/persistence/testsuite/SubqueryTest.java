@@ -371,12 +371,12 @@ public class SubqueryTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
                 .from("d.people", "person")
-                .from("d.partners", "partner")
-                .from("d.contacts", "contact")
-                .select("contact")
-                .leftJoin("contact.partnerDocument", "contactDoc")
-                .leftJoin("partner.partnerDocument", "partnerDoc")
                 .leftJoin("person.partnerDocument", "personDoc")
+                .from("d.partners", "partner")
+                .leftJoin("partner.partnerDocument", "partnerDoc")
+                .from("d.contacts", "contact")
+                .leftJoin("contact.partnerDocument", "contactDoc")
+                .select("contact")
                 .where("contactDoc").eqExpression("d")
                 .end();
         String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
@@ -394,13 +394,57 @@ public class SubqueryTest extends AbstractCoreTest {
             partnersCorrelation = partnersCorrelation.substring(0, idx);
         }
         String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT " + joinAliasValue("contact") + " " +
-                "FROM " + peopleCorrelation +", " +
-                partnersCorrelation + ", " +
+                "FROM " + peopleCorrelation +" LEFT JOIN person.partnerDocument personDoc, " +
+                partnersCorrelation + " LEFT JOIN partner.partnerDocument partnerDoc, " +
                 "d.contacts contact " +
                 "LEFT JOIN contact.partnerDocument contactDoc " +
-                "LEFT JOIN partner.partnerDocument partnerDoc " +
-                "LEFT JOIN person.partnerDocument personDoc " +
                 "WHERE ";
+        if (!peopleCorrelationWhere.isEmpty()) {
+            expectedQuery += peopleCorrelationWhere + " AND ";
+        }
+        if (!partnersCorrelationWhere.isEmpty()) {
+            expectedQuery += partnersCorrelationWhere + " AND ";
+        }
+        expectedQuery += "contactDoc = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    // TODO: Report datanucleus issue
+    @Category({ NoDatanucleus.class })
+    public void testReorderExplicitJoins() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+            .where("owner").in()
+            .from("d.people", "person")
+            .from("d.partners", "partner")
+            .from("d.contacts", "contact")
+            .select("contact")
+            .leftJoin("contact.partnerDocument", "contactDoc")
+            .leftJoin("partner.partnerDocument", "partnerDoc")
+            .leftJoin("person.partnerDocument", "personDoc")
+            .where("contactDoc").eqExpression("d")
+            .end();
+        String peopleCorrelation = correlationPath(Document.class, "d.people", "person", "id = d.id");
+        String partnersCorrelation = correlationPath("d.partners", Person.class, "partner", "partnerDocument.id = d.id");
+        String where = " WHERE ";
+        String peopleCorrelationWhere = "";
+        String partnersCorrelationWhere = "";
+        int idx;
+        if ((idx = peopleCorrelation.indexOf(where)) != -1) {
+            peopleCorrelationWhere = peopleCorrelation.substring(idx + where.length());
+            peopleCorrelation = peopleCorrelation.substring(0, idx);
+        }
+        if ((idx = partnersCorrelation.indexOf(where)) != -1) {
+            partnersCorrelationWhere = partnersCorrelation.substring(idx + where.length());
+            partnersCorrelation = partnersCorrelation.substring(0, idx);
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT " + joinAliasValue("contact") + " " +
+            "FROM " + peopleCorrelation +" LEFT JOIN person.partnerDocument personDoc, " +
+            partnersCorrelation + " LEFT JOIN partner.partnerDocument partnerDoc, " +
+            "d.contacts contact " +
+            "LEFT JOIN contact.partnerDocument contactDoc " +
+            "WHERE ";
         if (!peopleCorrelationWhere.isEmpty()) {
             expectedQuery += peopleCorrelationWhere + " AND ";
         }

@@ -1341,6 +1341,65 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         rootNodes.addAll(newRootNodes);
     }
 
+    void reorderExplicitJoins() {
+        // We don't have an explicit concept of table references, but essentially every root node becomes a table reference
+        // Explicit join nodes are ordered. We move these join nodes in the explicit join nodes list, so that it is rendered in the correct table reference
+        List<JoinNode> tableReferences = null;
+        // We start at index 1 because the first root is guaranteed to be at index 0
+        for (int i = 1; i < explicitJoinNodes.size(); i++) {
+            final JoinNode joinNode = explicitJoinNodes.get(i);
+            // Collect all table references which we need to determine dependencies
+            if (joinNode.isRootJoinNode()) {
+                if (tableReferences == null) {
+                    tableReferences = new ArrayList<>(explicitJoinNodes.size());
+                    // The first join node must always be the first root
+                    tableReferences.add(explicitJoinNodes.get(0));
+                }
+                tableReferences.add(joinNode);
+            } else if (tableReferences != null) {
+                // For every join node, we must check if it depends on a table reference that is to the left of the "current table reference"
+                // We check from left to right to find the leftmost table reference a join node depends on
+                final int lastTableRefIndex = tableReferences.size() - 1;
+                for (int targetTableRefIndex = 0; targetTableRefIndex < lastTableRefIndex; targetTableRefIndex++) {
+                    JoinNode tableRef = tableReferences.get(targetTableRefIndex);
+                    // Cross joined table references don't need to be considered
+                    if (!tableRef.isCrossJoin() && joinNode.dependsOn(tableRef)) {
+                        // If the join node depends on other table references that come after the leftmost one,
+                        // we must render all table references as cross joins and reorder to a later table reference
+                        for (int j = targetTableRefIndex + 1; j < tableReferences.size(); j++) {
+                            final JoinNode nextTableRef = tableReferences.get(j);
+                            if (joinNode.dependsOn(nextTableRef)) {
+                                nextTableRef.setCrossJoin();
+                                // Since the join node depends on the table reference, we try to move it into that table reference
+                                targetTableRefIndex = j;
+                            }
+                        }
+                        // If the target table reference index is the last one, we can skip reordering
+                        if (targetTableRefIndex == lastTableRefIndex) {
+                            break;
+                        }
+                        // We want to move the join into the appropriate "table reference" by moving it right before the next table reference
+                        final JoinNode nextTableReference = tableReferences.get(targetTableRefIndex + 1);
+                        // Move the index back until we have the index at which the next table reference is
+                        int targetIndex = i;
+                        for (; targetIndex != 0; targetIndex--) {
+                            if (explicitJoinNodes.get(targetIndex) == nextTableReference) {
+                                break;
+                            }
+                        }
+                        // Set the current join node on target index, and before shift all others one index to the right
+                        for (int j = i; j > targetIndex; j--) {
+                            explicitJoinNodes.set(j, explicitJoinNodes.get(j - 1));
+                        }
+                        explicitJoinNodes.set(targetIndex, joinNode);
+                        // We found the left most dependency, so we are done with this node
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     private static boolean isNoJoinValuesNode(JoinNode rootNode) {
         return rootNode.getValueCount() > 0 && rootNode.getNodes().isEmpty() && rootNode.getTreatedJoinNodes().isEmpty() && rootNode.getEntityJoinNodes().isEmpty();
     }
@@ -1398,6 +1457,8 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (isRootNode) {
                 if (firstRootNode) {
                     firstRootNode = false;
+                } else if (node.isCrossJoin()) {
+                    sb.append(" JOIN ");
                 } else {
                     sb.append(", ");
                 }
@@ -1433,7 +1494,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         sb.append(node.getValuesTypeName());
                     } else {
                         if (nodeType instanceof EntityType<?>) {
-                            sb.append(((EntityType) nodeType).getName());
+                            sb.append(((EntityType<?>) nodeType).getName());
                         } else {
                             // Not sure how safe that is regarding ambiguity
                             sb.append(node.getNodeType().getJavaType().getSimpleName());
@@ -1500,6 +1561,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                     }
                 }
                 renderedJoins.add(node);
+
+                if (node.isCrossJoin()) {
+                    sb.append(" ON 1=1");
+                }
 
                 // TODO: not sure if needed since applyImplicitJoins will already invoke that
                 node.registerDependencies();

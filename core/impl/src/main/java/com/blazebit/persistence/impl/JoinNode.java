@@ -109,6 +109,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
     private String disallowedDeReferenceAlias;
     // This is set to true when rendering a path with a disallowed attribute, according to allowedAttributes, with this join node as base
     private boolean disallowedDeReferenceUsed;
+    // This is set to true when this root node needs to be rendered as cross join because a join node depends on multiple root nodes
+    private boolean crossJoin;
     
     // Cache
     private boolean dirty = true;
@@ -762,6 +764,21 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
         return dependencies;
     }
 
+    public boolean dependsOn(JoinNode tableReference) {
+        if (dependencies.contains(tableReference)) {
+            return true;
+        }
+        // Unfortunately we don't have transitive dependencies, so we need to check the parents
+        JoinNode joinNode = parent;
+        while (joinNode != null) {
+            if (tableReference == joinNode || joinNode.getDependencies().contains(tableReference)) {
+                return true;
+            }
+            joinNode = joinNode.parent;
+        }
+        return false;
+    }
+
     public boolean isCollection(ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector) {
         return parentTreeNode != null && parentTreeNode.isCollection() && !constantifiedJoinNodeAttributeCollector.isConstantified(this) || parentTreeNode == null && !constantifiedJoinNodeAttributeCollector.isConstantified(this);
     }
@@ -996,6 +1013,14 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
 
     public void setDeReferenceFunction(String deReferenceFunction) {
         this.deReferenceFunction = deReferenceFunction;
+    }
+
+    public boolean isCrossJoin() {
+        return crossJoin;
+    }
+
+    public void setCrossJoin() {
+        this.crossJoin = true;
     }
 
     public boolean isCollectionDmlNode(boolean externalRepresentation) {
