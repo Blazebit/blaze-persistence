@@ -16,22 +16,15 @@
 
 package com.blazebit.persistence.examples.microprofile.graphql;
 
-import com.blazebit.reflection.ReflectionUtils;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
-import io.smallrye.graphql.schema.model.Argument;
 import io.smallrye.graphql.schema.model.Operation;
 import io.smallrye.graphql.schema.model.Reference;
-import io.smallrye.graphql.schema.model.ReferenceType;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -43,39 +36,33 @@ public class GraphQLProducer {
 //    @Inject
 //    EntityViewManager evm;
 
+    Set<Reference> interfaceReferences = new HashSet<>();
     GraphQLEntityViewSupport graphQLEntityViewSupport;
 
     void alterOperation(@Observes Operation operation) {
-        if ("com.blazebit.persistence.integration.graphql.GraphQLRelayConnection".equals(operation.getWrapper().getWrapperClassName())) {
-            try {
-                List<Argument> arguments = operation.getArguments();
-                Class<?>[] parameterTypes = new Class[arguments.size()];
-                for (int i = 0; i < arguments.size(); i++) {
-                    Argument argument = arguments.get(i);
-                    if (argument.getWrapper() == null) {
-                        parameterTypes[i] = Class.forName(argument.getReference().getClassName());
-                    } else {
-                        parameterTypes[i] = Class.forName(argument.getWrapper().getWrapperClassName());
-                    }
-                }
-
-                Class<?> clazz = Class.forName(operation.getClassName());
-                Method method = clazz.getDeclaredMethod(operation.getMethodName(), parameterTypes);
-                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(clazz, method);
-                Class<?> elementType = typeArguments[0];
-                operation.setWrapper(null);
-                operation.getReference().setClassName("com.blazebit.persistence.integration.graphql.GraphQLRelayConnection");
-                operation.getReference().setGraphQlClassName("com.blazebit.persistence.integration.graphql.GraphQLRelayConnection");
-                operation.getReference().setName(elementType.getSimpleName() + "Connection");
-                operation.getReference().setType(ReferenceType.TYPE);
-
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
+//        List<Reference> references = new ArrayList<>();
+//        references.add(operation.getReference());
+//        while (!references.isEmpty()) {
+//            Reference reference = references.remove(references.size() - 1);
+//            if (reference.getType() == ReferenceType.INTERFACE) {
+//                interfaceReferences.add(reference);
+//            }
+//            Map<String, Reference> parametrizedTypeArguments = reference.getParametrizedTypeArguments();
+//            if (parametrizedTypeArguments != null) {
+//                references.addAll(parametrizedTypeArguments.values());
+//            }
+//        }
     }
 
     void configure(@Observes GraphQLSchema.Builder schemaBuilder) {
+//        for (Reference interfaceReference : interfaceReferences) {
+//            schemaBuilder.additionalType(
+//                GraphQLObjectType.newObject()
+//                    .name(interfaceReference.getName() + "Impl")
+//                    .withInterface(GraphQLTypeReference.typeRef(interfaceReference.getName()))
+//                    .build()
+//            );
+//        }
 
         GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(true, true);
         graphQLEntityViewSupportFactory.setImplementRelayNode(false);

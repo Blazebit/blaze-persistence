@@ -379,7 +379,7 @@ public class GraphQLEntityViewSupport {
                 if (afterCursor != null) {
                     throw new RuntimeException("Can't provide both beforeCursor and afterCursor!");
                 }
-                GraphQLCursor cursor = deserialize( beforeCursor);
+                GraphQLCursor cursor = deserialize(beforeCursor);
                 keysetPage = new DefaultKeysetPage(cursor.getOffset(), cursor.getPageSize(), new DefaultKeyset(cursor.getTuple()), null);
             } else if (afterCursor != null) {
                 if (last != null) {
@@ -454,7 +454,7 @@ public class GraphQLEntityViewSupport {
      * @return a new cursor
      */
     protected GraphQLCursor deserialize(String beforeCursor) {
-        try (ObjectInputStream ois = new GraphQLCursorObjectInputStream( Base64.getDecoder().wrap( new ByteArrayInputStream( beforeCursor.getBytes())), serializableBasicTypes)) {
+        try (ObjectInputStream ois = new GraphQLCursorObjectInputStream(Base64.getDecoder().wrap(new ByteArrayInputStream(beforeCursor.getBytes())), serializableBasicTypes)) {
             int offset = ois.read();
             int pageSize = ois.read();
             Serializable[] tuple = (Serializable[]) ois.readObject();

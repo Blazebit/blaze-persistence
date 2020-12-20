@@ -111,7 +111,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-test-h2</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -175,7 +174,6 @@
                     <systemPropertyVariables>
                         <quarkus.test.profile>h2</quarkus.test.profile>
                     </systemPropertyVariables>
-                    <skip>false</skip>
                 </configuration>
             </plugin>
         </plugins>
