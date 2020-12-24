@@ -15,6 +15,7 @@ Not yet released
 * Support Spring Boot and Data 2.4 along with Spring Framework 5.3
 * Support for Java 16 EA
 * Support for converting entities to entity views
+* Add support for `GROUPING SETS`, `ROLLUP` and `CUBE` summarizations and `GROUPING` function
 
 ### Bug fixes
 
