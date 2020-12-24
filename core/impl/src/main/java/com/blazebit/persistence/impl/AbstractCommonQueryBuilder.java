@@ -45,6 +45,10 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.WindowBuilder;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.function.groupingsets.CubeFunction;
+import com.blazebit.persistence.impl.function.groupingsets.GroupingSetFunction;
+import com.blazebit.persistence.impl.function.groupingsets.GroupingSetsFunction;
+import com.blazebit.persistence.impl.function.groupingsets.RollupFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
@@ -1503,8 +1507,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
      */
     @SuppressWarnings("unchecked")
     public BuilderType groupBy(String... paths) {
-        for (String path : paths) {
-            groupBy(path);
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
+            for (String path : paths) {
+                groupByManager.groupBy(expressionFactory.createPathExpression(path));
+            }
+        } else {
+            for (String path : paths) {
+                groupByManager.groupBy(expressionFactory.createSimpleExpression(path, false));
+            }
         }
         return (BuilderType) this;
     }
@@ -1520,6 +1532,63 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
+        return (BuilderType) this;
+    }
+
+    private List<Expression> groupByExpressions(String[] expressions) {
+        List<Expression> list = new ArrayList<>(expressions.length);
+        if (mainQuery.getQueryConfiguration().isCompatibleModeEnabled()) {
+            for (String path : expressions) {
+                list.add(expressionFactory.createPathExpression(path));
+            }
+        } else {
+            for (String path : expressions) {
+                list.add(expressionFactory.createSimpleExpression(path, false));
+            }
+        }
+        return list;
+    }
+
+    private List<Expression> groupByGroupingSet(String[][] groupingSetExpressions) {
+        List<Expression> groupingSets = new ArrayList<>(groupingSetExpressions.length);
+        for (String[] expressions : groupingSetExpressions) {
+            groupingSets.add(new FunctionExpression(GroupingSetFunction.FUNCTION_NAME, groupByExpressions(expressions)));
+        }
+        return groupingSets;
+    }
+
+    public BuilderType groupByRollup(String... expressions) {
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        groupByManager.groupBy(new FunctionExpression(RollupFunction.FUNCTION_NAME, groupByExpressions(expressions)));
+        return (BuilderType) this;
+    }
+
+    public BuilderType groupByCube(String... expressions) {
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        groupByManager.groupBy(new FunctionExpression(CubeFunction.FUNCTION_NAME, groupByExpressions(expressions)));
+        return (BuilderType) this;
+    }
+
+    public BuilderType groupByRollup(String[]... expressions) {
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        groupByManager.groupBy(new FunctionExpression(RollupFunction.FUNCTION_NAME, groupByGroupingSet(expressions)));
+        return (BuilderType) this;
+    }
+
+    public BuilderType groupByCube(String[]... expressions) {
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        groupByManager.groupBy(new FunctionExpression(CubeFunction.FUNCTION_NAME, groupByGroupingSet(expressions)));
+        return (BuilderType) this;
+    }
+
+    public BuilderType groupByGroupingSets(String[]... expressions) {
+        prepareForModification(ClauseType.GROUP_BY);
+        verifyBuilderEnded();
+        groupByManager.groupBy(new FunctionExpression(GroupingSetsFunction.FUNCTION_NAME, groupByGroupingSet(expressions)));
         return (BuilderType) this;
     }
 

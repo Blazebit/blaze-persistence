@@ -552,6 +552,45 @@ Renders through 1:1 which is then replaced later in the SQL.
 
 WARNING: This is an internal function that is used to implement support for referring to the collection table alias used in DML statements.
 
+==== GROUPING_SET function
+
+Syntax: `GROUPING_SET ( ... )`
+
+Renders a SQL grouping set.
+
+WARNING: This is an internal function that is used to implement support for grouping sets.
+
+==== GROUPING_SETS function
+
+Syntax: `GROUPING_SETS ( ... )`
+
+Renders a SQL grouping set.
+
+WARNING: This is an internal function that is used to implement support for grouping sets.
+
+==== CUBE function
+
+Syntax: `CUBE ( ... )`
+
+Renders a SQL cube summarization.
+
+WARNING: This is an internal function that is used to implement support for cube summarization.
+
+==== ROLLUP function
+
+Syntax: `ROLLUP ( ... )`
+
+Renders a SQL rollup summarization.
+
+WARNING: This is an internal function that is used to implement support for rollup summarization.
+
+==== GROUPING function
+
+Syntax: `GROUPING ( ... )`
+
+Returns the group number of a grouping as integer.
+Renders the SQL `grouping` function which can be used to determine the group number.
+
 ==== REPLACE function
 
 Syntax: `REPLACE ( string, search, replacement )`

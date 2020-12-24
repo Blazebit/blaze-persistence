@@ -1214,4 +1214,40 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
         return super.groupBy(expression);
     }
+
+    public X groupByRollup(String... expressions) {
+        if (explicitPaginatedIdentifier) {
+            throw new IllegalStateException("Cannot use grouping sets when paginating");
+        }
+        return super.groupByRollup(expressions);
+    }
+
+    public X groupByCube(String... expressions) {
+        if (explicitPaginatedIdentifier) {
+            throw new IllegalStateException("Cannot use grouping sets when paginating");
+        }
+        return super.groupByCube(expressions);
+    }
+
+    public X groupByRollup(String[]... expressions) {
+        if (explicitPaginatedIdentifier) {
+            throw new IllegalStateException("Cannot use grouping sets when paginating");
+        }
+        return super.groupByRollup(expressions);
+    }
+
+    public X groupByCube(String[]... expressions) {
+        if (explicitPaginatedIdentifier) {
+            throw new IllegalStateException("Cannot use grouping sets when paginating");
+        }
+        return super.groupByCube(expressions);
+    }
+
+    public X groupByGroupingSets(String[]... expressions) {
+        if (explicitPaginatedIdentifier) {
+            throw new IllegalStateException("Cannot use grouping sets when paginating");
+        }
+        return super.groupByGroupingSets(expressions);
+    }
+
 }

@@ -345,6 +345,11 @@ import com.blazebit.persistence.impl.function.groupconcat.MSSQLGroupConcatFuncti
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.OracleListaggGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.grouping.GroupingFunction;
+import com.blazebit.persistence.impl.function.groupingsets.CubeFunction;
+import com.blazebit.persistence.impl.function.groupingsets.GroupingSetFunction;
+import com.blazebit.persistence.impl.function.groupingsets.GroupingSetsFunction;
+import com.blazebit.persistence.impl.function.groupingsets.RollupFunction;
 import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.DB2JsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.MSSQLJsonGetFunction;
@@ -1801,6 +1806,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2JsonSetFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLJsonSetFunction());
         registerFunction(jpqlFunctionGroup);
+
+        // grouping
+        registerFunction(GroupingFunction.FUNCTION_NAME, new GroupingFunction());
+        registerFunction(GroupingSetFunction.FUNCTION_NAME, new GroupingSetFunction());
+        registerFunction(GroupingSetsFunction.FUNCTION_NAME, new GroupingSetsFunction());
+        registerFunction(CubeFunction.FUNCTION_NAME, new CubeFunction());
+        registerFunction(RollupFunction.FUNCTION_NAME, new RollupFunction());
     }
 
     private void registerFunction(String name, JpqlFunction function) {

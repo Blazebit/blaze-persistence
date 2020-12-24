@@ -42,6 +42,46 @@ public interface GroupByBuilder<X extends GroupByBuilder<X>> extends HavingBuild
      */
     public X groupBy(String expression);
 
+    /**
+     * Adds a group by clause with a rollup of the given expressions to the query.
+     *
+     * @param expressions The expressions for rollup for the group by clauses
+     * @return The query builder for chaining calls
+     */
+    public X groupByRollup(String... expressions);
+
+    /**
+     * Adds a group by clause with a cube of the given expressions to the query.
+     *
+     * @param expressions The expressions for cube for the group by clauses
+     * @return The query builder for chaining calls
+     */
+    public X groupByCube(String... expressions);
+
+    /**
+     * Adds a group by clause with a rollup of the given expressions to the query.
+     *
+     * @param expressions The expressions for rollup for the group by clauses
+     * @return The query builder for chaining calls
+     */
+    public X groupByRollup(String[]... expressions);
+
+    /**
+     * Adds a group by clause with a cube of the given expressions to the query.
+     *
+     * @param expressions The expressions for cube for the group by clauses
+     * @return The query builder for chaining calls
+     */
+    public X groupByCube(String[]... expressions);
+
+    /**
+     * Adds a group by clause with a grouping set of the given expressions to the query.
+     *
+     * @param expressions The expressions for grouping set for the group by clauses
+     * @return The query builder for chaining calls
+     */
+    public X groupByGroupingSets(String[]... expressions);
+
     // NOTE: JPA 4.6.16 says that subqueries are only allowed in WHERE and HAVING
     // TODO: group by subqueries?
 }
