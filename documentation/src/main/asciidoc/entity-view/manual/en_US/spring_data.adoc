@@ -28,7 +28,7 @@ In short, the following Maven dependencies are required
 </dependency>
 ----
 
-For Spring-Data version 2.3, 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.4`, 2.2`, `2.1`, `2.0`, `1.x`.
+For Spring-Data version 2.4, 2.3, 2.2, 2.1, 2.0 or 1.x use the `blaze-persistence-integration-spring-data` artifact with the respective suffix `2.4`, `2.3`, `2.2`, `2.1`, `2.0`, `1.x`.
 
 The dependencies for other JPA providers or other versions can be found in the link:{core_doc}#maven-setup[core module setup section].
 
