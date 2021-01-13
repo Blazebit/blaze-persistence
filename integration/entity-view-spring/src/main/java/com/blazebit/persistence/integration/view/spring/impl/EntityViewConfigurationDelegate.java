@@ -22,6 +22,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.ClassUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class EntityViewConfigurationDelegate {
         Set<Class<?>> entityViewListenerClasses = new HashSet<>();
         for (BeanDefinition candidate : configurationSource.getCandidates(resourceLoader)) {
             try {
-                Class<?> clazz = Class.forName(candidate.getBeanClassName());
+                Class<?> clazz = ClassUtils.forName( candidate.getBeanClassName(),  resourceLoader == null ? null : resourceLoader.getClassLoader() );
                 if (clazz.isAnnotationPresent(EntityView.class)) {
                     entityViewClasses.add(clazz);
                 } else {
