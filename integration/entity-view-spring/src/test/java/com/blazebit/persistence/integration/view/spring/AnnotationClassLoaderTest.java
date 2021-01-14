@@ -22,15 +22,11 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.cglib.proxy.Enhancer;
-import org.springframework.cglib.proxy.MethodInterceptor;
-import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
-import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,25 +44,11 @@ public class AnnotationClassLoaderTest {
     static final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
 
     static {
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(ClassLoader.class);
-        enhancer.setCallback(new MethodInterceptor() {
-            @Override
-            public Object intercept(Object object, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-                if (method.getName().contains("loadClass") && args.length == 1) {
-                    if (Objects.equals(TestView1.class.getName(), args[0]) || Objects.equals(TestView2.class.getName(), args[0])) {
-                        trackedClassLoaderViews.incrementAndGet();
-                    }
-                }
-                return proxy.invokeSuper(object, args);
-            }
-        });
-        ClassLoader proxy = (ClassLoader) enhancer.create();
-        Thread.currentThread().setContextClassLoader(proxy);
+        Thread.currentThread().setContextClassLoader(new TrackingClassLoader());
     }
 
     @AfterClass
-    public static void verify() {
+    public static void resetClassLoader() {
         Thread.currentThread().setContextClassLoader(previousClassLoader);
     }
 
@@ -85,5 +67,15 @@ public class AnnotationClassLoaderTest {
     @Configuration
     @EnableEntityViews
     static class TestConfig {
+    }
+
+    private static class TrackingClassLoader extends ClassLoader {
+        @Override
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            if (Objects.equals(TestView1.class.getName(), name) || Objects.equals(TestView2.class.getName(), name)) {
+                trackedClassLoaderViews.incrementAndGet();
+            }
+            return super.loadClass(name);
+        }
     }
 }
