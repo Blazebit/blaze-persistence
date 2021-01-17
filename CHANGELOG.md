@@ -8,6 +8,22 @@ Not yet released
 
 ### New features
 
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.0-Alpha2
+
+17/01/2021 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.0-Alpha2) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue+milestone%3A1.6.0+is%3Aclosed+closed%3A%3C2021-01-17+sort%3Aupdated-desc)
+
+### New features
+
 * Implement emulation for temporal literals through functions also for Java 8 types
 * Support alternative constructors for subquery providers
 * Change EntityViewSettingProcessor API to allow subtyped EntityViewSetting to be returned
