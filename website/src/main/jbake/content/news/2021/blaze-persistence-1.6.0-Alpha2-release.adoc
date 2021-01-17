@@ -1,0 +1,28 @@
+= Blaze-Persistence 1.6.0-Alpha2 Release
+Christian Beikov
+2021-01-17 0
+:description: Blaze-Persistence version 1.6.0-Alpha2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the second alpha release of the 1.6 series. We introduced a few new features and fixed quite a few bugs.
+
+A big thank you goes out to https://github.com/danelowe[Dane Lowe] for implementing the conversion support from entities to entity views.
+I'd also like to thank https://github.com/riteshka[Ritesh] and https://github.com/slyoldfox[slyoldfox] for investigating and fixing
+issues they faced.
+
+Most of the enhancements delivered in this release improve the performance of a few types of queries. The support for `GROUPING SETS` is user facing
+which allows creating summarizations of aggregated data. For more information about grouping sets, take a look into the https://persistence.blazebit.com/documentation/1.6/core/manual/en_US/index.html#grouping-sets[documentation, window="_blank"].
+
+This version now also adds support for+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ Spring Data 2.4 and thus also Spring Framework 5.3.
+We also worked on the support for Java 16 and thanks to https://github.com/slyoldfox[slyoldfox], it seems we now also support the use of Spring Boot Dev-Tools.
+
+Since we fixed a query plan cache related issue that could lead to wrong queries being executed in some cases, you should update as soon as possible to avoid running into these issues.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

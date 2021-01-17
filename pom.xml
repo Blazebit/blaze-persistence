@@ -181,36 +181,6 @@
                 </pluginManagement>
             </build>
         </profile>
-<!--        <profile>-->
-<!--            <id>no-normal-jdk-jar-given</id>-->
-<!--            <activation>-->
-<!--                <os>-->
-<!--                    <family>!mac</family>-->
-<!--                </os>-->
-<!--                <file>-->
-<!--                    <missing>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</missing>-->
-<!--                </file>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                &lt;!&ndash; When building with Java 11+ we build with the respective Java version as target version if we don't have the JDK8 Home available &ndash;&gt;-->
-<!--                <java.version>${java.specification.version}</java.version>-->
-<!--            </properties>-->
-<!--        </profile>-->
-<!--        <profile>-->
-<!--            <id>no-mac-jdk-jar-given</id>-->
-<!--            <activation>-->
-<!--                <os>-->
-<!--                    <family>mac</family>-->
-<!--                </os>-->
-<!--                <file>-->
-<!--                    <missing>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</missing>-->
-<!--                </file>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                &lt;!&ndash; When building with Java 11+ we build with the respective Java version as target version if we don't have the JDK8 Home available &ndash;&gt;-->
-<!--                <java.version>${java.specification.version}</java.version>-->
-<!--            </properties>-->
-<!--        </profile>-->
         <profile>
             <id>blazebit-release</id>
 <!--            <dependencies>-->
