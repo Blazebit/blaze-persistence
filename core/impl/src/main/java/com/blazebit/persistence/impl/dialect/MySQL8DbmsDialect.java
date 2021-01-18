@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.dialect;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.DeleteJoinStyle;
@@ -88,7 +89,7 @@ public class MySQL8DbmsDialect extends MySQLDbmsDialect {
 
         if (withClause != null) {
             if (statementType == DbmsStatementType.INSERT) {
-                sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+                sqlSb.insert(SqlUtils.SELECT_FINDER.indexIn(sqlSb, 0, sqlSb.length()), withClause);
             } else {
                 sqlSb.insert(0, withClause);
             }
