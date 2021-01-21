@@ -126,6 +126,11 @@ class BlazePersistenceProcessor {
                                                   List<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors,
                                                   BlazePersistenceConfiguration blazePersistenceConfig,
                                                   BuildProducer<BlazePersistenceInstanceDescriptorBuildItem> blazePersistenceDescriptorBuildItemProducer) {
+        if (persistenceUnitDescriptors.isEmpty()) {
+            LOG.warn("The Blaze-Persistence dependency is present but no persistence units have been defined.");
+            return;
+        }
+
         Optional<PersistenceUnitDescriptorBuildItem> defaultPersistenceUnit = persistenceUnitDescriptors.stream()
                 .filter(pu -> PersistenceUnitUtil.isDefaultPersistenceUnit(pu.getPersistenceUnitName()))
                 .findFirst();
