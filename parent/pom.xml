@@ -112,7 +112,7 @@
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
         <version.weld>3.1.5.Final</version.weld>
-        <version.quarkus>1.9.2.Final</version.quarkus>
+        <version.quarkus>1.11.0.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
@@ -551,7 +551,7 @@
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
-                <version>8.0.19</version>
+                <version>8.0.22</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
