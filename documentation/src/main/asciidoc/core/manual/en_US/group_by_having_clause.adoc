@@ -115,7 +115,7 @@ The groupings `ROLLUP`, `CUBE` or manual `GROUPING SETS` can be used through the
 
 * link:{core_jdoc}/persistence/GroupByBuilder.html#groupByRollup(java.lang.String...)[`groupByRollup()`]
 * link:{core_jdoc}/persistence/GroupByBuilder.html#groupByCube(java.lang.String...)[`groupByCube()`]
-* link:{core_jdoc}/persistence/GroupByBuilder.html#groupByGroupingSets(java.lang.String[\]...)[`groupByGroupingSets()`]
+* link:{core_jdoc}/persistence/GroupByBuilder.html#groupByGroupingSets(java.lang.String%5B%5D...)[`groupByGroupingSets()`]
 
 The `GROUPING` function can be used for determining an integer that represents the number of the current group.
 
