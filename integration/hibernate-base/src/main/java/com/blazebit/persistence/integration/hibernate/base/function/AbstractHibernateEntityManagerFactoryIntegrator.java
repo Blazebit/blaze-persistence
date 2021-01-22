@@ -66,6 +66,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
     protected static final String TYPE;
 
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
+    private static final boolean USE_FUNCTION_REGISTRY;
     private static final String VERSION_STRING;
 
     static {
@@ -90,6 +91,14 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                 throw new IllegalArgumentException("An error happened while trying to resolve the Hibernate version through the version provider " + usedProvider.getClass().getName(), ex);
             }
         }
+        boolean useFunctionRegistry = false;
+        try {
+            SQLFunctionRegistry.class.getDeclaredField("userFunctions");
+        } catch (NoSuchFieldException ex) {
+            // The field was removed in Hibernate 5.0.0.Beta1 which marks the point at which SQLFunctionRegistry is the driver for finding functions
+            useFunctionRegistry = true;
+        }
+        USE_FUNCTION_REGISTRY = useFunctionRegistry;
     }
 
     protected String getDbmsName(EntityManagerFactory emf, EntityManager em, Dialect dialect) {
@@ -138,11 +147,11 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             return null;
         }
     }
-    
+
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         EntityManager em = null;
-        
+
         try {
             em = entityManagerFactory.createEntityManager();
             Session s = em.unwrap(Session.class);
@@ -151,12 +160,12 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             functions.putAll(originalFunctions);
             Dialect dialect = getDialect(s);
             String dbms = getDbmsName(entityManagerFactory, em, dialect);
-            
+
             for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
                 String functionName = functionEntry.getKey();
                 JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
                 JpqlFunction function = dbmsFunctionMap.get(dbms);
-                
+
                 if (function == null && !dbmsFunctionMap.contains(dbms)) {
                     function = dbmsFunctionMap.get(null);
                 }
@@ -166,9 +175,9 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                     functions.put(functionName, new HibernateJpqlFunctionAdapter(function));
                 }
             }
-            
+
             replaceFunctions(s, functions);
-            
+
             return entityManagerFactory;
         } finally {
             if (em != null) {
@@ -180,7 +189,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
     @Override
     public Map<String, JpqlFunction> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         EntityManager em = null;
-        
+
         try {
             em = entityManagerFactory.createEntityManager();
             Session s = em.unwrap(Session.class);
@@ -202,21 +211,18 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             }
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private Map<String, SQLFunction> getFunctions(Session s) {
-        if (MAJOR < 5 || (MAJOR == 5 && MINOR == 0 && FIX == 0 && "Beta1".equals(TYPE))) {
-            // Implementation detail: Hibernate uses a mutable map, so we can do this
-            return getDialect(s).getFunctions();
-        } else {
+        if (USE_FUNCTION_REGISTRY) {
             SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
             SQLFunctionRegistry registry = sf.getSqlFunctionRegistry();
             Exception ex;
-            
+
             // We have to retrieve the functionMap the old fashioned way via reflection :(
             Field f = null;
             boolean madeAccessible = false;
-            
+
             try {
                 f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
                 madeAccessible = !f.isAccessible();
@@ -238,57 +244,32 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                     f.setAccessible(false);
                 }
             }
-            
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
+
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report the version of hibernate your are using so we can provide support for it!", ex);
+        } else {
+            // Implementation detail: Hibernate uses a mutable map, so we can do this
+            return getDialect(s).getFunctions();
         }
     }
-    
+
     private void replaceFunctions(Session s, Map<String, SQLFunction> newFunctions) {
-        if (MAJOR < 5 || (MAJOR == 5 && MINOR == 0 && FIX == 0 && "Beta1".equals(TYPE))) {
-            Exception ex;
-            Field f = null;
-            boolean madeAccessible = false;
-            
-            try {
-                f = Dialect.class.getDeclaredField("sqlFunctions");
-                madeAccessible = !f.isAccessible();
-                
-                if (madeAccessible) {
-                    f.setAccessible(true);
-                }
-                
-                f.set(getDialect(s), newFunctions);
-                return;
-            } catch (NoSuchFieldException e) {
-                ex = e;
-            } catch (IllegalArgumentException e) {
-                // This can never happen
-                ex = e;
-            } catch (IllegalAccessException e) {
-                ex = e;
-            } finally {
-                if (f != null && madeAccessible) {
-                    f.setAccessible(false);
-                }
-            }
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
-        } else {
+        if (USE_FUNCTION_REGISTRY) {
             SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
             SQLFunctionRegistry registry = sf.getSqlFunctionRegistry();
             Exception ex;
-            
+
             // We have to retrieve the functionMap the old fashioned way via reflection :(
             Field f = null;
             boolean madeAccessible = false;
-            
+
             try {
                 f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
                 madeAccessible = !f.isAccessible();
-                
+
                 if (madeAccessible) {
                     f.setAccessible(true);
                 }
-                
+
                 f.set(registry, newFunctions);
                 return;
             } catch (NoSuchFieldException e) {
@@ -303,11 +284,39 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                     f.setAccessible(false);
                 }
             }
-            
-            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + VERSION_STRING + ") so we can provide support for it!", ex);
+
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report the version of hibernate your are using so we can provide support for it!", ex);
+        } else {
+            Exception ex;
+            Field f = null;
+            boolean madeAccessible = false;
+
+            try {
+                f = Dialect.class.getDeclaredField("sqlFunctions");
+                madeAccessible = !f.isAccessible();
+
+                if (madeAccessible) {
+                    f.setAccessible(true);
+                }
+
+                f.set(getDialect(s), newFunctions);
+                return;
+            } catch (NoSuchFieldException e) {
+                ex = e;
+            } catch (IllegalArgumentException e) {
+                // This can never happen
+                ex = e;
+            } catch (IllegalAccessException e) {
+                ex = e;
+            } finally {
+                if (f != null && madeAccessible) {
+                    f.setAccessible(false);
+                }
+            }
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report the version of hibernate your are using so we can provide support for it!", ex);
         }
     }
-    
+
     protected Dialect getDialect(Session s) {
         SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
         return sf.getDialect();
