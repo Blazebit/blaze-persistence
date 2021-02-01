@@ -904,9 +904,9 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             List<Object> elementIds;
             // If there is no inverseFlusher/mapped by attribute, the collection has a join table
             if (evm.getDbmsDialect().supportsReturningColumns()) {
-                List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName)
+                List<Tuple> tuples = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", mapping)
                         .where(ownerIdAttributeName).eq(ownerId)
-                        .executeWithReturning(attributeName + "." + elementDescriptor.getAttributeIdAttributeName())
+                        .executeWithReturning(mapping + "." + elementDescriptor.getAttributeIdAttributeName())
                         .getResultList();
 
                 elementIds = new ArrayList<>(tuples.size());
@@ -916,11 +916,11 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             } else {
                 elementIds = (List<Object>) evm.getCriteriaBuilderFactory().create(context.getEntityManager(), ownerEntityClass, "e")
                         .where(ownerIdAttributeName).eq(ownerId)
-                        .select("e." + attributeName + "." + elementDescriptor.getAttributeIdAttributeName())
+                        .select("e." + mapping + "." + elementDescriptor.getAttributeIdAttributeName())
                         .getResultList();
                 if (!elementIds.isEmpty() && !jpaProviderDeletesCollection) {
                     // We must always delete this, otherwise we might get a constraint violation because of the cascading delete
-                    DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+                    DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", mapping);
                     cb.where(ownerIdAttributeName).eq(ownerId);
                     cb.executeUpdate();
                 }
@@ -929,7 +929,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             return Collections.<PostFlushDeleter>singletonList(new PostFlushCollectionElementByIdDeleter(elementDescriptor.getElementToEntityMapper(), elementIds));
         } else if (!jpaProviderDeletesCollection) {
             // delete from Entity(collectionRole) e where e.id = :id
-            DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", attributeName);
+            DeleteCriteriaBuilder<?> cb = evm.getCriteriaBuilderFactory().deleteCollection(context.getEntityManager(), ownerEntityClass, "e", mapping);
             cb.where("e." + ownerIdAttributeName).eq(ownerId);
             cb.executeUpdate();
         }

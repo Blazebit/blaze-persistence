@@ -12,7 +12,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix remove by owner id of map attributes to use mapping instead of attribute name
 
 ### Backwards-incompatible changes
 
