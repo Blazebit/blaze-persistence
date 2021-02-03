@@ -33,8 +33,10 @@ import graphql.schema.GraphQLType;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +85,9 @@ public class GraphQLEntityViewSupport {
      * Default name for the total count field.
      */
     public static final String TOTAL_COUNT_NAME = "totalCount";
+
+    // GraphQL defines meta fields that can be used on any type: https://graphql.org/learn/queries/#meta-fields
+    private static final Set<String> META_FIELDS = new HashSet<>(Arrays.asList("__typename"));
 
     private final Map<String, Class<?>> typeNameToClass;
     private final Set<String> serializableBasicTypes;
@@ -423,6 +428,7 @@ public class GraphQLEntityViewSupport {
         StringBuilder sb = new StringBuilder();
         OUTER: for (String key : keys) {
             sb.setLength(0);
+            int fieldStartIndex = 0;
             for (int i = 0; i < key.length(); i++) {
                 final char c = key.charAt(i);
                 if (i < prefix.length()) {
@@ -434,11 +440,12 @@ public class GraphQLEntityViewSupport {
                 }
                 if (c == '/') {
                     sb.append('.');
+                    fieldStartIndex = sb.length();
                 } else {
                     sb.append(c);
                 }
             }
-            if (sb.length() > 0) {
+            if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
                 setting.fetch(sb.toString());
             }
         }

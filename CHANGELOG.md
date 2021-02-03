@@ -12,7 +12,11 @@ None yet
 
 ### Bug fixes
 
+* Log warning when Blaze-Persistence is used in Quarkus application without persistence units instead of throwing an exception
 * Fix remove by owner id of map attributes to use mapping instead of attribute name
+* Add reflection information about entity view methods for Quarkus to fix native image issues
+* Remove version string related Hibernate feature detection causing issues in native image and uber jars
+* Ignore GraphQL meta field `__typename` in entity view integration
 
 ### Backwards-incompatible changes
 
