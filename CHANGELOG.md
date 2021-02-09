@@ -17,6 +17,7 @@ None yet
 * Add reflection information about entity view methods for Quarkus to fix native image issues
 * Remove version string related Hibernate feature detection causing issues in native image and uber jars
 * Ignore GraphQL meta field `__typename` in entity view integration
+* Fix entity view annotation processor generation of casts for attributes containing annotations
 
 ### Backwards-incompatible changes
 

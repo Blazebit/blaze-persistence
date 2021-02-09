@@ -22,10 +22,17 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.NullType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.SimpleTypeVisitor6;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -82,6 +89,8 @@ public final class TypeUtils {
     }
 
     public static String toTypeString(DeclaredType declaredType, TypeMirror typeMirror, Context context) {
+        // Unwrap AnnotatedType
+        typeMirror = AnnotatedTypeUnwrapVisitor.unwrap(typeMirror);
         if (typeMirror instanceof TypeVariable) {
             typeMirror = context.getTypeUtils().asMemberOf(declaredType, ((TypeVariable) typeMirror).asElement());
         }
@@ -259,5 +268,62 @@ public final class TypeUtils {
      */
     public static interface TypeVisitor {
         void visit(TypeElement element);
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.6.0
+     */
+    private static class AnnotatedTypeUnwrapVisitor extends SimpleTypeVisitor6<TypeMirror, Object> {
+
+        private static final AnnotatedTypeUnwrapVisitor INSTANCE = new AnnotatedTypeUnwrapVisitor();
+
+        private AnnotatedTypeUnwrapVisitor() {
+        }
+
+        public static TypeMirror unwrap(TypeMirror typeMirror) {
+            return typeMirror.accept(AnnotatedTypeUnwrapVisitor.INSTANCE, null);
+        }
+
+        @Override
+        public TypeMirror visitDeclared(DeclaredType t, Object o) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitPrimitive(PrimitiveType t, Object o) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitArray(ArrayType t, Object o) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitNull(NullType t, Object o) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitTypeVariable(TypeVariable t, Object p) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitWildcard(WildcardType t, Object p) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitExecutable(ExecutableType t, Object p) {
+            return t;
+        }
+
+        @Override
+        public TypeMirror visitNoType(NoType t, Object p) {
+            return t;
+        }
+
     }
 }
