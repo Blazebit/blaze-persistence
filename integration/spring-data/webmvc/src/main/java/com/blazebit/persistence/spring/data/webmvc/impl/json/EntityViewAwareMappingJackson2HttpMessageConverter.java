@@ -38,7 +38,7 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
     private final EntityViewAwareObjectMapper entityViewAwareObjectMapper;
 
     public EntityViewAwareMappingJackson2HttpMessageConverter(final EntityViewManager entityViewManager, EntityViewIdValueAccessor entityViewIdValueAccessor) {
-        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, objectMapper, entityViewIdValueAccessor);
+        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, getObjectMapper(), entityViewIdValueAccessor);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
             if (inputMessage instanceof MappingJacksonInputMessage) {
                 Class<?> deserializationView = ((MappingJacksonInputMessage) inputMessage).getDeserializationView();
                 if (deserializationView != null) {
-                    return this.objectMapper.readerWithView(deserializationView).forType(javaType).
+                    return this.getObjectMapper().readerWithView(deserializationView).forType(javaType).
                             readValue(inputMessage.getBody());
                 }
             }
