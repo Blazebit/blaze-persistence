@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
+import com.blazebit.persistence.view.impl.accessor.PassthroughAttributeAccessor;
 import com.blazebit.persistence.view.impl.change.DirtyChecker;
 import com.blazebit.persistence.view.impl.collection.CollectionAction;
 import com.blazebit.persistence.view.impl.collection.CollectionAddAllAction;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -1779,6 +1781,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     private void visitInverseElementFlushersForActions(UpdateContext context, Iterable<?> current, Map<Object, Object> added, Map<Object, Object> removed, ElementChangeListener<E, V> listener) {
         if (elementDescriptor.isSubview()) {
             final ViewToEntityMapper mapper = elementDescriptor.getViewToEntityMapper();
+            AttributeAccessor idAccessor = elementDescriptor.isIdentifiable() ? elementDescriptor.getLoadOnlyViewToEntityMapper().getViewIdAccessor() : PassthroughAttributeAccessor.INSTANCE;
             // First remove elements, then persist, otherwise we might get a constrain violation
             for (Object element : removed.values()) {
                 listener.onRemovedInverseElement(element);
@@ -1793,7 +1796,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             @SuppressWarnings("unchecked")
                             DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                             if (flusher != null) {
-                                Object addedElement = added.remove(element);
+                                Object addedElement = added.remove(idAccessor.getValue(element));
                                 if (addedElement != null) {
                                     listener.onAddedAndUpdatedInverseElement(flusher, element);
                                 } else {
@@ -1811,13 +1814,14 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 listener.onAddedInverseElement(element);
             }
         } else if (elementDescriptor.isJpaEntity()) {
+            AttributeAccessor idAccessor = elementDescriptor.getLoadOnlyViewToEntityMapper().getEntityIdAccessor();
             for (Object element : removed.values()) {
                 listener.onRemovedInverseElement(element);
             }
             for (Object element : current) {
                 if (elementDescriptor.getBasicUserType().shouldPersist(element) && elementDescriptor.shouldJpaPersist()) {
                     CollectionElementAttributeFlusher<E, V> flusher = new PersistCollectionElementAttributeFlusher<>(element, optimisticLockProtected);
-                    Object addedElement = added.remove(element);
+                    Object addedElement = added.remove(idAccessor.getValue(element));
                     if (addedElement != null) {
                         listener.onAddedAndUpdatedInverseElement(flusher, element);
                     } else {
@@ -1827,7 +1831,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (element != null) {
                         // Although we can't replace the original object in the backing collection, we don't care in case of inverse collections
                         CollectionElementAttributeFlusher<E, V> flusher = new MergeCollectionElementAttributeFlusher<>(element, optimisticLockProtected);
-                        Object addedElement = added.remove(element);
+                        Object addedElement = added.remove(idAccessor.getValue(element));
                         if (addedElement != null) {
                             listener.onAddedAndUpdatedInverseElement(flusher, element);
                         } else {
@@ -1835,7 +1839,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
                     }
                 } else {
-                    Object addedElement = added.remove(element);
+                    Object addedElement = added.remove(idAccessor.getValue(element));
                     if (addedElement != null) {
                         listener.onAddedInverseElement(element);
                     }
@@ -1934,30 +1938,40 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             return null;
         }
 
-        Map<Object, Object> added = new IdentityHashMap<>();
-        Map<Object, Object> removed = new IdentityHashMap<>();
-        for (CollectionAction<? extends Collection<?>> a : collectionActions) {
-            Collection<Object> addedObjects = a.getAddedObjects();
-            Collection<Object> removedObjects = a.getRemovedObjects();
-
-            for (Object addedObject : addedObjects) {
-                removed.remove(addedObject);
-            }
-            for (Object removedObject : removedObjects) {
-                added.remove(removedObject);
-                removed.put(removedObject, removedObject);
-            }
-            for (Object addedObject : addedObjects) {
-                added.put(addedObject, addedObject);
-            }
-        }
+        Map<Object, Object>[] map = getAddedAndRemovedElementsForInverseFlusher(collectionActions);
+        Map<Object, Object> added = map[0];
+        Map<Object, Object> removed = map[1];
         return new FusedCollectionElementActions(elementDescriptor.getViewToEntityMapper() == null ? null : elementDescriptor.getLoadOnlyViewToEntityMapper(), removed, added);
     }
 
     @SuppressWarnings("unchecked")
     private Map<Object, Object>[] getAddedAndRemovedElementsForInverseFlusher(List<? extends CollectionAction<?>> collectionActions) {
-        Map<Object, Object> added = new IdentityHashMap<>();
-        Map<Object, Object> removed = new IdentityHashMap<>();
+        if (elementDescriptor.isIdentifiable()) {
+            AttributeAccessor idAccessor = elementDescriptor.isJpaEntity() ? elementDescriptor.getLoadOnlyViewToEntityMapper().getEntityIdAccessor()
+                    : elementDescriptor.getLoadOnlyViewToEntityMapper().getViewIdAccessor();
+
+            Map<Object, Object> added = new HashMap<>(collectionActions.size());
+            Map<Object, Object> removed = new HashMap<>(collectionActions.size());
+            for (CollectionAction<? extends Collection<?>> a : collectionActions) {
+                Collection<Object> addedObjects = a.getAddedObjects();
+                Collection<Object> removedObjects = a.getRemovedObjects();
+
+                for (Object addedObject : addedObjects) {
+                    removed.remove(idAccessor.getValue(addedObject));
+                }
+                for (Object removedObject : removedObjects) {
+                    Object id = idAccessor.getValue(removedObject);
+                    added.remove(id);
+                    removed.put(id, removedObject);
+                }
+                for (Object addedObject : addedObjects) {
+                    added.put(idAccessor.getValue(addedObject), addedObject);
+                }
+            }
+            return new Map[]{ added, removed };
+        }
+        Map<Object, Object> added = new IdentityHashMap<>(collectionActions.size());
+        Map<Object, Object> removed = new IdentityHashMap<>(collectionActions.size());
         for (CollectionAction<? extends Collection<?>> a : collectionActions) {
             Collection<Object> addedObjects = a.getAddedObjects();
             Collection<Object> removedObjects = a.getRemovedObjects();
@@ -1978,8 +1992,32 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
 
     @SuppressWarnings("unchecked")
     private Map<Object, Object>[] getAddedAndRemovedElementsForInverseFlusher(Collection<?> collection, List<CollectionAction<Collection<?>>> collectionActions) {
-        Map<Object, Object> added = new IdentityHashMap<>();
-        Map<Object, Object> removed = new IdentityHashMap<>();
+        if (elementDescriptor.isIdentifiable()) {
+            AttributeAccessor idAccessor = elementDescriptor.isJpaEntity() ? elementDescriptor.getLoadOnlyViewToEntityMapper().getEntityIdAccessor()
+                    : elementDescriptor.getLoadOnlyViewToEntityMapper().getViewIdAccessor();
+
+            Map<Object, Object> added = new HashMap<>(collectionActions.size());
+            Map<Object, Object> removed = new HashMap<>(collectionActions.size());
+            for (CollectionAction<Collection<?>> a : collectionActions) {
+                Collection<Object> addedObjects = a.getAddedObjects(collection);
+                Collection<Object> removedObjects = a.getRemovedObjects(collection);
+
+                for (Object addedObject : addedObjects) {
+                    removed.remove(idAccessor.getValue(addedObject));
+                }
+                for (Object removedObject : removedObjects) {
+                    Object id = idAccessor.getValue(removedObject);
+                    added.remove(id);
+                    removed.put(id, removedObject);
+                }
+                for (Object addedObject : addedObjects) {
+                    added.put(idAccessor.getValue(addedObject), addedObject);
+                }
+            }
+            return new Map[]{ added, removed };
+        }
+        Map<Object, Object> added = new IdentityHashMap<>(collectionActions.size());
+        Map<Object, Object> removed = new IdentityHashMap<>(collectionActions.size());
         for (CollectionAction<Collection<?>> a : collectionActions) {
             Collection<Object> addedObjects = a.getAddedObjects(collection);
             Collection<Object> removedObjects = a.getRemovedObjects(collection);

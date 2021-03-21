@@ -109,6 +109,29 @@ public class EntityViewUpdateSubviewInverseSimpleTest extends AbstractEntityView
     }
 
     @Test
+    public void testReplaceElementWithCopyInCollection() {
+        // Given
+        UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);
+        newPerson.setName("newPers1");
+        UpdatableDocumentView document = evm.create(UpdatableDocumentView.class);
+        document.setName("newDoc123");
+        document.setOwner(getP1View(PersonIdView.class));
+        newPerson.getOwnedDocuments2().add(document);
+        update(newPerson);
+
+        // When
+        UpdatableDocumentView copy = evm.convert(document, UpdatableDocumentView.class);
+        newPerson.getOwnedDocuments2().remove(document);
+        newPerson.getOwnedDocuments2().add(copy);
+        update(newPerson);
+
+        // Then
+        em.clear();
+        Document newDocument = em.find(Document.class, document.getId());
+        Assert.assertEquals(newPerson.getId(), newDocument.getResponsiblePerson().getId());
+    }
+
+    @Test
     public void testUpdateRemoveNonExisting() {
         // Given
         UpdatablePersonView newPerson = evm.create(UpdatablePersonView.class);

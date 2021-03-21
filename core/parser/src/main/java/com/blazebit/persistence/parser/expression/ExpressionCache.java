@@ -48,7 +48,7 @@ public interface ExpressionCache<T> {
             if (allowOuter) {
                 flags |= ALLOW_OUTER_MASK;
             }
-            if (allowOuter) {
+            if (allowQuantifiedPredicates) {
                 flags |= ALLOW_QUANTIFIED_PREDICATES_MASK;
             }
             if (allowObjectExpression) {

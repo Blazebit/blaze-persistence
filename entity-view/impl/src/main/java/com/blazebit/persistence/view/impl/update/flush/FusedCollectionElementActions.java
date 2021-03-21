@@ -63,27 +63,27 @@ public class FusedCollectionElementActions implements FusedCollectionActions {
 
     @Override
     public Collection<Object> getAdded() {
-        return added.keySet();
+        return added.values();
     }
 
     @Override
     public Collection<Object> getAdded(UpdateContext context) {
         if (loadOnlyViewToEntityMapper == null) {
-            return added.keySet();
+            return added.values();
         } else {
-            return getEntityReferencesForCollectionOperation(context, added.keySet());
+            return getEntityReferencesForCollectionOperation(context, added.values());
         }
     }
 
     public Collection<Object> getRemoved() {
-        return removed.keySet();
+        return removed.values();
     }
 
     public Collection<Object> getRemoved(UpdateContext context) {
         if (loadOnlyViewToEntityMapper == null) {
-            return removed.keySet();
+            return removed.values();
         } else {
-            return getEntityReferencesForCollectionOperation(context, removed.keySet());
+            return getEntityReferencesForCollectionOperation(context, removed.values());
         }
     }
 
