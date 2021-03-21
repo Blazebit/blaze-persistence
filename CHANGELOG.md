@@ -18,6 +18,7 @@ None yet
 * Remove version string related Hibernate feature detection causing issues in native image and uber jars
 * Ignore GraphQL meta field `__typename` in entity view integration
 * Fix entity view annotation processor generation of casts for attributes containing annotations
+* Coalesce inverse collection operations to avoid entity not found issues due to remove + update
 
 ### Backwards-incompatible changes
 
