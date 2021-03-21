@@ -87,7 +87,7 @@
 
         <version.deltaspike-1.7>1.7.2</version.deltaspike-1.7>
         <version.deltaspike-1.8>1.8.1</version.deltaspike-1.8>
-        <version.deltaspike-1.9>1.9.4</version.deltaspike-1.9>
+        <version.deltaspike-1.9>1.9.5</version.deltaspike-1.9>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
         <version.spring-data-1.x-spring>4.3.3.RELEASE</version.spring-data-1.x-spring>
@@ -125,7 +125,7 @@
         <version.shade.plugin>3.2.4</version.shade.plugin>
         <version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
         <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
-        <asmVersion>9.0</asmVersion>
+        <asmVersion>9.1</asmVersion>
 
         <version.h2>1.4.200</version.h2>
         <mssql.version>7.2.2.jre8</mssql.version>

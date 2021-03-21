@@ -410,13 +410,15 @@ jobs:
             jdk: 11
           - rdbms: h2
             provider: hibernate-5.2
-            jdk: 14
-          - rdbms: h2
-            provider: hibernate-5.2
             jdk: 15
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 16
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.4.x
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 17
             deltaspike: deltaspike-1.9
             spring-data: spring-data-2.4.x
           - rdbms: h2
@@ -436,8 +438,17 @@ jobs:
             build-jdk: 16
             deltaspike: deltaspike-1.9
             spring-data: spring-data-2.4.x
+# Neither Spring nor Deltaspike support reading JDK 17 class files yet
+#          - rdbms: h2
+#            provider: hibernate-5.2
+#            jdk: 17
+#            build-jdk: 17
+#            deltaspike: deltaspike-1.9
+#            spring-data: spring-data-2.4.x
     steps:
       - uses: actions/checkout@v2
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
       - uses: DeLaGuardo/setup-graalvm@master
         if: ${{ matrix.native }}
         with:
