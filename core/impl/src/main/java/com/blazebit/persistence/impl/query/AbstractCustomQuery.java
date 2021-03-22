@@ -143,6 +143,12 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
                     }
                 }
             }
+            if (q instanceof TypedQueryWrapper<?>) {
+                q = ((TypedQueryWrapper<?>) q).getDelegate();
+            }
+            if (q instanceof AbstractCustomQuery<?>) {
+                ((AbstractCustomQuery<?>) q).bindParameters();
+            }
         }
         if (missingParameters != null && !missingParameters.isEmpty()) {
             // Re-Check since a transformer could spread values

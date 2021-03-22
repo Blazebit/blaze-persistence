@@ -67,15 +67,13 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
         List<Query> cteQueries = new ArrayList<Query>();
 
         bindListParameters(baseQuery);
-        if (leftMostQuery instanceof CustomSQLQuery) {
-            CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
-            bindListParameters(leftMostQuery);
-            List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            participatingQueries.addAll(customQueryParticipants);
-            sqlQuery = customQuery.getSql();
-        } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
-            CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
-            bindListParameters(leftMostQuery);
+        Query q = leftMostQuery;
+        if (q instanceof TypedQueryWrapper<?>) {
+            q = ((TypedQueryWrapper<?>) q).getDelegate();
+        }
+        if (q instanceof AbstractCustomQuery<?>) {
+            AbstractCustomQuery<?> customQuery = (AbstractCustomQuery<?>) q;
+            bindListParameters(q);
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
             participatingQueries.addAll(customQueryParticipants);
             sqlQuery = customQuery.getSql();
@@ -88,18 +86,16 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
         List<String> setOperands = new ArrayList<String>();
         setOperands.add(sqlQuery);
 
-        for (Query q : this.setOperands) {
+        for (Query query : this.setOperands) {
             String setOperandSql;
 
-            bindListParameters(q);
-            if (q instanceof CustomSQLQuery) {
-                CustomSQLQuery customQuery = (CustomSQLQuery) q;
-                List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-                participatingQueries.addAll(customQueryParticipants);
-
-                setOperandSql = customQuery.getSql();
-            } else if (q instanceof CustomSQLTypedQuery<?>) {
-                CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) q;
+            bindListParameters(query);
+            q = query;
+            if (q instanceof TypedQueryWrapper<?>) {
+                q = ((TypedQueryWrapper<?>) q).getDelegate();
+            }
+            if (q instanceof AbstractCustomQuery<?>) {
+                AbstractCustomQuery<?> customQuery = (AbstractCustomQuery<?>) q;
                 List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
                 participatingQueries.addAll(customQueryParticipants);
 

@@ -40,6 +40,10 @@ public class TypedQueryWrapper<X> implements TypedQuery<X> {
         this.delegate = delegate;
     }
 
+    public TypedQuery<X> getDelegate() {
+        return delegate;
+    }
+
     @Override
     public List<X> getResultList() {
         return delegate.getResultList();

@@ -19,12 +19,13 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.function.querywrapper.QueryWrapperFunction;
+import com.blazebit.persistence.impl.query.AbstractCustomQuery;
 import com.blazebit.persistence.impl.query.CTENode;
-import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
+import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
@@ -342,22 +343,22 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
         parameterManager.collectParameterListNames(leftMostQuery, parameterListNames);
 
-        if (leftMostQuery instanceof CustomSQLQuery) {
-            CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
-            List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            baseQuery = customQueryParticipants.get(0);
-        } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
-            CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
+        Query q = leftMostQuery;
+        if (leftMostQuery instanceof TypedQueryWrapper<?>) {
+            q = ((TypedQueryWrapper<?>) leftMostQuery).getDelegate();
+        }
+        if (q instanceof AbstractCustomQuery<?>) {
+            AbstractCustomQuery<?> customQuery = (AbstractCustomQuery<?>) q;
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
             baseQuery = customQueryParticipants.get(0);
         } else {
-            baseQuery = leftMostQuery;
+            baseQuery = q;
         }
         
         List<Query> setOperands = new ArrayList<Query>();
 
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
-            Query q = setOperand.getQuery();
+            q = setOperand.getQuery();
             setOperands.add(q);
             parameterManager.collectParameterListNames(q, parameterListNames);
         }
