@@ -21,6 +21,7 @@ None yet
 * Fix Spring WebMvc Jackson integration for Spring Boot 2.4.3
 * Coalesce inverse collection operations to avoid entity not found issues due to remove + update
 * Fix nested join correlations problems due to join base missing
+* Fix set operation query wrapping issues leading to parameters not being bound
 
 ### Backwards-incompatible changes
 

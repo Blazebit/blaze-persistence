@@ -623,10 +623,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     private String getSql(Query query) {
-        if (query instanceof CustomSQLQuery) {
-            return ((CustomSQLQuery) query).getSql();
-        } else if (query instanceof CustomSQLTypedQuery<?>) {
-            return ((CustomSQLTypedQuery<?>) query).getSql();
+        if (query instanceof AbstractCustomQuery<?>) {
+            return ((AbstractCustomQuery<?>) query).getSql();
         }
         return extendedQuerySupport.getSql(em, query);
     }

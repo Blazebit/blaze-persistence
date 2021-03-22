@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
@@ -123,6 +124,32 @@ public class SetOperationTest extends AbstractCoreTest {
         List<String> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testObjectBuilder() {
+        FinalSetOperationCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d1")
+                .select("d1.name")
+                .where("d1.name").eq("D1")
+                .orderByAsc("d1.id")
+                .setMaxResults(1)
+            .unionAll()
+                .from(Document.class, "d2")
+                .select("d2.name")
+                .where("d2.name").eq("D2")
+                .orderByAsc("d2.id")
+                .setMaxResults(1)
+            .endSet();
+        String expected = ""
+            + "SELECT d1.name FROM Document d1 WHERE d1.name = :param_0 ORDER BY d1.id ASC LIMIT 1\n"
+            + "UNION ALL\n"
+            + "SELECT d2.name FROM Document d2 WHERE d2.name = :param_1 ORDER BY d2.id ASC LIMIT 1";
+
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> resultList = cb.getResultList();
+        assertEquals(2, resultList.size());
     }
     
     @Test
