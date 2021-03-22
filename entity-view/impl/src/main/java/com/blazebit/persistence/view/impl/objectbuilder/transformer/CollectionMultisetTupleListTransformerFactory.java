@@ -112,7 +112,7 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
                 throw new UnsupportedOperationException("Converting views with correlated attributes isn't supported!");
             }
         }
-        TupleTransformator tupleTransformator = template == null ? null : template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration, startIndex);
+        TupleTransformator tupleTransformator = template == null ? null : template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory == null ? null : subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer indexSubviewTupleTransformer = indexSubviewTupleTransformerFactory == null ? null : indexSubviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
         return new MultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, indexSubviewTupleTransformer, indexBasicTypeSupport == null ? -1 : fieldConverters.length - 1, fieldConverters, elementConverter, containerAccumulator, dirtyTracking);

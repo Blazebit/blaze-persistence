@@ -1410,7 +1410,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (tupleTransformatorFactory.hasTransformers() && !isSubview) {
-            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration, tupleOffset);
+            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration);
         }
 
         return result;

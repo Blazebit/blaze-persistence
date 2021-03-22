@@ -248,9 +248,11 @@ public class TupleTransformatorFactory {
         transformatorLevels.get(currentLevel).tupleTransformerFactories.add(tupleTransformerFactory);
     }
 
-    public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int subIndex) {
-        List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
-        for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
+    public TupleTransformator create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        TupleTransformatorLevel[] newTransformatorLevels = new TupleTransformatorLevel[transformatorLevels.size()];
+        // We create the tuple transformers and level in the inverse order as deeper nested objects come first, yet we want to initialize stuff top-down to properly support nested join correlations
+        for (int i = transformatorLevels.size() - 1; i >= 0; i--) {
+            TupleTransformatorFactoryLevel thisLevel = transformatorLevels.get(i);
             List<TupleTransformerFactory> tupleTransformerFactories = thisLevel.tupleTransformerFactories;
             final TupleTransformer[] tupleTransformers = new TupleTransformer[tupleTransformerFactories.size()];
             // No need to copy this, because TupleListTransformer are not context sensitive
@@ -262,15 +264,14 @@ public class TupleTransformatorFactory {
                 tupleListTransformer = thisLevel.tupleListTransformer;
             }
 
-            // We create the tuple transformers in the inverse order as deeper nested objects come first, yet we want to initialize stuff top-down to properly support nested join correlations
-            for (int i = tupleTransformerFactories.size() - 1; i >= 0; i--) {
-                TupleTransformerFactory tupleTransformerFactory = tupleTransformerFactories.get(i);
-                tupleTransformers[i] = tupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
+            for (int j = tupleTransformerFactories.size() - 1; j >= 0; j--) {
+                TupleTransformerFactory tupleTransformerFactory = tupleTransformerFactories.get(j);
+                tupleTransformers[j] = tupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
             }
 
-            newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
+            newTransformatorLevels[i] = new TupleTransformatorLevel(tupleTransformers, tupleListTransformer);
         }
         
-        return new TupleTransformator(newTransformatorLevels, subIndex);
+        return new TupleTransformator(Arrays.asList(newTransformatorLevels));
     }
 }
