@@ -33,11 +33,9 @@ import java.util.Set;
 public class TupleTransformator {
 
     private final List<TupleTransformatorLevel> transformatorLevels;
-    private final int subIndex;
 
-    public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels, int subIndex) {
+    public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels) {
         this.transformatorLevels = transformatorLevels;
-        this.subIndex = subIndex;
     }
 
     public List<Object[]> transformAll(List<Object[]> tupleList) {

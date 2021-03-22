@@ -20,6 +20,7 @@ None yet
 * Fix entity view annotation processor generation of casts for attributes containing annotations
 * Fix Spring WebMvc Jackson integration for Spring Boot 2.4.3
 * Coalesce inverse collection operations to avoid entity not found issues due to remove + update
+* Fix nested join correlations problems due to join base missing
 
 ### Backwards-incompatible changes
 

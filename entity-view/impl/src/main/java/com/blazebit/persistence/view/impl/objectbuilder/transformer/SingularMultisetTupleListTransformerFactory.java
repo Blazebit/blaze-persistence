@@ -83,7 +83,7 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
                 throw new UnsupportedOperationException("Converting views with correlated attributes isn't supported!");
             }
         }
-        TupleTransformator tupleTransformator = template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration, startIndex);
+        TupleTransformator tupleTransformator = template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
         return new SingularMultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, fieldConverters, elementConverter);
     }
