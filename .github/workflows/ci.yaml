@@ -204,6 +204,7 @@ jobs:
           - rdbms: db2
             provider: hibernate-5.4
             jdk: 8
+            native: true
           - rdbms: mssql
             provider: hibernate-5.4
             jdk: 8
