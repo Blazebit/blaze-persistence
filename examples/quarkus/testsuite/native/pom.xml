@@ -37,6 +37,12 @@
             </modules>
         </profile>
         <profile>
+            <id>db2</id>
+            <modules>
+                <module>db2</module>
+            </modules>
+        </profile>
+        <profile>
             <id>blazebit-release</id>
             <modules>
                 <module>postgresql</module>
