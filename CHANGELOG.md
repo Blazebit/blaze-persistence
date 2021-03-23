@@ -22,6 +22,7 @@ None yet
 * Coalesce inverse collection operations to avoid entity not found issues due to remove + update
 * Fix nested join correlations problems due to join base missing
 * Fix set operation query wrapping issues leading to parameters not being bound
+* Fix set operand wrapping for PostgreSQL
 
 ### Backwards-incompatible changes
 
