@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
@@ -224,7 +225,8 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 sqlSb.append(' ');
             }
 
-            if (hasOuterClause && !operand.startsWith("(")) {
+            // Need a wrapper for operands that have an order by clause
+            if (hasOuterClause && !operand.startsWith("(") || SqlUtils.indexOfOrderBy(operand) != -1) {
                 // Wrap operand so that the order by or limit has a clear target 
                 sqlSb.append('(');
                 sqlSb.append(operand);
