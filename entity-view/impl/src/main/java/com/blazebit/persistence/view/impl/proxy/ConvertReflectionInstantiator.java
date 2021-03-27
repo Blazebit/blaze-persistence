@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.impl.proxy;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -33,12 +32,11 @@ import java.util.Collections;
 public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
     private static final boolean TUPLE_STYLE = true;
-    private final boolean resetInitialState;
     private final Constructor<T> constructor;
     private final Object[] defaultObject;
     private final AbstractReflectionInstantiator.TypeConverterEntry[] typeConverterEntries;
 
-    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, int constructorParameterCount, boolean resetInitialState, EntityViewManager entityViewManager) {
+    public ConvertReflectionInstantiator(ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes, int constructorParameterCount, EntityViewManager entityViewManager) {
         @SuppressWarnings("unchecked")
         Class<T> proxyClazz = (Class<T>) proxyFactory.getProxy(entityViewManager, (ManagedViewTypeImplementor<Object>) viewType);
         Constructor<T> javaConstructor;
@@ -62,7 +60,6 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
             throw new IllegalArgumentException("Couldn't find expected constructor of the proxy class: " + proxyClazz.getName(), ex);
         }
 
-        this.resetInitialState = resetInitialState && DirtyStateTrackable.class.isAssignableFrom(proxyClazz);
         this.constructor = javaConstructor;
         this.defaultObject = defaultObject;
         this.typeConverterEntries = AbstractReflectionInstantiator.withPrimitiveConverters(Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList(), parameterTypes);
@@ -84,12 +81,6 @@ public class ConvertReflectionInstantiator<T> implements ObjectInstantiator<T> {
                 t = constructor.newInstance(array);
             } else {
                 t = constructor.newInstance(tuple);
-            }
-            if (resetInitialState) {
-                Object[] initialState = ((DirtyStateTrackable) t).$$_getInitialState();
-                for (int i = 0; i < initialState.length; i++) {
-                    initialState[i] = null;
-                }
             }
             return t;
         } catch (Exception ex) {

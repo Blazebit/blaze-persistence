@@ -152,6 +152,14 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         return $$_kind == (byte) 1;
     }
     @Override
+    public void $$_setIsReference(boolean isReference) {
+        if (isReference) {
+            this.$$_kind = (byte) 1;
+        } else {
+            this.$$_kind = (byte) 0;
+        }
+    }
+    @Override
     public Object $$_getId() { return id; }
     @Override
     public Object $$_getVersion() { return null; }

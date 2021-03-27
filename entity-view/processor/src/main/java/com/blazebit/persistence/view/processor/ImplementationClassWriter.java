@@ -173,6 +173,14 @@ public final class ImplementationClassWriter {
         sb.append("    public boolean $$_isReference() {").append(NEW_LINE);
         sb.append("        return $$_kind == (byte) 1;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
+        sb.append("    @Override").append(NEW_LINE);
+        sb.append("    public void $$_setIsReference(boolean isReference) {").append(NEW_LINE);
+        sb.append("        if (isReference) {").append(NEW_LINE);
+        sb.append("            this.$$_kind = (byte) 1;").append(NEW_LINE);
+        sb.append("        } else {").append(NEW_LINE);
+        sb.append("            this.$$_kind = (byte) 0;").append(NEW_LINE);
+        sb.append("        }").append(NEW_LINE);
+        sb.append("    }").append(NEW_LINE);
 
         sb.append("    @Override").append(NEW_LINE);
         sb.append("    public Object $$_getId() {").append(NEW_LINE);

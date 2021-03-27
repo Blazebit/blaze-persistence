@@ -255,8 +255,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // 5 Fields, 2 static field for EntityViewManager, 1 field for EntityViewProxy kind
         assertEquals(8, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 8 EntityViewProxy methods
-        assertEquals(20, proxyClass.getDeclaredMethods().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 9 EntityViewProxy methods
+        assertEquals(21, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
@@ -276,8 +276,8 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
 
         // 5 Fields, 2 static field for EntityViewManager, 1 field for EntityViewProxy kind
         assertEquals(8, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 8 EntityViewProxy methods
-        assertEquals(20, proxyClass.getDeclaredMethods().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode, 1 ToString, 9 EntityViewProxy methods
+        assertEquals(21, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
