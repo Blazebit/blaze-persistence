@@ -365,13 +365,16 @@ public class AnnotationMappingReader implements MappingReader {
                         // Check if the attribute definition is conflicting
                         String attributeName = AbstractMethodAttribute.getAttributeName(method);
                         Annotation mapping = getMapping(attributeName, method, true);
+                        MethodAttributeMapping originalAttribute = attributes.get(attributeName);
 
                         // We ignore methods that only have implicit mappings
                         if (mapping instanceof MappingLiteral) {
-                            continue;
+                            // Unless the declaring class of the method is no interface and the already visited method is an interface
+                            if (c.isInterface() || !originalAttribute.getMethod().getDeclaringClass().isInterface()) {
+                                continue;
+                            }
                         }
 
-                        MethodAttributeMapping originalAttribute = attributes.get(attributeName);
                         MethodAttributeMapping attribute = methodAttributeMappingReader.readMethodAttributeMapping(viewMapping, mapping, attributeName, method, method, -1);
                         MethodAttributeMapping newAttribute = attribute.handleReplacement(originalAttribute);
 
