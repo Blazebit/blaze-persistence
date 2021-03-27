@@ -64,6 +64,14 @@ public interface EntityViewProxy {
     public boolean $$_isReference();
 
     /**
+     * Sets whether the object should be a reference.
+     *
+     * @param isReference Whether the object should be a reference
+     * @since 1.6.0
+     */
+    public void $$_setIsReference(boolean isReference);
+
+    /**
      * Returns the identifier object of this entity view if it has one, otherwise <code>null</code>.
      *
      * @return The identifier or <code>null</code>

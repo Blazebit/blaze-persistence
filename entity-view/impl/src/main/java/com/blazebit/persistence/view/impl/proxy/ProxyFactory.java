@@ -1108,6 +1108,7 @@ public class ProxyFactory {
         kindField.setModifiers(getModifiers(true));
         cc.addField(kindField);
         cc.addMethod(CtMethod.make("public boolean $$_isReference() { return $0.$$_kind == (byte) 1; }", cc));
+        cc.addMethod(CtMethod.make("public void $$_setIsReference(boolean isReference) { if (isReference) { $0.$$_kind = (byte) 1; } else { $0.$$_kind = (byte) 0; } }", cc));
         if (managedViewType.isCreatable()) {
             cc.addMethod(CtMethod.make("public boolean $$_isNew() { return $0.$$_kind == (byte) 2; }", cc));
             cc.addMethod(CtMethod.make("public void $$_setIsNew(boolean isNew) { if (isNew) { $0.$$_kind = (byte) 2; } else { $0.$$_kind = (byte) 0; } }", cc));

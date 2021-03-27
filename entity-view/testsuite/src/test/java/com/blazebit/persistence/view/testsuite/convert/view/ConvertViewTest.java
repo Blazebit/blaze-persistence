@@ -208,4 +208,44 @@ public class ConvertViewTest extends AbstractEntityViewTest {
         assertTrue(nameChange.isDirty());
         assertNull(nameChange.getInitialState());
     }
+
+    @Test
+    public void testConvertNew() {
+        DocumentCloneUpdateView documentView = evm.create(DocumentCloneUpdateView.class);
+
+        documentView.setName("abc");
+        documentView.setOwner(evm.getReference(PersonView.class, doc.getOwner().getId()));
+        DocumentCloneUpdateView secondView = evm.convert(documentView, DocumentCloneUpdateView.class);
+
+        assertTrue(((EntityViewProxy) secondView).$$_isNew());
+        ChangeModel<Object> nameChange = evm.getChangeModel(secondView).get("name");
+        assertTrue(nameChange.isDirty());
+        assertNull(nameChange.getInitialState());
+    }
+
+    @Test
+    public void testConvertReference() {
+        DocumentCloneUpdateView documentView = evm.getReference(DocumentCloneUpdateView.class, doc.getId());
+
+        documentView.setName("abc");
+        DocumentCloneUpdateView secondView = evm.convert(documentView, DocumentCloneUpdateView.class);
+
+        assertTrue(((EntityViewProxy) secondView).$$_isReference());
+        ChangeModel<Object> nameChange = evm.getChangeModel(secondView).get("name");
+        assertTrue(nameChange.isDirty());
+        assertNull(nameChange.getInitialState());
+    }
+
+    @Test
+    public void testConvertReferenceToNew() {
+        DocumentCloneUpdateView documentView = evm.getReference(DocumentCloneUpdateView.class, doc.getId());
+
+        documentView.setName("abc");
+        DocumentCloneUpdateView secondView = evm.convert(documentView, DocumentCloneUpdateView.class, ConvertOption.CREATE_NEW);
+
+        assertTrue(((EntityViewProxy) secondView).$$_isNew());
+        ChangeModel<Object> nameChange = evm.getChangeModel(secondView).get("name");
+        assertTrue(nameChange.isDirty());
+        assertNull(nameChange.getInitialState());
+    }
 }

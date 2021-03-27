@@ -28,6 +28,7 @@ None yet
 * Fix GraphQL integration issue when encountering enum types multiple times
 * Fix `NumberFormatException` in `OracleDbmsLimitHandler` for set operation queries with limit and offset
 * Properly handle `Optional` in entity view annotation processor
+* Retain entity view kind when converting entity view if possible
 
 ### Backwards-incompatible changes
 
