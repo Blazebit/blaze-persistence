@@ -646,7 +646,13 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         MethodAttributeMapping originalAttribute = (MethodAttributeMapping) original;
         // If the mapping is the same, just let it through
         if (mapping.equals(originalAttribute.getMapping()) && Objects.equals(mappingIndex, originalAttribute.getMappingIndex())) {
-            return originalAttribute;
+            // But only if the method is more concrete
+            if (method.getDeclaringClass().isInterface()) {
+                return originalAttribute;
+            }
+            if (originalAttribute.getMethod().getDeclaringClass().isInterface()) {
+                return this;
+            }
         }
 
         // Also let through the attributes that are "specialized" in subclasses

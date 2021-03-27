@@ -493,6 +493,47 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     public static interface SetterOnSubtypeDocument extends IdHolderView<Long> {
         public void setId(Long id);
     }
-    
+
+    @Test
+    public void testImplicitAbstractClassMethodPreferredOverInterfaceMethod() {
+        ViewMetamodel metamodel = build(ImplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getMetamodel();
+        MethodAttribute<?, ?> methodAttribute = metamodel.view(ImplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getAttribute("name");
+        assertEquals(ImplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass.class, methodAttribute.getJavaMethod().getDeclaringClass());
+    }
+
+    public static interface ImplicitAbstractClassMethodPreferredOverInterfaceMethodInterface extends IdHolderView<Long> {
+        public String getName();
+    }
+
+    public static abstract class ImplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass implements IdHolderView<Long> {
+        public abstract String getName();
+    }
+
+    @EntityView(Document.class)
+    public static abstract class ImplicitAbstractClassMethodPreferredOverInterfaceMethod extends ImplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass implements ImplicitAbstractClassMethodPreferredOverInterfaceMethodInterface {
+    }
+
+    @Test
+    public void testExplicitAbstractClassMethodPreferredOverInterfaceMethod() {
+        ViewMetamodel metamodel = build(ExplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getMetamodel();
+        MethodAttribute<?, ?> methodAttribute = metamodel.view(ExplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getAttribute("name");
+        assertEquals(ExplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass.class, methodAttribute.getJavaMethod().getDeclaringClass());
+        assertEquals("COALESCE(name, '')", ((MappingAttribute<?, ?>) methodAttribute).getMapping());
+    }
+
+    public static interface ExplicitAbstractClassMethodPreferredOverInterfaceMethodInterface extends IdHolderView<Long> {
+        @Mapping("COALESCE(name, '')")
+        public String getName();
+    }
+
+    public static abstract class ExplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass implements IdHolderView<Long> {
+        @Mapping("COALESCE(name, '')")
+        public abstract String getName();
+    }
+
+    @EntityView(Document.class)
+    public static abstract class ExplicitAbstractClassMethodPreferredOverInterfaceMethod extends ExplicitAbstractClassMethodPreferredOverInterfaceMethodAbstractClass implements ExplicitAbstractClassMethodPreferredOverInterfaceMethodInterface {
+    }
+
     // TODO: Test filter mapping
 }

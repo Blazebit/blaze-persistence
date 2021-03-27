@@ -23,6 +23,7 @@ None yet
 * Fix nested join correlations problems due to join base missing
 * Fix set operation query wrapping issues leading to parameters not being bound
 * Fix set operand wrapping for PostgreSQL
+* Prefer abstract class method over interface method in metamodel if attribute mappings are equal
 
 ### Backwards-incompatible changes
 
