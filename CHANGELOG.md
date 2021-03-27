@@ -25,6 +25,7 @@ None yet
 * Fix set operand wrapping for PostgreSQL
 * Prefer abstract class method over interface method in metamodel if attribute mappings are equal
 * Validate that entity type for creatable entity view is non-abstract
+* Fix GraphQL integration issue when encountering enum types multiple times
 
 ### Backwards-incompatible changes
 

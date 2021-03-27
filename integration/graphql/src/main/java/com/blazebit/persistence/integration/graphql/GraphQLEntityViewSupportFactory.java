@@ -390,9 +390,7 @@ public class GraphQLEntityViewSupportFactory {
         if (typeName == null) {
             if (javaType.isEnum()) {
                 typeName = getTypeName(javaType);
-                if (typeRegistry.getType(typeName).isPresent()) {
-                    throw new IllegalArgumentException("Enum type with name '" + typeName + "' is registered multiple times: " + javaType.getName());
-                } else {
+                if (!typeRegistry.getType(typeName).isPresent()) {
                     List<EnumValueDefinition> enumValueDefinitions = new ArrayList<>();
                     for (Enum<?> enumConstant : (Enum<?>[]) javaType.getEnumConstants()) {
                         enumValueDefinitions.add(new EnumValueDefinition(enumConstant.name(), new ArrayList<>(0)));
