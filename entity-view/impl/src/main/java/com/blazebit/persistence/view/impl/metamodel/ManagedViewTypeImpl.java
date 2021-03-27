@@ -221,6 +221,9 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         if (!javaType.isInterface() && !Modifier.isAbstract(javaType.getModifiers()) && (creatable || updatable)) {
             context.addError("Only interfaces or abstract classes are allowed as creatable or updatable entity views. '" + javaType.getName() + "' is neither of those.");
         }
+        if (creatable && Modifier.isAbstract(jpaManagedType.getJavaType().getModifiers())) {
+            context.addError("Entity view type '" + javaType.getName() + "' is annotated with @CreatableEntityView but refers to an abstract entity '" + jpaManagedType.getJavaType().getName() + "' which is not allowed!");
+        }
 
         Integer batchSize = viewMapping.getDefaultBatchSize();
         if (batchSize == null || batchSize == -1) {

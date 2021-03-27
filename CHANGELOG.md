@@ -24,6 +24,7 @@ None yet
 * Fix set operation query wrapping issues leading to parameters not being bound
 * Fix set operand wrapping for PostgreSQL
 * Prefer abstract class method over interface method in metamodel if attribute mappings are equal
+* Validate that entity type for creatable entity view is non-abstract
 
 ### Backwards-incompatible changes
 

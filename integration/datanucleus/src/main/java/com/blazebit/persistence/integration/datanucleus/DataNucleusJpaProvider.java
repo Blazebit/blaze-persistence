@@ -297,12 +297,18 @@ public class DataNucleusJpaProvider implements JpaProvider {
             return (AttributeImpl<?, ?>) ownerType.getAttribute(attributeName);
         }
         ManagedType<?> t = ownerType;
-        SingularAttribute<?, ?> attr = null;
+        Attribute<?, ?> attr = null;
         String[] parts = attributeName.split("\\.");
         for (int i = 0; i < parts.length; i++) {
-            attr = t.getSingularAttribute(parts[i]);
-            if (attr.getType().getPersistenceType() != Type.PersistenceType.BASIC) {
-                t = (ManagedType<?>) attr.getType();
+            attr = t.getAttribute(parts[i]);
+            Type<?> type;
+            if (attr instanceof PluralAttribute<?, ?, ?>) {
+                type = ((PluralAttribute<?, ?, ?>) attr).getElementType();
+            } else {
+                type = ((SingularAttribute<?, ?>) attr).getType();
+            }
+            if (type.getPersistenceType() != Type.PersistenceType.BASIC) {
+                t = (ManagedType<?>) type;
             } else if (i + 1 != parts.length) {
                 throw new IllegalArgumentException("Illegal attribute name for type [" + ownerType.getJavaType().getName() + "]: " + attributeName);
             }
