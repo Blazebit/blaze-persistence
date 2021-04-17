@@ -76,7 +76,7 @@ public final class MetamodelClassWriter {
                     sb.append("    public static volatile ").append(entity.metamodelImportType(Constants.ATTRIBUTE_FILTER_MAPPING)).append('<');
                     sb.append(entity.importType(entity.getQualifiedName())).append(", ");
                     if (filter.getFilterValueType().getKind() == TypeKind.TYPEVAR) {
-                        sb.append(entity.metamodelImportType(metaMember.getRealType()));
+                        sb.append(entity.metamodelImportType(metaMember.getDeclaredJavaType()));
                     } else {
                         DeclaredType filterValueType = (DeclaredType) filter.getFilterValueType();
                         TypeElement filterValueTypeElement = (TypeElement) filterValueType.asElement();
@@ -85,7 +85,7 @@ public final class MetamodelClassWriter {
                             sb.append("<");
                             for (TypeMirror typeArgument : filterValueType.getTypeArguments()) {
                                 if (typeArgument.getKind() == TypeKind.TYPEVAR) {
-                                    sb.append(entity.metamodelImportType(metaMember.getRealType()));
+                                    sb.append(entity.metamodelImportType(metaMember.getDeclaredJavaType()));
                                 } else {
                                     sb.append(entity.metamodelImportType(typeArgument.toString()));
                                 }

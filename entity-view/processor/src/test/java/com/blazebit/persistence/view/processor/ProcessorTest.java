@@ -69,6 +69,9 @@ public class ProcessorTest {
             CompilationSubject.assertThat(compilation)
                     .generatedSourceFile(views[i].getName() + "Impl")
                     .hasSourceEquivalentTo(JavaFileObjects.forResource(views[i].getName().replace('.', '/') + "Impl.java"));
+            CompilationSubject.assertThat(compilation)
+                    .generatedSourceFile(views[i].getName() + "Builder")
+                    .hasSourceEquivalentTo(JavaFileObjects.forResource(views[i].getName().replace('.', '/') + "Builder.java"));
         }
         return compilation;
     }

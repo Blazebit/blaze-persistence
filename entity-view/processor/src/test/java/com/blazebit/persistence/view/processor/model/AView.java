@@ -8,6 +8,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @EntityView(AEntity.class)
@@ -18,6 +19,8 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
     void setName(String name);
 
     List<String> getNames();
+
+    Optional<BView> getOptionalValue();
 
     int getAge();
 

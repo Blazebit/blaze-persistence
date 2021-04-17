@@ -134,7 +134,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
                 .append(getHostingEntity().importType(keyType))
                 .append(", ");
         if (elementCollectionJavaType != null) {
-            sb.append(getHostingEntity().importType(getType())).append(", ");
+            sb.append(getHostingEntity().importType(getModelType())).append(", ");
         }
         appendElementType(sb, importContext);
         sb.append('>');

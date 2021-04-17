@@ -60,8 +60,9 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     private final AnnotationMetaEntityView parent;
     private final Element element;
-    private final String type;
-    private final String realType;
+    private final String modelType;
+    private final String declaredJavaType;
+    private final String convertedModelType;
     private final TypeMirror typeMirror;
     private final String attributeName;
     private final MappingKind kind;
@@ -82,11 +83,12 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private int attributeIndex = -1;
     private int dirtyStateIndex = -1;
 
-    private AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, Context context, boolean version) {
+    protected AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String modelType, String declaredJavaType, String convertedModelType, Context context, boolean version) {
         this.element = element;
         this.parent = parent;
-        this.type = type;
-        this.realType = realType;
+        this.modelType = modelType;
+        this.declaredJavaType = declaredJavaType;
+        this.convertedModelType = convertedModelType;
 
         String mapping = null;
         MappingKind kind = null;
@@ -161,7 +163,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         mutable = false;
                         TypeElement existingTypeElement = context.getOptionalParameters().get(mapping);
                         if (existingTypeElement == null) {
-                            optionalParameters.put(mapping, context.getElementUtils().getTypeElement(type));
+                            optionalParameters.put(mapping, context.getElementUtils().getTypeElement(modelType));
                         } else {
                             optionalParameters.put(mapping, existingTypeElement);
                         }
@@ -220,13 +222,13 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         if (kind == MappingKind.PARAMETER || kind == MappingKind.SUBQUERY) {
             this.subviewElement = null;
         } else {
-            this.subviewElement = getSubview(type, context);
+            this.subviewElement = getSubview(modelType, context);
         }
         if (subviewElement != null) {
-            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(type));
-            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(type, context);
+            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(modelType));
+            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(modelType, context);
         } else {
-            this.generatedTypePrefix = type;
+            this.generatedTypePrefix = modelType;
             this.subviewInfo = null;
         }
         if (subviewInfo != null && subviewInfo.getEntityViewIdElement() == null && subviewInfo.hasEmptyConstructor()) {
@@ -310,7 +312,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 updatable = true;
             }
             typeMirror = ((ExecutableElement) element).getReturnType();
-            supportsDirtyTracking = subviewElement != null || EntityViewTypeUtils.getMutability(type) != EntityViewTypeUtils.Mutability.MUTABLE;
+            supportsDirtyTracking = subviewElement != null || EntityViewTypeUtils.getMutability(modelType) != EntityViewTypeUtils.Mutability.MUTABLE;
             idMember = TypeUtils.containsAnnotation(element, Constants.ID_MAPPING);
             versionMember = mapping != null && (parent.getEntityVersionAttribute() != null && mapping.equals(parent.getEntityVersionAttribute().getSimpleName().toString()) || context.matchesDefaultVersionAttribute(element));
             self = false;
@@ -335,12 +337,12 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         this.mutable = updatable || mutable;
     }
 
-    public AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, Context context) {
-        this(parent, element, type, realType, context, false);
+    public AnnotationMetaAttribute(AnnotationMetaEntityView parent, Element element, String modelType, String declaredJavaType, Context context) {
+        this(parent, element, modelType, declaredJavaType, null, context, false);
     }
 
     protected AnnotationMetaAttribute(AnnotationMetaEntityView parent, Context context) {
-        this(parent, null, TypeUtils.getType(parent.getEntityVersionAttribute(), context), TypeUtils.getRealType(parent.getEntityVersionAttribute(), context), context, true);
+        this(parent, null, TypeUtils.getType(parent.getEntityVersionAttribute(), context), TypeUtils.getRealType(parent.getEntityVersionAttribute(), context), null, context, true);
     }
 
     private static void addAttributeFilter(Map<String, AttributeFilter> filters, AnnotationMirror mirror, Context context) {
@@ -387,8 +389,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     @Override
     public void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext) {
         if (createEmpty && createEmptyFlatViews) {
-            if (!type.equals(realType)) {
-                sb.append("(").append(realType).append(") ");
+            if (!modelType.equals(declaredJavaType)) {
+                sb.append("(").append(declaredJavaType).append(") ");
             }
             String attributeImplementationType = importContext.importType(getGeneratedTypePrefix() + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX);
             sb.append("new ").append(attributeImplementationType).append("((")
@@ -432,7 +434,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public void appendElementType(StringBuilder sb, ImportContext importContext) {
-        sb.append(parent.importType(getType()));
+        sb.append(parent.importType(getModelType()));
     }
 
     @Override
@@ -561,7 +563,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                             sb.append("()))");
                         }
                     } else {
-                        entityIdAttributes = EntityViewTypeUtils.getEntityIdAttributes(type, context);
+                        entityIdAttributes = EntityViewTypeUtils.getEntityIdAttributes(modelType, context);
                         if (!entityIdAttributes.isEmpty()) {
                             for (Element entityIdAttribute : entityIdAttributes) {
                                 String idAttributeName;
@@ -690,7 +692,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
             sb.append("    }");
 
-            if (!entityIdAttributes.isEmpty() && parent.addAccessorForType(type)) {
+            if (!entityIdAttributes.isEmpty() && parent.addAccessorForType(modelType)) {
                 for (Element entityIdAttribute : entityIdAttributes) {
                     String idAttributeName;
                     if (entityIdAttribute.getKind() == ElementKind.METHOD) {
@@ -710,7 +712,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         sb.append("    private static final ").append(parent.implementationImportType(Method.class.getName())).append(" ").append(accessor).append(";").append(NEW_LINE);
                         sb.append("    static {").append(NEW_LINE);
                         sb.append("        try {").append(NEW_LINE);
-                        sb.append("            Method m = ").append(parent.implementationImportType(type)).append(".class.getDeclaredMethod(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
+                        sb.append("            Method m = ").append(parent.implementationImportType(modelType)).append(".class.getDeclaredMethod(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
                         sb.append("            m.setAccessible(true);").append(NEW_LINE);
                         sb.append("            ").append(accessor).append(" = m;").append(NEW_LINE);
                         sb.append("        } catch (Exception ex) {").append(NEW_LINE);
@@ -721,7 +723,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         sb.append("    private static final ").append(parent.implementationImportType(Field.class.getName())).append(" ").append(accessor).append(";").append(NEW_LINE);
                         sb.append("    static {").append(NEW_LINE);
                         sb.append("        try {").append(NEW_LINE);
-                        sb.append("            Field f = ").append(parent.implementationImportType(type)).append(".class.getDeclaredField(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
+                        sb.append("            Field f = ").append(parent.implementationImportType(modelType)).append(".class.getDeclaredField(\"").append(entityIdAttribute.getSimpleName()).append("\");").append(NEW_LINE);
                         sb.append("            f.setAccessible(true);").append(NEW_LINE);
                         sb.append("            ").append(accessor).append(" = f;").append(NEW_LINE);
                         sb.append("        } catch (Exception ex) {").append(NEW_LINE);
@@ -755,19 +757,19 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             sb.append("    ");
         }
         sb.append("    protected ");
-        sb.append(getImplementationTypeString());
+        sb.append(getBuilderImplementationTypeString());
         sb.append(' ').append(getPropertyName()).append(";");
     }
 
     @Override
     public void appendBuilderAttributeGetterAndSetterString(StringBuilder sb) {
         ElementKind kind = element == null ? null : element.getKind();
-        sb.append("    public ").append(getImplementationTypeString()).append(' ');
+        sb.append("    public ").append(getBuilderImplementationTypeString()).append(' ');
 
         if (kind == ElementKind.METHOD) {
             sb.append(element.getSimpleName().toString());
         } else {
-            if ("boolean".equals(type)) {
+            if ("boolean".equals(modelType)) {
                 sb.append("is");
             } else {
                 sb.append("get");
@@ -795,7 +797,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         sb.append(getPropertyName(), 1, getPropertyName().length());
         sb.append('(');
 
-        sb.append(getImplementationTypeString());
+        sb.append(getBuilderImplementationTypeString());
 
         sb.append(' ')
                 .append(getPropertyName())
@@ -812,7 +814,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public String getImplementationTypeString() {
-        return parent.importType(getRealType());
+        return parent.importType(getDeclaredJavaType());
+    }
+
+    @Override
+    public String getBuilderImplementationTypeString() {
+        if (convertedModelType == null) {
+            return getImplementationTypeString();
+        } else {
+            return parent.builderImportType(modelType);
+        }
     }
 
     @Override
@@ -913,8 +924,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     public abstract String getMetaType();
 
     @Override
-    public String getType() {
-        return type;
+    public String getModelType() {
+        return modelType;
     }
 
     @Override
@@ -923,8 +934,13 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
-    public String getRealType() {
-        return realType;
+    public String getDeclaredJavaType() {
+        return declaredJavaType;
+    }
+
+    @Override
+    public String getConvertedModelType() {
+        return convertedModelType;
     }
 
     @Override

@@ -39,6 +39,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -504,6 +505,26 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public Map<String, ViewFilter> getViewFilters() {
         return viewFilters;
+    }
+
+    @Override
+    public String getSafeTypeVariable(String typeVariable) {
+        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) getTypeElement().asType()).getTypeArguments();
+        if (typeArguments.isEmpty()) {
+            return typeVariable;
+        }
+        String originalTypeVariable = typeVariable;
+        int suffix = 0;
+        OUTER: do {
+            for (TypeVariable variable : typeArguments) {
+                if (typeVariable.equals(variable.asElement().getSimpleName().toString())) {
+                    typeVariable = originalTypeVariable + (suffix++);
+                    continue OUTER;
+                }
+            }
+
+            return typeVariable;
+        } while (true);
     }
 
     private boolean isGetterOrSetter(Element methodOfClass) {

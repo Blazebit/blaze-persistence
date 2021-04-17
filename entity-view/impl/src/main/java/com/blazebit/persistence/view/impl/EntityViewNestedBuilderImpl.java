@@ -24,22 +24,22 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import java.util.Map;
 
 /**
- * @author Christian
+ * @author Christian Beikov
  * @since 1.5.0
  */
-public class EntityViewNestedBuilderImpl<X, T> extends EntityViewBuilderBaseImpl<T, EntityViewNestedBuilder<T, X>> implements EntityViewNestedBuilder<T, X> {
+public class EntityViewNestedBuilderImpl<ViewType, ResultType> extends EntityViewBuilderBaseImpl<ViewType, EntityViewNestedBuilderImpl<ViewType, ResultType>> implements EntityViewNestedBuilder<ViewType, ResultType, EntityViewNestedBuilderImpl<ViewType, ResultType>> {
 
-    private final X result;
+    private final ResultType result;
     private final EntityViewBuilderListener listener;
 
-    public EntityViewNestedBuilderImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<T> managedViewType, Map<ManagedViewType<? extends T>, String> inheritanceSubtypeMappings, Map<String, Object> optionalParameters, X result, EntityViewBuilderListener listener) {
+    public EntityViewNestedBuilderImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<ViewType> managedViewType, Map<ManagedViewType<? extends ViewType>, String> inheritanceSubtypeMappings, Map<String, Object> optionalParameters, ResultType result, EntityViewBuilderListener listener) {
         super(evm, managedViewType, managedViewType.getDefaultConstructor(), inheritanceSubtypeMappings, optionalParameters);
         this.result = result;
         this.listener = listener;
     }
 
     @Override
-    public X build() {
+    public ResultType build() {
         listener.onBuildComplete(buildObject());
         return result;
     }

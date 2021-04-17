@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -101,6 +102,7 @@ public class TypeConverterTest extends AbstractEntityViewTest {
                 .getSingleResult();
 
         assertEquals("1", documentView.getAge());
+        assertEquals(Optional.of("doc1"), documentView.getName());
     }
 
     @Test
@@ -128,6 +130,7 @@ public class TypeConverterTest extends AbstractEntityViewTest {
                 .getSingleResult();
 
         assertEquals("1", documentView.getAge());
+        assertEquals(Optional.of("doc1"), documentView.getName());
     }
 
     @Test

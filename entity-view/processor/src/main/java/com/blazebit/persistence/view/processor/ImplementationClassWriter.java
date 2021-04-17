@@ -296,7 +296,7 @@ public final class ImplementationClassWriter {
                     sb.append("            case ").append(member.getDirtyStateIndex()).append(": ");
                     sb.append(member.getSetter().getSimpleName().toString()).append('(');
                     if (member.isPrimitive()) {
-                        appendUnwrap(sb, member.getRealType(), "newObject");
+                        appendUnwrap(sb, member.getDeclaredJavaType(), "newObject");
                     } else {
                         sb.append("(").append(member.getImplementationTypeString()).append(") newObject");
                     }
@@ -378,7 +378,7 @@ public final class ImplementationClassWriter {
             } else {
                 sb.append("        this.").append(version.getPropertyName()).append(" = ");
                 if (version.isPrimitive()) {
-                    appendUnwrap(sb, version.getRealType(), "version");
+                    appendUnwrap(sb, version.getDeclaredJavaType(), "version");
                 } else {
                     sb.append("(").append(version.getImplementationTypeString()).append(") version");
                 }
@@ -1237,7 +1237,7 @@ public final class ImplementationClassWriter {
             sb.append("        int hash = 3;").append(NEW_LINE);
             for (MetaAttribute member : equalityMembers) {
                 if (!(member instanceof AnnotationMetaVersionAttribute)) {
-                    String type = member.getRealType();
+                    String type = member.getDeclaredJavaType();
                     if ("double".equals(type)) {
                         sb.append("        bits = java.lang.Double.doubleToLongBits(this.").append(member.getPropertyName()).append(");").append(NEW_LINE);
                     }

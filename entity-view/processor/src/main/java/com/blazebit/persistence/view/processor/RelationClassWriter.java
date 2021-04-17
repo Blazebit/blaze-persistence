@@ -84,7 +84,7 @@ public final class RelationClassWriter {
                     sb.append('.').append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
                     sb.append("        return new ").append(relationType).append("<>(relation == null ? getWrapped().<");
                     if (metaMember.isMultiCollection()) {
-                        sb.append(entity.relationImportType(metaMember.getType()));
+                        sb.append(entity.relationImportType(metaMember.getModelType()));
                         sb.append(", ");
                     }
                     metaMember.appendElementType(sb, entity.getRelationImportContext());
@@ -96,7 +96,7 @@ public final class RelationClassWriter {
                     sb.append(metaMember.getPropertyName()).append("\") : getWrapped().get(relation));").append(NEW_LINE);
                 } else {
                     sb.append("    public ").append(entity.relationImportType(Constants.ATTRIBUTE_PATH)).append("<T, ");
-                    sb.append(entity.relationImportType(metaMember.getType()));
+                    sb.append(entity.relationImportType(metaMember.getModelType()));
                     sb.append(", ");
                     metaMember.appendElementType(sb, entity.getRelationImportContext());
                     sb.append("> ").append(metaMember.getPropertyName()).append("() {").append(NEW_LINE);
@@ -106,7 +106,7 @@ public final class RelationClassWriter {
                     sb.append('.').append(metaMember.getPropertyName()).append(';').append(NEW_LINE);
                     sb.append("        return attribute == null ? getWrapped().<");
                     if (metaMember.isMultiCollection()) {
-                        sb.append(entity.relationImportType(metaMember.getType()));
+                        sb.append(entity.relationImportType(metaMember.getModelType()));
                         sb.append(", ");
                     }
                     metaMember.appendElementType(sb, entity.getRelationImportContext());
@@ -132,7 +132,7 @@ public final class RelationClassWriter {
                     sb.append(NEW_LINE);
                     sb.append("    public ").append(entity.relationImportType(Constants.ATTRIBUTE_FILTER_MAPPING_PATH)).append("<T, ");
                     if (filter.getFilterValueType().getKind() == TypeKind.TYPEVAR) {
-                        sb.append(entity.relationImportType(metaMember.getRealType()));
+                        sb.append(entity.relationImportType(metaMember.getDeclaredJavaType()));
                     } else {
                         DeclaredType filterValueType = (DeclaredType) filter.getFilterValueType();
                         TypeElement filterValueTypeElement = (TypeElement) filterValueType.asElement();
@@ -141,7 +141,7 @@ public final class RelationClassWriter {
                             sb.append("<");
                             for (TypeMirror typeArgument : filterValueType.getTypeArguments()) {
                                 if (typeArgument.getKind() == TypeKind.TYPEVAR) {
-                                    sb.append(entity.relationImportType(metaMember.getRealType()));
+                                    sb.append(entity.relationImportType(metaMember.getDeclaredJavaType()));
                                 } else {
                                     sb.append(entity.relationImportType(typeArgument.toString()));
                                 }

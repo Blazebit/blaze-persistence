@@ -1221,7 +1221,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public TypeConverter<?, X> getConverter() {
+    public TypeConverter<X, ?> getConverter() {
         return null;
     }
 

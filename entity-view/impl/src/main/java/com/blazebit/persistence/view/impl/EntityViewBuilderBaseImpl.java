@@ -55,17 +55,17 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>> implements EntityViewBuilderBase<T, X> {
+public class EntityViewBuilderBaseImpl<ViewType, BuilderType extends EntityViewBuilderBase<ViewType, BuilderType>> implements EntityViewBuilderBase<ViewType, BuilderType> {
 
     private final EntityViewManagerImpl evm;
-    private final ManagedViewTypeImplementor<T> managedViewType;
-    private final MappingConstructorImpl<T> mappingConstructor;
+    private final ManagedViewTypeImplementor<ViewType> managedViewType;
+    private final MappingConstructorImpl<ViewType> mappingConstructor;
     private final Map<String, Object> optionalParameters;
-    private final ObjectInstantiator<T> objectInstantiator;
+    private final ObjectInstantiator<ViewType> objectInstantiator;
     private final Object[] tuple;
     private final int parameterOffset;
 
-    public EntityViewBuilderBaseImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<T> managedViewType, MappingConstructorImpl<T> mappingConstructor, Map<ManagedViewType<? extends T>, String> inheritanceSubtypeMappings, Map<String, Object> optionalParameters) {
+    public EntityViewBuilderBaseImpl(EntityViewManagerImpl evm, ManagedViewTypeImplementor<ViewType> managedViewType, MappingConstructorImpl<ViewType> mappingConstructor, Map<ManagedViewType<? extends ViewType>, String> inheritanceSubtypeMappings, Map<String, Object> optionalParameters) {
         this.evm = evm;
         this.managedViewType = managedViewType;
         this.optionalParameters = optionalParameters;
@@ -79,8 +79,8 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
             }
         }
         this.mappingConstructor = mappingConstructor;
-        ManagedViewTypeImpl.InheritanceSubtypeConfiguration<T> inheritanceSubtypeConfiguration = managedViewType.getInheritanceSubtypeConfiguration(inheritanceSubtypeMappings);
-        List<AbstractParameterAttribute<? super T, ?>> parameterAttributeList;
+        ManagedViewTypeImpl.InheritanceSubtypeConfiguration<ViewType> inheritanceSubtypeConfiguration = managedViewType.getInheritanceSubtypeConfiguration(inheritanceSubtypeMappings);
+        List<AbstractParameterAttribute<? super ViewType, ?>> parameterAttributeList;
 
         if (mappingConstructor == null) {
             parameterAttributeList = Collections.emptyList();
@@ -94,7 +94,7 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         } else {
             parameterTypes = new ArrayList<>(inheritanceSubtypeConfiguration.getParameterTypes().size() + parameterAttributeList.size());
             parameterTypes.addAll(inheritanceSubtypeConfiguration.getParameterTypes());
-            for (ParameterAttribute<? super T, ?> parameterAttribute : parameterAttributeList) {
+            for (ParameterAttribute<? super ViewType, ?> parameterAttribute : parameterAttributeList) {
                 parameterTypes.add(parameterAttribute.getConvertedJavaType());
             }
         }
@@ -102,20 +102,20 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         Class<?>[] constructorParameterTypes = parameterTypes.toArray(new Class[parameterTypes.size()]);
         this.objectInstantiator = AbstractReflectionInstantiator.createInstantiator(mappingConstructor, evm.getProxyFactory(), managedViewType, constructorParameterTypes, evm, inheritanceSubtypeConfiguration.getMutableBasicUserTypes(), Collections.<AbstractReflectionInstantiator.TypeConverterEntry>emptyList());
         this.tuple = new Object[constructorParameterTypes.length];
-        for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super T, ?>>> attributeEntry : inheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
+        for (Map.Entry<ManagedViewTypeImpl.AttributeKey, ConstrainedAttribute<AbstractMethodAttribute<? super ViewType, ?>>> attributeEntry : inheritanceSubtypeConfiguration.getAttributesClosure().entrySet()) {
             if (attributeEntry.getValue().getAttribute().getMappingType() == Attribute.MappingType.PARAMETER) {
                 tuple[attributeEntry.getValue().getAttribute().getAttributeIndex()] = optionalParameters.get(attributeEntry.getValue().getAttribute().getMapping());
             }
         }
         this.parameterOffset = inheritanceSubtypeConfiguration.getAttributesClosure().size();
-        for (AbstractParameterAttribute<? super T, ?> parameterAttribute : parameterAttributeList) {
+        for (AbstractParameterAttribute<? super ViewType, ?> parameterAttribute : parameterAttributeList) {
             if (parameterAttribute.getMappingType() == Attribute.MappingType.PARAMETER) {
                 tuple[parameterOffset + parameterAttribute.getIndex()] = optionalParameters.get(parameterAttribute.getMapping());
             }
         }
     }
 
-    public ManagedViewTypeImplementor<T> getManagedViewType() {
+    public ManagedViewTypeImplementor<ViewType> getManagedViewType() {
         return managedViewType;
     }
 
@@ -123,12 +123,12 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         return tuple;
     }
 
-    protected T buildObject() {
+    protected ViewType buildObject() {
         return objectInstantiator.newInstance(tuple);
     }
 
     private AbstractMethodAttribute<?, ?> getAttribute(String attribute) {
-        MethodAttribute<? super T, ?> attr = managedViewType.getAttribute(attribute);
+        MethodAttribute<? super ViewType, ?> attr = managedViewType.getAttribute(attribute);
         if (attr == null) {
             throw new IllegalArgumentException("Unknown attribute '" + attribute + "' on type: " + managedViewType.getJavaType().getName());
         }
@@ -267,31 +267,31 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
     }
 
     @Override
-    public X with(String attribute, Object value) {
+    public BuilderType with(String attribute, Object value) {
         AbstractMethodAttribute<?, ?> attr = getAttribute(attribute);
         setValue(attr, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public X with(int parameterIndex, Object value) {
+    public BuilderType with(int parameterIndex, Object value) {
         AbstractParameterAttribute<?, ?> attr = getAttribute(parameterIndex);
         setValue(attr, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <E> X with(SingularAttribute<T, E> attribute, E value) {
+    public <E> BuilderType with(SingularAttribute<ViewType, E> attribute, E value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         setValue(attr, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <C> X with(PluralAttribute<T, C, ?> attribute, C value) {
+    public <C> BuilderType with(PluralAttribute<ViewType, C, ?> attribute, C value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         setValue(attr, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
@@ -305,26 +305,26 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
     }
 
     @Override
-    public <E> E get(SingularAttribute<T, E> attribute) {
+    public <E> E get(SingularAttribute<ViewType, E> attribute) {
         return getValue(getAttribute(attribute));
     }
 
     @Override
-    public <C> C get(PluralAttribute<T, C, ?> attribute) {
+    public <C> C get(PluralAttribute<ViewType, C, ?> attribute) {
         return getValue(getAttribute(attribute));
     }
 
     @Override
-    public X withElement(String attribute, Object value) {
+    public BuilderType withElement(String attribute, Object value) {
         return withElement(getAttribute(attribute), value);
     }
 
     @Override
-    public X withElement(int parameterIndex, Object value) {
+    public BuilderType withElement(int parameterIndex, Object value) {
         return withElement(getAttribute(parameterIndex), value);
     }
 
-    private X withElement(AbstractAttribute<?, ?> attr, Object value) {
+    private BuilderType withElement(AbstractAttribute<?, ?> attr, Object value) {
         if (attr instanceof MapAttribute<?, ?, ?>) {
             if (value instanceof Map.Entry<?, ?>) {
                 Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>) value;
@@ -337,26 +337,26 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         }
         value = getValue(attr.getElementType(), value);
         getCollection(attr).add(value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public X withListElement(String attribute, int index, Object value) {
+    public BuilderType withListElement(String attribute, int index, Object value) {
         return withListElement(getAttribute(attribute), index, value);
     }
 
     @Override
-    public X withListElement(int parameterIndex, int index, Object value) {
+    public BuilderType withListElement(int parameterIndex, int index, Object value) {
         return withListElement(getAttribute(parameterIndex), index, value);
     }
 
-    private X withListElement(AbstractAttribute<?, ?> attr, int index, Object value) {
+    private BuilderType withListElement(AbstractAttribute<?, ?> attr, int index, Object value) {
         checkAttribute(attr, ListAttribute.class, "List");
         value = getValue(attr.getElementType(), value);
         List<Object> list = getCollection(attr);
         addListValue(list, index,value);
 
-        return (X) this;
+        return (BuilderType) this;
     }
 
     private void addListValue(List<Object> list, int index, Object value) {
@@ -373,16 +373,16 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
     }
 
     @Override
-    public X withEntry(String attribute, Object key, Object value) {
+    public BuilderType withEntry(String attribute, Object key, Object value) {
         return withEntry(getAttribute(attribute), key, value);
     }
 
     @Override
-    public X withEntry(int parameterIndex, Object key, Object value) {
+    public BuilderType withEntry(int parameterIndex, Object key, Object value) {
         return withEntry(getAttribute(parameterIndex), key, value);
     }
 
-    private X withEntry(AbstractAttribute<?, ?> attr, Object key, Object value) {
+    private BuilderType withEntry(AbstractAttribute<?, ?> attr, Object key, Object value) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal null key!");
         }
@@ -391,58 +391,58 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         value = getValue(attr.getElementType(), value);
         Map<Object, Object> map = getMap(attr);
         map.put(key, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <E> X withElement(CollectionAttribute<T, E> attribute, E value) {
+    public <E> BuilderType withElement(CollectionAttribute<ViewType, E> attribute, E value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         value = getValue(attr.getElementType(), value);
         getCollection(attr).add(value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <E> X withElement(SetAttribute<T, E> attribute, E value) {
+    public <E> BuilderType withElement(SetAttribute<ViewType, E> attribute, E value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         value = getValue(attr.getElementType(), value);
         getCollection(attr).add(value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <E> X withElement(ListAttribute<T, E> attribute, E value) {
+    public <E> BuilderType withElement(ListAttribute<ViewType, E> attribute, E value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         value = getValue(attr.getElementType(), value);
         getCollection(attr).add(value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <E> X withListElement(ListAttribute<T, E> attribute, int index, E value) {
+    public <E> BuilderType withListElement(ListAttribute<ViewType, E> attribute, int index, E value) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         value = getValue(attr.getElementType(), value);
         List<Object> list = getCollection(attr);
         addListValue(list, index,value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @Override
-    public <K, V> X withEntry(MapAttribute<T, K, V> attribute, K key, V value) {
+    public <K, V> BuilderType withEntry(MapAttribute<ViewType, K, V> attribute, K key, V value) {
         return withEntry(getAttribute(attribute), key, value);
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withSingularBuilder(String attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSingularBuilder(String attribute) {
         return withSingularBuilder(getAttribute(attribute));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withSingularBuilder(int parameterIndex) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSingularBuilder(int parameterIndex) {
         return withSingularBuilder(getAttribute(parameterIndex));
     }
 
-    private <E> EntityViewNestedBuilder<E, X> withSingularBuilder(AbstractAttribute<?, ?> attr) {
+    private <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSingularBuilder(AbstractAttribute<?, ?> attr) {
         checkAttribute(attr, SingularAttribute.class, "Singular");
         checkType(attr.getElementType(), "attribute", attr);
 
@@ -453,20 +453,20 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         } else {
             index = parameterOffset + ((AbstractParameterAttribute<?, ?>) attr).getIndex();
         }
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new SingularEntityViewBuilderListener(tuple, index));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new SingularEntityViewBuilderListener(tuple, index));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(String attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withCollectionBuilder(String attribute) {
         return withCollectionBuilder(getAttribute(attribute));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(int parameterIndex) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withCollectionBuilder(int parameterIndex) {
         return withCollectionBuilder(getAttribute(parameterIndex));
     }
 
-    private <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(AbstractAttribute<?, ?> attr) {
+    private <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withCollectionBuilder(AbstractAttribute<?, ?> attr) {
         if (attr instanceof MapAttribute<?, ?, ?>) {
             throw new IllegalArgumentException("Can not add element to map attribute. Use withMapBuilder()!");
         } else if (attr instanceof SingularAttribute<?, ?>) {
@@ -474,68 +474,68 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         }
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(String attribute) {
         AbstractMethodAttribute<?, ?> attr = getAttribute(attribute);
         checkAttribute(attr, ListAttribute.class, "List");
         return withCollectionBuilder(attribute);
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(int parameterIndex) {
         AbstractAttribute<?, ?> attr = getAttribute(parameterIndex);
         checkAttribute(attr, ListAttribute.class, "List");
         return withCollectionBuilder(parameterIndex);
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute, int index) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(String attribute, int index) {
         return withListBuilder(getAttribute(attribute), index);
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex, int index) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(int parameterIndex, int index) {
         return withListBuilder(getAttribute(parameterIndex), index);
     }
 
-    public <E> EntityViewNestedBuilder<E, X> withListBuilder(AbstractAttribute<?, ?> attr, int index) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(AbstractAttribute<?, ?> attr, int index) {
         checkAttribute(attr, ListAttribute.class, "List");
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new ListEntityViewBuilderListener((List<Object>) getCollection(attr), index));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new ListEntityViewBuilderListener((List<Object>) getCollection(attr), index));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withSetBuilder(String attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSetBuilder(String attribute) {
         return withSetBuilder(getAttribute(attribute));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withSetBuilder(int parameterIndex) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSetBuilder(int parameterIndex) {
         return withSetBuilder(getAttribute(parameterIndex));
     }
 
-    private <E> EntityViewNestedBuilder<E, X> withSetBuilder(AbstractAttribute<?, ?> attr) {
+    private <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSetBuilder(AbstractAttribute<?, ?> attr) {
         checkAttribute(attr, SetAttribute.class, "Set");
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
     }
 
     @Override
-    public <V> EntityViewNestedBuilder<V, X> withMapBuilder(String attribute, Object key) {
+    public <V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withMapBuilder(String attribute, Object key) {
         return withMapBuilder(getAttribute(attribute), key);
     }
 
     @Override
-    public <V> EntityViewNestedBuilder<V, X> withMapBuilder(int parameterIndex, Object key) {
+    public <V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withMapBuilder(int parameterIndex, Object key) {
         return withMapBuilder(getAttribute(parameterIndex), key);
     }
 
-    private <V> EntityViewNestedBuilder<V, X> withMapBuilder(AbstractAttribute<?, ?> attr, Object key) {
+    private <V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withMapBuilder(AbstractAttribute<?, ?> attr, Object key) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal null key!");
         }
@@ -544,32 +544,32 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         checkType(attr.getElementType(), "element", attr);
         key = getValue(keyType, key);
         Map<ManagedViewType<? extends V>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, V>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new MapEntityViewBuilderListener(getMap(attr), key));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new MapEntityViewBuilderListener(getMap(attr), key));
     }
 
     @Override
-    public <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(String attribute) {
+    public <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withMapBuilder(String attribute) {
         return withMapBuilder(getAttribute(attribute));
     }
 
     @Override
-    public <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(int parameterIndex) {
+    public <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withMapBuilder(int parameterIndex) {
         return withMapBuilder(getAttribute(parameterIndex));
     }
 
-    private <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(AbstractAttribute<?, ?> attr) {
+    private <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withMapBuilder(AbstractAttribute<?, ?> attr) {
         checkAttribute(attr, MapAttribute.class, "Map");
         checkType(((MapAttribute<?, ?, ?>) attr).getKeyType(), "key", attr);
         checkType(attr.getElementType(), "element", attr);
         MapKeyEntityViewBuilderListener listener = new MapKeyEntityViewBuilderListener(getMap(attr));
         Map<ManagedViewType<? extends V>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, V>) attr).getElementInheritanceSubtypeMappings();
-        EntityViewNestedBuilder<V, X> valueBuilder = new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, listener);
+        EntityViewNestedBuilder<V, ? extends BuilderType, ?> valueBuilder = new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, listener);
         Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypeMappings = ((MapAttribute<?, K, ?>) attr).getKeyInheritanceSubtypeMappings();
         return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<K>) attr.getElementType(), keyInheritanceSubtypeMappings, optionalParameters, valueBuilder, listener);
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withBuilder(SingularAttribute<T, E> attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(SingularAttribute<ViewType, E> attribute) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(attr.getElementType(), "attribute", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((SingularAttribute<?, E>) attr).getInheritanceSubtypeMappings();
@@ -579,55 +579,55 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         } else {
             index = parameterOffset + ((AbstractParameterAttribute<?, ?>) attr).getIndex();
         }
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new SingularEntityViewBuilderListener(tuple, index));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new SingularEntityViewBuilderListener(tuple, index));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withBuilder(CollectionAttribute<T, E> attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(CollectionAttribute<ViewType, E> attribute) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(ListAttribute<ViewType, E> attribute) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute, int index) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(ListAttribute<ViewType, E> attribute, int index) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new ListEntityViewBuilderListener((List<Object>) getCollection(attr), index));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new ListEntityViewBuilderListener((List<Object>) getCollection(attr), index));
     }
 
     @Override
-    public <E> EntityViewNestedBuilder<E, X> withBuilder(SetAttribute<T, E> attribute) {
+    public <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(SetAttribute<ViewType, E> attribute) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(attr.getElementType(), "element", attr);
         Map<ManagedViewType<? extends E>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, E>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<E>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new CollectionEntityViewBuilderListener(getCollection(attr)));
     }
 
     @Override
-    public <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withBuilder(MapAttribute<T, K, V> attribute) {
+    public <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withBuilder(MapAttribute<ViewType, K, V> attribute) {
         AbstractAttribute<?, ?> attr = getAttribute(attribute);
         checkType(((MapAttribute<?, ?, ?>) attr).getKeyType(), "key", attr);
         checkType(attr.getElementType(), "element", attr);
         MapKeyEntityViewBuilderListener listener = new MapKeyEntityViewBuilderListener(getMap(attr));
         Map<ManagedViewType<? extends V>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, V>) attr).getElementInheritanceSubtypeMappings();
-        EntityViewNestedBuilder<V, X> valueBuilder = new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, listener);
+        EntityViewNestedBuilder<V, ? extends BuilderType, ?> valueBuilder = new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, listener);
         Map<ManagedViewType<? extends K>, String> keyInheritanceSubtypeMappings = ((MapAttribute<?, K, ?>) attr).getKeyInheritanceSubtypeMappings();
         return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<K>) attr.getElementType(), keyInheritanceSubtypeMappings, optionalParameters, valueBuilder, listener);
     }
 
     @Override
-    public <K, V> EntityViewNestedBuilder<V, X> withBuilder(MapAttribute<T, K, V> attribute, K key) {
+    public <K, V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withBuilder(MapAttribute<ViewType, K, V> attribute, K key) {
         if (key == null) {
             throw new IllegalArgumentException("Illegal null key!");
         }
@@ -637,6 +637,6 @@ public class EntityViewBuilderBaseImpl<T, X extends EntityViewBuilderBase<T, X>>
         checkType(attr.getElementType(), "element", attr);
         key = getValue(keyType, key);
         Map<ManagedViewType<? extends V>, String> inheritanceSubtypeMappings = ((PluralAttribute<?, ?, V>) attr).getElementInheritanceSubtypeMappings();
-        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (X) this, new MapEntityViewBuilderListener(getMap(attr), key));
+        return new EntityViewNestedBuilderImpl<>(evm, (ManagedViewTypeImplementor<V>) attr.getElementType(), inheritanceSubtypeMappings, optionalParameters, (BuilderType) this, new MapEntityViewBuilderListener(getMap(attr), key));
     }
 }

@@ -521,15 +521,5 @@
                 </plugins>
             </build>
         </profile>
-
-        <profile>
-            <id>post-10-unsafe-code</id>
-            <activation>
-                <jdk>[11,)</jdk>
-            </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens java.base/java.lang=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
-        </profile>
     </profiles>
 </project>

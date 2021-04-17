@@ -75,13 +75,17 @@ public interface MetaAttribute {
 
     String getPropertyName();
 
-    String getType();
+    String getModelType();
 
-    String getRealType();
+    String getDeclaredJavaType();
+
+    String getConvertedModelType();
 
     String getGeneratedTypePrefix();
 
     String getImplementationTypeString();
+
+    String getBuilderImplementationTypeString();
 
     Collection<AttributeFilter> getFilters();
 

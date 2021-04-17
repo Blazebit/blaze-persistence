@@ -74,33 +74,44 @@ public final class BuilderClassWriter {
         printConstructors(sb, entity, context);
 
         sb.append(NEW_LINE);
+        String builderTypeVariable = entity.getSafeTypeVariable("BuilderType");
 
         for (MetaAttribute metaMember : members) {
-            appendMember(sb, entity, metaMember, "BuilderType");
+            appendMember(sb, entity, metaMember, builderTypeVariable);
         }
 
         appendUtilityMethods(sb, entity, context);
-        appendGetAndWithMethods(sb, entity, context);
-        appendWithBuilderMethods(sb, entity, context);
+        appendGetMethods(sb, entity, context);
+        appendWithMethods(sb, entity, builderTypeVariable, context);
+        appendWithBuilderMethods(sb, entity, builderTypeVariable, context);
 
         sb.append(NEW_LINE);
 
         List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
+        String elementType = entity.getSafeTypeVariable("ElementType");
+        StringBuilder tempSb = new StringBuilder();
         for (MetaConstructor constructor : entity.getConstructors()) {
             String className = Character.toUpperCase(constructor.getName().charAt(0)) + constructor.getName().substring(1);
-            String builderType = entity.importType(Constants.ENTITY_VIEW_BUILDER) + "<" + entity.builderImportType(entity.getQualifiedName()) + ">";
             sb.append(NEW_LINE);
             sb.append("    public static class ").append(className);
+            tempSb.setLength(0);
+            tempSb.append(className);
 
             if (!typeArguments.isEmpty()) {
                 sb.append("<");
+                tempSb.append("<");
                 printTypeVariable(sb, entity, typeArguments.get(0));
+                tempSb.append(typeArguments.get(0));
                 for (int i = 1; i < typeArguments.size(); i++) {
                     sb.append(", ");
                     printTypeVariable(sb, entity, typeArguments.get(i));
+                    tempSb.append(", ");
+                    tempSb.append(typeArguments.get(i));
                 }
                 sb.append(">");
+                tempSb.append(">");
             }
+            String builderType = tempSb.toString();
 
             sb.append(" extends ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX);
             sb.append("<");
@@ -133,7 +144,7 @@ public final class BuilderClassWriter {
                         metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                         sb.append(" : ");
                     }
-                    sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
+                    sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
                 }
             }
             sb.append("        }").append(NEW_LINE);
@@ -157,10 +168,7 @@ public final class BuilderClassWriter {
             sb.append("        @Override").append(NEW_LINE);
             sb.append("        public ");
 
-            sb.append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER));
-            sb.append("<");
-            sb.append(entity.builderImportType(entity.getQualifiedName()));
-            sb.append(">");
+            sb.append(builderType);
 
             sb.append(" with(int parameterIndex, Object value) {").append(NEW_LINE);
             sb.append("            switch (parameterIndex) {").append(NEW_LINE);
@@ -174,32 +182,37 @@ public final class BuilderClassWriter {
                 sb.append("value == null ? ");
                 metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
                 sb.append(" : ");
-                sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
+                sb.append("(").append(metaMember.getBuilderImplementationTypeString()).append(") value;").append(NEW_LINE);
                 sb.append("                    break;").append(NEW_LINE);
             }
             sb.append("                default:").append(NEW_LINE);
             sb.append("                     throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
             sb.append("        }").append(NEW_LINE);
             if (!first) {
-                sb.append("        return (").append(builderType).append(") this;").append(NEW_LINE);
+                sb.append("        return this;").append(NEW_LINE);
             }
             sb.append("    }").append(NEW_LINE);
 
-            // <E> E get(int parameterIndex)
+            // <ElementType> ElementType get(int parameterIndex)
             sb.append(NEW_LINE);
             sb.append("        @Override").append(NEW_LINE);
-            sb.append("        public <E> E get(int parameterIndex) {").append(NEW_LINE);
+            sb.append("        public <").append(elementType).append("> ").append(elementType).append(" get(int parameterIndex) {").append(NEW_LINE);
             sb.append("            switch (parameterIndex) {").append(NEW_LINE);
             for (int i = 0; i < parameters.size(); i++) {
                 MetaAttribute metaMember = parameters.get(i);
                 sb.append("                case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                    return (E) (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
+                sb.append("                    return (").append(elementType).append(") (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
             }
             sb.append("            }").append(NEW_LINE);
             sb.append("            throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
             sb.append("        }").append(NEW_LINE);
 
-            appendWithBuilderMethods(sb, constructor, context, entity.importType(Constants.ENTITY_VIEW_BUILDER) + "<" + entity.builderImportType(entity.getQualifiedName()) + ">");
+            for (MetaAttribute metaMember : entity.getMembers()) {
+                appendMemberWith(sb, entity, metaMember, builderType);
+            }
+            appendWithMethods(sb, entity, builderType, context);
+            appendWithBuilderMethods(sb, entity, builderType, context);
+            appendWithBuilderMethods(sb, constructor, context, builderType);
 
             for (MetaAttribute metaMember : constructor.getParameters()) {
                 appendMember(sb, entity, metaMember, builderType);
@@ -220,32 +233,38 @@ public final class BuilderClassWriter {
             constructor = entity.getConstructors().iterator().next();
         }
 
-        String builderType = entity.importType(Constants.ENTITY_VIEW_NESTED_BUILDER) + "<" + entity.builderImportType(entity.getQualifiedName()) + ", BuilderResult>";
+        String builderResult = entity.getSafeTypeVariable("BuilderResult");
         sb.append(NEW_LINE);
         sb.append("    public static class Nested<");
-
+        tempSb.setLength(0);
+        tempSb.append("Nested<");
         for (int i = 0; i < typeArguments.size(); i++) {
             printTypeVariable(sb, entity, typeArguments.get(i));
             sb.append(", ");
+            tempSb.append(typeArguments.get(i));
+            tempSb.append(", ");
         }
-        sb.append("BuilderResult> extends ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX);
+        sb.append(builderResult).append(">");
+        tempSb.append(builderResult).append(">");
+        String builderType = tempSb.toString();
+        sb.append(" extends ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX);
         sb.append("<");
         for (int i = 0; i < typeArguments.size(); i++) {
             sb.append(typeArguments.get(i));
             sb.append(", ");
         }
-        sb.append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", BuilderResult>");
+        sb.append(builderType);
         sb.append("> implements ");
 
         sb.append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER));
         sb.append("<");
         sb.append(entity.builderImportType(entity.getQualifiedName()));
-        sb.append(", BuilderResult>");
-
-        sb.append(" {").append(NEW_LINE);
+        sb.append(", ").append(builderResult).append(", ");
+        sb.append(builderType);
+        sb.append("> {").append(NEW_LINE);
         sb.append(NEW_LINE);
         sb.append("        private final ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener;").append(NEW_LINE);
-        sb.append("        private final BuilderResult result;").append(NEW_LINE);
+        sb.append("        private final ").append(builderResult).append(" result;").append(NEW_LINE);
 
         for (MetaAttribute metaMember : constructor.getParameters()) {
             metaMember.appendBuilderAttributeDeclarationString(sb);
@@ -253,7 +272,7 @@ public final class BuilderClassWriter {
         }
 
         sb.append(NEW_LINE);
-        sb.append("        public Nested(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters, ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener, BuilderResult result) {").append(NEW_LINE);
+        sb.append("        public Nested(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters, ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener, ").append(builderResult).append(" result) {").append(NEW_LINE);
         sb.append("            super(optionalParameters);").append(NEW_LINE);
         for (MetaAttribute metaMember : constructor.getParameters()) {
             if (metaMember.getKind() == MappingKind.PARAMETER) {
@@ -262,7 +281,7 @@ public final class BuilderClassWriter {
                     metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
-                sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
+                sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
             }
         }
         sb.append("            this.listener = listener;").append(NEW_LINE);
@@ -272,7 +291,7 @@ public final class BuilderClassWriter {
         // X build()
         sb.append(NEW_LINE);
         sb.append("        @Override").append(NEW_LINE);
-        sb.append("        public BuilderResult build() {").append(NEW_LINE);
+        sb.append("        public ").append(builderResult).append(" build() {").append(NEW_LINE);
         sb.append("            listener.onBuildComplete(new ").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append("(");
         if (members.isEmpty() && constructor.getParameters().isEmpty()) {
             sb.append("(").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append(") null, optionalParameters));").append(NEW_LINE);
@@ -303,32 +322,37 @@ public final class BuilderClassWriter {
             sb.append("value == null ? ");
             metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             sb.append(" : ");
-            sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
+            sb.append("(").append(metaMember.getBuilderImplementationTypeString()).append(") value;").append(NEW_LINE);
             sb.append("                break;").append(NEW_LINE);
         }
         sb.append("            default:").append(NEW_LINE);
         sb.append("                throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         if (!first) {
-            sb.append("        return (").append(builderType).append(") this;").append(NEW_LINE);
+            sb.append("        return this;").append(NEW_LINE);
         }
         sb.append("    }").append(NEW_LINE);
 
-        // <E> E get(int parameterIndex)
+        // <ElementType> ElementType get(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("        @Override").append(NEW_LINE);
-        sb.append("        public <E> E get(int parameterIndex) {").append(NEW_LINE);
+        sb.append("        public <").append(elementType).append("> ").append(elementType).append(" get(int parameterIndex) {").append(NEW_LINE);
         sb.append("            switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < parameters.size(); i++) {
             MetaAttribute metaMember = parameters.get(i);
             sb.append("                case ").append(i).append(":").append(NEW_LINE);
-            sb.append("                    return (E) (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
+            sb.append("                    return (").append(elementType).append(") (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
         }
         sb.append("            }").append(NEW_LINE);
         sb.append("            throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
 
-        appendWithBuilderMethods(sb, constructor, context, entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER) + "<" + entity.builderImportType(entity.getQualifiedName()) + ", BuilderResult>");
+        for (MetaAttribute metaMember : entity.getMembers()) {
+            appendMemberWith(sb, entity, metaMember, builderType);
+        }
+        appendWithMethods(sb, entity, builderType, context);
+        appendWithBuilderMethods(sb, entity, builderType, context);
+        appendWithBuilderMethods(sb, constructor, context, builderType);
 
         for (MetaAttribute metaMember : constructor.getParameters()) {
             appendMember(sb, entity, metaMember, builderType);
@@ -355,7 +379,17 @@ public final class BuilderClassWriter {
                 sb.append(",").append(NEW_LINE);
             }
             if (member != idMember) {
-                sb.append("            this.").append(member.getPropertyName());
+                if (member.getConvertedModelType() == null) {
+                    sb.append("            this.").append(member.getPropertyName());
+                } else if (member.isSubview()) {
+                    sb.append("            (").append(member.getImplementationTypeString()).append(") ")
+                            .append(entity.getSimpleName()).append(MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX).append(".")
+                            .append(member.getPropertyName()).append(".attr().getType().getConverter().convertToViewType(this.").append(member.getPropertyName()).append(')');
+                } else {
+                    sb.append("            (").append(member.getImplementationTypeString()).append(") ")
+                            .append(entity.getSimpleName()).append(MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX).append(".")
+                            .append(member.getPropertyName()).append(".getType().getConverter().convertToViewType(this.").append(member.getPropertyName()).append(')');
+                }
             }
         }
 
@@ -370,9 +404,13 @@ public final class BuilderClassWriter {
     }
 
     private static void appendMember(StringBuilder sb, MetaEntityView entity, MetaAttribute metaMember, String builderType) {
-        ElementKind kind = metaMember.getElement() == null ? null : metaMember.getElement().getKind();
         metaMember.appendBuilderAttributeGetterAndSetterString(sb);
         sb.append(NEW_LINE);
+        appendMemberWith(sb, entity, metaMember, builderType);
+    }
+
+    private static void appendMemberWith(StringBuilder sb, MetaEntityView entity, MetaAttribute metaMember, String builderType) {
+        ElementKind kind = metaMember.getElement() == null ? null : metaMember.getElement().getKind();
         sb.append("    public ").append(builderType).append(" with");
         if (kind == ElementKind.PARAMETER) {
             sb.append(PARAMETER_PREFIX);
@@ -381,7 +419,7 @@ public final class BuilderClassWriter {
         sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length());
         sb.append('(');
 
-        sb.append(metaMember.getImplementationTypeString());
+        sb.append(metaMember.getBuilderImplementationTypeString());
 
         sb.append(' ')
                 .append(metaMember.getPropertyName())
@@ -407,6 +445,7 @@ public final class BuilderClassWriter {
                 if (!typeArguments.isEmpty()) {
                     sb.append("<");
                     for (int i = 0; i < typeArguments.size(); i++) {
+                        sb.append("Sub");
                         printTypeVariable(sb, entity, typeArguments.get(i));
                         sb.append(", ");
                     }
@@ -414,10 +453,11 @@ public final class BuilderClassWriter {
                 }
                 sb.append(entity.builderImportType(memberBuilderFqn)).append(".Nested<");
                 for (int i = 0; i < typeArguments.size(); i++) {
+                    sb.append("Sub");
                     sb.append(typeArguments.get(i));
                     sb.append(", ");
                 }
-                sb.append(builderType).append("> with");
+                sb.append("? extends ").append(builderType).append("> with");
                 if (kind == ElementKind.PARAMETER) {
                     sb.append(PARAMETER_PREFIX);
                 }
@@ -455,12 +495,12 @@ public final class BuilderClassWriter {
                         sb.append(keyTypeArguments.get(i));
                         sb.append(", ");
                     }
-                    sb.append(entity.builderImportType(memberBuilderFqn)).append(".Nested<");
+                    sb.append("? extends ").append(entity.builderImportType(memberBuilderFqn)).append(".Nested<");
                     for (int i = 0; i < typeArguments.size(); i++) {
                         sb.append(typeArguments.get(i));
                         sb.append(", ");
                     }
-                    sb.append(builderType).append(">> with");
+                    sb.append("? extends ").append(builderType).append(">> with");
                     if (kind == ElementKind.PARAMETER) {
                         sb.append(PARAMETER_PREFIX);
                     }
@@ -487,6 +527,7 @@ public final class BuilderClassWriter {
                         if (!typeArguments.isEmpty()) {
                             sb.append("<");
                             for (int i = 0; i < typeArguments.size(); i++) {
+                                sb.append("Sub");
                                 printTypeVariable(sb, entity, typeArguments.get(i));
                                 sb.append(", ");
                             }
@@ -494,10 +535,11 @@ public final class BuilderClassWriter {
                         }
                         sb.append(entity.builderImportType(memberBuilderFqn)).append(".Nested<");
                         for (int i = 0; i < typeArguments.size(); i++) {
+                            sb.append("Sub");
                             sb.append(typeArguments.get(i));
                             sb.append(", ");
                         }
-                        sb.append(builderType).append("> with");
+                        sb.append("? extends ").append(builderType).append("> with");
                         if (kind == ElementKind.PARAMETER) {
                             sb.append(PARAMETER_PREFIX);
                         }
@@ -521,6 +563,7 @@ public final class BuilderClassWriter {
                 if (!typeArguments.isEmpty()) {
                     sb.append("<");
                     for (int i = 0; i < typeArguments.size(); i++) {
+                        sb.append("Sub");
                         printTypeVariable(sb, entity, typeArguments.get(i));
                         sb.append(", ");
                     }
@@ -528,10 +571,11 @@ public final class BuilderClassWriter {
                 }
                 sb.append(entity.builderImportType(memberBuilderFqn)).append(".Nested<");
                 for (int i = 0; i < typeArguments.size(); i++) {
+                    sb.append("Sub");
                     sb.append(typeArguments.get(i));
                     sb.append(", ");
                 }
-                sb.append(builderType).append("> with");
+                sb.append("? extends ").append(builderType).append("> with");
                 if (kind == ElementKind.PARAMETER) {
                     sb.append(PARAMETER_PREFIX);
                 }
@@ -551,8 +595,11 @@ public final class BuilderClassWriter {
     }
 
     private static void appendUtilityMethods(StringBuilder sb, MetaEntityView entity, Context context) {
+        String collectionType = entity.getSafeTypeVariable("CollectionType");
+        String elementType = entity.getSafeTypeVariable("ElementType");
+        String keyType = entity.getSafeTypeVariable("KeyType");
         sb.append(NEW_LINE);
-        sb.append("    protected <E> E get(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(elementType).append("> ").append(elementType).append(" get(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return get(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -561,16 +608,7 @@ public final class BuilderClassWriter {
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected BuilderType with(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr, Object value) {").append(NEW_LINE);
-        sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
-        sb.append("            return with(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName(), value);").append(NEW_LINE);
-        sb.append("        } else {").append(NEW_LINE);
-        sb.append("            return with(((").append(entity.builderImportType(Constants.PARAMETER_ATTRIBUTE)).append(") attr).getIndex(), value);").append(NEW_LINE);
-        sb.append("        }").append(NEW_LINE);
-        sb.append("    }").append(NEW_LINE);
-
-        sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> A getCollection(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> ").append(collectionType).append(" getCollection(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return getCollection(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -579,7 +617,7 @@ public final class BuilderClassWriter {
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> A getMap(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> ").append(collectionType).append(" getMap(").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return getMap(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -588,58 +626,58 @@ public final class BuilderClassWriter {
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> A getCollection(String attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> ").append(collectionType).append(" getCollection(String attr) {").append(NEW_LINE);
         sb.append("        Object currentValue = get(attr);").append(NEW_LINE);
         sb.append("        if (currentValue == null) {").append(NEW_LINE);
         sb.append("            with(attr, null);").append(NEW_LINE);
         sb.append("            currentValue = get(attr);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("        if (currentValue instanceof ").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) {").append(NEW_LINE);
-        sb.append("            return (A) ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
-        sb.append("            return (A) currentValue;").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") currentValue;").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> A getMap(String attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> ").append(collectionType).append(" getMap(String attr) {").append(NEW_LINE);
         sb.append("        Object currentValue = get(attr);").append(NEW_LINE);
         sb.append("        if (currentValue == null) {").append(NEW_LINE);
         sb.append("            with(attr, null);").append(NEW_LINE);
         sb.append("            currentValue = get(attr);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("        if (currentValue instanceof ").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) {").append(NEW_LINE);
-        sb.append("            return (A) ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
-        sb.append("            return (A) currentValue;").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") currentValue;").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> A getCollection(int attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.COLLECTION)).append("<Object>> ").append(collectionType).append(" getCollection(int attr) {").append(NEW_LINE);
         sb.append("        Object currentValue = get(attr);").append(NEW_LINE);
         sb.append("        if (currentValue == null) {").append(NEW_LINE);
         sb.append("            with(attr, null);").append(NEW_LINE);
         sb.append("            currentValue = get(attr);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("        if (currentValue instanceof ").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) {").append(NEW_LINE);
-        sb.append("            return (A) ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
-        sb.append("            return (A) currentValue;").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") currentValue;").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         sb.append(NEW_LINE);
-        sb.append("    protected <A extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> A getMap(int attr) {").append(NEW_LINE);
+        sb.append("    protected <").append(collectionType).append(" extends ").append(entity.builderImportType(Constants.MAP)).append("<Object, Object>> ").append(collectionType).append(" getMap(int attr) {").append(NEW_LINE);
         sb.append("        Object currentValue = get(attr);").append(NEW_LINE);
         sb.append("        if (currentValue == null) {").append(NEW_LINE);
         sb.append("            with(attr, null);").append(NEW_LINE);
         sb.append("            currentValue = get(attr);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("        if (currentValue instanceof ").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) {").append(NEW_LINE);
-        sb.append("            return (A) ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") ((").append(entity.builderImportType(Constants.RECORDING_CONTAINER)).append("<?>) currentValue).getDelegate();").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
-        sb.append("            return (A) currentValue;").append(NEW_LINE);
+        sb.append("            return (").append(collectionType).append(") currentValue;").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
@@ -658,13 +696,51 @@ public final class BuilderClassWriter {
         sb.append("    }").append(NEW_LINE);
     }
 
-    private static void appendGetAndWithMethods(StringBuilder sb, MetaEntityView entity, Context context) {
+    private static void appendGetMethods(StringBuilder sb, MetaEntityView entity, Context context) {
         Collection<MetaAttribute> members = entity.getMembers();
+        String collectionType = entity.getSafeTypeVariable("CollectionType");
+        String elementType = entity.getSafeTypeVariable("ElementType");
+        String keyType = entity.getSafeTypeVariable("KeyType");
+
+        // <ElementType> ElementType get(String attribute)
+        sb.append(NEW_LINE);
+        sb.append("    @Override").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(elementType).append(" get(String attribute) {").append(NEW_LINE);
+        sb.append("        switch (attribute) {").append(NEW_LINE);
+        for (MetaAttribute metaMember : members) {
+            sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
+            sb.append("                return (").append(elementType).append(") (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
+        }
+        sb.append("        }").append(NEW_LINE);
+        sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
+        sb.append("    }").append(NEW_LINE);
+
+        // <ElementType> ElementType get(SingularAttribute<T, ElementType> attribute)
+        sb.append(NEW_LINE);
+        sb.append("    @Override").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(elementType).append(" get(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute) {").append(NEW_LINE);
+        sb.append("        return get((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute);").append(NEW_LINE);
+        sb.append("    }").append(NEW_LINE);
+
+        // <CollectionType> CollectionType get(PluralAttribute<T, CollectionType, ?> attribute)
+        sb.append(NEW_LINE);
+        sb.append("    @Override").append(NEW_LINE);
+        sb.append("    public <").append(collectionType).append("> ").append(collectionType).append(" get(").append(entity.builderImportType(Constants.PLURAL_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(collectionType).append(", ?> attribute) {").append(NEW_LINE);
+        sb.append("        return get((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute);").append(NEW_LINE);
+        sb.append("    }").append(NEW_LINE);
+    }
+
+    private static void appendWithMethods(StringBuilder sb, MetaEntityView entity, String builderType, Context context) {
+        String builderTypeCast = "(" + builderType + ") ";
+        Collection<MetaAttribute> members = entity.getMembers();
+        String collectionType = entity.getSafeTypeVariable("CollectionType");
+        String elementType = entity.getSafeTypeVariable("ElementType");
+        String keyType = entity.getSafeTypeVariable("KeyType");
 
         // X with(String attribute, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType with(String attribute, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" with(String attribute, Object value) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
@@ -672,167 +748,151 @@ public final class BuilderClassWriter {
             sb.append("value == null ? ");
             metaMember.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             sb.append(" : ");
-            sb.append("(").append(metaMember.getImplementationTypeString()).append(") value;").append(NEW_LINE);
+            sb.append("(").append(metaMember.getBuilderImplementationTypeString()).append(") value;").append(NEW_LINE);
             sb.append("                break;").append(NEW_LINE);
         }
         sb.append("            default:").append(NEW_LINE);
         sb.append("                throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
         if (!members.isEmpty()) {
-            sb.append("        return (BuilderType) this;").append(NEW_LINE);
+            sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         }
         sb.append("    }").append(NEW_LINE);
 
-        // <E> X with(SingularAttribute<T, E> attribute, E value)
+        // <ElementType> X with(SingularAttribute<T, ElementType> attribute, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> BuilderType with(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute, E value) {").append(NEW_LINE);
-        sb.append("        return with((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute, value);").append(NEW_LINE);
-        sb.append("    }").append(NEW_LINE);
-
-        // <C> X with(PluralAttribute<T, C, ?> attribute, C value)
-        sb.append(NEW_LINE);
-        sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <C> BuilderType with(").append(entity.builderImportType(Constants.PLURAL_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", C, ?> attribute, C value) {").append(NEW_LINE);
-        sb.append("        return with((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute, value);").append(NEW_LINE);
-        sb.append("    }").append(NEW_LINE);
-
-        // <E> E get(String attribute)
-        sb.append(NEW_LINE);
-        sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> E get(String attribute) {").append(NEW_LINE);
-        sb.append("        switch (attribute) {").append(NEW_LINE);
-        for (MetaAttribute metaMember : members) {
-            sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-            sb.append("                return (E) (Object) this.").append(metaMember.getPropertyName()).append(";").append(NEW_LINE);
-        }
+        sb.append("    public <").append(elementType).append("> ").append(builderType).append(" with(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute, ").append(elementType).append(" value) {").append(NEW_LINE);
+        sb.append("        if (attribute instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
+        sb.append("            return with(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attribute).getName(), value);").append(NEW_LINE);
+        sb.append("        } else {").append(NEW_LINE);
+        sb.append("            return with(((").append(entity.builderImportType(Constants.PARAMETER_ATTRIBUTE)).append(") attribute).getIndex(), value);").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
-        sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> E get(SingularAttribute<T, E> attribute)
+        // <CollectionType> X with(PluralAttribute<T, CollectionType, ?> attribute, CollectionType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> E get(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute) {").append(NEW_LINE);
-        sb.append("        return get((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute);").append(NEW_LINE);
+        sb.append("    public <").append(collectionType).append("> ").append(builderType).append(" with(").append(entity.builderImportType(Constants.PLURAL_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(collectionType).append(", ?> attribute, ").append(collectionType).append(" value) {").append(NEW_LINE);
+        sb.append("        if (attribute instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
+        sb.append("            return with(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attribute).getName(), value);").append(NEW_LINE);
+        sb.append("        } else {").append(NEW_LINE);
+        sb.append("            return with(((").append(entity.builderImportType(Constants.PARAMETER_ATTRIBUTE)).append(") attribute).getIndex(), value);").append(NEW_LINE);
+        sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <C> C get(PluralAttribute<T, C, ?> attribute)
-        sb.append(NEW_LINE);
-        sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <C> C get(").append(entity.builderImportType(Constants.PLURAL_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", C, ?> attribute) {").append(NEW_LINE);
-        sb.append("        return get((").append(entity.builderImportType(Constants.ATTRIBUTE)).append("<?, ?>) attribute);").append(NEW_LINE);
-        sb.append("    }").append(NEW_LINE);
-
-        // TODO: check value?
 
         // X withElement(String attribute, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withElement(String attribute, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withElement(String attribute, Object value) {").append(NEW_LINE);
         sb.append("        getCollection(attribute).add(value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         // X withElement(int parameterIndex, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withElement(int parameterIndex, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withElement(int parameterIndex, Object value) {").append(NEW_LINE);
         sb.append("        getCollection(parameterIndex).add(value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         // X withListElement(String attribute, int index, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withListElement(String attribute, int index, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withListElement(String attribute, int index, Object value) {").append(NEW_LINE);
         sb.append("        List<Object> list = getCollection(attribute);").append(NEW_LINE);
         sb.append("        addListValue(list, index, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         // X withListElement(int parameterIndex, int index, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withListElement(int parameterIndex, int index, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withListElement(int parameterIndex, int index, Object value) {").append(NEW_LINE);
         sb.append("        List<Object> list = getCollection(parameterIndex);").append(NEW_LINE);
         sb.append("        addListValue(list, index, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         // X withEntry(String attribute, Object key, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withEntry(String attribute, Object key, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withEntry(String attribute, Object key, Object value) {").append(NEW_LINE);
         sb.append("        Map<Object, Object> map = getMap(attribute);").append(NEW_LINE);
         sb.append("        map.put(key, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
         // X withEntry(int parameterIndex, Object key, Object value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public BuilderType withEntry(int parameterIndex, Object key, Object value) {").append(NEW_LINE);
+        sb.append("    public ").append(builderType).append(" withEntry(int parameterIndex, Object key, Object value) {").append(NEW_LINE);
         sb.append("        Map<Object, Object> map = getMap(parameterIndex);").append(NEW_LINE);
         sb.append("        map.put(key, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> X withElement(CollectionAttribute<T, E> attribute, E value)
+        // <ElementType> X withElement(CollectionAttribute<T, ElementType> attribute, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> BuilderType withElement(").append(entity.builderImportType(Constants.COLLECTION_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute, E value) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(builderType).append(" withElement(").append(entity.builderImportType(Constants.COLLECTION_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute, ").append(elementType).append(" value) {").append(NEW_LINE);
         sb.append("        getCollection(attribute).add(value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> X withElement(SetAttribute<T, E> attribute, E value)
+        // <ElementType> X withElement(SetAttribute<T, ElementType> attribute, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> BuilderType withElement(").append(entity.builderImportType(Constants.SET_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute, E value) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(builderType).append(" withElement(").append(entity.builderImportType(Constants.SET_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute, ").append(elementType).append(" value) {").append(NEW_LINE);
         sb.append("        getCollection(attribute).add(value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> X withElement(ListAttribute<T, E> attribute, E value)
+        // <ElementType> X withElement(ListAttribute<T, ElementType> attribute, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> BuilderType withElement(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute, E value) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(builderType).append(" withElement(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute, ").append(elementType).append(" value) {").append(NEW_LINE);
         sb.append("        getCollection(attribute).add(value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> X withListElement(ListAttribute<T, E> attribute, int index, E value)
+        // <ElementType> X withListElement(ListAttribute<T, ElementType> attribute, int index, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> BuilderType withListElement(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attribute, int index, E value) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(builderType).append(" withListElement(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attribute, int index, ").append(elementType).append(" value) {").append(NEW_LINE);
         sb.append("        List<Object> list = getCollection(attribute);").append(NEW_LINE);
         sb.append("        addListValue(list, index, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <K, V> X withEntry(MapAttribute<T, K, V> attribute, K key, V value)
+        // <KeyType, ElementType> X withEntry(MapAttribute<T, KeyType, ElementType> attribute, KeyType key, ElementType value)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <K, V> BuilderType withEntry(").append(entity.builderImportType(Constants.MAP_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", K, V> attribute, K key, V value) {").append(NEW_LINE);
+        sb.append("    public <").append(keyType).append(", ").append(elementType).append("> ").append(builderType).append(" withEntry(")
+                .append(entity.builderImportType(Constants.MAP_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(keyType).append(", ").append(elementType).append("> attribute, ").append(keyType).append(" key, ").append(elementType).append(" value) {").append(NEW_LINE);
         sb.append("        Map<Object, Object> map = getMap(attribute);").append(NEW_LINE);
         sb.append("        map.put(key, value);").append(NEW_LINE);
-        sb.append("        return (BuilderType) this;").append(NEW_LINE);
+        sb.append("        return ").append(builderTypeCast).append("this;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
     }
 
-    private static void appendWithBuilderMethods(StringBuilder sb, MetaEntityView entity, Context context) {
+    private static void appendWithBuilderMethods(StringBuilder sb, MetaEntityView entity, String builderType, Context context) {
         Collection<MetaAttribute> members = entity.getMembers();
+        String collectionType = entity.getSafeTypeVariable("CollectionType");
+        String elementType = entity.getSafeTypeVariable("ElementType");
+        String keyType = entity.getSafeTypeVariable("KeyType");
 
-        // <E> EntityViewNestedBuilder<E, X> withSingularBuilder(String attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withSingularBuilder(String attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withSingularBuilder(String attribute) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withSingularBuilder(String attribute) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaSingularAttribute && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -841,15 +901,15 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(String attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withCollectionBuilder(String attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withCollectionBuilder(String attribute) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withCollectionBuilder(String attribute) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -858,15 +918,15 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withListBuilder(String attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withListBuilder(String attribute) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withListBuilder(String attribute) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -875,15 +935,15 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute, int index)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withListBuilder(String attribute, int index)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withListBuilder(String attribute, int index) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withListBuilder(String attribute, int index) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaCollection && ((AnnotationMetaCollection) metaMember).isIndexedList() && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder(index);").append(NEW_LINE);
             }
@@ -892,15 +952,15 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withSetBuilder(String attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withSetBuilder(String attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withSetBuilder(String attribute) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withSetBuilder(String attribute) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -909,15 +969,15 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <V> EntityViewNestedBuilder<V, X> withMapBuilder(String attribute, Object key)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withMapBuilder(String attribute, Object key)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType> withMapBuilder(String attribute, Object key) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withMapBuilder(String attribute, Object key) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaMap && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder(key);").append(NEW_LINE);
             }
@@ -926,15 +986,17 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(String attribute)
+        // <KeyType, ElementType> EntityViewNestedBuilder<KeyType, ? extends EntityViewNestedBuilder<ElementType, ? extends X, ?>, ?> withMapBuilder(String attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <K, V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<K, ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType>> withMapBuilder(String attribute) {").append(NEW_LINE);
+        sb.append("    public <").append(keyType).append(", ").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER))
+                .append("<").append(keyType).append(", ? extends ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>, ?> withMapBuilder(String attribute) {").append(NEW_LINE);
         sb.append("        switch (attribute) {").append(NEW_LINE);
         for (MetaAttribute metaMember : members) {
             if (metaMember instanceof AnnotationMetaMap && ((AnnotationMetaMap) metaMember).isKeySubview() && metaMember.isSubview()) {
                 sb.append("            case \"").append(metaMember.getPropertyName()).append("\":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<K, ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType>>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(keyType).append(", ? extends ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER))
+                        .append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>, ?>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -943,11 +1005,11 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown attribute: \" + attribute);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withBuilder(SingularAttribute<T, E> attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(SingularAttribute<T, ElementType> attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withBuilder(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attr) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.SINGULAR_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withSingularBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -955,11 +1017,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withBuilder(CollectionAttribute<T, E> attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(CollectionAttribute<T, ElementType> attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withBuilder(").append(entity.builderImportType(Constants.COLLECTION_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attr) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.COLLECTION_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withCollectionBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -967,11 +1029,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(ListAttribute<T, ElementType> attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withBuilder(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attr) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withListBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -979,11 +1041,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute, int index)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(ListAttribute<T, ElementType> attribute, int index)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withBuilder(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attr, int index) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.LIST_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attr, int index) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withListBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName(), index);").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -991,11 +1053,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withBuilder(SetAttribute<T, E> attribute)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(SetAttribute<T, ElementType> attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, BuilderType> withBuilder(").append(entity.builderImportType(Constants.SET_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", E> attr) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.SET_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(elementType).append("> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withSetBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -1003,11 +1065,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <K, V> EntityViewNestedBuilder<V, X> withBuilder(MapAttribute<T, K, V> attribute, K key)
+        // <KeyType, ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withBuilder(MapAttribute<T, KeyType, ElementType> attribute, KeyType key)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <K, V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType> withBuilder(").append(entity.builderImportType(Constants.MAP_ATTRIBUTE));
-        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", K, V> attr, K key) {").append(NEW_LINE);
+        sb.append("    public <").append(keyType).append(", ").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withBuilder(").append(entity.builderImportType(Constants.MAP_ATTRIBUTE));
+        sb.append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(keyType).append(", ").append(elementType).append("> attr, ").append(keyType).append(" key) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withMapBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName(), key);").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -1015,11 +1077,11 @@ public final class BuilderClassWriter {
         sb.append("        }").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withBuilder(MapAttribute<T, K, V> attribute)
+        // <KeyType, ElementType> EntityViewNestedBuilder<KeyType, ? extends EntityViewNestedBuilder<ElementType, ? extends X, ?>, ?> withBuilder(MapAttribute<T, KeyType, ElementType> attribute)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <K, V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<K, ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, BuilderType>> withBuilder(");
-        sb.append(entity.builderImportType(Constants.MAP_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", K, V> attr) {").append(NEW_LINE);
+        sb.append("    public <").append(keyType).append(", ").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(keyType).append(", ? extends ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>, ?> withBuilder(");
+        sb.append(entity.builderImportType(Constants.MAP_ATTRIBUTE)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(", ").append(keyType).append(", ").append(elementType).append("> attr) {").append(NEW_LINE);
         sb.append("        if (attr instanceof ").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") {").append(NEW_LINE);
         sb.append("            return withMapBuilder(((").append(entity.builderImportType(Constants.METHOD_ATTRIBUTE)).append(") attr).getName());").append(NEW_LINE);
         sb.append("        } else {").append(NEW_LINE);
@@ -1029,19 +1091,22 @@ public final class BuilderClassWriter {
     }
 
     private static void appendWithBuilderMethods(StringBuilder sb, MetaConstructor constructor, Context context, String builderType) {
+        String collectionType = constructor.getHostingEntity().getSafeTypeVariable("CollectionType");
+        String elementType = constructor.getHostingEntity().getSafeTypeVariable("ElementType");
+        String keyType = constructor.getHostingEntity().getSafeTypeVariable("KeyType");
         MetaEntityView entity = constructor.getHostingEntity();
         List<MetaAttribute> members = constructor.getParameters();
 
-        // <E> EntityViewNestedBuilder<E, X> withSingularBuilder(int parameterIndex)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withSingularBuilder(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append("> withSingularBuilder(int parameterIndex) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withSingularBuilder(int parameterIndex) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaSingularAttribute && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -1050,16 +1115,16 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(int parameterIndex)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withCollectionBuilder(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append("> withCollectionBuilder(int parameterIndex) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withCollectionBuilder(int parameterIndex) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -1068,16 +1133,16 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withListBuilder(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append("> withListBuilder(int parameterIndex) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withListBuilder(int parameterIndex) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -1086,16 +1151,16 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex, int index)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withListBuilder(int parameterIndex, int index)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append("> withListBuilder(int parameterIndex, int index) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withListBuilder(int parameterIndex, int index) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaCollection && ((AnnotationMetaCollection) metaMember).isIndexedList() && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder(index);").append(NEW_LINE);
             }
@@ -1104,16 +1169,16 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <E> EntityViewNestedBuilder<E, X> withSetBuilder(int parameterIndex)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withSetBuilder(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <E> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append("> withSetBuilder(int parameterIndex) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withSetBuilder(int parameterIndex) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaCollection && !(metaMember instanceof AnnotationMetaMap) && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<E, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -1122,16 +1187,16 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <V> EntityViewNestedBuilder<V, X> withMapBuilder(int parameterIndex, Object key)
+        // <ElementType> EntityViewNestedBuilder<ElementType, ? extends X, ?> withMapBuilder(int parameterIndex, Object key)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, ").append(builderType).append("> withMapBuilder(int parameterIndex, Object key) {").append(NEW_LINE);
+        sb.append("    public <").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?> withMapBuilder(int parameterIndex, Object key) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaMap && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, ").append(builderType).append(">) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with").append(PARAMETER_PREFIX);
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>) with").append(PARAMETER_PREFIX);
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder(key);").append(NEW_LINE);
             }
@@ -1140,16 +1205,17 @@ public final class BuilderClassWriter {
         sb.append("        throw new IllegalArgumentException(\"Unknown parameter index: \" + parameterIndex);").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
 
-        // <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(int parameterIndex)
+        // <KeyType, ElementType> EntityViewNestedBuilder<KeyType, ? extends EntityViewNestedBuilder<ElementType, ? extends X, ?>, ?> withMapBuilder(int parameterIndex)
         sb.append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
-        sb.append("    public <K, V> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<K, ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, ").append(builderType).append(">> withMapBuilder(int parameterIndex) {").append(NEW_LINE);
+        sb.append("    public <").append(keyType).append(", ").append(elementType).append("> ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(keyType).append(", ? extends ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER))
+                .append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>, ?> withMapBuilder(int parameterIndex) {").append(NEW_LINE);
         sb.append("        switch (parameterIndex) {").append(NEW_LINE);
         for (int i = 0; i < members.size(); i++) {
             MetaAttribute metaMember = members.get(i);
             if (metaMember instanceof AnnotationMetaMap && ((AnnotationMetaMap) metaMember).isKeySubview() && metaMember.isSubview()) {
                 sb.append("            case ").append(i).append(":").append(NEW_LINE);
-                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<K, ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<V, ").append(builderType).append(">>) (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<?, ?>) with");
+                sb.append("                return (").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(keyType).append(", ? extends ").append(entity.builderImportType(Constants.ENTITY_VIEW_NESTED_BUILDER)).append("<").append(elementType).append(", ? extends ").append(builderType).append(", ?>, ?>) with");
                 sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                 sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length()).append("Builder();").append(NEW_LINE);
             }
@@ -1161,6 +1227,7 @@ public final class BuilderClassWriter {
 
     private static void printClassDeclaration(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.append("public abstract class ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX);
+        String builderType = entity.getSafeTypeVariable("BuilderType");
 
         List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
         sb.append("<");
@@ -1172,13 +1239,13 @@ public final class BuilderClassWriter {
             }
             sb.append(", ");
         }
-        sb.append("BuilderType extends EntityViewBuilderBase<");
+        sb.append(builderType).append(" extends EntityViewBuilderBase<");
         sb.append(entity.builderImportType(entity.getQualifiedName()));
-        sb.append(", BuilderType>> implements ");
+        sb.append(", ").append(builderType).append(">> implements ");
         sb.append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_BASE));
         sb.append("<");
         sb.append(entity.builderImportType(entity.getQualifiedName()));
-        sb.append(", BuilderType>");
+        sb.append(", ").append(builderType).append(">");
 
         sb.append(" {");
         sb.append(NEW_LINE);

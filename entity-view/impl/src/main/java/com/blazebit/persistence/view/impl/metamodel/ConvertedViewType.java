@@ -48,9 +48,9 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
 
     private final ViewTypeImplementor<X> delegate;
     private final Type convertedType;
-    private final TypeConverter<?, X> converter;
+    private final TypeConverter<X, ?> converter;
 
-    public ConvertedViewType(ViewTypeImplementor<X> delegate, Type convertedType, TypeConverter<?, X> converter) {
+    public ConvertedViewType(ViewTypeImplementor<X> delegate, Type convertedType, TypeConverter<X, ?> converter) {
         this.delegate = delegate;
         this.convertedType = convertedType;
         this.converter = converter;
@@ -62,7 +62,7 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
-    public TypeConverter<?, X> getConverter() {
+    public TypeConverter<X, ?> getConverter() {
         return converter;
     }
 

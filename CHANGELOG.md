@@ -27,6 +27,7 @@ None yet
 * Validate that entity type for creatable entity view is non-abstract
 * Fix GraphQL integration issue when encountering enum types multiple times
 * Fix `NumberFormatException` in `OracleDbmsLimitHandler` for set operation queries with limit and offset
+* Properly handle `Optional` in entity view annotation processor
 
 ### Backwards-incompatible changes
 
