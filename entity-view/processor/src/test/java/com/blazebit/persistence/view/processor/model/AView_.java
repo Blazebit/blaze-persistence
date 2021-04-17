@@ -22,6 +22,7 @@ public abstract class AView_ {
     public static volatile MethodMultiListAttribute<AView, String, Set<String>> multiNames;
     public static volatile MethodSingularAttribute<AView, String> name;
     public static volatile MethodListAttribute<AView, String> names;
+    public static volatile BViewRelation<AView, MethodSingularAttribute<AView, BView>> optionalValue;
     public static volatile MethodListAttribute<AView, Serializable> test;
 
     public static final String AGE = "age";
@@ -30,7 +31,11 @@ public abstract class AView_ {
     public static final String MULTI_NAMES = "multiNames";
     public static final String NAME = "name";
     public static final String NAMES = "names";
+    public static final String OPTIONAL_VALUE = "optionalValue";
     public static final String TEST = "test";
+    public static final String OPTIONAL_VALUEID = "optionalValue.id";
+    public static final String OPTIONAL_VALUENAME = "optionalValue.name";
+    public static final String OPTIONAL_VALUEPARENT = "optionalValue.parent";
 
     public static EntityViewSetting<AView, CriteriaBuilder<AView>> createSettingInit() {
         return EntityViewSetting.create(AView.class, "init");

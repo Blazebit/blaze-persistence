@@ -24,6 +24,10 @@ jobs:
     if: github.actor == 'quarkusbot' || github.actor == 'Mobe91' || github.actor == 'beikov'
 
     steps:
+      - name: Update /etc/hosts file
+        # /etc/hosts file needs to be updated as a workaround for
+        # https://github.com/actions/virtual-environments/issues/3185
+        run: echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
       - name: Install yq
         run: sudo add-apt-repository ppa:rmescandon/yq && sudo apt update && sudo apt install yq -y
 

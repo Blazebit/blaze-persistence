@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.processor.annotation;
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.TypeUtils;
+import com.blazebit.persistence.view.processor.convert.TypeConverter;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -34,6 +35,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.tools.Diagnostic;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -53,14 +55,14 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
     @Override
     public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
-        return new AnnotationMetaSingularAttribute(entity, element, type, t.toString(), context);
+        return new AnnotationMetaSingularAttribute(entity, element, type, t.toString(), null, context);
     }
 
     @Override
     public AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
         String realType = TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), t.getComponentType(), entity.getContext()) + "[]";
-        return new AnnotationMetaSingularAttribute(entity, element, type, realType, context);
+        return new AnnotationMetaSingularAttribute(entity, element, type, realType, null, context);
     }
 
     @Override
@@ -113,14 +115,29 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
                 return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementCollectionType, elementType, realElementType, context);
             }
         } else if (!Constants.SPECIAL.contains(fqNameOfReturnType)) {
-            String type = returnedElement.getQualifiedName().toString();
-            String realType;
+            String modelType = returnedElement.getQualifiedName().toString();
+            TypeMirror declaredTypeMirror;
             if (element instanceof ExecutableElement) {
-                realType = TypeUtils.toTypeString(entityDeclaredType, ((ExecutableElement) element).getReturnType(), context);
+                declaredTypeMirror = ((ExecutableElement) element).getReturnType();
             } else {
-                realType = TypeUtils.toTypeString(entityDeclaredType, element.asType(), context);
+                declaredTypeMirror = element.asType();
             }
-            return new AnnotationMetaSingularAttribute(entity, element, type, realType, context);
+            String declaredJavaType = TypeUtils.toTypeString(entityDeclaredType, declaredTypeMirror, context);
+            Map<String, TypeConverter> converters = context.getConverter(fqNameOfReturnType);
+            if (!converters.isEmpty()) {
+                // Try find a converter matching the entity model type
+                TypeConverter typeConverter = converters.get(declaredJavaType);
+                if (typeConverter == null) {
+                    typeConverter = converters.get("java.lang.Object");
+                }
+
+                if (typeConverter != null) {
+                    String convertedModelType = modelType;
+                    modelType = typeConverter.getUnderlyingType(entityDeclaredType, declaredTypeMirror, context);
+                    return new AnnotationMetaSingularAttribute(entity, element, modelType, declaredJavaType, convertedModelType, context);
+                }
+            }
+            return new AnnotationMetaSingularAttribute(entity, element, modelType, declaredJavaType, null, context);
         }
         return null;
     }

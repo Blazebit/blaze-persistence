@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor;
 
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaEntityView;
+import com.blazebit.persistence.view.processor.convert.TypeConverter;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -28,9 +29,11 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * @author Christian Beikov
@@ -44,6 +47,8 @@ public class Context {
 
     private final Map<String, MetaEntityView> metaEntityViews = new HashMap<>();
     private final Collection<String> generatedModelClasses = new HashSet<>();
+    private final Map<String, TypeElement> optionalParameters = new HashMap<>();
+    private final Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
 
     private boolean addGeneratedAnnotation;
     private boolean addGenerationDate;
@@ -55,7 +60,6 @@ public class Context {
     private boolean generateDeepConstants;
     private String defaultVersionAttributeName;
     private String defaultVersionAttributeType;
-    private Map<String, TypeElement> optionalParameters = new HashMap<>();
 
     public Context(ProcessingEnvironment pe) {
         this.pe = pe;
@@ -67,6 +71,9 @@ public class Context {
         } else {
             // Using the new name for this annotation in Java 9 and above
             generatedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.processing.Generated");
+        }
+        for (TypeConverter typeConverter : ServiceLoader.load(TypeConverter.class, Context.class.getClassLoader())) {
+            typeConverter.addRegistrations(converters);
         }
     }
 
@@ -80,6 +87,14 @@ public class Context {
 
     public Types getTypeUtils() {
         return pe.getTypeUtils();
+    }
+
+    public Map<String, TypeConverter> getConverter(String fqn) {
+        Map<String, TypeConverter> map = converters.get(fqn);
+        if (map == null) {
+            return Collections.emptyMap();
+        }
+        return map;
     }
 
     public void logMessage(Diagnostic.Kind type, String message) {

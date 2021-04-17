@@ -135,6 +135,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoH2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:h2:mem:test</jdbc.url>
@@ -169,6 +170,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
@@ -203,6 +205,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
@@ -237,6 +240,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:postgresql://localhost:5432/test</jdbc.url>
@@ -272,6 +276,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlite:test.db</jdbc.url>
@@ -306,6 +311,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
@@ -341,6 +347,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:firebirdsql:localhost:/tmp/test.fdb</jdbc.url>
@@ -375,6 +382,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:oracle:thin:@localhost:1521:XE</jdbc.url>
@@ -415,6 +423,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>${surefire.jvm.params}</argLine>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlserver://localhost:1433</jdbc.url>
@@ -2228,16 +2237,6 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>
-
-        <profile>
-            <id>post-10-unsafe-code</id>
-            <activation>
-                <jdk>[11,)</jdk>
-            </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens java.base/java.lang=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
         </profile>
     </profiles>
 </project>

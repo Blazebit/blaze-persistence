@@ -542,7 +542,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                         elementType = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
                         path = AttributePaths.of((MethodPluralAttribute<?, ?, ?>) attribute);
                     } else {
-                        elementType = attribute.getConvertedJavaType();
+                        elementType = attribute.getJavaType();
                         path = AttributePaths.of((MethodSingularAttribute<?, ?>) attribute);
                     }
                     if (attribute instanceof MethodMultiListAttribute<?, ?, ?> || attribute instanceof MethodMultiMapAttribute<?, ?, ?, ?>) {

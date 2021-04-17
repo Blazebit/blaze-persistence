@@ -132,7 +132,7 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
                 .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
                 .append(", ");
         if (elementCollectionJavaType != null) {
-            sb.append(getHostingEntity().importType(getType())).append(", ");
+            sb.append(getHostingEntity().importType(getModelType())).append(", ");
         }
         appendElementType(sb, importContext);
         sb.append('>');
@@ -141,11 +141,11 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     @Override
     public void appendElementType(StringBuilder sb, ImportContext importContext) {
         if (elementCollectionJavaType == null) {
-            sb.append(getHostingEntity().importType(getType()));
+            sb.append(getHostingEntity().importType(getModelType()));
         } else {
             sb.append(getHostingEntity().importType(elementCollectionJavaType))
                     .append('<')
-                    .append(getHostingEntity().importType(getType()))
+                    .append(getHostingEntity().importType(getModelType()))
                     .append('>');
         }
     }

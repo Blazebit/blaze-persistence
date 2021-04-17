@@ -26,12 +26,12 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 /**
  * A builder for creating an entity view.
  *
- * @param <T> The entity view type that is built
- * @param <X> The entity view builder type
+ * @param <ViewType> The entity view type that is built
+ * @param <BuilderType> The entity view builder type
  * @author Christian Beikov
  * @since 1.5.0
  */
-public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>> {
+public interface EntityViewBuilderBase<ViewType, BuilderType extends EntityViewBuilderBase<ViewType, BuilderType>> {
 
     /**
      * Sets the given value for the given attribute.
@@ -40,7 +40,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value     The value
      * @return this builder for chaining
      */
-    X with(String attribute, Object value);
+    BuilderType with(String attribute, Object value);
 
     /**
      * Sets the given value for the given constructor parameter.
@@ -49,7 +49,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value          The value
      * @return this builder for chaining
      */
-    X with(int parameterIndex, Object value);
+    BuilderType with(int parameterIndex, Object value);
 
     /**
      * Sets the given value for the attribute.
@@ -59,7 +59,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The attribute type
      * @return this builder for chaining
      */
-    <E> X with(SingularAttribute<T, E> attribute, E value);
+    <E> BuilderType with(SingularAttribute<ViewType, E> attribute, E value);
 
     /**
      * Sets the given value for the attribute.
@@ -69,7 +69,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <C>       The attribute type
      * @return this builder for chaining
      */
-    <C> X with(PluralAttribute<T, C, ?> attribute, C value);
+    <C> BuilderType with(PluralAttribute<ViewType, C, ?> attribute, C value);
 
     /**
      * Returns the value for the given attribute.
@@ -96,7 +96,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The attribute type
      * @return The value
      */
-    <E> E get(SingularAttribute<T, E> attribute);
+    <E> E get(SingularAttribute<ViewType, E> attribute);
 
     /**
      * Returns the value for the given attribute.
@@ -105,7 +105,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <C>       The attribute type
      * @return The value
      */
-    <C> C get(PluralAttribute<T, C, ?> attribute);
+    <C> C get(PluralAttribute<ViewType, C, ?> attribute);
 
     /**
      * Adds the given value as element to the Collection, Set or List attribute for the given attribute name.
@@ -114,7 +114,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value     The value
      * @return this builder for chaining
      */
-    X withElement(String attribute, Object value);
+    BuilderType withElement(String attribute, Object value);
 
     /**
      * Adds the given value as element to the Collection, Set or List attribute for the given constructor parameter index.
@@ -123,7 +123,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value          The value
      * @return this builder for chaining
      */
-    X withElement(int parameterIndex, Object value);
+    BuilderType withElement(int parameterIndex, Object value);
 
     /**
      * Adds the given value as element at the given index to the List attribute for the given attribute name.
@@ -133,7 +133,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value     The value
      * @return this builder for chaining
      */
-    X withListElement(String attribute, int index, Object value);
+    BuilderType withListElement(String attribute, int index, Object value);
 
     /**
      * Adds the given value as element at the given index to the List attribute for the given constructor parameter index.
@@ -143,7 +143,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value          The value
      * @return this builder for chaining
      */
-    X withListElement(int parameterIndex, int index, Object value);
+    BuilderType withListElement(int parameterIndex, int index, Object value);
 
     /**
      * Adds the given key and value to the Map attribute for the given attribute name.
@@ -153,7 +153,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value     The value
      * @return this builder for chaining
      */
-    X withEntry(String attribute, Object key, Object value);
+    BuilderType withEntry(String attribute, Object key, Object value);
 
     /**
      * Adds the given key and value to the Map attribute for the given constructor parameter index.
@@ -163,7 +163,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param value          The value
      * @return this builder for chaining
      */
-    X withEntry(int parameterIndex, Object key, Object value);
+    BuilderType withEntry(int parameterIndex, Object key, Object value);
 
     /**
      * Adds the given value as element to the Collection for the given attribute.
@@ -173,7 +173,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return this builder for chaining
      */
-    <E> X withElement(CollectionAttribute<T, E> attribute, E value);
+    <E> BuilderType withElement(CollectionAttribute<ViewType, E> attribute, E value);
 
     /**
      * Adds the given value as element to the Set for the given attribute.
@@ -183,7 +183,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return this builder for chaining
      */
-    <E> X withElement(SetAttribute<T, E> attribute, E value);
+    <E> BuilderType withElement(SetAttribute<ViewType, E> attribute, E value);
 
     /**
      * Adds the given value as element to the List for the given attribute.
@@ -193,7 +193,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return this builder for chaining
      */
-    <E> X withElement(ListAttribute<T, E> attribute, E value);
+    <E> BuilderType withElement(ListAttribute<ViewType, E> attribute, E value);
 
     /**
      * Sets the given value as element on the List at the given index for the given attribute.
@@ -204,7 +204,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return this builder for chaining
      */
-    <E> X withListElement(ListAttribute<T, E> attribute, int index, E value);
+    <E> BuilderType withListElement(ListAttribute<ViewType, E> attribute, int index, E value);
 
     /**
      * Sets the given value as element on the Map for the given key for the given attribute.
@@ -216,7 +216,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>       The element type
      * @return this builder for chaining
      */
-    <K, V> X withEntry(MapAttribute<T, K, V> attribute, K key, V value);
+    <K, V> BuilderType withEntry(MapAttribute<ViewType, K, V> attribute, K key, V value);
 
     /**
      * Starts and returns a nested entity view builder for the singular attribute for the given attribute name.
@@ -225,7 +225,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The attribute type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withSingularBuilder(String attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSingularBuilder(String attribute);
 
     /**
      * Starts and returns a nested entity view builder for the singular attribute for the given constructor parameter index.
@@ -234,7 +234,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>            The attribute type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withSingularBuilder(int parameterIndex);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSingularBuilder(int parameterIndex);
 
     /**
      * Starts and returns a nested entity view builder for the Collection, Set or List attribute for the given attribute name.
@@ -243,7 +243,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(String attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withCollectionBuilder(String attribute);
 
     /**
      * Starts and returns a nested entity view builder for the Collection, Set or List attribute for the given constructor parameter index.
@@ -252,7 +252,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>            The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withCollectionBuilder(int parameterIndex);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withCollectionBuilder(int parameterIndex);
 
     /**
      * Starts and returns a nested entity view builder for the List attribute for the given attribute name.
@@ -261,7 +261,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(String attribute);
 
     /**
      * Starts and returns a nested entity view builder for the List attribute for the given constructor parameter index.
@@ -270,7 +270,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>            The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(int parameterIndex);
 
     /**
      * Starts and returns a nested entity view builder for the List attribute for the given attribute name.
@@ -281,7 +281,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withListBuilder(String attribute, int index);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(String attribute, int index);
 
     /**
      * Starts and returns a nested entity view builder for the List attribute for the given constructor parameter index.
@@ -292,7 +292,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>            The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withListBuilder(int parameterIndex, int index);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withListBuilder(int parameterIndex, int index);
 
     /**
      * Starts and returns a nested entity view builder for the Set attribute for the given attribute name.
@@ -301,7 +301,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withSetBuilder(String attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSetBuilder(String attribute);
 
     /**
      * Starts and returns a nested entity view builder for the Set attribute for the given constructor parameter index.
@@ -310,7 +310,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>            The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withSetBuilder(int parameterIndex);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withSetBuilder(int parameterIndex);
 
     /**
      * Starts and returns a nested entity view builder for the Map attribute for the given attribute name.
@@ -321,7 +321,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>       The element type
      * @return the nested builder
      */
-    <V> EntityViewNestedBuilder<V, X> withMapBuilder(String attribute, Object key);
+    <V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withMapBuilder(String attribute, Object key);
 
     /**
      * Starts and returns a nested entity view builder for the Map attribute for the given constructor parameter index.
@@ -332,7 +332,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>            The element type
      * @return the nested builder
      */
-    <V> EntityViewNestedBuilder<V, X> withMapBuilder(int parameterIndex, Object key);
+    <V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withMapBuilder(int parameterIndex, Object key);
 
     /**
      * Starts and returns a nested entity view builder for the Map attribute for the given attribute name.
@@ -343,7 +343,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>       The element type
      * @return the nested builder
      */
-    <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(String attribute);
+    <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withMapBuilder(String attribute);
 
     /**
      * Starts and returns a nested entity view builder for the Map attribute for the given constructor parameter index.
@@ -354,7 +354,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>            The element type
      * @return the nested builder
      */
-    <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withMapBuilder(int parameterIndex);
+    <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withMapBuilder(int parameterIndex);
 
     /**
      * Starts and returns a nested entity view builder for the given singular attribute.
@@ -363,7 +363,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The attribute type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withBuilder(SingularAttribute<T, E> attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(SingularAttribute<ViewType, E> attribute);
 
     /**
      * Starts and returns a nested entity view builder for the given Collection attribute.
@@ -372,7 +372,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withBuilder(CollectionAttribute<T, E> attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(CollectionAttribute<ViewType, E> attribute);
 
     /**
      * Starts and returns a nested entity view builder for the given List attribute.
@@ -381,7 +381,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(ListAttribute<ViewType, E> attribute);
 
     /**
      * Starts and returns a nested entity view builder for the given List attribute.
@@ -392,7 +392,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withBuilder(ListAttribute<T, E> attribute, int index);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(ListAttribute<ViewType, E> attribute, int index);
 
     /**
      * Starts and returns a nested entity view builder for the Set attribute.
@@ -401,7 +401,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <E>       The element type
      * @return the nested builder
      */
-    <E> EntityViewNestedBuilder<E, X> withBuilder(SetAttribute<T, E> attribute);
+    <E> EntityViewNestedBuilder<E, ? extends BuilderType, ?> withBuilder(SetAttribute<ViewType, E> attribute);
 
     /**
      * Starts and returns a nested entity view builder for the given Map attribute.
@@ -413,7 +413,7 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>       The element type
      * @return the nested builder
      */
-    <K, V> EntityViewNestedBuilder<V, X> withBuilder(MapAttribute<T, K, V> attribute, K key);
+    <K, V> EntityViewNestedBuilder<V, ? extends BuilderType, ?> withBuilder(MapAttribute<ViewType, K, V> attribute, K key);
 
     /**
      * Starts and returns a nested entity view builder for the given Map attribute.
@@ -424,5 +424,5 @@ public interface EntityViewBuilderBase<T, X extends EntityViewBuilderBase<T, X>>
      * @param <V>       The element type
      * @return the nested builder
      */
-    <K, V> EntityViewNestedBuilder<K, EntityViewNestedBuilder<V, X>> withBuilder(MapAttribute<T, K, V> attribute);
+    <K, V> EntityViewNestedBuilder<K, ? extends EntityViewNestedBuilder<V, ? extends BuilderType, ?>, ?> withBuilder(MapAttribute<ViewType, K, V> attribute);
 }

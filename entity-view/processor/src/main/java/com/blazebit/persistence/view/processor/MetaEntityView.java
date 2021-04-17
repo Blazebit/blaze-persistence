@@ -102,5 +102,7 @@ public interface MetaEntityView {
 
     Map<String, ViewFilter> getViewFilters();
 
+    String getSafeTypeVariable(String typeVariable);
+
     int getDefaultDirtyMask();
 }

@@ -49,9 +49,13 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
@@ -59,6 +63,7 @@ import java.util.logging.LogManager;
  */
 public abstract class AbstractJaxrsTest {
 
+    private static final Logger LOG = Logger.getLogger(AbstractJaxrsTest.class.getName());
     private static final int SERVER_START_PORT = 18080;
     private static final String SERVER_HOST = "localhost";
     private static Server SERVER;
@@ -95,9 +100,13 @@ public abstract class AbstractJaxrsTest {
                 if (!(getRootCause(e) instanceof BindException)) {
                     throw e;
                 }
+                LOG.log(Level.SEVERE, "Can't create http endpoint. Retrying with different port...", e);
             }
         }
         SERVER.start();
+        while (!SERVER.isStarted()) {
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
+        }
     }
 
     private static Throwable getRootCause(Throwable t) {

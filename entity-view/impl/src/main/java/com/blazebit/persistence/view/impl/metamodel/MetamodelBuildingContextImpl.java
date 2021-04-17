@@ -428,7 +428,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                     BasicUserType<X> userType = (BasicUserType<X>) basicUserTypeRegistry.getBasicUserType(ReflectionUtils.resolveType(viewMapping.getEntityViewClass(), type));
                     ManagedType<X> managedType = (ManagedType<X>) entityMetamodel.getManagedType(classType);
                     registerMultisetSupport(userType);
-                    t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<?, X>) typeConverter);
+                    t = new BasicTypeImpl<>((Class<X>) classType, managedType, userType, type, (TypeConverter<X, ?>) typeConverter);
                     if (convertedTypeMap == null) {
                         convertedTypeMap = new HashMap<>();
                         convertedTypeRegistry.put(key, convertedTypeMap);

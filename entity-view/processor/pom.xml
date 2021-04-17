@@ -92,6 +92,7 @@
                                         requires transitive com.blazebit.persistence.core;
                                         requires transitive com.blazebit.persistence.view;
                                         provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;
+                                        provides com.blazebit.persistence.view.processor.convert.TypeConverter with com.blazebit.persistence.view.processor.convert.OptionalTypeConverter;
                                     }
                                 </moduleInfoSource>
                             </module>

@@ -33,7 +33,7 @@ public class BasicTypeImpl<X> implements BasicType<X> {
 
     private final Class<X> javaType;
     private final Type convertedType;
-    private final TypeConverter<?, X> converter;
+    private final TypeConverter<X, ?> converter;
     private final ManagedType<X> managedType;
     private final BasicUserType<X> userType;
 
@@ -45,7 +45,7 @@ public class BasicTypeImpl<X> implements BasicType<X> {
         this.userType = userType;
     }
 
-    public BasicTypeImpl(Class<X> javaType, ManagedType<X> managedType, BasicUserType<X> userType, Type convertedType, TypeConverter<?, X> converter) {
+    public BasicTypeImpl(Class<X> javaType, ManagedType<X> managedType, BasicUserType<X> userType, Type convertedType, TypeConverter<X, ?> converter) {
         this.javaType = javaType;
         this.convertedType = convertedType;
         this.converter = converter;
@@ -64,7 +64,7 @@ public class BasicTypeImpl<X> implements BasicType<X> {
     }
 
     @Override
-    public TypeConverter<?, X> getConverter() {
+    public TypeConverter<X, ?> getConverter() {
         return converter;
     }
 

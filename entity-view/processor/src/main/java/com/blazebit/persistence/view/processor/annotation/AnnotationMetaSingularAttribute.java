@@ -27,8 +27,8 @@ import javax.lang.model.element.Element;
  */
 public class AnnotationMetaSingularAttribute extends AnnotationMetaAttribute {
 
-    public AnnotationMetaSingularAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, Context context) {
-        super(parent, element, type, realType, context);
+    public AnnotationMetaSingularAttribute(AnnotationMetaEntityView parent, Element element, String type, String realType, String convertedModelType, Context context) {
+        super(parent, element, type, realType, convertedModelType, context, false);
     }
 
     @Override

@@ -46,7 +46,7 @@ public interface Type<X> {
      *
      * @return The type converter
      */
-    public TypeConverter<?, X> getConverter();
+    public TypeConverter<X, ?> getConverter();
 
     /**
      * Returns the mapping type.
