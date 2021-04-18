@@ -29,6 +29,7 @@ None yet
 * Fix `NumberFormatException` in `OracleDbmsLimitHandler` for set operation queries with limit and offset
 * Properly handle `Optional` in entity view annotation processor
 * Retain entity view kind when converting entity view if possible
+* Improve dialect detection for MariaDB dialects
 
 ### Backwards-incompatible changes
 
