@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -114,6 +115,13 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
     @Override
     public Object flushToEntity(UpdateContext context, Object entity, Object view) {
         return applyToEntity(context, entity, view);
+    }
+
+    @Override
+    public void loadEntities(UpdateContext context, List<Object> views) {
+        for (int i = 0; i < views.size(); i++) {
+            views.set(i, null);
+        }
     }
 
     @Override

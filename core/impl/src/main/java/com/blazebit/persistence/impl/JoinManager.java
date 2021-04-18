@@ -187,7 +187,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
-        aliasManager.registerAliasInfo(rootAliasInfo);
+        aliasManager.registerAliasInfoOnly(rootAliasInfo);
         nodeMapping.put(node, rootNode);
 
         for (JoinTreeNode treeNode : node.getNodes().values()) {
@@ -234,7 +234,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         } else {
             newAliasInfo = new TreatedJoinAliasInfo(nodeMapping.get(((TreatedJoinAliasInfo) oldNode.getAliasInfo()).getTreatedJoinNode()), oldNode.getTreatType(), alias);
         }
-        aliasManager.registerAliasInfo(newAliasInfo);
+        aliasManager.registerAliasInfoOnly(newAliasInfo);
 
         node = oldNode.cloneJoinNode(parent, treeNode, newAliasInfo);
         newAliasInfo.setJoinNode(node);

@@ -130,7 +130,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.flushStrategy = flushStrategy;
         this.lockOwner = lockOwner;
         this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
-        this.referenceEntityLoader = new ReferenceEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor);
+        this.referenceEntityLoader = new ReferenceEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor, false);
         this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
         this.versionedDeleteQuery = createVersionedDeleteQuery(deleteQuery, versionFlusher);
         boolean[] features = determineFeatures(flushStrategy, flushers);

@@ -28,9 +28,9 @@ import com.blazebit.persistence.view.impl.entity.DefaultEntityToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ElementToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
+import com.blazebit.persistence.view.impl.entity.EntityLoaders;
 import com.blazebit.persistence.view.impl.entity.EntityToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.LoadOrPersistViewToEntityMapper;
-import com.blazebit.persistence.view.impl.entity.ReferenceEntityLoader;
 import com.blazebit.persistence.view.impl.entity.UpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
@@ -176,8 +176,39 @@ public class TypeDescriptor {
                 entityIdAttributeName = extendedManagedType.getIdAttribute().getName();
                 attributeIdAttributeName = getAttributeElementIdentifier(evm, (EntityType<?>) ownerEntityType, attribute.getName(), ownerMapping, attribute.getMapping(), extendedManagedType.getType());
             }
-            viewToEntityMapper = createViewToEntityMapper(evm, localCache, updater, attributeIdAttributeName, attribute.getMapping(), attributeLocation, elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
-            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(attributeLocation, evm, localCache, attributeIdAttributeName, attribute.getMapping(), elementType, cascadePersist, cascadeUpdate, readOnlyAllowedSubtypes, persistAllowedSubtypes, updateAllowedSubtypes, viewTypes, owner, ownerMapping);
+            viewToEntityMapper = createViewToEntityMapper(
+                evm,
+                localCache,
+                updater,
+                attributeIdAttributeName,
+                attribute.getMapping(),
+                attributeLocation,
+                elementType,
+                cascadePersist,
+                cascadeUpdate,
+                readOnlyAllowedSubtypes,
+                persistAllowedSubtypes,
+                updateAllowedSubtypes,
+                EntityLoaders.referenceLoaderForAttribute(evm, localCache, elementType, viewTypes, attributeIdAttributeName),
+                owner,
+                ownerMapping
+            );
+            loadOnlyViewToEntityMapper = createLoadOnlyViewToEntityMapper(
+                attributeLocation,
+                evm,
+                localCache,
+                attributeIdAttributeName,
+                attribute.getMapping(),
+                elementType,
+                cascadePersist,
+                cascadeUpdate,
+                readOnlyAllowedSubtypes,
+                persistAllowedSubtypes,
+                updateAllowedSubtypes,
+                EntityLoaders.referenceLoaderForAttribute(evm, localCache, elementType, viewTypes, attributeIdAttributeName),
+                owner,
+                ownerMapping
+            );
             identifiable = viewToEntityMapper.getViewIdAccessor() != null;
         }
 
@@ -303,8 +334,7 @@ public class TypeDescriptor {
     }
 
     private static ViewToEntityMapper createViewToEntityMapper(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, EntityViewUpdaterImpl updater, String attributeIdAttributeName, String attributeMapping, String attributeLocation, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
-                                                               Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, localCache, viewType, viewTypes);
+                                                               Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, EntityViewUpdaterImpl owner, String ownerMapping) {
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
@@ -365,8 +395,7 @@ public class TypeDescriptor {
     }
 
     private static ViewToEntityMapper createLoadOnlyViewToEntityMapper(String attributeLocation, EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, String attributeIdAttributeName, String attributeMapping, ManagedViewType<?> viewType, boolean cascadePersist, boolean cascadeUpdate,
-                                                                       Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, Set<ManagedViewType<?>> viewTypes, EntityViewUpdaterImpl owner, String ownerMapping) {
-        EntityLoader entityLoader = ReferenceEntityLoader.forAttribute(evm, localCache, viewType, viewTypes);
+                                                                       Set<Type<?>> readOnlyAllowedSubtypes, Set<Type<?>> persistAllowedSubtypes, Set<Type<?>> updateAllowedSubtypes, EntityLoader entityLoader, EntityViewUpdaterImpl owner, String ownerMapping) {
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {

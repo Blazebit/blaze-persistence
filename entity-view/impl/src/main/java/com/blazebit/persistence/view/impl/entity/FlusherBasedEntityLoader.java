@@ -35,6 +35,7 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
 
     private final DirtyAttributeFlusher<?, Object, Object>[] flushers;
     private volatile String queryString;
+    private volatile String queryStringMultiple;
 
     public FlusherBasedEntityLoader(EntityViewManagerImpl evm, Class<?> entityClass, SingularAttribute<?, ?> jpaIdAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor, DirtyAttributeFlusher<?, Object, Object>[] flushers) {
         super(evm, entityClass, jpaIdAttribute, null, viewIdMapper, entityIdAccessor);
@@ -64,6 +65,27 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
         return query;
     }
 
+    private String getQueryStringMultiple() {
+        String query = queryStringMultiple;
+        if (query != null) {
+            return query;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("SELECT e FROM ").append(entityClass.getName()).append(" e");
+        for (int i = 0; i < flushers.length; i++) {
+            if (flushers[i] != null) {
+                flushers[i].appendFetchJoinQueryFragment("e", sb);
+            }
+        }
+        sb.append(" WHERE e.").append(idAttributeName).append(" IN :entityIds");
+
+        query = sb.toString();
+        queryStringMultiple = query;
+        return query;
+    }
+
     @Override
     public Object toEntity(UpdateContext context, Object view, Object id) {
         if (id == null || entityIdAccessor == null) {
@@ -71,6 +93,17 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
         }
 
         return getReferenceOrLoad(context, view, id);
+    }
+
+    @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        if (entityIdAccessor == null) {
+            for (int i = 0; i < views.size(); i++) {
+                views.set(i, createEntity());
+            }
+        } else {
+            getReferencesLoadOrCreate(context, views, ids);
+        }
     }
 
     @Override
@@ -84,5 +117,17 @@ public class FlusherBasedEntityLoader extends AbstractEntityLoader {
         }
 
         return list.get(0);
+    }
+
+    @Override
+    protected List<Object> queryEntities(EntityManager em, List<Object> ids) {
+        List<Object> list = em.createQuery(getQueryStringMultiple())
+            .setParameter("entityIds", ids)
+            .getResultList();
+        if (list.size() != ids.size()) {
+            throw new EntityNotFoundException("Required entities '" + entityClass.getName() + "' with ids '" + ids + "' couldn't all be found!");
+        }
+
+        return list;
     }
 }

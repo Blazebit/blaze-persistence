@@ -130,28 +130,64 @@ public class AliasManager {
         return alias;
     }
 
+    void registerAliasInfoOnly(AliasInfo aliasInfo) {
+        aliasMap.put(aliasInfo.getAlias(), aliasInfo);
+    }
+
     public String generateRootAlias(String alias) {
-        return generatePostfixedAlias(alias, DEFAULT_IMPLICIT_ALIAS_START_IDX);
+        return generatePostfixedAlias(alias, DEFAULT_IMPLICIT_ALIAS_START_IDX, AliasGenerationMode.CREATE);
     }
 
     // TODO: rewrite tests for join aliases to be 0-based so we can remove this method
     public String generateJoinAlias(String alias) {
-        return generatePostfixedAlias(alias, 1);
+        return generatePostfixedAlias(alias, 1, AliasGenerationMode.CREATE);
     }
 
-    private String generatePostfixedAlias(String alias, int startIdx) {
-        Integer counter;
-        String nonPostfixed = alias;
-        if ((counter = getCounter(alias)) == null) {
-            // alias does not exist so just register it
-            counter = startIdx;
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.6.0
+     */
+    private enum AliasGenerationMode {
+        CREATE,
+        FIND_PARENT,
+        FIND_CHILD
+    }
+
+    String generatePostfixedAlias(String baseAlias, int startIdx, AliasGenerationMode generationMode) {
+        // Don't copy counter from parent but implement this in the alias manager that owns the alias,
+        // otherwise we could run into collisions
+        String newAlias;
+        Integer counter = aliasCounterMap.get(baseAlias);
+        if (counter == null) {
+            if (generationMode != AliasGenerationMode.FIND_CHILD && parent != null) {
+                newAlias = parent.generatePostfixedAlias(baseAlias, startIdx, AliasGenerationMode.FIND_PARENT);
+                if (newAlias != null) {
+                    return newAlias;
+                }
+            }
+            if (generationMode != AliasGenerationMode.FIND_PARENT) {
+                for (int i = 0; i < children.size(); i++) {
+                    AliasManager child = children.get(i);
+                    newAlias = child.generatePostfixedAlias(baseAlias, startIdx, AliasGenerationMode.FIND_CHILD);
+                    if (newAlias != null) {
+                        return newAlias;
+                    }
+                }
+                if (generationMode == AliasGenerationMode.CREATE) {
+                    counter = startIdx;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         } else {
-            // non postfixed version of the alias already exists
             counter++;
         }
-        alias = alias + "_" + counter;
-        aliasCounterMap.put(nonPostfixed, counter);
-        return alias;
+        newAlias = baseAlias + "_" + counter;
+        aliasCounterMap.put(baseAlias, counter);
+        return newAlias;
     }
 
     private AliasInfo getHierarchical(String alias) {

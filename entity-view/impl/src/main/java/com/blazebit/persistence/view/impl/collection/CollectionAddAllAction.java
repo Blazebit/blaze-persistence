@@ -78,8 +78,12 @@ public class CollectionAddAllAction<C extends Collection<E>, E> implements Colle
             if (collection instanceof ArrayList<?>) {
                 ((ArrayList<?>) collection).ensureCapacity(collection.size() + elements.size());
             }
-            for (Object e : elements) {
-                collection.add((E) mapper.applyToEntity(context, null, e));
+            if (elements.size() == 1) {
+                collection.add((E) mapper.applyToEntity(context, null, elements.iterator().next()));
+            } else {
+                List<E> entities = new ArrayList<>(elements);
+                mapper.applyAll(context, (List<Object>) entities);
+                collection.addAll(entities);
             }
         } else {
             collection.addAll(elements);

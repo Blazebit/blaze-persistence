@@ -148,18 +148,6 @@ public class UpdaterBasedViewToEntityMapper extends AbstractViewToEntityMapper {
     }
 
     @Override
-    public Object loadEntity(UpdateContext context, Object view) {
-        if (view == null) {
-            return null;
-        }
-        Object id = null;
-        if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(view);
-        }
-        return entityLoader.toEntity(context, view, id);
-    }
-
-    @Override
     public Query createUpdateQuery(UpdateContext context, MutableStateTrackable view, DirtyAttributeFlusher<?, ?, ?> nestedGraphNode) {
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = updateUpdater.get(viewTypeClass);

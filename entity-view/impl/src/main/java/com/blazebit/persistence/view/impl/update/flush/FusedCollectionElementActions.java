@@ -91,9 +91,10 @@ public class FusedCollectionElementActions implements FusedCollectionActions {
         List<Object> entityReferences = new ArrayList<>(objects.size());
         for (Object o : objects) {
             if (o != null) {
-                entityReferences.add(loadOnlyViewToEntityMapper.applyToEntity(context, null, o));
+                entityReferences.add(o);
             }
         }
+        loadOnlyViewToEntityMapper.applyAll(context, entityReferences);
         return entityReferences;
     }
 }

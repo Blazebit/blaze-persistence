@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -28,9 +30,11 @@ import java.io.Serializable;
  */
 @Entity
 @Table(name = "book")
+@Access(AccessType.FIELD)
 public class BookEntity extends Ownable implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Column(unique = true, name = "isbn", length = 50, nullable = false)
     private String isbn;
 
     public BookEntity() {
@@ -40,7 +44,6 @@ public class BookEntity extends Ownable implements Serializable {
         super(id);
     }
 
-    @Column(unique = true, name = "isbn", length = 50, nullable = false)
     public String getIsbn() {
         return isbn;
     }

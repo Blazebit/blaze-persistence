@@ -361,7 +361,7 @@ public class AnnotationMappingReader implements MappingReader {
                                 }
                             }
                         }
-                    } else if (!concreteMethods.contains(methodName) && method.getReturnType() != EntityViewManager.class) {
+                    } else if (!concreteMethods.contains(methodName) && method.getReturnType() != EntityViewManager.class && method.getReturnType() != void.class) {
                         // Check if the attribute definition is conflicting
                         String attributeName = AbstractMethodAttribute.getAttributeName(method);
                         Annotation mapping = getMapping(attributeName, method, true);
@@ -370,7 +370,7 @@ public class AnnotationMappingReader implements MappingReader {
                         // We ignore methods that only have implicit mappings
                         if (mapping instanceof MappingLiteral) {
                             // Unless the declaring class of the method is no interface and the already visited method is an interface
-                            if (c.isInterface() || !originalAttribute.getMethod().getDeclaringClass().isInterface()) {
+                            if (c.isInterface() || originalAttribute == null || !originalAttribute.getMethod().getDeclaringClass().isInterface()) {
                                 continue;
                             }
                         }

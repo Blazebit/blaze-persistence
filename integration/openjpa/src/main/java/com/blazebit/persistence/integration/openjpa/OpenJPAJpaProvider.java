@@ -471,6 +471,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsProxyParameterForNonPkAssociation() {
+        return true;
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -42,13 +43,15 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     private final String attributeName;
     private final Map<String, Map<?, ?>> fetchGraph;
     private final String queryString;
+    private final String queryStringMultiple;
 
     public DefaultEntityLoaderFetchGraphNode(EntityViewManagerImpl evm, String attributeName, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph) {
         // ViewIdMapper is not necessary because this is only for entity types
         super(evm, entityType.getJavaType(), JpaMetamodelUtils.getSingleIdAttribute(entityType), null, null, evm.getEntityIdAccessor());
         this.attributeName = attributeName;
         this.fetchGraph = fetchGraph;
-        this.queryString = createQueryString(evm, entityType, fetchGraph);
+        this.queryString = createQueryString(evm, entityType, fetchGraph, false);
+        this.queryStringMultiple = createQueryString(evm, entityType, fetchGraph, true);
     }
 
     @Override
@@ -94,7 +97,7 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
         }
     }
 
-    private String createQueryString(EntityViewManagerImpl evm, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph) {
+    private String createQueryString(EntityViewManagerImpl evm, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph, boolean multiple) {
         CriteriaBuilderFactory cbf = evm.getCriteriaBuilderFactory();
         EntityManagerFactory emf = cbf.getService(EntityManagerFactory.class);
         EntityManager em = emf.createEntityManager();
@@ -102,12 +105,20 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
         try {
             String[] paths = flatten(fetchGraph);
             if (paths.length == 0) {
+                if (multiple) {
+                    return cbf.create(em, entityClass)
+                        .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds")
+                        .getQueryString();
+                }
                 return null;
             } else {
-                return cbf.create(em, entityClass)
-                        .fetch(paths)
-                        .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id")
-                        .getQueryString();
+                CriteriaBuilder<?> criteriaBuilder = cbf.create(em, entityClass).fetch(paths);
+                if (multiple) {
+                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
+                } else {
+                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
+                }
+                return criteriaBuilder.getQueryString();
             }
         } finally {
             em.close();
@@ -153,6 +164,17 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
     }
 
     @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        if (queryString == null) {
+            for (int i = 0; i < views.size(); i++) {
+                views.set(i, createEntity());
+            }
+        } else {
+            getReferencesLoadOrCreate(context, views, ids);
+        }
+    }
+
+    @Override
     protected Object queryEntity(EntityManager em, Object id) {
         if (queryString == null) {
             return em.find(entityClass, id);
@@ -167,5 +189,17 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
         }
 
         return list.get(0);
+    }
+
+    @Override
+    protected List<Object> queryEntities(EntityManager em, List<Object> ids) {
+        List<Object> list = em.createQuery(queryStringMultiple)
+            .setParameter("entityIds", ids)
+            .getResultList();
+        if (list.size() != ids.size()) {
+            throw new EntityNotFoundException("Required entities '" + entityClass.getName() + "' with ids '" + ids + "' couldn't all be found!");
+        }
+
+        return list;
     }
 }

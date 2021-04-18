@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -37,12 +39,26 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "nid_join_table")
+@Access(AccessType.FIELD)
 public class NaturalIdJoinTableEntity extends Ownable implements Serializable {
 
     private Long version;
+    @Column(unique = true, name = "isbn", length = 50, nullable = false)
     private String isbn;
-    private BookEntity oneToOneBook;
+    @OneToMany
+    @JoinTable(
+        name = "nid_jt_join_table1",
+        joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
+        inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
+    )
     private Set<BookEntity> oneToManyBook = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+        name = "nid_jt_join_table2",
+        joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
+        inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
+    )
+    @MapKeyColumn(name = "nid_map_key", nullable = false, length = 20)
     private Map<String, BookEntity> manyToManyBook = new HashMap<>();
 
     public Long getVersion() {
@@ -53,12 +69,6 @@ public class NaturalIdJoinTableEntity extends Ownable implements Serializable {
         this.version = version;
     }
 
-    @OneToMany
-    @JoinTable(
-            name = "nid_jt_join_table1",
-            joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
-            inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
-    )
     public Set<BookEntity> getOneToManyBook() {
         return oneToManyBook;
     }
@@ -67,13 +77,6 @@ public class NaturalIdJoinTableEntity extends Ownable implements Serializable {
         this.oneToManyBook = oneToManyBook;
     }
 
-    @ManyToMany
-    @JoinTable(
-            name = "nid_jt_join_table2",
-            joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
-            inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn")
-    )
-    @MapKeyColumn(name = "nid_map_key", nullable = false, length = 20)
     public Map<String, BookEntity> getManyToManyBook() {
         return manyToManyBook;
     }
@@ -82,7 +85,6 @@ public class NaturalIdJoinTableEntity extends Ownable implements Serializable {
         this.manyToManyBook = manyToManyBook;
     }
 
-    @Column(unique = true, name = "isbn", length = 50, nullable = false)
     public String getIsbn() {
         return isbn;
     }

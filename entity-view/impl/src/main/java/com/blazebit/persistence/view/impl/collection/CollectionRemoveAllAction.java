@@ -100,8 +100,12 @@ public class CollectionRemoveAllAction<C extends Collection<E>, E> implements Co
             }
         }
         if (mapper != null) {
-            for (Object e : elements) {
-                collection.remove(mapper.applyToEntity(context, null, e));
+            if (elements.size() == 1) {
+                collection.remove((E) mapper.applyToEntity(context, null, elements.iterator().next()));
+            } else {
+                List<Object> entities = new ArrayList<>(elements);
+                mapper.applyAll(context, entities);
+                collection.removeAll(entities);
             }
         } else {
             collection.removeAll(elements);

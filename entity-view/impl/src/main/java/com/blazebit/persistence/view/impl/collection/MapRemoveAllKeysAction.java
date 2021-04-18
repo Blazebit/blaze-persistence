@@ -66,7 +66,8 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
     @Override
     public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getKeyMapper() != null) {
-            for (Object e : elements) {
+            if (elements.size() == 1) {
+                Object e = elements.iterator().next();
                 K key = (K) mapper.getKeyMapper().applyToEntity(context, null, e);
                 V value = map.remove(key);
                 if (value != null) {
@@ -75,6 +76,23 @@ public class MapRemoveAllKeysAction<C extends Map<K, V>, K, V> implements MapAct
                     }
                     if (valueRemoveListener != null) {
                         valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e));
+                    }
+                }
+            } else {
+                List<Object> entities = new ArrayList<>(elements.size());
+                entities.addAll(elements);
+                mapper.getKeyMapper().applyAll(context, entities);
+                int i = 0;
+                for (Object e : elements) {
+                    K key = (K) entities.get(i++);
+                    V value = map.remove(key);
+                    if (value != null) {
+                        if (keyRemoveListener != null) {
+                            keyRemoveListener.onCollectionRemove(context, e);
+                        }
+                        if (valueRemoveListener != null) {
+                            valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e));
+                        }
                     }
                 }
             }

@@ -56,9 +56,12 @@ public class ListAddAllAction<C extends List<E>, E> implements ListAction<C> {
             if (list instanceof ArrayList<?>) {
                 ((ArrayList<?>) list).ensureCapacity(list.size() + elements.size());
             }
-            int i = index;
-            for (Object e : elements) {
-                list.add(i++, (E) mapper.applyToEntity(context, null, e));
+            if (elements.size() == 1) {
+                list.add(index, (E) mapper.applyToEntity(context, null, elements.iterator().next()));
+            } else {
+                List<E> entities = new ArrayList<>(elements);
+                mapper.applyAll(context, (List<Object>) entities);
+                list.addAll(index, entities);
             }
         } else {
             list.addAll(index, elements);

@@ -378,9 +378,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
         ViewToEntityMapper loadOnlyViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
         for (Object o : objects) {
             if (o != null) {
-                entityReferences.add(loadOnlyViewToEntityMapper.applyToEntity(context, null, o));
+                entityReferences.add(o);
             }
         }
+        loadOnlyViewToEntityMapper.applyAll(context, entityReferences);
         return entityReferences;
     }
 
@@ -1796,7 +1797,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             @SuppressWarnings("unchecked")
                             DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                             if (flusher != null) {
-                                Object addedElement = added.remove(idAccessor.getValue(element));
+                                Object id = idAccessor.getValue(element);
+                                if (id == null) {
+                                    id = element;
+                                }
+                                Object addedElement = added.remove(id);
                                 if (addedElement != null) {
                                     listener.onAddedAndUpdatedInverseElement(flusher, element);
                                 } else {
@@ -1821,7 +1826,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             for (Object element : current) {
                 if (elementDescriptor.getBasicUserType().shouldPersist(element) && elementDescriptor.shouldJpaPersist()) {
                     CollectionElementAttributeFlusher<E, V> flusher = new PersistCollectionElementAttributeFlusher<>(element, optimisticLockProtected);
-                    Object addedElement = added.remove(idAccessor.getValue(element));
+                    Object id = idAccessor.getValue(element);
+                    if (id == null) {
+                        id = element;
+                    }
+                    Object addedElement = added.remove(id);
                     if (addedElement != null) {
                         listener.onAddedAndUpdatedInverseElement(flusher, element);
                     } else {
@@ -1831,7 +1840,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (element != null) {
                         // Although we can't replace the original object in the backing collection, we don't care in case of inverse collections
                         CollectionElementAttributeFlusher<E, V> flusher = new MergeCollectionElementAttributeFlusher<>(element, optimisticLockProtected);
-                        Object addedElement = added.remove(idAccessor.getValue(element));
+                        Object id = idAccessor.getValue(element);
+                        if (id == null) {
+                            id = element;
+                        }
+                        Object addedElement = added.remove(id);
                         if (addedElement != null) {
                             listener.onAddedAndUpdatedInverseElement(flusher, element);
                         } else {
@@ -1839,7 +1852,11 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         }
                     }
                 } else {
-                    Object addedElement = added.remove(idAccessor.getValue(element));
+                    Object id = idAccessor.getValue(element);
+                    if (id == null) {
+                        id = element;
+                    }
+                    Object addedElement = added.remove(id);
                     if (addedElement != null) {
                         listener.onAddedInverseElement(element);
                     }
@@ -1956,16 +1973,29 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 Collection<Object> addedObjects = a.getAddedObjects();
                 Collection<Object> removedObjects = a.getRemovedObjects();
 
-                for (Object addedObject : addedObjects) {
-                    removed.remove(idAccessor.getValue(addedObject));
+                if (!removed.isEmpty()) {
+                    for (Object addedObject : addedObjects) {
+                        Object id = idAccessor.getValue(addedObject);
+                        if (id == null) {
+                            id = addedObject;
+                        }
+                        removed.remove(id);
+                    }
                 }
                 for (Object removedObject : removedObjects) {
                     Object id = idAccessor.getValue(removedObject);
+                    if (id == null) {
+                        id = removedObject;
+                    }
                     added.remove(id);
                     removed.put(id, removedObject);
                 }
                 for (Object addedObject : addedObjects) {
-                    added.put(idAccessor.getValue(addedObject), addedObject);
+                    Object id = idAccessor.getValue(addedObject);
+                    if (id == null) {
+                        id = addedObject;
+                    }
+                    added.put(id, addedObject);
                 }
             }
             return new Map[]{ added, removed };
@@ -1976,8 +2006,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Collection<Object> addedObjects = a.getAddedObjects();
             Collection<Object> removedObjects = a.getRemovedObjects();
 
-            for (Object addedObject : addedObjects) {
-                removed.remove(addedObject);
+            if (!removed.isEmpty()) {
+                for (Object addedObject : addedObjects) {
+                    removed.remove(addedObject);
+                }
             }
             for (Object removedObject : removedObjects) {
                 added.remove(removedObject);
@@ -2002,16 +2034,29 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 Collection<Object> addedObjects = a.getAddedObjects(collection);
                 Collection<Object> removedObjects = a.getRemovedObjects(collection);
 
-                for (Object addedObject : addedObjects) {
-                    removed.remove(idAccessor.getValue(addedObject));
+                if (!removed.isEmpty()) {
+                    for (Object addedObject : addedObjects) {
+                        Object id = idAccessor.getValue(addedObject);
+                        if (id == null) {
+                            id = addedObject;
+                        }
+                        removed.remove(id);
+                    }
                 }
                 for (Object removedObject : removedObjects) {
                     Object id = idAccessor.getValue(removedObject);
+                    if (id == null) {
+                        id = removedObject;
+                    }
                     added.remove(id);
                     removed.put(id, removedObject);
                 }
                 for (Object addedObject : addedObjects) {
-                    added.put(idAccessor.getValue(addedObject), addedObject);
+                    Object id = idAccessor.getValue(addedObject);
+                    if (id == null) {
+                        id = addedObject;
+                    }
+                    added.put(id, addedObject);
                 }
             }
             return new Map[]{ added, removed };
@@ -2022,8 +2067,10 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Collection<Object> addedObjects = a.getAddedObjects(collection);
             Collection<Object> removedObjects = a.getRemovedObjects(collection);
 
-            for (Object addedObject : addedObjects) {
-                removed.remove(addedObject);
+            if (!removed.isEmpty()) {
+                for (Object addedObject : addedObjects) {
+                    removed.remove(addedObject);
+                }
             }
             for (Object removedObject : removedObjects) {
                 added.remove(removedObject);

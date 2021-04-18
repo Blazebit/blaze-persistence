@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -29,6 +31,7 @@ public interface EntityLoader {
 
     public Object toEntity(UpdateContext context, Object view, Object id);
 
+    void toEntities(UpdateContext context, List<Object> views, List<Object> ids);
+
     public Object getEntityId(UpdateContext context, Object entity);
-    
 }

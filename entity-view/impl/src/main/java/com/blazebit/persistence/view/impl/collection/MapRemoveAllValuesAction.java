@@ -70,9 +70,19 @@ public class MapRemoveAllValuesAction<C extends Map<K, V>, K, V> implements MapA
     @Override
     public void doAction(C map, UpdateContext context, MapViewToEntityMapper mapper, CollectionRemoveListener keyRemoveListener, CollectionRemoveListener valueRemoveListener) {
         if (mapper != null && mapper.getValueMapper() != null) {
-            for (Object e : elements) {
+            if (elements.size() == 1) {
+                Object e = elements.iterator().next();
                 V value = (V) mapper.getValueMapper().applyToEntity(context, null, e);
                 removeByValue(context, map, e, value, keyRemoveListener, valueRemoveListener);
+            } else {
+                List<Object> entities = new ArrayList<>(elements.size());
+                entities.addAll(elements);
+                mapper.getValueMapper().applyAll(context, entities);
+                int i = 0;
+                for (Object e : elements) {
+                    V value = (V) entities.get(i++);
+                    removeByValue(context, map, e, value, keyRemoveListener, valueRemoveListener);
+                }
             }
         } else {
             if (map.size() > 0 && (keyRemoveListener != null || valueRemoveListener != null)) {

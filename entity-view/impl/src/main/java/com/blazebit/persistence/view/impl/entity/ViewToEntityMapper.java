@@ -24,6 +24,8 @@ import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -46,6 +48,8 @@ public interface ViewToEntityMapper extends ElementToEntityMapper, UpdateQueryFa
     public Object flushToEntity(UpdateContext context, Object entity, Object view);
 
     public Object loadEntity(UpdateContext context, Object view);
+
+    public void loadEntities(UpdateContext context, List<Object> views);
 
     public boolean cascades(Object value);
 }
