@@ -104,6 +104,18 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
     protected String getDbmsName(EntityManagerFactory emf, EntityManager em, Dialect dialect) {
         if (dialect instanceof MySQLDialect) {
             try {
+                Class<?> mysql8Dialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.MySQL8Dialect");
+                if (mysql8Dialect.isInstance(dialect)) {
+                    return "mysql8";
+                }
+                Class<?> mariaDbDialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.MariaDB10Dialect");
+                if (mariaDbDialect.isInstance(dialect)) {
+                    return "mysql8";
+                }
+            } catch (ClassNotFoundException e) {
+                // Ignore
+            }
+            try {
                 boolean close = em == null;
                 EntityManager entityManager = em == null ? emf.createEntityManager() : em;
                 try {
