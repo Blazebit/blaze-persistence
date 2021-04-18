@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,6 +40,14 @@ public class TargetViewClassBasedEntityLoader implements EntityLoader {
     @Override
     public Class<?> getEntityClass() {
         return first.getEntityClass();
+    }
+
+    @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        // TODO: Segment the views
+        for (int i = 0; i < views.size(); i++) {
+            views.set(i, toEntity(context, views.get(i), ids.get(i)));
+        }
     }
 
     @Override

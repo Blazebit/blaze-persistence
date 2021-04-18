@@ -77,7 +77,8 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
             ViewToEntityMapper keyMapper = mapper.getKeyMapper();
             ViewToEntityMapper valueMapper = mapper.getValueMapper();
 
-            for (Map.Entry<K, V> entry : elements) {
+            if (elements.size() == 1) {
+                Map.Entry<K, V> entry = elements.iterator().next();
                 K k = entry.getKey();
                 V v = entry.getValue();
 
@@ -95,6 +96,86 @@ public class MapRemoveAllEntriesAction<C extends Map<K, V>, K, V> implements Map
                     }
                     if (valueRemoveListener != null && v != null) {
                         valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
+                    }
+                }
+            } else {
+                if (keyMapper == null) {
+                    if (valueMapper == null) {
+                        for (Map.Entry<? extends K, ? extends V> entry : elements) {
+                            K k = entry.getKey();
+                            V v = entry.getValue();
+                            if (entrySet.remove(entry)) {
+                                if (keyRemoveListener != null && k != null) {
+                                    keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                                }
+                                if (valueRemoveListener != null && v != null) {
+                                    valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
+                                }
+                            }
+                        }
+                    } else {
+                        List<V> entities = new ArrayList<>(elements.size());
+                        for (Map.Entry<K, V> entry : elements) {
+                            entities.add(entry.getValue());
+                        }
+                        valueMapper.applyAll(context, (List<Object>) entities);
+                        int i = 0;
+                        for (Map.Entry<? extends K, ? extends V> entry : elements) {
+                            K k = entry.getKey();
+                            V v = entities.get(i++);
+                            Map.Entry<K, V> e = new AbstractMap.SimpleEntry<K, V>(k, v);
+                            if (entrySet.remove(e)) {
+                                if (keyRemoveListener != null && k != null) {
+                                    keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                                }
+                                if (valueRemoveListener != null && v != null) {
+                                    valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
+                                }
+                            }
+                        }
+                    }
+                } else if (valueMapper == null) {
+                    List<K> entities = new ArrayList<>(elements.size());
+                    for (Map.Entry<K, V> entry : elements) {
+                        entities.add(entry.getKey());
+                    }
+                    keyMapper.applyAll(context, (List<Object>) entities);
+                    int i = 0;
+                    for (Map.Entry<? extends K, ? extends V> entry : elements) {
+                        K k = entities.get(i++);
+                        V v = entry.getValue();
+                        Map.Entry<K, V> e = new AbstractMap.SimpleEntry<K, V>(k, v);
+                        if (entrySet.remove(e)) {
+                            if (keyRemoveListener != null && k != null) {
+                                keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                            }
+                            if (valueRemoveListener != null && v != null) {
+                                valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
+                            }
+                        }
+                    }
+                } else {
+                    List<K> keyEntities = new ArrayList<>(elements.size());
+                    List<V> valueEntities = new ArrayList<>(elements.size());
+                    for (Map.Entry<? extends K, ? extends V> entry : elements) {
+                        keyEntities.add(entry.getKey());
+                        valueEntities.add(entry.getValue());
+                    }
+                    keyMapper.applyAll(context, (List<Object>) keyEntities);
+                    valueMapper.applyAll(context, (List<Object>) valueEntities);
+                    int i = 0;
+                    for (Map.Entry<? extends K, ? extends V> entry : elements) {
+                        K k = keyEntities.get(i);
+                        V v = valueEntities.get(i++);
+                        Map.Entry<K, V> e = new AbstractMap.SimpleEntry<K, V>(k, v);
+                        if (entrySet.remove(e)) {
+                            if (keyRemoveListener != null && k != null) {
+                                keyRemoveListener.onCollectionRemove(context, entry.getKey());
+                            }
+                            if (valueRemoveListener != null && v != null) {
+                                valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(entry.getKey()));
+                            }
+                        }
                     }
                 }
             }

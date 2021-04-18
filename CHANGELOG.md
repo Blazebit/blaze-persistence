@@ -30,6 +30,7 @@ None yet
 * Properly handle `Optional` in entity view annotation processor
 * Retain entity view kind when converting entity view if possible
 * Improve dialect detection for MariaDB dialects
+* Workaround Hibernate proxy field access bug for non-pk relations
 
 ### Backwards-incompatible changes
 

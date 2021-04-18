@@ -651,6 +651,16 @@ public interface JpaProvider {
     public boolean supportsSelectCompositeIdEntityInSubquery();
 
     /**
+     * Whether the JPA provider supports the use of an entity proxy as parameter for a non primary key association.
+     *
+     * See https://github.com/Blazebit/blaze-persistence/issues/1082 for details.
+     *
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.6.0
+     */
+    public boolean supportsProxyParameterForNonPkAssociation();
+
+    /**
      * Returns the identifier of the entity object.
      *
      * @param entity The entity

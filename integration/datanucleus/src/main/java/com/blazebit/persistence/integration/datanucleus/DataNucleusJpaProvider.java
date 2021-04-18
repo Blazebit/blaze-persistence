@@ -629,6 +629,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsProxyParameterForNonPkAssociation() {
+        return true;
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         Object identifier = persistenceUnitUtil.getIdentifier(entity);
         // DataNucleus 4 returns a SingleFieldId object here instead of the real object...

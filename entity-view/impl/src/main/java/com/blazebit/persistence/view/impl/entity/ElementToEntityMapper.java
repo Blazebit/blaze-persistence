@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -30,4 +32,6 @@ public interface ElementToEntityMapper {
     public void removeById(UpdateContext context, Object elementId);
 
     public Object applyToEntity(UpdateContext context, Object entity, Object element);
+
+    public void applyAll(UpdateContext context, List<Object> elements);
 }

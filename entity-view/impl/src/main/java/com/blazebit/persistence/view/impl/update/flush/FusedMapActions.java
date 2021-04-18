@@ -153,8 +153,9 @@ public class FusedMapActions {
                 if (o instanceof RemoveWrapper) {
                     o = ((RemoveWrapper) o).object;
                 }
-                entityReferences.add(keyViewToEntityMapper.applyToEntity(context, null, o));
+                entityReferences.add(o);
             }
+            keyViewToEntityMapper.applyAll(context, entityReferences);
             return entityReferences;
         }
     }

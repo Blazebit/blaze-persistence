@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -44,14 +45,16 @@ import java.util.Set;
 public class FullEntityLoader extends AbstractEntityLoader {
 
     private final String queryString;
+    private final String queryStringMultiple;
 
     public FullEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
         // ViewIdMapper is not necessary because this will always be invoked with a null id
         super(evm, subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMappingOf(evm, subviewType), null, evm.getEntityIdAccessor());
-        this.queryString = createQueryString(evm, subviewType);
+        this.queryString = createQueryString(evm, subviewType, false);
+        this.queryStringMultiple = createQueryString(evm, subviewType, true);
     }
 
-    private String createQueryString(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
+    private String createQueryString(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, boolean multiple) {
         EntityMetamodel entityMetamodel = evm.getMetamodel().getEntityMetamodel();
         EntityType<?> entityType = entityMetamodel.getEntity(entityClass);
 
@@ -72,10 +75,13 @@ public class FullEntityLoader extends AbstractEntityLoader {
             if (fetchJoinableRelations.isEmpty()) {
                 return null;
             } else {
-                return cbf.create(em, entityClass)
-                        .fetch(fetchJoinableRelations.toArray(new String[fetchJoinableRelations.size()]))
-                        .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id")
-                        .getQueryString();
+                CriteriaBuilder<?> criteriaBuilder = cbf.create(em, entityClass).fetch(fetchJoinableRelations.toArray(new String[fetchJoinableRelations.size()]));
+                if (multiple) {
+                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
+                } else {
+                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
+                }
+                return criteriaBuilder.getQueryString();
             }
         } finally {
             em.close();
@@ -124,6 +130,17 @@ public class FullEntityLoader extends AbstractEntityLoader {
     }
 
     @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        if (entityIdAccessor == null) {
+            for (int i = 0; i < views.size(); i++) {
+                views.set(i, createEntity());
+            }
+        } else {
+            getReferencesLoadOrCreate(context, views, ids);
+        }
+    }
+
+    @Override
     protected Object queryEntity(EntityManager em, Object id) {
         if (queryString == null) {
             return em.find(entityClass, id);
@@ -138,5 +155,17 @@ public class FullEntityLoader extends AbstractEntityLoader {
         }
 
         return list.get(0);
+    }
+
+    @Override
+    protected List<Object> queryEntities(EntityManager em, List<Object> ids) {
+        List<Object> list = em.createQuery(queryStringMultiple)
+            .setParameter("entityIds", ids)
+            .getResultList();
+        if (list.size() != ids.size()) {
+            throw new EntityNotFoundException("Required entities '" + entityClass.getName() + "' with ids '" + ids + "' couldn't all be found!");
+        }
+
+        return list;
     }
 }

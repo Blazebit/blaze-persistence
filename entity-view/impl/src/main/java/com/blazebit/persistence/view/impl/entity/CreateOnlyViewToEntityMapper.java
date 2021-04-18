@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.Type;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,6 +54,13 @@ public class CreateOnlyViewToEntityMapper extends AbstractViewToEntityMapper {
         }
 
         return entity;
+    }
+
+    @Override
+    public void loadEntities(UpdateContext context, List<Object> views) {
+        for (int i = 0; i < views.size(); i++) {
+            views.set(i, persist(context, null, views.get(i)));
+        }
     }
 
     @Override

@@ -418,6 +418,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsProxyParameterForNonPkAssociation() {
+        return jpaProvider.supportsProxyParameterForNonPkAssociation();
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }

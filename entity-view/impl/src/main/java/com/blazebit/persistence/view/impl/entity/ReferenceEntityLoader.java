@@ -16,20 +16,17 @@
 
 package com.blazebit.persistence.view.impl.entity;
 
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
-import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
-import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.metamodel.SingularAttribute;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -38,36 +35,25 @@ import java.util.Set;
  */
 public class ReferenceEntityLoader extends AbstractEntityLoader {
 
+    private final JpaProvider jpaProvider;
     private final String queryString;
+    private final String queryStringMultiple;
 
     public ReferenceEntityLoader(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, ViewToEntityMapper viewIdMapper) {
-        this(evm, subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMappingOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor());
+        this(evm, subviewType.getEntityClass(), jpaIdOf(evm, subviewType), viewIdMappingOf(evm, subviewType), viewIdMapper, evm.getEntityIdAccessor(), false);
     }
 
-    public ReferenceEntityLoader(EntityViewManagerImpl evm, Class<?> entityClass, SingularAttribute<?, ?> idAttribute, SingularAttribute<?, ?> viewIdMappingAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor) {
+    public ReferenceEntityLoader(EntityViewManagerImpl evm, Class<?> entityClass, SingularAttribute<?, ?> idAttribute, SingularAttribute<?, ?> viewIdMappingAttribute, ViewToEntityMapper viewIdMapper, AttributeAccessor entityIdAccessor, boolean forceQuery) {
         super(evm, entityClass, idAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor);
-        this.queryString = primaryKeyId ? null : "SELECT e FROM " + evm.getMetamodel().getEntityMetamodel().entity(entityClass).getName() + " e WHERE e." + idAttributeName + " = :id";
-    }
-
-    public static EntityLoader forAttribute(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> subviewType, AbstractMethodAttribute<?, ?> attribute) {
-        return forAttribute(evm, localCache, subviewType, attribute.getViewTypes());
-    }
-
-    public static EntityLoader forAttribute(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> subviewType, Set<? extends ManagedViewType<?>> viewTypes) {
-        if (viewTypes.size() == 1) {
-            return new ReferenceEntityLoader(evm, subviewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType));
+        if (!forceQuery && primaryKeyId) {
+            this.jpaProvider = null;
+            this.queryString = null;
+            this.queryStringMultiple = null;
+        } else {
+            this.jpaProvider = evm.getJpaProvider();
+            this.queryString = "SELECT e FROM " + evm.getMetamodel().getEntityMetamodel().entity(entityClass).getName() + " e WHERE e." + idAttributeName + " = :id";
+            this.queryStringMultiple = "SELECT e FROM " + evm.getMetamodel().getEntityMetamodel().entity(entityClass).getName() + " e WHERE e." + idAttributeName + " IN :entityIds";
         }
-
-        EntityLoader first = null;
-        Map<Class<?>, EntityLoader> entityLoaderMap = new HashMap<>(viewTypes.size());
-        for (ManagedViewType<?> viewType : viewTypes) {
-            ReferenceEntityLoader referenceEntityLoader = new ReferenceEntityLoader(evm, viewType, EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, viewType));
-            entityLoaderMap.put(viewType.getJavaType(), referenceEntityLoader);
-            if (viewType == subviewType) {
-                first = referenceEntityLoader;
-            }
-        }
-        return new TargetViewClassBasedEntityLoader(first, entityLoaderMap);
     }
 
     @Override
@@ -80,8 +66,12 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
     }
 
     @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        getReferencesLoadOrCreate(context, views, ids);
+    }
+
+    @Override
     protected Object queryEntity(EntityManager em, Object id) {
-        // TODO: Support natural id access? session.byNaturalId(entityClass).using(idAttributeName, id).getReference()
         if (queryString == null) {
             return em.getReference(entityClass, id);
         }
@@ -92,7 +82,41 @@ public class ReferenceEntityLoader extends AbstractEntityLoader {
             throw new EntityNotFoundException("Required entity '" + entityClass.getName() + "' with id '" + id + "' couldn't be found!");
         }
 
-        return list.get(0);
+        Object entity = list.get(0);
+        if (jpaProvider == null) {
+            return entity;
+        }
+        // If we get here, it's most probably due to a Hibernate bug
+        // To workaround it, we must actually unproxy the entity
+        return jpaProvider.unproxy(entity);
+    }
+
+    @Override
+    protected List<Object> queryEntities(EntityManager em, List<Object> ids) {
+        if (queryStringMultiple == null) {
+            List<Object> entities = new ArrayList<>(ids.size());
+            for (Object id : ids) {
+                entities.add(em.getReference(entityClass, id));
+            }
+            return entities;
+        }
+        List<Object> list = em.createQuery(queryStringMultiple)
+            .setParameter("entityIds", ids)
+            .getResultList();
+        if (list.size() != ids.size()) {
+            throw new EntityNotFoundException("Required entities '" + entityClass.getName() + "' with ids '" + ids + "' couldn't all be found!");
+        }
+
+        if (jpaProvider == null) {
+            return list;
+        }
+        // If we get here, it's most probably due to a Hibernate bug
+        // To workaround it, we must actually unproxy the entity
+        for (int i = 0; i < list.size(); i++) {
+            list.set(i, jpaProvider.unproxy(list.get(i)));
+        }
+
+        return list;
     }
 
     @Override

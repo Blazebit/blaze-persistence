@@ -60,7 +60,8 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
             ViewToEntityMapper keyMapper = mapper.getKeyMapper();
             ViewToEntityMapper valueMapper = mapper.getValueMapper();
 
-            for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
+            if (elements.size() == 1) {
+                Map.Entry<? extends K, ? extends V> e = elements.entrySet().iterator().next();
                 K k = e.getKey();
                 V v = e.getValue();
 
@@ -74,6 +75,59 @@ public class MapPutAllAction<C extends Map<K, V>, K, V> implements MapAction<C> 
                 V oldValue = map.put(k, v);
                 if (valueRemoveListener != null && oldValue != null) {
                     valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
+                }
+            } else {
+                if (keyMapper == null) {
+                    if (valueMapper == null) {
+                        for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
+                            V oldValue = map.put(e.getKey(), e.getValue());
+                            if (valueRemoveListener != null && oldValue != null) {
+                                valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
+                            }
+                        }
+                    } else {
+                        List<V> entities = new ArrayList<>(elements.size());
+                        entities.addAll(elements.values());
+                        valueMapper.applyAll(context, (List<Object>) entities);
+                        int i = 0;
+                        for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
+                            V value = entities.get(i++);
+                            V oldValue = map.put(e.getKey(), value);
+                            if (valueRemoveListener != null && oldValue != null) {
+                                valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
+                            }
+                        }
+                    }
+                } else if (valueMapper == null) {
+                    List<K> entities = new ArrayList<>(elements.size());
+                    entities.addAll(elements.keySet());
+                    keyMapper.applyAll(context, (List<Object>) entities);
+                    int i = 0;
+                    for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
+                        K key = entities.get(i++);
+                        V oldValue = map.put(key, e.getValue());
+                        if (valueRemoveListener != null && oldValue != null) {
+                            valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
+                        }
+                    }
+                } else {
+                    List<K> keyEntities = new ArrayList<>(elements.size());
+                    List<V> valueEntities = new ArrayList<>(elements.size());
+                    for (Map.Entry<? extends K, ? extends V> entry : elements.entrySet()) {
+                        keyEntities.add(entry.getKey());
+                        valueEntities.add(entry.getValue());
+                    }
+                    keyMapper.applyAll(context, (List<Object>) keyEntities);
+                    valueMapper.applyAll(context, (List<Object>) valueEntities);
+                    int i = 0;
+                    for (Map.Entry<? extends K, ? extends V> e : elements.entrySet()) {
+                        K key = keyEntities.get(i);
+                        V value = valueEntities.get(i++);
+                        V oldValue = map.put(key, value);
+                        if (valueRemoveListener != null && oldValue != null) {
+                            valueRemoveListener.onCollectionRemove(context, removedObjectsInView.get(e.getKey()));
+                        }
+                    }
                 }
             }
         } else {

@@ -19,6 +19,8 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.UnmappedAttributeCascadeDeleter;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -53,5 +55,12 @@ public abstract class AbstractEntityToEntityMapper implements EntityToEntityMapp
     public EntityLoaderFetchGraphNode<?> getFetchGraph(String[] dirtyProperties) {
         // TODO: extract the relevant fetch graph parts from the dirty properties
         return entityLoaderFetchGraphNode;
+    }
+
+    @Override
+    public void applyAll(UpdateContext context, List<Object> elements) {
+        for (int i = 0; i < elements.size(); i++) {
+            elements.set(i, applyToEntity(context, null, elements.get(i)));
+        }
     }
 }

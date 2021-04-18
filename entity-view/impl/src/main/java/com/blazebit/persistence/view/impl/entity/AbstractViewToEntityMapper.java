@@ -30,9 +30,11 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -155,6 +157,40 @@ public abstract class AbstractViewToEntityMapper implements ViewToEntityMapper {
     @Override
     public Object applyToEntity(UpdateContext context, Object entity, Object element) {
         return null;
+    }
+
+    @Override
+    public void applyAll(UpdateContext context, List<Object> elements) {
+        for (int i = 0; i < elements.size(); i++) {
+            elements.set(i, applyToEntity(context, null, elements.get(i)));
+        }
+    }
+
+    @Override
+    public void loadEntities(UpdateContext context, List<Object> views) {
+        List<Object> ids = new ArrayList<>(views.size());
+        if (viewIdAccessor == null) {
+            for (int i = 0; i < views.size(); i++) {
+                views.set(i, loadEntity(context, views.get(i)));
+            }
+        } else {
+            for (int i = 0; i < views.size(); i++) {
+                ids.add(viewIdAccessor.getValue(views.get(i)));
+            }
+            entityLoader.toEntities(context, views, ids);
+        }
+    }
+
+    @Override
+    public Object loadEntity(UpdateContext context, Object view) {
+        if (view == null) {
+            return null;
+        }
+        Object id = null;
+        if (viewIdAccessor != null) {
+            id = viewIdAccessor.getValue(view);
+        }
+        return entityLoader.toEntity(context, view, id);
     }
 
     @Override

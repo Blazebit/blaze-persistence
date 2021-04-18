@@ -29,6 +29,10 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -92,6 +96,13 @@ public abstract class AbstractEntityLoader implements EntityLoader {
     }
 
     @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        for (int i = 0; i < views.size(); i++) {
+            views.set(i, toEntity(context, views.get(i), ids.get(i)));
+        }
+    }
+
+    @Override
     public Object getEntityId(UpdateContext context, Object entity) {
         if (entityIdAccessor == null) {
             return null;
@@ -117,6 +128,56 @@ public abstract class AbstractEntityLoader implements EntityLoader {
         }
     }
 
+    protected final void getReferencesLoadOrCreate(UpdateContext context, List<Object> views, List<Object> ids) {
+        List<Object> idsToQuery = null;
+        if (primaryKeyId) {
+            // If we have a primary key identifier, we might be able to refer to objects from the persistence context
+            for (int i = 0; i < views.size(); i++) {
+                Object view = views.get(i);
+                Object id = ids.get(i);
+                if (id == null) {
+                    views.set(i, createEntity());
+                } else {
+                    id = getEntityId(context, view, id);
+                    if (context.containsEntity(entityClass, id)) {
+                        views.set(i, context.getEntityManager().getReference(entityClass, id));
+                        ids.set(i, null);
+                    } else {
+                        if (idsToQuery == null) {
+                            idsToQuery = new ArrayList<>(ids.size());
+                        }
+                        idsToQuery.add(id);
+                    }
+                }
+            }
+        } else {
+            idsToQuery = new ArrayList<>(ids.size());
+            for (int i = 0; i < views.size(); i++) {
+                Object view = views.get(i);
+                Object id = ids.get(i);
+                if (id == null) {
+                    views.set(i, createEntity());
+                } else {
+                    idsToQuery.add(getEntityId(context, view, id));
+                }
+            }
+        }
+        if (idsToQuery != null && !idsToQuery.isEmpty()) {
+            List<Object> entities = queryEntities(context.getEntityManager(), idsToQuery);
+            Map<Object, Object> entityIndex = new HashMap<>(entities.size());
+            for (Object e : entities) {
+                entityIndex.put(getEntityId(context, e), e);
+            }
+            for (int i = 0; i < views.size(); i++) {
+                Object id = ids.get(i);
+                if (id != null) {
+                    Object entity = entityIndex.get(getEntityId(context, views.get(i), id));
+                    views.set(i, entity);
+                }
+            }
+        }
+    }
+
     protected final Object getEntityId(UpdateContext context, Object view, Object id) {
         if (viewIdMapper != null) {
             id = viewIdMapper.applyToEntity(context, null, id);
@@ -125,4 +186,6 @@ public abstract class AbstractEntityLoader implements EntityLoader {
     }
 
     protected abstract Object queryEntity(EntityManager em, Object id);
+
+    protected abstract List<Object> queryEntities(EntityManager em, List<Object> ids);
 }

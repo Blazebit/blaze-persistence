@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
 import java.lang.reflect.Constructor;
+import java.util.List;
 
 /**
  *
@@ -47,6 +48,13 @@ public class EntityIdLoader implements EntityLoader {
     @Override
     public Object getEntityId(UpdateContext context, Object entity) {
         return entity;
+    }
+
+    @Override
+    public void toEntities(UpdateContext context, List<Object> views, List<Object> ids) {
+        for (int i = 0; i < views.size(); i++) {
+            views.set(i, toEntity(context, views.get(i), ids.get(i)));
+        }
     }
 
     @Override

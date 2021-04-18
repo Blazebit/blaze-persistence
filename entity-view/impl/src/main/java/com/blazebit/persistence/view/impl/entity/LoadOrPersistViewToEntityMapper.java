@@ -74,16 +74,4 @@ public class LoadOrPersistViewToEntityMapper extends AbstractViewToEntityMapper 
         }
         return null;
     }
-
-    @Override
-    public Object loadEntity(UpdateContext context, Object view) {
-        if (view == null) {
-            return null;
-        }
-        Object id = null;
-        if (viewIdAccessor != null) {
-            id = viewIdAccessor.getValue(view);
-        }
-        return entityLoader.toEntity(context, view, id);
-    }
 }

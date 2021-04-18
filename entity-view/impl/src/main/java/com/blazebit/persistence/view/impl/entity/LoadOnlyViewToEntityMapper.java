@@ -24,6 +24,8 @@ import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 
 import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -87,8 +89,28 @@ public class LoadOnlyViewToEntityMapper implements ViewToEntityMapper {
     }
 
     @Override
+    public void applyAll(UpdateContext context, List<Object> elements) {
+        loadEntities(context, elements);
+    }
+
+    @Override
     public Object flushToEntity(UpdateContext context, Object entity, Object view) {
         return loadEntity(context, view);
+    }
+
+    @Override
+    public void loadEntities(UpdateContext context, List<Object> views) {
+        List<Object> ids = new ArrayList<>(views.size());
+        if (viewIdAccessor == null) {
+            for (int i = 0; i < views.size(); i++) {
+                views.set(i, loadEntity(context, views.get(i)));
+            }
+        } else {
+            for (int i = 0; i < views.size(); i++) {
+                ids.add(viewIdAccessor.getValue(views.get(i)));
+            }
+            entityLoader.toEntities(context, views, ids);
+        }
     }
 
     @Override
