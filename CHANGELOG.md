@@ -31,6 +31,7 @@ None yet
 * Retain entity view kind when converting entity view if possible
 * Improve dialect detection for MariaDB dialects
 * Workaround Hibernate proxy field access bug for non-pk relations
+* Fix aliasing issues with `joinOnSubquery` variants on databases that don't support column aliasing at the table alias site
 
 ### Backwards-incompatible changes
 
