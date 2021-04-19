@@ -48,6 +48,7 @@ import java.util.Set;
  */
 public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
+    private static final String WHERE_TOKEN = " where ";
     protected final EntityManager em;
     protected final DbmsDialect dbmsDialect;
     protected final ServiceProvider serviceProvider;
@@ -396,7 +397,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 keyRestrictedLeftJoinAliases.size() * 20);
         EntityFunction.appendSubqueryPart(sb, sqlQuery);
         for (int i = 1; i < entityFunctionNodes.size(); i++) {
-            EntityFunction.removeSyntheticPredicate(sb, sqlQuery, sb.length());
+            EntityFunction.removeSyntheticPredicate(sb, sb.length());
         }
 
         for (String sqlAlias : keyRestrictedLeftJoinAliases) {
@@ -404,7 +405,6 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         }
 
         LateralStyle lateralStyle = dbmsDialect.getLateralStyle();
-        final String andSeparator = " and ";
         for (EntityFunctionNode node : entityFunctionNodes) {
             String valuesTableSqlAlias = node.getTableAlias();
             String valuesClause = node.getSubquery();
@@ -412,38 +412,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             String syntheticPredicate = node.getSyntheticPredicate();
             boolean useApply = node.isLateral() && lateralStyle == LateralStyle.APPLY;
 
-            // TODO: this is a hibernate specific integration detail
-            // Replace the subview subselect that is generated for this subselect
-            String entityName = node.getEntityName();
-            final String subselect = "( select * from " + entityName + " )";
-            final String subselectTableExpr = subselect + " " + valuesTableSqlAlias;
-            int subselectIndex = sb.indexOf(subselectTableExpr, 0);
-            if (subselectIndex == -1) {
-                if (syntheticPredicate != null) {
-                    // this is probably a VALUES clause for an entity type
-                    int syntheticPredicateStart = sb.indexOf(syntheticPredicate, SqlUtils.indexOfFrom(sb));
-                    int end = syntheticPredicateStart + syntheticPredicate.length();
-                    if (sb.indexOf(andSeparator, end) == end) {
-                        sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
-                    } else {
-                        sb.replace(syntheticPredicateStart, end, "1=1");
-                    }
-                }
-            } else {
-                while ((subselectIndex = sb.indexOf(subselectTableExpr, subselectIndex)) > -1) {
-                    int endIndex = subselectIndex + subselect.length();
-                    if (syntheticPredicate != null) {
-                        int syntheticPredicateStart = sb.indexOf(syntheticPredicate, endIndex);
-                        int end = syntheticPredicateStart + syntheticPredicate.length();
-                        if (sb.indexOf(andSeparator, end) == end) {
-                            sb.replace(syntheticPredicateStart, end + andSeparator.length(), "");
-                        } else {
-                            sb.replace(syntheticPredicateStart, end, "1=1");
-                        }
-                    }
-                    sb.replace(subselectIndex, endIndex, entityName);
-                }
-            }
+            EntityFunction.removeSyntheticPredicate(sb, node.getEntityName(), syntheticPredicate, valuesTableSqlAlias);
 
             String newSqlAlias = null;
             if (node.getPluralTableJoin() != null) {
@@ -468,7 +437,20 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
             SqlUtils.applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases, newSqlAlias, useApply);
         }
 
+        if (endsWith(sb, WHERE_TOKEN)) {
+            sb.setLength(sb.length() - WHERE_TOKEN.length());
+        }
+
         return sb;
+    }
+
+    private boolean endsWith(StringBuilder sb, String s) {
+        for (int i = 0, offset = sb.length() - s.length(); i < s.length(); i++, offset++) {
+            if (s.charAt(i) != sb.charAt(offset)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void applyLeftJoinSubqueryRewrite(StringBuilder sb, String sqlAlias) {

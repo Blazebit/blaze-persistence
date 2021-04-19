@@ -467,6 +467,31 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
+    // Test for #1285
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testJoinOnSubquery() {
+        CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
+                .from(RecursiveEntity.class, "t")
+                .innerJoinOnSubquery(TestCTE.class, "cte")
+                    .from(RecursiveEntity.class, "sub")
+                    .bind("id").select("MAX(sub.id)", "id_")
+                    .bind("name").select("'abc'", "name_")
+                    .bind("level").select("1", "level_")
+                    .where("sub.id").gtLiteral(0)
+                .end().setOnExpression("t.id = cte.id")
+                .where("t.id").gtLiteral(0);
+        String expected = ""
+                + "SELECT t FROM RecursiveEntity t JOIN TestCTE(" +
+                "SELECT MAX(sub.id) AS id_, 'abc' AS name_, 1 AS level_ FROM RecursiveEntity sub WHERE sub.id > 0" +
+                ") cte(id, name, level)" + onClause("t.id = cte.id") +
+                " WHERE t.id > 0";
+
+        assertEquals(expected, cb.getQueryString());
+        List<RecursiveEntity> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+    }
+
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     // NOTE: Hibernate 5.1 renders t.id = tSub.id rather than t = tSub
     @Test
