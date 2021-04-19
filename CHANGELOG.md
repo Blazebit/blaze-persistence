@@ -14,6 +14,7 @@ None yet
 
 * Fix missing reflection registrations in Quarkus native image processor
 * Fix NPE when flushing updatable entity view with plural mapping for element collection using embeddable types
+* Fix aliasing issues with `joinOnSubquery` variants on databases that don't support column aliasing at the table alias site
 
 ### Backwards-incompatible changes
 

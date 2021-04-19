@@ -80,7 +80,19 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
             int removeEnd = Integer.parseInt(selectItemPositions[selectItemPositions.length - 1]);
             sqlSb.replace(removeStart, removeEnd, "");
 
-            int whereIndex = SqlUtils.indexOfWhere(sqlSb);
+            int endIndex = SqlUtils.indexOfWhere(sqlSb);
+            if (endIndex == -1) {
+                endIndex = SqlUtils.indexOfGroupBy(sqlSb, 0);
+            }
+            if (endIndex == -1) {
+                endIndex = SqlUtils.indexOfHaving(sqlSb, 0);
+            }
+            if (endIndex == -1) {
+                endIndex = SqlUtils.indexOfOrderBy(sqlSb, 0);
+            }
+            if (endIndex == -1) {
+                endIndex = sqlSb.length();
+            }
             // For every table alias we found in the select items that we removed due to the cutoff, we delete the joins
             Set<String> processedAliases = new HashSet<>();
             for (int i = tableAliasesToRemove.size() - cutoffColumns; i < tableAliasesToRemove.size(); i++) {
@@ -90,13 +102,13 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
                 }
                 String aliasOnPart = " " + tableAlias + " on ";
                 int aliasIndex = sqlSb.indexOf(aliasOnPart, removeStart);
-                if (aliasIndex > -1 && aliasIndex < whereIndex) {
+                if (aliasIndex > -1 && aliasIndex < endIndex) {
                     // First, let's find the end of the on clause
                     int onClauseStart = aliasIndex + aliasOnPart.length();
-                    int onClauseEnd = SqlUtils.findEndOfOnClause(sqlSb, onClauseStart, whereIndex);
+                    int onClauseEnd = SqlUtils.findEndOfOnClause(sqlSb, onClauseStart, endIndex);
                     int joinStartIndex = SqlUtils.findJoinStartIndex(sqlSb, aliasIndex);
                     sqlSb.replace(joinStartIndex, onClauseEnd, "");
-                    whereIndex -= onClauseEnd - joinStartIndex;
+                    endIndex -= onClauseEnd - joinStartIndex;
                 }
             }
         }
