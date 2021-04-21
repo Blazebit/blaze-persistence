@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.dialect.CockroachSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
@@ -1840,6 +1841,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerDialect("postgresql", new PostgreSQLDbmsDialect());
         registerDialect("oracle", new OracleDbmsDialect());
         registerDialect("microsoft", new MSSQLDbmsDialect());
+        registerDialect("cockroach", new CockroachSQLDbmsDialect());
     }
 
     private void loadDefaultProperties() {
