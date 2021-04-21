@@ -156,6 +156,14 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
         } else if (dialect instanceof InterbaseDialect) {
             return "interbase";
         } else {
+            try {
+                Class<?> cockroachDialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.CockroachDB192Dialect");
+                if (cockroachDialect.isInstance(dialect)) {
+                    return "cockroach";
+                }
+            } catch (ClassNotFoundException e) {
+                // Ignore
+            }
             return null;
         }
     }
