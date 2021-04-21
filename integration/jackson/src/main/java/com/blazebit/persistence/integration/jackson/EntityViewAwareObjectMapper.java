@@ -18,6 +18,8 @@ package com.blazebit.persistence.integration.jackson;
 
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.BeanDescription;
@@ -97,14 +99,61 @@ public class EntityViewAwareObjectMapper {
 
             @Override
             public boolean isSetterVisible(Method m) {
-                Class<?> rawParameterType;
-                return super.isSetterVisible(m) && !Collection.class.isAssignableFrom(rawParameterType = m.getParameterTypes()[0]) && !Map.class.isAssignableFrom(rawParameterType);
+                if (super.isSetterVisible(m)) {
+                    Class<?> rawParameterType = m.getParameterTypes()[0];
+                    if (Collection.class.isAssignableFrom(rawParameterType) || Map.class.isAssignableFrom(rawParameterType)) {
+                        return isCollectionSetterVisible(m.getDeclaringClass(), m.getName());
+                    } else {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             @Override
             public boolean isSetterVisible(AnnotatedMethod m) {
-                Class<?> rawParameterType;
-                return super.isSetterVisible(m) && !Collection.class.isAssignableFrom(rawParameterType = m.getRawParameterType(0)) && !Map.class.isAssignableFrom(rawParameterType);
+                if (super.isSetterVisible(m)) {
+                    Class<?> rawParameterType = m.getRawParameterType(0);
+                    if (Collection.class.isAssignableFrom(rawParameterType) || Map.class.isAssignableFrom(rawParameterType)) {
+                        return isCollectionSetterVisible(m.getDeclaringClass(), m.getName());
+                    } else {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            private boolean isCollectionSetterVisible(Class<?> declaringClass, String setterName) {
+                final ViewMetamodel metamodel = entityViewManager.getMetamodel();
+                ManagedViewType<?> managedViewType = metamodel.managedView(declaringClass);
+                if (managedViewType == null) {
+                    // This could be the implementation class, so check the super class
+                    Class<?> superclass = declaringClass.getSuperclass();
+                    if (superclass != Object.class) {
+                        ManagedViewType<?> managedViewTypeSuper = metamodel.managedView(superclass);
+                        if (managedViewTypeSuper != null) {
+                            managedViewType = managedViewTypeSuper;
+                        }
+                    }
+                    // If it is not, check the interfaces
+                    if (managedViewType == null) {
+                        for (Class<?> interfaceClass : declaringClass.getInterfaces()) {
+                            ManagedViewType<?> managedViewTypeInterface = metamodel.managedView(interfaceClass);
+                            if (managedViewTypeInterface != null) {
+                                managedViewType = managedViewTypeInterface;
+                                break;
+                            }
+                        }
+                    }
+                    // If this is not an entity view, the setter is visible
+                    if (managedViewType == null) {
+                        return true;
+                    }
+                }
+                // If this is an entity view, the setter is only visible if this is a singular attribute
+                String attributeName = Character.toLowerCase(setterName.charAt(3)) + setterName.substring(4);
+                MethodAttribute<?, ?> attribute = managedViewType.getAttribute(attributeName);
+                return attribute == null || !attribute.isCollection();
             }
         });
 

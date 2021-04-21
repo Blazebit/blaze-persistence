@@ -16,11 +16,14 @@
 
 package com.blazebit.persistence.integration.jackson;
 
+import javax.persistence.Basic;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,6 +37,9 @@ public class SomeEntity {
     String name;
     @ManyToOne(fetch = FetchType.LAZY)
     SomeEntity parent;
+    @Basic
+    @Convert(converter = StringListConverter.class)
+    List<String> tags;
     @OneToMany(mappedBy = "parent")
     Set<SomeEntity> children;
 }

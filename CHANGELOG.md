@@ -31,6 +31,7 @@ None yet
 * Retain entity view kind when converting entity view if possible
 * Improve dialect detection for MariaDB dialects
 * Workaround Hibernate proxy field access bug for non-pk relations
+* Fix issues with de-serializing of singular entity view attributes that use a collection type
 
 ### Backwards-incompatible changes
 
