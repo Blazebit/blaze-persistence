@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
@@ -39,6 +40,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -353,5 +355,29 @@ public class EntityViewAwareObjectMapperTest {
         JsonNode viewAsJsonTree = mapper.getObjectMapper().readTree(mapper.getObjectMapper().writeValueAsString(view));
         assertEquals(1L, viewAsJsonTree.get("id").asLong());
         assertFalse(viewAsJsonTree.has("name"));
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    static interface ViewWithSingularCollection {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        @MappingSingular
+        List<String> getTags();
+        void setTags(List<String> tags);
+    }
+
+    @Test
+    public void testSingularCollection() throws Exception {
+        EntityViewAwareObjectMapper mapper = mapper(ViewWithSingularCollection.class);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(ViewWithSingularCollection.class));
+        ViewWithSingularCollection view = objectReader.readValue("{\"name\": \"Joe\", \"tags\": [\"t1\", \"t2\"]}");
+        Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
+        assertEquals("Joe", view.getName());
+        assertEquals(2, view.getTags().size());
+        assertEquals("t1", view.getTags().get(0));
+        assertEquals("t2", view.getTags().get(1));
     }
 }
