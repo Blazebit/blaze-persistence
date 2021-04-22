@@ -35,7 +35,8 @@ public class ViewCollectionRemoveListener implements CollectionRemoveListener {
 
     @Override
     public void onEntityCollectionRemove(UpdateContext context, Object element) {
-        viewToEntityMapper.removeById(context, viewToEntityMapper.getEntityIdAccessor().getValue(element));
+        Object viewId = ((CompositeAttributeFlusher) viewToEntityMapper.getFullGraphNode()).createViewIdByEntityId(viewToEntityMapper.getEntityIdAccessor().getValue(element));
+        viewToEntityMapper.removeById(context, viewId);
     }
 
     @Override

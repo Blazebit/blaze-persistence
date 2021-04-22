@@ -1372,19 +1372,17 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         if (!attribute.isOrphanRemoval()) {
             return null;
         }
-
-        if (elementDescriptor.isSubview()) {
-            return new ViewCollectionRemoveListener(elementDescriptor.getLoadOnlyViewToEntityMapper());
-        } else {
-            return EntityCollectionRemoveListener.INSTANCE;
-        }
+        return createCollectionRemoveListener(elementDescriptor);
     }
 
     private static CollectionRemoveListener createCascadeDeleteListener(AbstractMethodAttribute<?, ?> attribute, TypeDescriptor elementDescriptor) {
         if (!attribute.isDeleteCascaded()) {
             return null;
         }
+        return createCollectionRemoveListener(elementDescriptor);
+    }
 
+    private static CollectionRemoveListener createCollectionRemoveListener(TypeDescriptor elementDescriptor) {
         if (elementDescriptor.isSubview()) {
             return new ViewCollectionRemoveListener(elementDescriptor.getLoadOnlyViewToEntityMapper());
         } else {

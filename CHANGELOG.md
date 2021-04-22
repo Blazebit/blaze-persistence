@@ -34,6 +34,7 @@ None yet
 * Fix issues with de-serializing of singular entity view attributes that use a collection type
 * Add Cockroach DBMS detection and a `DbmsDialect` implementation
 * Fix various issues with type resolving paths that match entity names
+* Fix issues with remove view by id when element type of cascaded collection uses embedded id
 
 ### Backwards-incompatible changes
 
