@@ -213,6 +213,29 @@ public class EntityViewUpdateSubviewInverseEmbeddedComplexTest extends AbstractE
         Assert.assertEquals(0, legacyOrder.getPositions().size());
     }
 
+    // Test for https://github.com/Blazebit/blaze-persistence/issues/1299
+    @Test
+    public void testRemoveById() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        newOrder.getPositions().add(position);
+        update(newOrder);
+
+        // When
+        em.clear();
+        evm.remove(em, UpdatableLegacyOrderView.class, newOrder.getId());
+        em.flush();
+        em.clear();
+
+        // Then
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertNull(legacyOrder);
+
+    }
+
     @Test
     public void testAddElementCreateViewToCollection() {
         // Given
