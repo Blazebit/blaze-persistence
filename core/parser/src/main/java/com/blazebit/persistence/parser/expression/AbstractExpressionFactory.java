@@ -206,6 +206,14 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             List<PathElementExpression> pathElements = new ArrayList<>(1);
             pathElements.add((PathElementExpression) expr);
             return new PathExpression(pathElements);
+        } else if (expr instanceof EntityLiteral) {
+            // Special case where the path matches an entity name
+            String[] parts = ((EntityLiteral) expr).getOriginalExpression().split("\\.");
+            List<PathElementExpression> pathElements = new ArrayList<>(parts.length);
+            for (String part : parts) {
+                pathElements.add(new PropertyExpression(part));
+            }
+            return new PathExpression(pathElements);
         } else if (expr instanceof FunctionExpression) {
             return expr;
         } else {
