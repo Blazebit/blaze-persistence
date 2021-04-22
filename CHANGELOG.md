@@ -33,6 +33,7 @@ None yet
 * Workaround Hibernate proxy field access bug for non-pk relations
 * Fix issues with de-serializing of singular entity view attributes that use a collection type
 * Add Cockroach DBMS detection and a `DbmsDialect` implementation
+* Fix various issues with type resolving paths that match entity names
 
 ### Backwards-incompatible changes
 

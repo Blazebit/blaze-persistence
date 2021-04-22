@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AbstractCachingExpressionFactory;
+import com.blazebit.persistence.parser.expression.EntityLiteral;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.MacroConfiguration;
@@ -54,6 +55,7 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -346,6 +348,15 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             ));
         }
         Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, false, true);
+        if (simpleExpression instanceof EntityLiteral) {
+            // This is a special case where the mapping i.e. attribute name matches an entity name
+            try {
+                Attribute<?, ?> attribute = managedType.getAttribute(expression);
+                return Collections.<ScalarTargetResolvingExpressionVisitor.TargetType>singletonList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(false, attribute, attribute.getJavaType(), null, attribute.getJavaType()));
+            } catch (IllegalArgumentException ex) {
+                // Apparently it's not an attribute, so let it run through
+            }
+        }
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions, rootTypes);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargetTypes();

@@ -2866,7 +2866,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                                 Type<?> type = attributeHolder.getAttributeType();
                                 result = new JoinResult(currentResult.baseNode, Arrays.asList(elementString), type, -1, -1);
                             } else if (metamodel.getManagedType(ExtendedManagedType.class, current.getManagedType()).getAttributes().get(associationName) != null) {
-                                Expression resultExpr = expressionFactory.createSimpleExpression(associationName, false);
+                                Expression resultExpr = new PathExpression(new PropertyExpression(associationName));
                                 AttributeHolder attributeHolder = JpaUtils.getAttributeForJoining(
                                         metamodel,
                                         current.getNodeType(),
@@ -3475,13 +3475,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (resultFields.isEmpty()) {
             return new JoinResult(current, null, current == null ? null : current.getNodeType(), singleValuedAssociationNameStartIndex, singleValuedAssociationNameEndIndex);
         } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append(resultFields.get(0));
-            for (int i = 1; i < resultFields.size(); i++) {
-                sb.append('.');
-                sb.append(resultFields.get(i));
+            List<PathElementExpression> pathElementExpressions = new ArrayList<>(resultFields.size());
+            for (int i = 0; i < resultFields.size(); i++) {
+                pathElementExpressions.add(new PropertyExpression(resultFields.get(i)));
             }
-            Expression expression = expressionFactory.createSimpleExpression(sb.toString(), false);
+            Expression expression = new PathExpression(pathElementExpressions);
             Type<?> type = JpaUtils.getAttributeForJoining(metamodel, current.getNodeType(), expression, null).getAttributeType();
             return new JoinResult(current, resultFields, type, singleValuedAssociationNameStartIndex, singleValuedAssociationNameEndIndex);
         }
