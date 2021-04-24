@@ -23,6 +23,6 @@ We also worked on the support for Java 16 and thanks to https://github.com/slyol
 
 Since we fixed a query plan cache related issue that could lead to wrong queries being executed in some cases, you should update as soon as possible to avoid running into these issues.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
 
 Enjoy the release and stay tuned for the next one!

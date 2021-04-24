@@ -1,0 +1,19 @@
+= Blaze-Persistence 1.6.0 Release
+Christian Beikov
+2021-04-24 0
+:description: Blaze-Persistence version 1.6.0 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the final release of the 1.6 series. This release mainly fixes bugs and adds a few optimizations.
+
+Some users were still using the 1.5 series although the 1.6 Alpha releases were already considered stable.
+To avoid confusion about the stability of releases, we will try to avoid using the Alpha label in the future.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

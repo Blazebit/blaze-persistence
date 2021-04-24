@@ -30,7 +30,7 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Interval arithmetics support
 ** Entity view collection attribute filters
 
-= 1.6 Lockjaw
+= 1.6 Lockjaw *[RELEASED]*
 
 ** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
 ** CDI/Spring integration for listeners and services
