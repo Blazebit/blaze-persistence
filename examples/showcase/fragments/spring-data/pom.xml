@@ -14,7 +14,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.showcase.fragments.spring.data</module.name>
-        <version.spring>4.3.3.RELEASE</version.spring>
+        <version.spring>4.3.29.RELEASE</version.spring>
         <version.spring.boot>1.4.1.RELEASE</version.spring.boot>
     </properties>
 
