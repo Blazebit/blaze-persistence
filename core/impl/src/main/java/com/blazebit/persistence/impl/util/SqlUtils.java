@@ -37,6 +37,7 @@ import java.util.Set;
 public class SqlUtils {
 
     public static final String SELECT = "select ";
+    public static final String UPDATE = "update ";
     public static final String SET = " set ";
     public static final String FROM = " from ";
     public static final String JOIN = " join ";
@@ -51,7 +52,9 @@ public class SqlUtils {
     public static final String AS = " as ";
     public static final String FROM_FINAL_TABLE = " from final table (";
     public static final String NEXT_VALUE_FOR = "next value for ";
+    public static final String INTO = "into ";
     public static final PatternFinder SELECT_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT));
+    public static final PatternFinder UPDATE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(UPDATE));
     public static final PatternFinder SET_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SET));
     public static final PatternFinder FROM_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM));
     public static final PatternFinder JOIN_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(JOIN));
@@ -66,6 +69,7 @@ public class SqlUtils {
     public static final PatternFinder AS_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(AS));
     public static final PatternFinder FROM_FINAL_TABLE_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE));
     public static final PatternFinder NEXT_VALUE_FOR_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR));
+    public static final PatternFinder INTO_FINDER = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(INTO));
 
     /**
      * @author Christian Beikov

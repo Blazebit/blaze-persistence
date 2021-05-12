@@ -563,32 +563,4 @@ public class DefaultDbmsDialect implements DbmsDialect {
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         createLimitHandler().applySql(sqlSb, isSubquery, limit, offset);
     }
-
-    protected static int indexOfIgnoreCase(StringBuilder haystack, String needle) {
-        final int endLimit = haystack.length() - needle.length() + 1;
-        for (int i = 0; i < endLimit; i++) {
-            if (regionMatchesIgnoreCase(haystack, i, needle, 0, needle.length())) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    protected static boolean regionMatchesIgnoreCase(StringBuilder haystack, int thisStart, String substring, int start, int length) {
-        int index1 = thisStart;
-        int index2 = start;
-        int tmpLen = length;
-
-        while (tmpLen-- > 0) {
-            final char c1 = haystack.charAt(index1++);
-            final char c2 = substring.charAt(index2++);
-
-            if (c1 != c2 && Character.toUpperCase(c1) != Character.toUpperCase(c2) && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
 }

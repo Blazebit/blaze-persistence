@@ -21,12 +21,18 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import java.io.Serializable;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
+@NamedQueries({
+    @NamedQuery(name = "findD1", query = "select d from Document d where d.name = 'D1'"),
+    @NamedQuery(name = "findIdOfD1", query = "select d.id from Document d where d.name = 'D1'")
+})
 @Entity
 public class Document implements Serializable {
 

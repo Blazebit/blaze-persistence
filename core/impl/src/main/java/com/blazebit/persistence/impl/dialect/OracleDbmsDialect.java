@@ -189,7 +189,7 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
                 sqlSb.insert(whereIndex, newSb);
                 sqlSb.append(')');
             } else {
-                sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+                sqlSb.insert(SqlUtils.SELECT_FINDER.indexIn(sqlSb, 0, sqlSb.length()), withClause);
             }
         }
         if (limit != null) {

@@ -33,9 +33,15 @@ import com.blazebit.persistence.spring.data.testsuite.webmvc.repository.ReadOnly
 import com.blazebit.persistence.spring.data.testsuite.webmvc.tx.TransactionalWorkService;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.tx.TxWork;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentView;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
@@ -108,16 +114,88 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     // Hibernate 4.2 doesn't support the JPA 2.1 APIs that introduced entity graphs
     @Test
     @Category({ NoHibernate42.class, NoEclipselink.class, NoDatanucleus.class })
-    public void testFindD1() {
+    public void testFindD1EntityGraph() {
         // Given
         final Document d1 = createDocument("D1");
         final Document d2 = createDocument("D2");
 
         // When
-        Document d = readOnlyDocumentRepository.findD1();
+        Document d = readOnlyDocumentRepository.findD1EntityGraph();
 
         // Then
         assertEquals(d1.getId(), d.getId());
+    }
+
+    @Test
+    public void testFindD1NamedQuery() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Document d = readOnlyDocumentRepository.findD1NamedQuery();
+
+        // Then
+        assertEquals(d1.getId(), d.getId());
+    }
+
+    @Test
+    // We don't want to deal with the different casing requirements for table names in the various DBs so we only run
+    // this test for H2.
+    // DataNucleus is not able to create entities from native query result sets.
+    @Category({NoDatanucleus.class, NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoSQLite.class, NoFirebird.class, NoDB2.class})
+    public void testFindD1Native() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Document d = readOnlyDocumentRepository.findD1Native();
+
+        // Then
+        assertEquals(d1.getId(), d.getId());
+    }
+
+    @Test
+    public void testFindD1Projection() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Long id = readOnlyDocumentRepository.findD1Projection();
+
+        // Then
+        assertEquals(d1.getId(), id);
+    }
+
+    @Test
+    public void testFindD1NamedQueryProjection() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Long id = readOnlyDocumentRepository.findD1NamedQueryProjection();
+
+        // Then
+        assertEquals(d1.getId(), id);
+    }
+
+    @Test
+    // We don't want to deal with the different casing requirements for table names in the various DBs so we only run
+    // this test for H2.
+    @Category({NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoSQLite.class, NoFirebird.class, NoDB2.class})
+    public void testFindD1NativeProjection() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Long id = readOnlyDocumentRepository.findD1NativeProjection();
+
+        // Then
+        assertEquals(d1.getId(), id);
     }
 
     @Test

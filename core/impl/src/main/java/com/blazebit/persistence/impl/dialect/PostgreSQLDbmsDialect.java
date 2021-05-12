@@ -254,18 +254,15 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
 
     private static String extractSingleTableName(DbmsStatementType statementType, StringBuilder sb) {
         if (statementType == DbmsStatementType.DELETE) {
-            String needle = "from";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int startIndex = SqlUtils.FROM_FINDER.indexIn(sb, 0, sb.length()) + SqlUtils.FROM.length();
             int endIndex = sb.indexOf(" ", startIndex);
             return sb.substring(startIndex, endIndex);
         } else if (statementType == DbmsStatementType.UPDATE) {
-            String needle = "update";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int startIndex = SqlUtils.UPDATE_FINDER.indexIn(sb, 0, sb.length()) + SqlUtils.UPDATE.length();
             int endIndex = sb.indexOf(" ", startIndex);
             return sb.substring(startIndex, endIndex);
         } else if (statementType == DbmsStatementType.INSERT) {
-            String needle = "into";
-            int startIndex = indexOfIgnoreCase(sb, needle) + needle.length() + 1;
+            int startIndex = SqlUtils.INTO_FINDER.indexIn(sb, 0, sb.length()) + SqlUtils.INTO.length();
             int endIndex = sb.indexOf(" ", startIndex);
             endIndex = indexOfOrEnd(sb, '(', startIndex, endIndex);
             return sb.substring(startIndex, endIndex);

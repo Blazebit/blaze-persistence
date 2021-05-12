@@ -150,8 +150,6 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle10gDialect");
         }
         String targetSchema = System.getProperty("hibernate.default_schema", getTargetSchema());
-        // Ignore default schema for MySQL since MySQL does not support schemas and bad things happen in some Hibernate
-        // versions if we still set it.
         if (targetSchema != null && getSchemaMode() == SchemaMode.JPA) {
             properties.put("hibernate.default_schema", targetSchema);
         }

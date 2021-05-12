@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.util.Map;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.DeleteJoinStyle;
@@ -82,7 +83,7 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         
         // NOTE: this only works for insert and select statements, but H2 does not support CTEs in modification queries anyway so it's ok
         if (withClause != null) {
-            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+            sqlSb.insert(SqlUtils.SELECT_FINDER.indexIn(sqlSb, 0, sqlSb.length()), withClause);
         }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);

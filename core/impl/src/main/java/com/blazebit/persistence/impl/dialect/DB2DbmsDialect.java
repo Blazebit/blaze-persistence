@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
@@ -136,8 +137,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
                 newValuesSb.append(")");
                 dbmsModificationStateQueries.put(newValuesTableName, newValuesSb.toString());
                 
-                String needle = "into";
-                int startIndex = indexOfIgnoreCase(sqlSb, needle) + needle.length() + 1;
+                int startIndex = SqlUtils.INTO_FINDER.indexIn(sqlSb, 0, sqlSb.length()) + SqlUtils.INTO.length();
                 int endIndex = sqlSb.indexOf(" ", startIndex);
                 endIndex = indexOfOrEnd(sqlSb, '(', startIndex, endIndex);
                 String table = sqlSb.substring(startIndex, endIndex);
@@ -217,7 +217,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         
         // This is a select
         if (withClause != null) {
-            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+            sqlSb.insert(SqlUtils.SELECT_FINDER.indexIn(sqlSb, 0, sqlSb.length()), withClause);
         }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
