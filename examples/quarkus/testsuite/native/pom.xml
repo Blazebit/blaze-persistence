@@ -49,6 +49,7 @@
                 <module>h2</module>
                 <module>mysql</module>
                 <module>mssql</module>
+                <module>db2</module>
             </modules>
         </profile>
         <profile>

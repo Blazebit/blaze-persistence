@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
@@ -192,13 +193,16 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         if (updatable) {
             String mappingExpression = getMapping();
             if (mappingExpression != null) {
-                boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), mappingExpression);
-                if (jpaOrphanRemoval && !orphanRemoval) {
-                    context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
-                }
-                boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), mappingExpression);
-                if (jpaDeleteCascaded && !deleteCascaded) {
-                    context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                if (elementType instanceof BasicType<?> && context.getEntityMetamodel().getEntity(elementType.getJavaType()) != null || elementType instanceof ViewType<?>) {
+                    // Checking this only makes sense for entities, as embeddables are orphan removed/delete cascaded anyway
+                    boolean jpaOrphanRemoval = context.getJpaProvider().isOrphanRemoval(declaringType.getJpaManagedType(), mappingExpression);
+                    if (jpaOrphanRemoval && !orphanRemoval) {
+                        context.addError("Orphan removal configuration via @UpdatableMapping must be defined if entity attribute defines orphan removal. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                    }
+                    boolean jpaDeleteCascaded = context.getJpaProvider().isDeleteCascaded(declaringType.getJpaManagedType(), mappingExpression);
+                    if (jpaDeleteCascaded && !deleteCascaded) {
+                        context.addError("Delete cascading configuration via @UpdatableMapping must be defined if entity attribute defines delete cascading. Invalid definition found on the  " + mapping.getErrorLocation() + "!");
+                    }
                 }
             }
         }

@@ -274,13 +274,15 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
                 invokeCollectionAction(context, ownerView, view, getEntityAttributeValue(entity), value, collectionActions);
                 return;
             case COLLECTION_REPLACE_AND_ELEMENT:
-                if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity()) {
-                    for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
-                    }
-                } else {
-                    for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
-                        elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null, null);
+                if (elementFlushers != null) {
+                    if (flushStrategy == FlushStrategy.ENTITY || context.isForceEntity()) {
+                        for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
+                            elementFlusher.flushEntity(context, entity, ownerView, view, value, null);
+                        }
+                    } else {
+                        for (CollectionElementAttributeFlusher<E, V> elementFlusher : elementFlushers) {
+                            elementFlusher.flushQuery(context, null, null, null, ownerView, view, value, null, null);
+                        }
                     }
                 }
                 replaceCollection(context, ownerView, view, entity, value, flushStrategy);

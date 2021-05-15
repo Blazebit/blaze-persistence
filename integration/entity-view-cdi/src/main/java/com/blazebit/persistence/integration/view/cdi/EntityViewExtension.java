@@ -32,6 +32,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.WithAnnotations;
 import java.lang.annotation.Annotation;
 
 /**
@@ -45,7 +46,7 @@ public class EntityViewExtension implements Extension {
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
     private final List<RuntimeException> exceptions = new ArrayList<>();
 
-    <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
+    <X> void processEntityView(@Observes @WithAnnotations({EntityView.class, EntityViewListener.class, EntityViewListeners.class}) ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
             try {
                 configuration.addEntityView(pat.getAnnotatedType().getJavaClass());

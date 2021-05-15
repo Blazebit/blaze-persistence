@@ -12,13 +12,14 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix missing reflection registrations in Quarkus native image processor
+* Fix NPE when flushing updatable entity view with plural mapping for element collection using embeddable types
 
 ### Backwards-incompatible changes
 
 None yet
 
-## 1.6.0-SNAPSHOT
+## 1.6.0
 
 24/04/2021 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.0) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.0+is%3Aclosed+sort%3Aupdated-desc)
 
