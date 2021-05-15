@@ -250,7 +250,10 @@ class BlazePersistenceProcessor {
                 "org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor",
                 "org.hibernate.hql.internal.ast.exec.BasicExecutor",
                 "org.hibernate.hql.internal.ast.exec.DeleteExecutor",
-                "org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor")
+                "org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor",
+                "org.hibernate.hql.internal.ast.exec.IdSubselectUpdateExecutor",
+                "org.hibernate.hql.internal.ast.exec.SimpleUpdateExecutor",
+                "org.hibernate.hql.internal.ast.exec.InsertExecutor")
                 .fields(true)
                 .finalFieldsWritable(true)
                 .build()
