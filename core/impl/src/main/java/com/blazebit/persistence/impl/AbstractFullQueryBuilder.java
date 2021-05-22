@@ -270,13 +270,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (useCountWrapper(countAll)) {
             if (externalRepresentation) {
                 sbSelectFrom.append("SELECT COUNT(*) FROM (");
-                buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+                buildBaseQueryString(sbSelectFrom, externalRepresentation, null, true);
                 if (maximumCount != Long.MAX_VALUE) {
                     sbSelectFrom.append(" LIMIT ").append(maximumCount);
                 }
                 sbSelectFrom.append(')');
             } else {
-                buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+                buildBaseQueryString(sbSelectFrom, externalRepresentation, null, true);
             }
         } else {
             buildPageCountQueryString(sbSelectFrom, externalRepresentation, countAll && !hasGroupBy && !selectManager.isDistinct(), maximumCount);

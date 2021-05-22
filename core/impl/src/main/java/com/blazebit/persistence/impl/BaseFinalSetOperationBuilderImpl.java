@@ -264,13 +264,13 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         boolean nested = isNestedAndComplex(setOperationManager.getStartQueryBuilder());
         if (nested) {
             sbSelectFrom.append('(');
         }
         
-        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
+        setOperationManager.getStartQueryBuilder().buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode, false);
         
         if (nested) {
             sbSelectFrom.append(')');
@@ -288,7 +288,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                     sbSelectFrom.append('(');
                 }
                 
-                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
+                setOperand.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode, false);
                 
                 if (nested) {
                     sbSelectFrom.append(')');

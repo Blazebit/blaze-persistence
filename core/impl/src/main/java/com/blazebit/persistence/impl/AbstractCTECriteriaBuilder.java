@@ -92,7 +92,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     @Override
     protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
-        buildBaseQueryString(sbSelectFrom, true, null);
+        buildBaseQueryString(sbSelectFrom, true, null, false);
     }
 
     @Override

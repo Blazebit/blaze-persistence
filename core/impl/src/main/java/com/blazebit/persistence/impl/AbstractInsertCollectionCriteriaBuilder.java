@@ -106,9 +106,9 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         if (externalRepresentation) {
-            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode);
+            super.buildBaseQueryString(sbSelectFrom, externalRepresentation, lateralJoinNode, countWrapped);
         } else {
             buildSelectBaseQueryString(sbSelectFrom, externalRepresentation);
         }

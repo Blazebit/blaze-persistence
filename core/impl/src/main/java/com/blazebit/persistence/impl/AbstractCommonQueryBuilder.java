@@ -3655,7 +3655,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             sbSelectFrom.append("EXISTS(");
         }
-        buildBaseQueryString(sbSelectFrom, false, lateralJoinNode);
+        buildBaseQueryString(sbSelectFrom, false, lateralJoinNode, false);
         if (hasLimit()) {
             final boolean hasFirstResult = firstResult != 0;
             final boolean hasMaxResults = maxResults != Integer.MAX_VALUE;
@@ -3747,15 +3747,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected String buildBaseQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
-        buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+        buildBaseQueryString(sbSelectFrom, externalRepresentation, null, false);
         return sbSelectFrom.toString();
     }
 
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
-        buildBaseQueryString0(sbSelectFrom, externalRepresentation, lateralJoinNode);
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
+        buildBaseQueryString0(sbSelectFrom, externalRepresentation, lateralJoinNode, countWrapped);
     }
 
-    protected final void buildBaseQueryString0(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected final void buildBaseQueryString0(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         boolean originalExternalRepresentation = queryGenerator.isExternalRepresentation();
         queryGenerator.setExternalRepresentation(externalRepresentation);
         try {
@@ -3768,9 +3768,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
             appendGroupByClause(sbSelectFrom);
             appendWindowClause(sbSelectFrom, externalRepresentation);
-            appendOrderByClause(sbSelectFrom);
-            if (externalRepresentation && !isMainQuery) {
-                applyJpaLimit(sbSelectFrom);
+            if (!countWrapped || externalRepresentation && !isMainQuery && hasLimit()) {
+                appendOrderByClause(sbSelectFrom);
+                if (externalRepresentation && !isMainQuery) {
+                    applyJpaLimit(sbSelectFrom);
+                }
             }
         } finally {
             queryGenerator.setExternalRepresentation(originalExternalRepresentation);
@@ -3787,7 +3789,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildBaseQueryString(sbSelectFrom, true, null);
+        buildBaseQueryString(sbSelectFrom, true, null, false);
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {

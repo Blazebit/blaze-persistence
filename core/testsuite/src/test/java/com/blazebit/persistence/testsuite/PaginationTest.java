@@ -33,6 +33,9 @@ import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
@@ -961,7 +964,52 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getResultList();
     }
-    
+
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class })
+    public void testCountWithExplicitLeftJoin() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .leftJoinOn(Person.class, "p")
+                .on("p.age").eqExpression("d.id")
+                .end();
+        String expectedCountQuery = "SELECT " + countStar() + " FROM Document d " +
+                "LEFT JOIN Person p"
+                + onClause("p.age = d.id");
+        assertEquals(expectedCountQuery, cb.getCountQueryString());
+        cb.getCountQuery().getResultList();
+    }
+
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    public void testPaginateSimpleAggregate() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .select("d.owner.id")
+                .select("d.owner.age")
+                .select("d.owner.name")
+                .select("max(d.id)")
+                .where("d.owner.name").eqLiteral("test")
+                .groupBy("d.owner.name")
+                .groupBy("d.owner.age")
+                .groupBy("d.owner.id")
+                .orderByAsc("d.owner.name")
+                .orderByAsc("d.owner.age")
+                .orderByAsc("d.owner.id");
+        String expectedObjectQuery = "SELECT d.owner.id, owner_1.age, owner_1.name, max(d.id) FROM Document d JOIN d.owner owner_1 " +
+                "WHERE owner_1.name = 'test' GROUP BY owner_1.name, owner_1.age, d.owner.id " +
+                "ORDER BY owner_1.name ASC, owner_1.age ASC, d.owner.id ASC";
+        String expectedCountQuery;
+        if (dbmsDialect.supportsCountTuple() || !supportsAdvancedSql()) {
+            expectedCountQuery = "SELECT " + countPaginated("owner_1.name, owner_1.age, d.owner.id", true) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = 'test'";
+        } else {
+            expectedCountQuery = "SELECT COUNT(*) FROM (SELECT d.owner.id, owner_1.age, owner_1.name, max(d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = 'test' GROUP BY owner_1.name, owner_1.age, d.owner.id)";
+        }
+        assertEquals(expectedObjectQuery, cb.getQueryString());
+        assertEquals(expectedCountQuery, cb.getCountQueryString());
+        cb.getCountQuery().getResultList();
+    }
+
     @Test
     @Category(NoEclipselink.class)
     // TODO: Maybe report that EclipseLink has a bug in case when rendering

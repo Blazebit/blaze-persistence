@@ -1186,12 +1186,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (externalRepresentation && isMainQuery) {
             mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+        buildBaseQueryString(sbSelectFrom, externalRepresentation, null, false);
         return sbSelectFrom.toString();
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         selectManager.buildSelect(sbSelectFrom, false, externalRepresentation);
 
         /**
