@@ -178,7 +178,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         JoinNode rootNode = joinManager.getRoots().get(0);
         JoinTreeNode collectionTreeNode = rootNode.getNodes().get(collectionName);
         boolean hasOtherJoinNodes = joinManager.getRoots().size() > 1

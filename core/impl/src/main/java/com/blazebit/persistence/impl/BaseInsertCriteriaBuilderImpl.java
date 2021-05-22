@@ -134,7 +134,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     @Override
-    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
         appendInsertIntoFragment(sbSelectFrom, externalRepresentation);
         sbSelectFrom.append('(');
         
@@ -154,7 +154,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
 
     protected void buildSelectBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-        super.buildBaseQueryString(sbSelectFrom, externalRepresentation, null);
+        super.buildBaseQueryString(sbSelectFrom, externalRepresentation, null, false);
     }
 
     protected void appendInsertIntoFragment(StringBuilder sbSelectFrom, boolean externalRepresentation) {

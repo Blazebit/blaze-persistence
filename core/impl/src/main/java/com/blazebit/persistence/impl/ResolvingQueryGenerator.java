@@ -255,7 +255,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
             if (isSimple) {
                 sb.append('(');
-                subquery.buildBaseQueryString(sb, externalRepresentation, null);
+                subquery.buildBaseQueryString(sb, externalRepresentation, null, false);
                 sb.append(')');
             } else {
                 if (!externalRepresentation) {
