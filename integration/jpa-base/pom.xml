@@ -124,6 +124,7 @@
                                         requires java.sql;
                                         requires java.persistence;
                                         requires com.blazebit.persistence.core;
+                                        requires com.blazebit.persistence.core.parser;
                                         exports com.blazebit.persistence.integration.jpa;
                                         exports com.blazebit.persistence.integration.jpa.function;
                                     }

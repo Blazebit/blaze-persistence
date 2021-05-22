@@ -134,7 +134,8 @@
                                         requires java.persistence;
                                         requires org.hibernate.orm.core;
                                         requires com.blazebit.persistence.core;
-                                        requires com.blazebit.persistence.integration.hibernate.base;
+                                        requires transitive com.blazebit.persistence.integration.hibernate.base;
+                                        requires static com.blazebit.persistence.view;
                                         provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate60Access;
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60EntityManagerFactoryIntegrator;
                                         provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory;
