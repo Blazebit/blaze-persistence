@@ -64,7 +64,7 @@
                                     module ${module.name} {
                                         requires java.sql;
                                         requires java.persistence;
-                                        requires java.enterprise.inject;
+                                        requires jakarta.enterprise.cdi.api;
                                         requires com.blazebit.persistence.view;
                                         requires deltaspike.data.module.api;
                                         exports com.blazebit.persistence.deltaspike.data;

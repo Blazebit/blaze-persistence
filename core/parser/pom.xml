@@ -161,6 +161,7 @@
                                         exports com.blazebit.persistence.parser.expression.modifier;
                                         exports com.blazebit.persistence.parser.predicate;
                                         exports com.blazebit.persistence.parser.util;
+                                        uses com.blazebit.persistence.parser.util.TypeConverterContributor;
                                     }
                                 </moduleInfoSource>
                             </module>

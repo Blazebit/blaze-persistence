@@ -202,12 +202,14 @@
                         </goals>
                         <configuration>
                             <module>
+                                <!-- This must be an open module because CDI needs to introspect the extension -->
                                 <moduleInfoSource>
-                                    module ${module.name} {
+                                    open module ${module.name} {
                                         requires java.sql;
                                         requires java.persistence;
-                                        requires java.enterprise.inject;
+                                        requires jakarta.enterprise.cdi.api;
                                         requires com.blazebit.persistence.view;
+                                        exports com.blazebit.persistence.integration.view.cdi;
                                         provides javax.enterprise.inject.spi.Extension with com.blazebit.persistence.integration.view.cdi.EntityViewExtension;
                                     }
                                 </moduleInfoSource>

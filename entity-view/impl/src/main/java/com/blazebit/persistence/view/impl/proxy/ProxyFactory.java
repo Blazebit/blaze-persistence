@@ -129,6 +129,7 @@ public class ProxyFactory {
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     private static final Path DEBUG_DUMP_DIRECTORY;
+    private static final boolean NEEDS_READS_INJECTOR;
     private final ConcurrentMap<Class<?>, Class<?>> baseClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<>();
@@ -152,6 +153,17 @@ public class ProxyFactory {
                 Logger.getLogger(ProxyFactory.class.getName()).severe("The given debug dump directory does not exist: " + p.toAbsolutePath());
             }
         }
+        boolean needsReadsInjector = false;
+        try {
+            Method getUnnamedModule = ClassLoader.class.getMethod("getUnnamedModule");
+            Object unnamedModule = getUnnamedModule.invoke(ProxyFactory.class.getClassLoader());
+            needsReadsInjector = Class.class.getMethod("getModule").invoke(ProxyFactory.class) != unnamedModule;
+        } catch (NoSuchMethodException ex) {
+            // Ignore
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not determine if the reads injector is needed", e);
+        }
+        NEEDS_READS_INJECTOR = needsReadsInjector;
     }
 
     public ProxyFactory(boolean unsafeDisabled, boolean strictCascadingCheck, PackageOpener packageOpener) {
@@ -307,26 +319,33 @@ public class ProxyFactory {
                 CtClass ctClass = pool.get(classOfPackage.getName());
                 classNameMapping.put(classOfPackage.getName(), cc.getName());
                 for (CtMethod method : ctClass.getDeclaredMethods()) {
-                    if (java.lang.reflect.Modifier.isAbstract(method.getModifiers()) && !java.lang.reflect.Modifier.isPublic(method.getModifiers()) && !java.lang.reflect.Modifier.isPrivate(method.getModifiers())) {
+                    if (java.lang.reflect.Modifier.isAbstract(method.getModifiers()) && !java.lang.reflect.Modifier.isPublic(method.getModifiers()) && !java.lang.reflect.Modifier.isProtected(method.getModifiers()) && !java.lang.reflect.Modifier.isPrivate(method.getModifiers())) {
                         methods.put(method.getName() + " " + method.getMethodInfo().getDescriptor(), method.getMethodInfo());
                     }
                 }
 
-                // Redefine methods in proxy base class as public
-                for (MethodInfo value : methods.values()) {
-                    MethodInfo methodInfo = new MethodInfo(cc.getClassFile().getConstPool(), value.getName(), value.getDescriptor());
-                    if (value.getExceptionsAttribute() != null) {
-                        methodInfo.setExceptionsAttribute((ExceptionsAttribute) value.getExceptionsAttribute().copy(cc.getClassFile().getConstPool(), classNameMapping));
-                    }
-                    for (AttributeInfo attribute : value.getAttributes()) {
-                        methodInfo.addAttribute(attribute.copy(cc.getClassFile().getConstPool(), classNameMapping));
+                // No need to define the base class if no methods need a re-definition
+                if (methods.isEmpty()) {
+                    cc.detach();
+                } else {
+                    // Redefine methods in proxy base class as public
+                    for (MethodInfo value : methods.values()) {
+                        MethodInfo methodInfo = new MethodInfo(cc.getClassFile().getConstPool(), value.getName(), value.getDescriptor());
+                        if (value.getExceptionsAttribute() != null) {
+                            methodInfo.setExceptionsAttribute((ExceptionsAttribute) value.getExceptionsAttribute().copy(cc.getClassFile().getConstPool(), classNameMapping));
+                        }
+                        for (AttributeInfo attribute : value.getAttributes()) {
+                            methodInfo.addAttribute(attribute.copy(cc.getClassFile().getConstPool(), classNameMapping));
+                        }
+
+                        methodInfo.setAccessFlags(Modifier.setPublic(value.getAccessFlags()));
+                        cc.addMethod(CtMethod.make(methodInfo, cc));
                     }
 
-                    methodInfo.setAccessFlags(Modifier.setPublic(value.getAccessFlags()));
-                    cc.addMethod(CtMethod.make(methodInfo, cc));
+                    addReadsModule(proxyClass, classOfPackage, ProxyFactory.class);
+                    addReadsModule(proxyClass, classOfPackage, baseClass);
+                    proxyClass = defineOrGetClass(proxyClass, classOfPackage, cc);
                 }
-
-                proxyClass = defineOrGetClass(proxyClass, classOfPackage, cc);
             }
 
             return proxyClass;
@@ -334,6 +353,23 @@ public class ProxyFactory {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
             pool.removeClassPath(classPath);
+        }
+    }
+
+    private void addReadsModule(Class<?> proxyClass, Class<?> classOfPackage, Class<?> classFromTargetModule) throws Exception {
+        // In modular mode, we need to add a module-read edge from the user module to the entity view module,
+        // because the generated proxies use types from the entity view module e.g. RecordingCollection
+        if (NEEDS_READS_INJECTOR) {
+            String addReadsInjectorClassName = classOfPackage.getPackage().getName() + ".AddReadsInjector";
+            Class<?> readsInjectorClass;
+            try {
+                readsInjectorClass = classOfPackage.getClassLoader().loadClass(addReadsInjectorClassName);
+            } catch (ClassNotFoundException ex) {
+                CtClass injectorCc = pool.getAndRename(AddReadsInjector.class.getName(), addReadsInjectorClassName);
+                readsInjectorClass = defineOrGetClass(proxyClass, classOfPackage, injectorCc);
+            }
+            Method addReadsModule = readsInjectorClass.getMethod("addReadsModule", Class.class);
+            addReadsModule.invoke(null, classFromTargetModule);
         }
     }
 
@@ -351,6 +387,7 @@ public class ProxyFactory {
         pool.insertClassPath(classPath);
 
         try {
+            addReadsModule(clazz, clazz, ProxyFactory.class);
             superCc = pool.get(getProxyBase(clazz).getName());
 
             if (clazz.isInterface()) {
@@ -460,6 +497,20 @@ public class ProxyFactory {
             int mutableAttributeCount = 0;
             for (MethodAttribute<?, ?> attribute : attributes) {
                 AbstractMethodAttribute<?, ?> methodAttribute = (AbstractMethodAttribute<?, ?>) attribute;
+                if (NEEDS_READS_INJECTOR) {
+                    for (Class<?> allowedSubtype : attribute.getAllowedSubtypes()) {
+                        addReadsModule(clazz, clazz, allowedSubtype);
+                    }
+                    for (Type<?> allowedSubtype : attribute.getReadOnlyAllowedSubtypes()) {
+                        addReadsModule(clazz, clazz, allowedSubtype.getJavaType());
+                    }
+                    for (Type<?> allowedSubtype : attribute.getPersistCascadeAllowedSubtypes()) {
+                        addReadsModule(clazz, clazz, allowedSubtype.getJavaType());
+                    }
+                    for (Type<?> allowedSubtype : attribute.getUpdateCascadeAllowedSubtypes()) {
+                        addReadsModule(clazz, clazz, allowedSubtype.getJavaType());
+                    }
+                }
                 boolean forceMutable = mutableStateField != null && methodAttribute == versionAttribute;
                 CtField attributeField = addMembersForAttribute(methodAttribute, clazz, cc, mutableStateField, dirtyChecking, false, forceMutable);
                 fieldMap.put(attribute.getName(), attributeField);

@@ -16,24 +16,17 @@
 
 package com.blazebit.persistence.view.impl.proxy;
 
-import java.lang.invoke.MethodHandles;
-
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.0
  */
-public final class UnsafeHelper {
+public class AddReadsInjector {
 
-    private UnsafeHelper() {
+    private AddReadsInjector() {
     }
 
-    public static Class<?> define(String name, byte[] bytes, final Class<?> declaringClass) {
-        try {
-            UnsafeHelper.class.getModule().addReads(declaringClass.getModule());
-            return MethodHandles.privateLookupIn(declaringClass, MethodHandles.lookup()).defineClass(bytes);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public static void addReadsModule(Class<?> clazz) {
+        AddReadsInjector.class.getModule().addReads(clazz.getModule());
     }
 }

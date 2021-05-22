@@ -44,6 +44,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -77,7 +78,24 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                 usedProvider = iter.next();
                 VERSION_STRING = usedProvider.getVersion();
             } else {
-                VERSION_STRING = Version.getVersionString();
+                String versionString = Version.getVersionString();
+                if ("[WORKING]".equals(versionString)) {
+                    try {
+                        Method getModule = Class.class.getMethod("getModule");
+                        Method getDescriptor = getModule.getReturnType().getMethod("getDescriptor");
+                        Method version = getDescriptor.getReturnType().getMethod("version");
+                        Method get = version.getReturnType().getMethod("get");
+                        Object module = getModule.invoke(Version.class);
+                        Object descriptor = getDescriptor.invoke(module);
+                        Object versionOptional = version.invoke(descriptor);
+                        versionString = get.invoke(versionOptional).toString();
+                    } catch (NoSuchMethodException ex) {
+                        throw new IllegalArgumentException("Error while trying to resolve the Hibernate version. This can happen when using an uber-jar deployment. In that case, please provide a service provider implementation of " + HibernateVersionProvider.class.getName());
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException("An error happened while trying to resolve the Hibernate version through the module version descriptor", ex);
+                    }
+                }
+                VERSION_STRING = versionString;
             }
             String[] parts = VERSION_STRING.split("[\\.-]");
             MAJOR = Integer.parseInt(parts[0]);
