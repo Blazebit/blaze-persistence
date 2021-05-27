@@ -1037,7 +1037,7 @@ To achieve that, the `@Limit` annotation can be used like in the following examp
 interface CatView extends SimpleCatView {
 
     @Mapping("kittens")
-    @Limit(limit = 5, order = {"age DESC", "id DESC"})
+    @Limit(limit = "5", order = {"age DESC", "id DESC"})
     List<SimpleCatView> getKittens();
 }
 ----
