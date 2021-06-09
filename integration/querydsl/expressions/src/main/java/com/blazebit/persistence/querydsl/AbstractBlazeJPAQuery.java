@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import static com.blazebit.persistence.querydsl.HintsAccessor.getHints;
+
 /**
  * Abstract base class for JPA API based implementations of the JPQLQuery interface
  *
@@ -78,7 +80,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
 
     protected final CriteriaBuilderFactory criteriaBuilderFactory;
 
-    protected boolean cachable = false;
+    protected boolean cacheable = false;
 
     protected final Binds<T> binds = new Binds<>();
 
@@ -179,7 +181,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
             query.setFlushMode(flushMode);
         }
 
-        for (Map.Entry<String, Object> entry : hints.entries()) {
+        for (Map.Entry<String, Object> entry : getHints(this)) {
             try {
                 query.setHint(entry.getKey(), entry.getValue());
             } catch (UnsupportedOperationException e) {
@@ -187,7 +189,6 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
             }
         }
 
-        logQuery(queryable.getQueryString(), null);
         return query;
     }
 
@@ -231,11 +232,11 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
             }
         }
 
-        for (Map.Entry<String, Object> entry : hints.entries()) {
+        for (Map.Entry<String, Object> entry : getHints(this)) {
             criteriaBuilder.setProperty(entry.getKey(), entry.getValue().toString());
         }
 
-        if (cachable) {
+        if (cacheable) {
             criteriaBuilder.setCacheable(true);
         }
 
@@ -246,7 +247,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     @SuppressWarnings({ "unchecked", "unsafe" })
     protected void clone(Q query) {
         super.clone(query);
-        this.cachable = query.cachable;
+        this.cacheable = query.cacheable;
         this.binds.addBinds(((Operation) query.binds.accept(new ReplaceVisitor<Void>(), null)).getArgs());
     }
 
@@ -416,7 +417,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     // End full joins
 
     public Q setCacheable(boolean cacheable) {
-        this.cachable = cacheable;
+        this.cacheable = cacheable;
         return queryMixin.getSelf();
     }
 
