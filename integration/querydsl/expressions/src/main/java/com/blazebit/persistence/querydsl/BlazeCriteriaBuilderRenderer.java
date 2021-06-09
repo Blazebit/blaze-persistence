@@ -1027,6 +1027,7 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 append("(");
             }
             append(":");
+            final Map<Object, String> constantToLabel = getConstantToLabel();
             String label = constantToLabel.get(constant);
             if (label == null) {
                 label = "param_" + constantToLabel.size();
@@ -1036,6 +1037,11 @@ public class BlazeCriteriaBuilderRenderer<T> {
             if (wrap) {
                 append(")");
             }
+        }
+
+        @Override
+        public Map<Object, String> getConstantToLabel() {
+            return BlazeCriteriaBuilderRenderer.this.constantToLabel;
         }
 
         @Override
