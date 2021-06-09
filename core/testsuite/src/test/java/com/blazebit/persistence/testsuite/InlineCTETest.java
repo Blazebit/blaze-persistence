@@ -27,13 +27,19 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentCTE;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.ParameterOrderCte;
 import com.blazebit.persistence.testsuite.entity.ParameterOrderCteB;
 import com.blazebit.persistence.testsuite.entity.ParameterOrderEntity;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -57,6 +63,12 @@ public class InlineCTETest extends AbstractCoreTest {
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
+            Document.class,
+            Version.class,
+            Person.class,
+            Workflow.class,
+            IntIdEntity.class,
+            DocumentCTE.class,
             RecursiveEntity.class,
             TestCTE.class,
             TestAdvancedCTE1.class,
@@ -96,6 +108,37 @@ public class InlineCTETest extends AbstractCoreTest {
                 em.persist(parameterOrderEntity);
             }
         });
+    }
+
+    @Test
+    public void testInliningFromSubqueryCte() {
+        cbf.create(em, RecursiveEntity.class)
+                .withRecursive(DocumentCTE.class)
+                    .from(Document.class, "d")
+                    .bind("id").select("d.id")
+                    .bind("parent.id").select("d.parent.id")
+                    .bind("root.id").select("d.id")
+                    .where("d").eqExpression(":param_1")
+                    .setParameter("param_1", em.getReference(Document.class, 1L))
+                .unionAll()
+                    .from(Document.class, "d")
+                    .innerJoinOn(DocumentCTE.class, "parentDocument").on("parentDocument.id").eqExpression("d.parent.id").end()
+                    .bind("id").select("d.id")
+                    .bind("parent.id").select("d.parent.id")
+                    .bind("root.id").select("parentDocument.root.id")
+                .end()
+                .select("document")
+                .from(Document.class, "document")
+                .where("document").in()
+                    .fromSubquery(DocumentCTE.class, "de1")
+                        .from(DocumentCTE.class, "d2")
+                        .bind("id").select("d2.id")
+                        .bind("parent.id").select("d2.parent.id")
+                        .bind("root.id").select("d2.root.id")
+                    .end()
+                    .select("de1.document")
+                .end()
+                .getResultList();
     }
 
     // TODO: Oracle requires a cycle clause #295
