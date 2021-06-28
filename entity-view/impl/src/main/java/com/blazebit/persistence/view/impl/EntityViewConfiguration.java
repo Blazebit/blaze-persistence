@@ -19,13 +19,15 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.ConfigurationProperties;
-import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
 import java.util.Collection;
@@ -109,13 +111,13 @@ public final class EntityViewConfiguration {
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
     }
 
-    private EntityViewConfiguration(EntityViewConfiguration original, FullQueryBuilder<?, ?> criteriaBuilder, String attributePath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    private EntityViewConfiguration(EntityViewConfiguration original, FullQueryBuilder<?, ?> criteriaBuilder, Set<String> fetches, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         this.criteriaBuilder = criteriaBuilder;
         this.expressionFactory = original.expressionFactory;
         this.viewJpqlMacro = original.viewJpqlMacro;
         this.embeddingViewJpqlMacro = embeddingViewJpqlMacro;
         this.optionalParameters = original.optionalParameters;
-        this.fetches = original.fetches;
+        this.fetches = fetches;
         this.batchSizeConfiguration = original.batchSizeConfiguration;
         this.expectBatchCorrelationValuesConfiguration = original.expectBatchCorrelationValuesConfiguration;
     }
@@ -168,13 +170,19 @@ public final class EntityViewConfiguration {
                         break;
                     } else {
                         // Fetch a specific attribute
-                        sb.append(parts[i]).append('.');
+                        sb.append(parts[i]);
                         MethodAttribute<?, ?> attribute = viewType.getAttribute(parts[i]);
                         if (attribute instanceof PluralAttribute<?, ?, ?>) {
-                            t = ((PluralAttribute) attribute).getElementType();
+                            t = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
                         } else {
                             t = ((SingularAttribute<?, ?>) attribute).getType();
                         }
+                        // For select and subselect correlation fetched attributes we must add the correlated attribute path also to fetch the correlation basis expression
+                        if ((attribute.getFetchStrategy() == FetchStrategy.SELECT || attribute.getFetchStrategy() == FetchStrategy.SUBSELECT)
+                                && ((AbstractMethodAttribute<?, ?>) attribute).getCorrelationProviderFactory() != null) {
+                            filteredFetches.add(sb.toString());
+                        }
+                        sb.append('.');
                         i++;
                     }
                 }
@@ -205,7 +213,7 @@ public final class EntityViewConfiguration {
     }
 
     public EntityViewConfiguration forSubview(FullQueryBuilder<?, ?> criteriaBuilder, String attributePath, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
-        return new EntityViewConfiguration(this, criteriaBuilder, attributePath, embeddingViewJpqlMacro);
+        return new EntityViewConfiguration(this, criteriaBuilder, getFetches(fetches, attributePath), embeddingViewJpqlMacro);
     }
 
     public FullQueryBuilder<?, ?> getCriteriaBuilder() {

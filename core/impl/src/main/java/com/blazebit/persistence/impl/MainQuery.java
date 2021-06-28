@@ -76,9 +76,6 @@ public class MainQuery {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
-        if (em == null) {
-            throw new NullPointerException("entityManager");
-        }
 
         JpaProvider jpaProvider = cbf.getJpaProvider();
         ParameterManager parameterManager = new ParameterManager(jpaProvider, cbf.getMetamodel());
