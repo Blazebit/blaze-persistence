@@ -30,7 +30,6 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.metamodel.EntityType;
 import java.util.HashSet;
@@ -68,23 +67,16 @@ public class FullEntityLoader extends AbstractEntityLoader {
         addFetchJoinableRelations(fetchJoinableRelations, "", subviewType);
 
         CriteriaBuilderFactory cbf = evm.getCriteriaBuilderFactory();
-        EntityManagerFactory emf = cbf.getService(EntityManagerFactory.class);
-        EntityManager em = emf.createEntityManager();
-
-        try {
-            if (fetchJoinableRelations.isEmpty()) {
-                return null;
+        if (fetchJoinableRelations.isEmpty()) {
+            return null;
+        } else {
+            CriteriaBuilder<?> criteriaBuilder = cbf.create(null, entityClass).fetch(fetchJoinableRelations.toArray(new String[fetchJoinableRelations.size()]));
+            if (multiple) {
+                criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
             } else {
-                CriteriaBuilder<?> criteriaBuilder = cbf.create(em, entityClass).fetch(fetchJoinableRelations.toArray(new String[fetchJoinableRelations.size()]));
-                if (multiple) {
-                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
-                } else {
-                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
-                }
-                return criteriaBuilder.getQueryString();
+                criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
             }
-        } finally {
-            em.close();
+            return criteriaBuilder.getQueryString();
         }
     }
 

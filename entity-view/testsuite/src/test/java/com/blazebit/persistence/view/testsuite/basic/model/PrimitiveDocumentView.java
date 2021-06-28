@@ -36,6 +36,9 @@ public interface PrimitiveDocumentView extends PrimitiveSimpleDocumentView {
 
     public PrimitivePersonView getOwner();
 
+    @Mapping(value = "owner", fetch = FetchStrategy.SELECT)
+    public PrimitivePersonView getCorrelatedOwner();
+
     @Mapping("contacts[1]")
     public PrimitivePerson getFirstContactPerson();
 

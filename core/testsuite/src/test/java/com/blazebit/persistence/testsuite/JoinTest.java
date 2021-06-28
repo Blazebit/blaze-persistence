@@ -235,11 +235,6 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testConstructorEntityManagerNull() {
-        verifyException(cbf, NullPointerException.class, r -> r.create(null, Document.class, "d"));
-    }
-
-    @Test
     public void testJoinNullPath() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, NullPointerException.class, r -> r.join(null, "o", JoinType.LEFT, true));

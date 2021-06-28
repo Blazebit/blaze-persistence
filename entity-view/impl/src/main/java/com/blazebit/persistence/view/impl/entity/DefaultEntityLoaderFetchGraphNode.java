@@ -24,7 +24,6 @@ import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.metamodel.EntityType;
 import java.util.ArrayList;
@@ -99,29 +98,22 @@ public class DefaultEntityLoaderFetchGraphNode extends AbstractEntityLoader impl
 
     private String createQueryString(EntityViewManagerImpl evm, EntityType<?> entityType, Map<String, Map<?, ?>> fetchGraph, boolean multiple) {
         CriteriaBuilderFactory cbf = evm.getCriteriaBuilderFactory();
-        EntityManagerFactory emf = cbf.getService(EntityManagerFactory.class);
-        EntityManager em = emf.createEntityManager();
-
-        try {
-            String[] paths = flatten(fetchGraph);
-            if (paths.length == 0) {
-                if (multiple) {
-                    return cbf.create(em, entityClass)
-                        .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds")
-                        .getQueryString();
-                }
-                return null;
-            } else {
-                CriteriaBuilder<?> criteriaBuilder = cbf.create(em, entityClass).fetch(paths);
-                if (multiple) {
-                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
-                } else {
-                    criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
-                }
-                return criteriaBuilder.getQueryString();
+        String[] paths = flatten(fetchGraph);
+        if (paths.length == 0) {
+            if (multiple) {
+                return cbf.create(null, entityClass)
+                    .where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds")
+                    .getQueryString();
             }
-        } finally {
-            em.close();
+            return null;
+        } else {
+            CriteriaBuilder<?> criteriaBuilder = cbf.create(null, entityClass).fetch(paths);
+            if (multiple) {
+                criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).inExpressions(":entityIds");
+            } else {
+                criteriaBuilder.where(JpaMetamodelUtils.getSingleIdAttribute(entityType).getName()).eqExpression(":id");
+            }
+            return criteriaBuilder.getQueryString();
         }
     }
 

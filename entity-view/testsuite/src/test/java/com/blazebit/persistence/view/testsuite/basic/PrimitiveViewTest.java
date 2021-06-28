@@ -150,10 +150,12 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         EntityViewSetting<PrimitiveDocumentView, CriteriaBuilder<PrimitiveDocumentView>> setting = EntityViewSetting.create(PrimitiveDocumentView.class);
         setting.fetch("name");
         setting.fetch("owner.name");
+        setting.fetch("correlatedOwner.name");
 
         PrimitiveDocumentView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
         assertEquals("doc1", view.getName());
         assertEquals("pers1", view.getOwner().getName());
+        assertEquals("pers1", view.getCorrelatedOwner().getName());
         assertEquals(Collections.emptyMap(), view.getContacts());
     }
 }
