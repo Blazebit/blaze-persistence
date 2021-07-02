@@ -33,6 +33,7 @@ public class EntityFunction implements JpqlFunction {
     private static final String AND_MARKER = " and " + MARKER_PREDICATE;
     private static final String NULL_IS_NULL = "(null is null)";
     private static final String AND_TOKEN = " and ";
+    private static final String AND_PARENTHESIS_TOKEN = " and (";
     private static final String WHERE_TOKEN = " where ";
     private static final String GROUP_BY_TOKEN = " group by ";
     private static final String HAVING_TOKEN = " having ";
@@ -178,12 +179,18 @@ public class EntityFunction implements JpqlFunction {
         if (markerIndex == -1) {
             sb.append(sqlQuery);
         } else {
-            int subqueryEndIndex = sqlQuery.lastIndexOf("(null is null)", markerIndex);
+            int subqueryEndIndex = sqlQuery.lastIndexOf(NULL_IS_NULL, markerIndex);
             if (subqueryEndIndex == -1) {
                 subqueryEndIndex = markerIndex;
             }
-            sb.append(sqlQuery, 0, subqueryEndIndex);
             int[] range = removeSyntheticPredicate(sqlQuery, markerIndex, sqlQuery.length());
+            // Remove a possible leftover connector predicate
+            if (range[0] < sqlQuery.length() && sqlQuery.charAt(range[0]) == ')'
+                    && sqlQuery.regionMatches(subqueryEndIndex - AND_PARENTHESIS_TOKEN.length(), AND_PARENTHESIS_TOKEN, 0, AND_PARENTHESIS_TOKEN.length())) {
+                subqueryEndIndex -= AND_PARENTHESIS_TOKEN.length();
+                range[0]++;
+            }
+            sb.append(sqlQuery, 0, subqueryEndIndex);
             if (
                     sqlQuery.regionMatches(subqueryEndIndex - WHERE_TOKEN.length(), WHERE_TOKEN, 0, WHERE_TOKEN.length())
                             && (sqlQuery.regionMatches(range[0], GROUP_BY_TOKEN, 0, GROUP_BY_TOKEN.length())
@@ -198,14 +205,20 @@ public class EntityFunction implements JpqlFunction {
     }
 
     private static void appendSubqueryPart(StringBuilder sb, String sqlQuery, int start, int subqueryEndIndex, int end) {
-        sb.append(sqlQuery, start, subqueryEndIndex);
         int[] range = removeSyntheticPredicate(sqlQuery, subqueryEndIndex, end);
+        // Remove a possible leftover connector predicate
+        if (range[0] < sqlQuery.length() && sqlQuery.charAt(range[0]) == ')'
+                && sqlQuery.regionMatches(subqueryEndIndex - AND_PARENTHESIS_TOKEN.length(), AND_PARENTHESIS_TOKEN, 0, AND_PARENTHESIS_TOKEN.length())) {
+            subqueryEndIndex -= AND_PARENTHESIS_TOKEN.length();
+            range[0]++;
+        }
+        sb.append(sqlQuery, start, subqueryEndIndex);
         sb.append(sqlQuery, range[0], range[1]);
     }
 
     public static void removeSyntheticPredicate(StringBuilder sb, int end) {
         int markerIndex = sb.lastIndexOf(AND_MARKER);
-        int subqueryEndIndex = sb.lastIndexOf("(null is null)", markerIndex);
+        int subqueryEndIndex = sb.lastIndexOf(NULL_IS_NULL, markerIndex);
         if (subqueryEndIndex == -1) {
             subqueryEndIndex = markerIndex;
         }
