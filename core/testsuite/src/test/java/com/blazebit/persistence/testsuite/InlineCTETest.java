@@ -110,7 +110,10 @@ public class InlineCTETest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
+    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoMySQLOld.class })
     public void testInliningFromSubqueryCte() {
         cbf.create(em, RecursiveEntity.class)
                 .withRecursive(DocumentCTE.class)

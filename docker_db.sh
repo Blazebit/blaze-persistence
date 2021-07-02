@@ -30,7 +30,7 @@ db2() {
 
 mssql() {
     docker rm -f mssql || true
-    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Blaze-Persistence" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
+    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Blaze-Persistence" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server:2017-CU13
 }
 
 oracle() {
