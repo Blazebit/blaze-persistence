@@ -89,6 +89,7 @@
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
+                                        requires transitive java.compiler;
                                         requires transitive com.blazebit.persistence.core;
                                         requires transitive com.blazebit.persistence.view;
                                         provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;

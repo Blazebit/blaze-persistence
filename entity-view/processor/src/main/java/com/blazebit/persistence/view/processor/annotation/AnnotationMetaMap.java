@@ -45,7 +45,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         this.realKeyType = realKeyType;
         this.keySubviewElement = getSubview(keyType, context);
         if (keySubviewElement != null) {
-            this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(keyType));
+            this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getTypeElement(keyType));
         } else {
             this.generatedKeyTypePrefix = keyType;
         }
@@ -129,12 +129,12 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
         sb.append(importContext.importType(getMetaType()))
                 .append('<')
-                .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
+                .append(importContext.importType(getHostingEntity().getQualifiedName()))
                 .append(", ")
-                .append(getHostingEntity().importType(keyType))
+                .append(importContext.importType(keyType))
                 .append(", ");
         if (elementCollectionJavaType != null) {
-            sb.append(getHostingEntity().importType(getModelType())).append(", ");
+            sb.append(importContext.importType(getModelType())).append(", ");
         }
         appendElementType(sb, importContext);
         sb.append('>');

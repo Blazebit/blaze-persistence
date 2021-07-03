@@ -44,7 +44,7 @@ public final class MetamodelClassWriter {
     public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.setLength(0);
         generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX, entity.getMetamodelImportContext(), context);
+        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX, entity.getMetamodelImportContext(), context, entity.getOriginatingElements());
     }
 
     private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -66,7 +66,7 @@ public final class MetamodelClassWriter {
         Collection<MetaAttribute> members = entity.getMembers();
         for (MetaAttribute metaMember : members) {
             if (!metaMember.isSynthetic()) {
-                metaMember.appendMetamodelAttributeDeclarationString(sb);
+                metaMember.appendMetamodelAttributeDeclarationString(sb, entity.getMetamodelImportContext());
                 sb.append(NEW_LINE);
             }
         }
@@ -74,7 +74,7 @@ public final class MetamodelClassWriter {
             if (!metaMember.isSynthetic()) {
                 for (AttributeFilter filter : metaMember.getFilters()) {
                     sb.append("    public static volatile ").append(entity.metamodelImportType(Constants.ATTRIBUTE_FILTER_MAPPING)).append('<');
-                    sb.append(entity.importType(entity.getQualifiedName())).append(", ");
+                    sb.append(entity.metamodelImportType(entity.getQualifiedName())).append(", ");
                     if (filter.getFilterValueType().getKind() == TypeKind.TYPEVAR) {
                         sb.append(entity.metamodelImportType(metaMember.getDeclaredJavaType()));
                     } else {
@@ -109,7 +109,7 @@ public final class MetamodelClassWriter {
 
         for (MetaAttribute metaMember : members) {
             if (!metaMember.isSynthetic()) {
-                metaMember.appendMetamodelAttributeNameDeclarationString(sb);
+                metaMember.appendMetamodelAttributeNameDeclarationString(sb, entity.getMetamodelImportContext());
                 sb.append(NEW_LINE);
             }
         }

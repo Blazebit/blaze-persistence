@@ -43,7 +43,7 @@ public final class BuilderClassWriter {
     public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.setLength(0);
         generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + BUILDER_CLASS_NAME_SUFFIX, entity.getBuilderImportContext(), context);
+        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + BUILDER_CLASS_NAME_SUFFIX, entity.getBuilderImportContext(), context, entity.getOriginatingElements());
     }
 
     private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -56,7 +56,7 @@ public final class BuilderClassWriter {
             sb.append(NEW_LINE);
         }
 
-        sb.append("@").append(entity.builderImportType(Constants.STATIC_BUILDER)).append("(").append(entity.metamodelImportType(entity.getQualifiedName())).append(".class)");
+        sb.append("@").append(entity.builderImportType(Constants.STATIC_BUILDER)).append("(").append(entity.builderImportType(entity.getQualifiedName())).append(".class)");
         sb.append(NEW_LINE);
         printClassDeclaration(sb, entity, context);
 
@@ -119,7 +119,7 @@ public final class BuilderClassWriter {
                 sb.append(typeArguments.get(i));
                 sb.append(", ");
             }
-            sb.append(entity.importType(Constants.ENTITY_VIEW_BUILDER)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(">");
+            sb.append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER)).append("<").append(entity.builderImportType(entity.getQualifiedName())).append(">");
             sb.append("> implements ");
 
             sb.append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER));

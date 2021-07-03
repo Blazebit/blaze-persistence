@@ -34,7 +34,7 @@ public final class OptionalParameterUtils {
         }
         int idx = -1;
         StringBuilder sb = null;
-        TypeElement objectTypeElement = context.getElementUtils().getTypeElement("java.lang.Object");
+        TypeElement objectTypeElement = null;
         while ((idx = mapping.indexOf(':', idx + 1)) != -1) {
             if (sb == null) {
                 sb = new StringBuilder();
@@ -54,6 +54,9 @@ public final class OptionalParameterUtils {
                 TypeElement existingTypeElement = context.getOptionalParameters().get(name);
                 if (existingTypeElement == null) {
                     if (!optionalParameters.containsKey(name)) {
+                        if (objectTypeElement == null) {
+                            objectTypeElement = context.getTypeElement("java.lang.Object");
+                        }
                         optionalParameters.put(name, objectTypeElement);
                     }
                 } else {

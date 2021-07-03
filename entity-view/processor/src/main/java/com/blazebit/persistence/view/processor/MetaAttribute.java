@@ -31,9 +31,9 @@ public interface MetaAttribute {
 
     void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext);
 
-    void appendMetamodelAttributeDeclarationString(StringBuilder sb);
+    void appendMetamodelAttributeDeclarationString(StringBuilder sb, ImportContext importContext);
 
-    void appendMetamodelAttributeNameDeclarationString(StringBuilder sb);
+    void appendMetamodelAttributeNameDeclarationString(StringBuilder sb, ImportContext importContext);
 
     void appendImplementationAttributeDeclarationString(StringBuilder sb);
 

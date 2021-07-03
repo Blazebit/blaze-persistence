@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.HashMap;
@@ -38,7 +39,10 @@ public class ViewFilter {
         Map<String, TypeElement> optionalParameters = new HashMap<>();
         for (Element enclosedElement : filterProvider.getEnclosedElements()) {
             if (enclosedElement instanceof ExecutableElement) {
-                OptionalParameterScanner.scan(optionalParameters, (ExecutableElement) enclosedElement, context);
+                ExecutableElement executableElement = (ExecutableElement) enclosedElement;
+                if (executableElement.getKind() == ElementKind.METHOD && "apply".equals(executableElement.getSimpleName().toString())) {
+                    OptionalParameterScanner.scan(optionalParameters, executableElement, context);
+                }
             }
         }
 

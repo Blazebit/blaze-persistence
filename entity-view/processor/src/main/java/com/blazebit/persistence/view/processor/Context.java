@@ -31,9 +31,10 @@ import javax.tools.Diagnostic;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Christian Beikov
@@ -41,30 +42,34 @@ import java.util.ServiceLoader;
  */
 public class Context {
 
+    private static final Object NULL_OBJECT = new Object();
     private final ProcessingEnvironment pe;
     private final boolean logDebug;
     private final TypeElement generatedAnnotation;
 
-    private final Map<String, MetaEntityView> metaEntityViews = new HashMap<>();
-    private final Collection<String> generatedModelClasses = new HashSet<>();
-    private final Map<String, TypeElement> optionalParameters = new HashMap<>();
-    private final Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
+    private final Map<String, MetaEntityView> metaEntityViews = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Boolean> generatedModelClasses = new ConcurrentHashMap<>();
+    private final ConcurrentMap<CharSequence, Object> typeElements = new ConcurrentHashMap<>();
+    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, Map<String, TypeConverter>> converters;
 
-    private boolean addGeneratedAnnotation;
-    private boolean addGenerationDate;
-    private boolean addSuppressWarningsAnnotation;
-    private boolean strictCascadingCheck;
-    private boolean generateImplementations;
-    private boolean generateBuilders;
-    private boolean createEmptyFlatViews;
-    private boolean generateDeepConstants;
-    private String defaultVersionAttributeName;
-    private String defaultVersionAttributeType;
+    private final boolean addGeneratedAnnotation;
+    private final boolean addGenerationDate;
+    private final boolean addSuppressWarningsAnnotation;
+    private final boolean strictCascadingCheck;
+    private final boolean generateImplementations;
+    private final boolean generateBuilders;
+    private final boolean createEmptyFlatViews;
+    private final boolean generateDeepConstants;
+    private final String defaultVersionAttributeName;
+    private final String defaultVersionAttributeType;
 
     public Context(ProcessingEnvironment pe) {
         this.pe = pe;
         this.logDebug = Boolean.parseBoolean(pe.getOptions().get(EntityViewAnnotationProcessor.DEBUG_OPTION));
 
+        Map<String, TypeElement> optionalParameters = new HashMap<>();
+        Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
         TypeElement java8AndBelowGeneratedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.Generated");
         if (java8AndBelowGeneratedAnnotation != null) {
             generatedAnnotation = java8AndBelowGeneratedAnnotation;
@@ -75,10 +80,65 @@ public class Context {
         for (TypeConverter typeConverter : ServiceLoader.load(TypeConverter.class, Context.class.getClassLoader())) {
             typeConverter.addRegistrations(converters);
         }
+        this.converters = converters;
+
+        this.addGeneratedAnnotation = getOption(pe, EntityViewAnnotationProcessor.ADD_GENERATED_ANNOTATION, true);
+        this.addGenerationDate = getOption(pe, EntityViewAnnotationProcessor.ADD_GENERATION_DATE, false);
+        this.addSuppressWarningsAnnotation = getOption(pe, EntityViewAnnotationProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION, false);
+        this.strictCascadingCheck = getOption(pe, EntityViewAnnotationProcessor.STRICT_CASCADING_CHECK, true);
+        this.generateImplementations = getOption(pe, EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS, true);
+        this.generateBuilders = getOption(pe, EntityViewAnnotationProcessor.GENERATE_BUILDERS, true);
+        this.createEmptyFlatViews = getOption(pe, EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS, true);
+        this.generateDeepConstants = getOption(pe, EntityViewAnnotationProcessor.GENERATE_DEEP_CONSTANTS, true);
+
+        this.defaultVersionAttributeName = pe.getOptions().get(EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_NAME);
+        this.defaultVersionAttributeType = pe.getOptions().get(EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE);
+
+        String s = pe.getOptions().get(EntityViewAnnotationProcessor.OPTIONAL_PARAMETERS);
+        if (s != null) {
+            for (String part : s.split("\\s*;\\s*")) {
+                int idx = part.lastIndexOf('=');
+                String name;
+                String type;
+                if (idx == -1) {
+                    name = part;
+                    type = "java.lang.Object";
+                } else {
+                    name = part.substring(0, idx);
+                    type = part.substring(idx + 1);
+                }
+                optionalParameters.put(name, pe.getElementUtils().getTypeElement(type));
+            }
+        }
+        this.optionalParameters = optionalParameters;
+    }
+
+    private static Boolean getOption(ProcessingEnvironment processingEnvironment, String option, boolean defaultValue) {
+        String tmp = processingEnvironment.getOptions().get(option);
+        if (tmp == null) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(tmp);
     }
 
     public ProcessingEnvironment getProcessingEnvironment() {
         return pe;
+    }
+
+    public TypeElement getTypeElement(CharSequence name) {
+        Object cached = typeElements.get(name);
+        if (cached != null) {
+            return cached == NULL_OBJECT ? null : (TypeElement) cached;
+        }
+        synchronized (this) {
+            TypeElement typeElement = pe.getElementUtils().getTypeElement(name);
+            if (typeElement == null) {
+                typeElements.put(name, NULL_OBJECT);
+            } else {
+                typeElements.put(name, typeElement);
+            }
+            return typeElement;
+        }
     }
 
     public Elements getElementUtils() {
@@ -101,7 +161,9 @@ public class Context {
         if (!logDebug && type.equals(Diagnostic.Kind.OTHER)) {
             return;
         }
-        pe.getMessager().printMessage(type, message);
+        synchronized (pe) {
+            pe.getMessager().printMessage(type, message);
+        }
     }
 
     public boolean matchesDefaultVersionAttribute(Element member) {
@@ -114,10 +176,6 @@ public class Context {
         return getDefaultVersionAttributeType() == null || getDefaultVersionAttributeType().equals(((TypeElement) ((DeclaredType) member.asType()).asElement()).getQualifiedName().toString());
     }
 
-    public boolean containsMetaEntityView(String qualifiedName) {
-        return metaEntityViews.containsKey(qualifiedName);
-    }
-
     public void addMetaEntityViewToContext(String qualifiedName, AnnotationMetaEntityView metaEntityView) {
         metaEntityViews.put(qualifiedName, metaEntityView);
     }
@@ -125,20 +183,13 @@ public class Context {
     public Collection<MetaEntityView> getMetaEntityViews() {
         return metaEntityViews.values();
     }
+
     public Map<String, MetaEntityView> getMetaEntityViewMap() {
         return metaEntityViews;
     }
 
-    public MetaEntityView getMetaEntityView(String fqcn) {
-        return metaEntityViews.get(fqcn);
-    }
-
-    public void markGenerated(String name) {
-        generatedModelClasses.add(name);
-    }
-
-    public boolean isAlreadyGenerated(String name) {
-        return generatedModelClasses.contains(name);
+    public boolean markGenerated(String name) {
+        return generatedModelClasses.putIfAbsent(name, Boolean.TRUE) == null;
     }
 
     public TypeElement getGeneratedAnnotation() {
@@ -149,80 +200,40 @@ public class Context {
         return addGeneratedAnnotation;
     }
 
-    public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {
-        this.addGeneratedAnnotation = addGeneratedAnnotation;
-    }
-
     public boolean addGeneratedDate() {
         return addGenerationDate;
-    }
-
-    public void setAddGenerationDate(boolean addGenerationDate) {
-        this.addGenerationDate = addGenerationDate;
     }
 
     public boolean isAddSuppressWarningsAnnotation() {
         return addSuppressWarningsAnnotation;
     }
 
-    public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
-        this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
-    }
-
     public boolean isStrictCascadingCheck() {
         return strictCascadingCheck;
-    }
-
-    public void setStrictCascadingCheck(boolean strictCascadingCheck) {
-        this.strictCascadingCheck = strictCascadingCheck;
     }
 
     public boolean isGenerateImplementations() {
         return generateImplementations;
     }
 
-    public void setGenerateImplementations(boolean generateImplementations) {
-        this.generateImplementations = generateImplementations;
-    }
-
     public boolean isGenerateBuilders() {
         return generateBuilders;
-    }
-
-    public void setGenerateBuilders(boolean generateBuilders) {
-        this.generateBuilders = generateBuilders;
     }
 
     public String getDefaultVersionAttributeName() {
         return defaultVersionAttributeName;
     }
 
-    public void setDefaultVersionAttributeName(String defaultVersionAttributeName) {
-        this.defaultVersionAttributeName = defaultVersionAttributeName;
-    }
-
     public String getDefaultVersionAttributeType() {
         return defaultVersionAttributeType;
-    }
-
-    public void setDefaultVersionAttributeType(String defaultVersionAttributeType) {
-        this.defaultVersionAttributeType = defaultVersionAttributeType;
     }
 
     public boolean isCreateEmptyFlatViews() {
         return createEmptyFlatViews;
     }
 
-    public void setCreateEmptyFlatViews(boolean createEmptyFlatViews) {
-        this.createEmptyFlatViews = createEmptyFlatViews;
-    }
-
     public boolean isGenerateDeepConstants() {
         return generateDeepConstants;
-    }
-
-    public void setGenerateDeepConstants(boolean generateDeepConstants) {
-        this.generateDeepConstants = generateDeepConstants;
     }
 
     public Map<String, TypeElement> getOptionalParameters() {

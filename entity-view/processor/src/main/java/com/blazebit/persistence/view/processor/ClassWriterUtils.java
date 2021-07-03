@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.view.processor;
 
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
+import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import java.io.IOException;
@@ -41,12 +43,27 @@ public final class ClassWriterUtils {
     private ClassWriterUtils() {
     }
 
-    public static void writeFile(StringBuilder sb, String basePackage, String simpleName, ImportContext importContext, Context context) {
+    public static void writeFile(StringBuilder sb, String basePackage, String simpleName, ImportContext importContext, Context context, Element... originatingElements) {
+        Element[] elements;
+        Filer filer = context.getProcessingEnvironment().getFiler();
+        if (originatingElements.length > 0 && filer.getClass().getName().startsWith("org.gradle.api")) {
+            // gradle filer only support single originating element for isolating processors
+            elements = new Element[1];
+            elements[0] = originatingElements[0];
+        } else {
+            // other compilers like the IntelliJ compiler support multiple
+            elements = originatingElements;
+        }
         try {
-            FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
-                    getFullyQualifiedClassName(basePackage, simpleName)
-            );
-            OutputStream os = fo.openOutputStream();
+            FileObject fo;
+            OutputStream os;
+            synchronized (context) {
+                fo = filer.createSourceFile(
+                        getFullyQualifiedClassName(basePackage, simpleName),
+                        elements
+                );
+                os = fo.openOutputStream();
+            }
             PrintWriter pw = new PrintWriter(os);
 
             if (!basePackage.isEmpty()) {
@@ -59,7 +76,9 @@ public final class ClassWriterUtils {
             pw.println(sb);
 
             pw.flush();
-            pw.close();
+            synchronized (context) {
+                pw.close();
+            }
         } catch (FilerException filerEx) {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: " + filerEx.getMessage());
         } catch (IOException ioEx) {
