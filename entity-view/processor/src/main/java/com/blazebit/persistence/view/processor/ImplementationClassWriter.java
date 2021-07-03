@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.processor;
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaCollection;
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaVersionAttribute;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -70,7 +69,7 @@ public final class ImplementationClassWriter {
     public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.setLength(0);
         generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX, entity.getImplementationImportContext(), context);
+        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX, entity.getImplementationImportContext(), context, entity.getOriginatingElements());
     }
 
     private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -153,7 +152,7 @@ public final class ImplementationClassWriter {
         sb.append("    }").append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
         sb.append("    public Class<?> $$_getJpaManagedBaseClass() {").append(NEW_LINE);
-        sb.append("        return ").append(entity.implementationImportType(getJpaManagedBaseClass(entity.getEntityClass(), context))).append(".class;").append(NEW_LINE);
+        sb.append("        return ").append(entity.implementationImportType(entity.getJpaManagedBaseClass())).append(".class;").append(NEW_LINE);
         sb.append("    }").append(NEW_LINE);
         sb.append("    @Override").append(NEW_LINE);
         String entityViewClassName = entity.implementationImportType(entity.getQualifiedName());
@@ -614,7 +613,7 @@ public final class ImplementationClassWriter {
 
             // TODO: foreign package supertypes?
             TypeElement superclass = entity.getTypeElement();
-            TypeMirror serializableTypeMirror = context.getElementUtils().getTypeElement(Serializable.class.getName()).asType();
+            TypeMirror serializableTypeMirror = context.getTypeElement(Serializable.class.getName()).asType();
             while (superclass.getKind() == ElementKind.CLASS && !superclass.getQualifiedName().toString().equals("java.lang.Object")) {
                 // Class descriptor
                 oos.writeByte(ObjectStreamConstants.TC_CLASSDESC);
@@ -1337,39 +1336,11 @@ public final class ImplementationClassWriter {
         }
         TypeElement superClass;
         if (typeElement.getSuperclass() instanceof DeclaredType) {
-            superClass = context.getElementUtils().getTypeElement(((DeclaredType) typeElement.getSuperclass()).asElement().toString());
+            superClass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
         } else {
-            superClass = context.getElementUtils().getTypeElement(((TypeElement) typeElement.getSuperclass()).getQualifiedName());
+            superClass = context.getTypeElement(((TypeElement) typeElement.getSuperclass()).getQualifiedName());
         }
         return hasCustom(context, superClass, methodName, argumentTypes);
-    }
-
-    private static String getJpaManagedBaseClass(String entityClass, Context context) {
-        TypeElement typeElement = context.getElementUtils().getTypeElement(entityClass);
-        if (isEntity(typeElement)) {
-            TypeElement entityElement = typeElement;
-            do {
-                typeElement = context.getElementUtils().getTypeElement(TypeUtils.extractClosestRealTypeAsString(entityElement.getSuperclass(), context));
-                if (isEntity(typeElement)) {
-                    entityElement = typeElement;
-                } else {
-                    break;
-                }
-            } while (true);
-
-            return entityElement.getQualifiedName().toString();
-        }
-        return typeElement.getQualifiedName().toString();
-    }
-
-    public static boolean isEntity(TypeElement typeElement) {
-        for (AnnotationMirror annotationMirror : typeElement.getAnnotationMirrors()) {
-            if (annotationMirror.getAnnotationType().toString().equals(Constants.ENTITY)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static void printClassDeclaration(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -1823,7 +1794,7 @@ public final class ImplementationClassWriter {
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
                     sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
-                    member.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
+                    member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
                     sb.append(" : ");
                 }
                 sb.append("(").append(member.getImplementationTypeString()).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")");

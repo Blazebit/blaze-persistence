@@ -37,7 +37,7 @@ public final class RelationClassWriter {
     public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.setLength(0);
         generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + RELATION_CLASS_NAME_SUFFIX, entity.getRelationImportContext(), context);
+        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + RELATION_CLASS_NAME_SUFFIX, entity.getRelationImportContext(), context, entity.getOriginatingElements());
     }
 
     private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {

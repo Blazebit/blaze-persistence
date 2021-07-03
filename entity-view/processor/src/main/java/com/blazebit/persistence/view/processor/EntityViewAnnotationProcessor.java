@@ -29,8 +29,16 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
@@ -81,43 +89,6 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
         context = new Context(processingEnvironment);
         context.logMessage(Diagnostic.Kind.NOTE, "Blaze-Persistence Entity-View Annotation Processor");
-
-        context.setAddGeneratedAnnotation(getOption(processingEnvironment, ADD_GENERATED_ANNOTATION, true));
-        context.setAddGenerationDate(getOption(processingEnvironment, ADD_GENERATION_DATE, false));
-        context.setAddSuppressWarningsAnnotation(getOption(processingEnvironment, ADD_SUPPRESS_WARNINGS_ANNOTATION, false));
-        context.setStrictCascadingCheck(getOption(processingEnvironment, STRICT_CASCADING_CHECK, true));
-        context.setGenerateImplementations(getOption(processingEnvironment, GENERATE_IMPLEMENTATIONS, true));
-        context.setGenerateBuilders(getOption(processingEnvironment, GENERATE_BUILDERS, true));
-        context.setCreateEmptyFlatViews(getOption(processingEnvironment, CREATE_EMPTY_FLAT_VIEWS, true));
-        context.setGenerateDeepConstants(getOption(processingEnvironment, GENERATE_DEEP_CONSTANTS, true));
-
-        context.setDefaultVersionAttributeName(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_NAME));
-        context.setDefaultVersionAttributeType(processingEnvironment.getOptions().get(DEFAULT_VERSION_ATTRIBUTE_TYPE));
-
-        String s = processingEnvironment.getOptions().get(OPTIONAL_PARAMETERS);
-        if (s != null) {
-            for (String part : s.split("\\s*;\\s*")) {
-                int idx = part.lastIndexOf('=');
-                String name;
-                String type;
-                if (idx == -1) {
-                    name = part;
-                    type = "java.lang.Object";
-                } else {
-                    name = part.substring(0, idx);
-                    type = part.substring(idx + 1);
-                }
-                context.getOptionalParameters().put(name, context.getElementUtils().getTypeElement(type));
-            }
-        }
-    }
-
-    private static Boolean getOption(ProcessingEnvironment processingEnvironment, String option, boolean defaultValue) {
-        String tmp = processingEnvironment.getOptions().get(option);
-        if (tmp == null) {
-            return defaultValue;
-        }
-        return Boolean.parseBoolean(tmp);
     }
 
     @Override
@@ -131,41 +102,120 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     }
 
     private void execute(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
-        discoverEntityViews(roundEnvironment.getRootElements());
-        createMetaModelClasses();
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        long start = System.nanoTime();
+        List<Future<?>> futures = new ArrayList<>();
+        discoverEntityViews(executorService, futures, roundEnvironment.getRootElements());
+        await(futures);
+        context.logMessage(Diagnostic.Kind.NOTE, "Discovering " + context.getMetaEntityViews().size() + " entity views took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        int views = createMetaModelClasses(executorService);
+        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor processed " + views + " entity views with " + threads + " threads and took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
     }
 
-    private void discoverEntityViews(Collection<? extends Element> elements) {
+    private static void await(List<Future<?>> futures) {
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void discoverEntityViews(ExecutorService executorService, List<Future<?>> futures, Collection<? extends Element> elements) {
         for (Element element : elements) {
             if (isEntityView(element)) {
                 context.logMessage(Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString());
-                handleRootElementAnnotationMirrors(element);
+                handleRootElementAnnotationMirrors(executorService, futures, element);
             }
-            discoverEntityViews(element.getEnclosedElements());
+            discoverEntityViews(executorService, futures, element.getEnclosedElements());
         }
     }
 
-    private void createMetaModelClasses() {
-        StringBuilder sb = new StringBuilder(64 * 1024);
+    private int createMetaModelClasses(ExecutorService executorService) {
+        final ThreadLocal<StringBuilder> threadLocalStringBuilder = new ThreadLocal<StringBuilder>() {
+            @Override
+            protected StringBuilder initialValue() {
+                return new StringBuilder(64 * 1024);
+            }
+        };
+        LongAdder relationTime = new LongAdder();
+        LongAdder multiRelationTime = new LongAdder();
+        LongAdder metamodelTime = new LongAdder();
+        LongAdder implementationTime = new LongAdder();
+        LongAdder builderTime = new LongAdder();
+        List<Future<?>> futures = new ArrayList<>();
+        int views = 0;
         for (MetaEntityView entityView : context.getMetaEntityViews()) {
-            if (context.isAlreadyGenerated(entityView.getQualifiedName()) || !entityView.isValid()) {
+            if (!entityView.isValid()) {
                 continue;
             }
             if (entityView.getTypeElement().getModifiers().contains(Modifier.ABSTRACT) || entityView.getTypeElement().getKind().isInterface()) {
-                context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity view " + entityView);
-                RelationClassWriter.writeFile(sb, entityView, context);
-                MultiRelationClassWriter.writeFile(sb, entityView, context);
-                MetamodelClassWriter.writeFile(sb, entityView, context);
+                views++;
+                futures.add(executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        StringBuilder sb = threadLocalStringBuilder.get();
+                        long start = System.nanoTime();
+                        RelationClassWriter.writeFile(sb, entityView, context);
+                        relationTime.add(System.nanoTime() - start);
+                    }
+                }));
+                futures.add(executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        StringBuilder sb = threadLocalStringBuilder.get();
+                        long start = System.nanoTime();
+                        MultiRelationClassWriter.writeFile(sb, entityView, context);
+                        multiRelationTime.add(System.nanoTime() - start);
+                    }
+                }));
+                futures.add(executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        StringBuilder sb = threadLocalStringBuilder.get();
+                        long start = System.nanoTime();
+                        MetamodelClassWriter.writeFile(sb, entityView, context);
+                        metamodelTime.add(System.nanoTime() - start);
+                    }
+                }));
                 if (context.isGenerateImplementations()) {
-                    ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
-                    ImplementationClassWriter.writeFile(sb, entityView, context);
+                    futures.add(executorService.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            StringBuilder sb = threadLocalStringBuilder.get();
+                            long start = System.nanoTime();
+                            ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
+                            ImplementationClassWriter.writeFile(sb, entityView, context);
+                            implementationTime.add(System.nanoTime() - start);
+                        }
+                    }));
                     if (context.isGenerateBuilders()) {
-                        BuilderClassWriter.writeFile(sb, entityView, context);
+                        futures.add(executorService.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                StringBuilder sb = threadLocalStringBuilder.get();
+                                long start = System.nanoTime();
+                                BuilderClassWriter.writeFile(sb, entityView, context);
+                                builderTime.add(System.nanoTime() - start);
+                            }
+                        }));
                     }
                 }
             }
-            context.markGenerated(entityView.getQualifiedName());
         }
+        await(futures);
+        context.logMessage(Diagnostic.Kind.NOTE, "Generating relation classes took overall " + TimeUnit.NANOSECONDS.toMillis(relationTime.sum()) + "ms");
+        context.logMessage(Diagnostic.Kind.NOTE, "Generating multi relation classes took overall " + TimeUnit.NANOSECONDS.toMillis(multiRelationTime.sum()) + "ms");
+        context.logMessage(Diagnostic.Kind.NOTE, "Generating metamodel classes took overall " + TimeUnit.NANOSECONDS.toMillis(metamodelTime.sum()) + "ms");
+        if (context.isGenerateImplementations()) {
+            context.logMessage(Diagnostic.Kind.NOTE, "Generating implementation classes took overall " + TimeUnit.NANOSECONDS.toMillis(implementationTime.sum()) + "ms");
+        }
+        if (context.isGenerateBuilders()) {
+            context.logMessage(Diagnostic.Kind.NOTE, "Generating builder classes took overall " + TimeUnit.NANOSECONDS.toMillis(builderTime.sum()) + "ms");
+        }
+        return views;
     }
 
     private boolean isEntityView(Element element) {
@@ -175,12 +225,17 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void handleRootElementAnnotationMirrors(final Element element) {
+    private void handleRootElementAnnotationMirrors(ExecutorService executorService, List<Future<?>> futures, final Element element) {
         if (!ElementKind.CLASS.equals(element.getKind()) && !ElementKind.INTERFACE.equals(element.getKind())) {
             return;
         }
 
-        AnnotationMetaEntityView metaEntity = new AnnotationMetaEntityView((TypeElement) element, context);
-        context.addMetaEntityViewToContext(metaEntity.getQualifiedName(), metaEntity);
+        futures.add(executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                AnnotationMetaEntityView metaEntity = new AnnotationMetaEntityView((TypeElement) element, context);
+                context.addMetaEntityViewToContext(metaEntity.getQualifiedName(), metaEntity);
+            }
+        }));
     }
 }

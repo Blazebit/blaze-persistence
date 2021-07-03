@@ -56,6 +56,8 @@ public interface MetaEntityView {
 
     String getEntityClass();
 
+    String getJpaManagedBaseClass();
+
     Element getEntityVersionAttribute();
 
     ExecutableElement getPostCreate();
@@ -80,6 +82,8 @@ public interface MetaEntityView {
 
     ImportContext getRelationImportContext();
 
+    ImportContext getMultiRelationImportContext();
+
     ImportContext getImplementationImportContext();
 
     ImportContext getBuilderImportContext();
@@ -92,11 +96,15 @@ public interface MetaEntityView {
 
     String relationImportType(String fqcn);
 
+    String multiRelationImportType(String fqcn);
+
     String implementationImportType(String fqcn);
 
     String builderImportType(String fqcn);
 
     TypeElement getTypeElement();
+
+    Element[] getOriginatingElements();
 
     Map<String, TypeElement> getOptionalParameters();
 

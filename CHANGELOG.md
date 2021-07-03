@@ -17,6 +17,7 @@ None yet
 * Fix aliasing issues with `joinOnSubquery` variants on databases that don't support column aliasing at the table alias site
 * Fix some issue and improve support for running on the module path
 * Fix issues with using `EntityViewSetting.fetch` on correlated attributes
+* Add support for incremental compilation for entity-view annotation processor
 
 ### Backwards-incompatible changes
 

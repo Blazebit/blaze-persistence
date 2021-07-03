@@ -33,7 +33,7 @@ public class AttributeFilter {
     public AttributeFilter(String name, TypeElement filterProvider, Context context) {
         this.name = name;
         this.filterProvider = filterProvider;
-        this.filterValueType = context.getTypeUtils().asMemberOf((DeclaredType) filterProvider.asType(), context.getElementUtils().getTypeElement(Constants.ATTRIBUTE_FILTER_PROVIDER).getTypeParameters().get(0));
+        this.filterValueType = context.getTypeUtils().asMemberOf((DeclaredType) filterProvider.asType(), context.getTypeElement(Constants.ATTRIBUTE_FILTER_PROVIDER).getTypeParameters().get(0));
     }
 
     public String getName() {

@@ -129,10 +129,10 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
         sb.append(importContext.importType(getMetaType()))
                 .append('<')
-                .append(getHostingEntity().importType(getHostingEntity().getQualifiedName()))
+                .append(importContext.importType(getHostingEntity().getQualifiedName()))
                 .append(", ");
         if (elementCollectionJavaType != null) {
-            sb.append(getHostingEntity().importType(getModelType())).append(", ");
+            sb.append(importContext.importType(getModelType())).append(", ");
         }
         appendElementType(sb, importContext);
         sb.append('>');
@@ -141,11 +141,11 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     @Override
     public void appendElementType(StringBuilder sb, ImportContext importContext) {
         if (elementCollectionJavaType == null) {
-            sb.append(getHostingEntity().importType(getModelType()));
+            sb.append(importContext.importType(getModelType()));
         } else {
-            sb.append(getHostingEntity().importType(elementCollectionJavaType))
+            sb.append(importContext.importType(elementCollectionJavaType))
                     .append('<')
-                    .append(getHostingEntity().importType(getModelType()))
+                    .append(importContext.importType(getModelType()))
                     .append('>');
         }
     }

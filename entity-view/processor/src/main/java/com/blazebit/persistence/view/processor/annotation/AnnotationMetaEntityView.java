@@ -60,10 +60,13 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
     private final ImportContext metamodelImportContext;
     private final ImportContext relationImportContext;
+    private final ImportContext multiRelationImportContext;
     private final ImportContext implementationImportContext;
     private final ImportContext builderImportContext;
     private final TypeElement element;
+    private final Element[] originatingElements;
     private final String entityClass;
+    private final String jpaManagedBaseClass;
     private final Element entityVersionAttribute;
     private final ExecutableElement postCreate;
     private final ExecutableElement postLoad;
@@ -93,6 +96,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.context = context;
         this.metamodelImportContext = new ImportContextImpl(getPackageName());
         this.relationImportContext = new ImportContextImpl(getPackageName());
+        this.multiRelationImportContext = new ImportContextImpl(getPackageName());
         this.implementationImportContext = new ImportContextImpl(getPackageName());
         this.builderImportContext = new ImportContextImpl(getPackageName());
         getContext().logMessage(Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + ".");
@@ -132,14 +136,34 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         }
 
         Element entityVersionAttribute = null;
-        for (Element member : TypeUtils.getAllMembers(context.getElementUtils().getTypeElement(entityClass), context)) {
+        String jpaManagedBaseClass = null;
+        TypeElement entityTypeElement = context.getTypeElement(entityClass);
+        for (Element member : TypeUtils.getAllMembers(entityTypeElement, context)) {
             if (TypeUtils.containsAnnotation(member, Constants.VERSION)) {
                 entityVersionAttribute = member;
                 break;
             }
         }
+
+        if (isEntity(entityTypeElement)) {
+            TypeElement entityElement = entityTypeElement;
+            do {
+                entityTypeElement = context.getTypeElement(TypeUtils.extractClosestRealTypeAsString(entityElement.getSuperclass(), context));
+                if (isEntity(entityTypeElement)) {
+                    entityElement = entityTypeElement;
+                } else {
+                    break;
+                }
+            } while (true);
+
+            jpaManagedBaseClass = entityElement.getQualifiedName().toString();
+        }
+        if (jpaManagedBaseClass == null) {
+            jpaManagedBaseClass = entityTypeElement.getQualifiedName().toString();
+        }
         this.entityVersionAttribute = entityVersionAttribute;
         this.entityClass = entityClass;
+        this.jpaManagedBaseClass = jpaManagedBaseClass;
         this.updatable = updatable;
         this.creatable = creatable;
         this.viewFilters = viewFilters;
@@ -158,6 +182,8 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         boolean hasSubviews = false;
         ExecutableElement postCreate = null;
         ExecutableElement postLoad = null;
+        Set<Element> originatingElements = new HashSet<>();
+        originatingElements.add(element);
         for (Element memberOfClass : allMembers) {
             if (memberOfClass instanceof ExecutableElement) {
                 ExecutableElement executableElement = (ExecutableElement) memberOfClass;
@@ -184,6 +210,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
                             if (result.isSubview()) {
                                 hasSubviews = true;
+                                originatingElements.add(result.getSubviewElement());
                             }
                         }
                     } else if (!modifiers.contains(Modifier.PRIVATE) && memberOfClass.getKind() == ElementKind.CONSTRUCTOR) {
@@ -289,6 +316,17 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.optionalParameters = optionalParameters;
         this.postCreate = postCreate;
         this.postLoad = postLoad;
+        this.originatingElements = originatingElements.toArray(new Element[0]);
+    }
+
+    private static boolean isEntity(TypeElement typeElement) {
+        for (AnnotationMirror annotationMirror : typeElement.getAnnotationMirrors()) {
+            if (annotationMirror.getAnnotationType().toString().equals(Constants.ENTITY)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void addViewFilter(Map<String, ViewFilter> filters, AnnotationMirror mirror, Context context) {
@@ -388,6 +426,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public String getJpaManagedBaseClass() {
+        return jpaManagedBaseClass;
+    }
+
+    @Override
     public Element getEntityVersionAttribute() {
         return entityVersionAttribute;
     }
@@ -405,7 +448,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public final String getPackageName() {
         PackageElement packageOf = context.getElementUtils().getPackageOf(element);
-        return context.getElementUtils().getName(packageOf.getQualifiedName()).toString();
+        return packageOf.getQualifiedName().toString();
     }
 
     @Override
@@ -449,6 +492,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public ImportContext getMultiRelationImportContext() {
+        return multiRelationImportContext;
+    }
+
+    @Override
     public ImportContext getImplementationImportContext() {
         return implementationImportContext;
     }
@@ -463,6 +511,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         implementationImportContext.importType(fqcn);
         metamodelImportContext.importType(fqcn);
         relationImportContext.importType(fqcn);
+        multiRelationImportContext.importType(fqcn);
         return builderImportContext.importType(fqcn);
     }
 
@@ -483,6 +532,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     }
 
     @Override
+    public String multiRelationImportType(String fqcn) {
+        return multiRelationImportContext.importType(fqcn);
+    }
+
+    @Override
     public String implementationImportType(String fqcn) {
         return implementationImportContext.importType(fqcn);
     }
@@ -495,6 +549,11 @@ public class AnnotationMetaEntityView implements MetaEntityView {
     @Override
     public final TypeElement getTypeElement() {
         return element;
+    }
+
+    @Override
+    public Element[] getOriginatingElements() {
+        return originatingElements;
     }
 
     @Override

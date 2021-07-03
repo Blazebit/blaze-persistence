@@ -62,6 +62,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final Element element;
     private final String modelType;
     private final String declaredJavaType;
+    private final String implementationTypeString;
     private final String convertedModelType;
     private final TypeMirror typeMirror;
     private final String attributeName;
@@ -88,6 +89,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         this.parent = parent;
         this.modelType = modelType;
         this.declaredJavaType = declaredJavaType;
+        this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(declaredJavaType);
         this.convertedModelType = convertedModelType;
 
         String mapping = null;
@@ -163,7 +165,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         mutable = false;
                         TypeElement existingTypeElement = context.getOptionalParameters().get(mapping);
                         if (existingTypeElement == null) {
-                            optionalParameters.put(mapping, context.getElementUtils().getTypeElement(modelType));
+                            optionalParameters.put(mapping, context.getTypeElement(modelType));
                         } else {
                             optionalParameters.put(mapping, existingTypeElement);
                         }
@@ -225,8 +227,8 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             this.subviewElement = getSubview(modelType, context);
         }
         if (subviewElement != null) {
-            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getElementUtils().getTypeElement(modelType));
-            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(modelType, context);
+            this.generatedTypePrefix = TypeUtils.getDerivedTypeName(context.getTypeElement(modelType));
+            this.subviewInfo = EntityViewTypeUtils.getSubviewInfo(subviewElement, context);
         } else {
             this.generatedTypePrefix = modelType;
             this.subviewInfo = null;
@@ -379,7 +381,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         }
         //CHECKSTYLE:ON: FallThrough
         //CHECKSTYLE:ON: MissingSwitchDefault
-        TypeElement typeElement = context.getElementUtils().getTypeElement(realType);
+        TypeElement typeElement = context.getTypeElement(realType);
         if (typeElement == null || !TypeUtils.containsAnnotation(typeElement, Constants.ENTITY_VIEW)) {
             return null;
         }
@@ -426,7 +428,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     public void appendMetamodelAttributeType(StringBuilder sb, ImportContext importContext) {
         sb.append(importContext.importType(getMetaType()))
                 .append('<')
-                .append(parent.importType(parent.getQualifiedName()))
+                .append(importContext.importType(parent.getQualifiedName()))
                 .append(", ");
         appendElementType(sb, importContext);
         sb.append('>');
@@ -434,24 +436,24 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public void appendElementType(StringBuilder sb, ImportContext importContext) {
-        sb.append(parent.importType(getModelType()));
+        sb.append(importContext.importType(getModelType()));
     }
 
     @Override
-    public void appendMetamodelAttributeDeclarationString(StringBuilder sb) {
+    public void appendMetamodelAttributeDeclarationString(StringBuilder sb, ImportContext importContext) {
         sb.append("    public static volatile ");
         if (isSubview()) {
             if (isMultiCollection()) {
                 sb.append(parent.metamodelImportType(generatedTypePrefix + MultiRelationClassWriter.MULTI_RELATION_CLASS_NAME_SUFFIX))
                         .append('<');
-                sb.append(parent.importType(parent.getQualifiedName()))
+                sb.append(importContext.importType(parent.getQualifiedName()))
                         .append(", ");
                 appendElementType(sb, parent.getMetamodelImportContext());
                 sb.append(", ");
             } else {
                 sb.append(parent.metamodelImportType(generatedTypePrefix + RelationClassWriter.RELATION_CLASS_NAME_SUFFIX))
                         .append('<')
-                        .append(parent.importType(parent.getQualifiedName()))
+                        .append(importContext.importType(parent.getQualifiedName()))
                         .append(", ");
             }
         }
@@ -465,10 +467,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     }
 
     @Override
-    public void appendMetamodelAttributeNameDeclarationString(StringBuilder sb) {
+    public void appendMetamodelAttributeNameDeclarationString(StringBuilder sb, ImportContext importContext) {
         String propertyName = getPropertyName();
         sb.append("    public static final ")
-                .append(parent.importType(String.class.getName()))
+                .append(importContext.importType(String.class.getName()))
                 .append(" ");
 
         for (int i = 0; i < propertyName.length(); i++) {
@@ -814,7 +816,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     @Override
     public String getImplementationTypeString() {
-        return parent.importType(getDeclaredJavaType());
+        return implementationTypeString;
     }
 
     @Override

@@ -45,19 +45,18 @@ public final class ForeignPackageAdapterClassWriter {
         for (int i = 0; i < entries.size(); i++) {
             Map.Entry<String, TypeElement> entry = entries.get(i);
             String name = entry.getValue().getQualifiedName().toString() + "_" + entity.getQualifiedName().replace('.', '_');
-            if (context.isAlreadyGenerated(name)) {
+            if (!context.markGenerated(name)) {
                 continue;
             }
             String baseType = entries.size() < i + 1 ? entries.get(i + 1).getValue().getQualifiedName().toString() : entity.getQualifiedName();
             sb.setLength(0);
             writeFile(sb, entry.getKey(), baseType, name, entry.getValue(), entity, context);
-            context.markGenerated(name);
         }
     }
 
     private static void writeFile(StringBuilder sb, String metaModelPackage, String baseType, String name, TypeElement typeElement, MetaEntityView entity, Context context) {
         generateBody(sb, typeElement, baseType, entity, context);
-        ClassWriterUtils.writeFile(sb, metaModelPackage, name.substring(metaModelPackage.length() + 1), null, context);
+        ClassWriterUtils.writeFile(sb, metaModelPackage, name.substring(metaModelPackage.length() + 1), null, context, entity.getOriginatingElements());
     }
 
     private static void generateBody(StringBuilder sb, TypeElement typeElement, String baseType, MetaEntityView entity, Context context) {

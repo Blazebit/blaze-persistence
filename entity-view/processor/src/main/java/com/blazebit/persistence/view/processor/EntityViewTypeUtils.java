@@ -139,8 +139,7 @@ public final class EntityViewTypeUtils {
         return sb.toString();
     }
 
-    public static SubviewInfo getSubviewInfo(String realType, Context context) {
-        TypeElement typeElement = context.getElementUtils().getTypeElement(realType);
+    public static SubviewInfo getSubviewInfo(TypeElement typeElement, Context context) {
         Element subviewIdElement = null;
         boolean hasEmptyConstructor = typeElement.getKind() == ElementKind.INTERFACE;
         for (Element enclosedElement : TypeUtils.getAllMembers(typeElement, context)) {
@@ -163,7 +162,7 @@ public final class EntityViewTypeUtils {
 
     public static List<Element> getEntityIdAttributes(String realType, Context context) {
         List<Element> elements = new ArrayList<>();
-        TypeElement typeElement = context.getElementUtils().getTypeElement(realType);
+        TypeElement typeElement = context.getTypeElement(realType);
         for (Element enclosedElement : typeElement.getEnclosedElements()) {
             if (TypeUtils.containsAnnotation(enclosedElement, Constants.ID, Constants.EMBEDDED_ID)) {
                 elements.add(enclosedElement);
