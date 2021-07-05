@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Add support for incremental compilation for entity-view annotation processor
 
 ### Bug fixes
 
@@ -17,7 +17,7 @@ None yet
 * Fix aliasing issues with `joinOnSubquery` variants on databases that don't support column aliasing at the table alias site
 * Fix some issue and improve support for running on the module path
 * Fix issues with using `EntityViewSetting.fetch` on correlated attributes
-* Add support for incremental compilation for entity-view annotation processor
+* Fix wrong use of entity view id value accessor during deserialization of non-root entity view
 
 ### Backwards-incompatible changes
 

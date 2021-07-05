@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,8 +45,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * @author Christian Beikov
@@ -63,13 +63,17 @@ public class EntityViewAwareObjectMapperTest {
     }
 
     static EntityViewAwareObjectMapper mapper(Class<?>... classes) {
+        return mapper(null, classes);
+    }
+
+    static EntityViewAwareObjectMapper mapper(EntityViewIdValueAccessor idValueAccessor, Class<?>... classes) {
         EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
         for (Class<?> clazz : classes) {
             configuration.addEntityView(clazz);
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
-        return new EntityViewAwareObjectMapper(configuration.createEntityViewManager(cbf), objectMapper, null);
+        return new EntityViewAwareObjectMapper(configuration.createEntityViewManager(cbf), objectMapper, idValueAccessor);
     }
 
     @Test
@@ -335,15 +339,43 @@ public class EntityViewAwareObjectMapperTest {
         void setChildren(Set<NameView> children);
     }
 
+    @Test
+    public void testIdValueAccessorWithCollection() throws Exception {
+        EntityViewIdValueAccessor accessor = new EntityViewIdValueAccessor() {
+            @Override
+            public <T> T getValue(JsonParser jsonParser, Class<T> idType) {
+                return (T) (Object) 1L;
+            }
+        };
+        EntityViewAwareObjectMapper mapper = mapper(accessor, UpdatableWithCollectionForIdAccessor.class, NameViewForIdAccessor.class);
+        ObjectReader objectReader = mapper.readerFor(mapper.getObjectMapper().constructType(UpdatableWithCollectionForIdAccessor.class));
+        UpdatableWithCollectionForIdAccessor view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"The child\"}]}");
+        assertFalse(((EntityViewProxy) view).$$_isNew());
+        assertEquals(1L, view.getId());
+        assertEquals("test", view.getName());
+        assertNull(view.getChildren().iterator().next().getId());
+        assertEquals("The child", view.getChildren().iterator().next().getName());
+        assertEquals(1, view.getChildren().size());
+    }
+
+    @EntityView(SomeEntity.class)
+    @UpdatableEntityView
+    interface UpdatableWithCollectionForIdAccessor {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        Set<NameViewForIdAccessor> getChildren();
+        void setChildren(Set<NameViewForIdAccessor> children);
+    }
+
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    static abstract class ViewWithJsonIgnore {
+    interface NameViewForIdAccessor {
         @IdMapping
-        public abstract long getId();
-        public abstract void setId(long id);
-        @JsonIgnore
-        public abstract String getName();
-        public abstract void setName(String name);
+        Long getId();
+        String getName();
+        void setName(String name);
     }
 
     @Test
@@ -359,14 +391,13 @@ public class EntityViewAwareObjectMapperTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    static interface ViewWithSingularCollection {
+    static abstract class ViewWithJsonIgnore {
         @IdMapping
-        long getId();
-        String getName();
-        void setName(String name);
-        @MappingSingular
-        List<String> getTags();
-        void setTags(List<String> tags);
+        public abstract long getId();
+        public abstract void setId(long id);
+        @JsonIgnore
+        public abstract String getName();
+        public abstract void setName(String name);
     }
 
     @Test
@@ -379,5 +410,17 @@ public class EntityViewAwareObjectMapperTest {
         assertEquals(2, view.getTags().size());
         assertEquals("t1", view.getTags().get(0));
         assertEquals("t2", view.getTags().get(1));
+    }
+
+    @EntityView(SomeEntity.class)
+    @CreatableEntityView
+    static interface ViewWithSingularCollection {
+        @IdMapping
+        long getId();
+        String getName();
+        void setName(String name);
+        @MappingSingular
+        List<String> getTags();
+        void setTags(List<String> tags);
     }
 }

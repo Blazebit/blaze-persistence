@@ -111,7 +111,7 @@ public class EntityViewReferenceDeserializer extends JsonDeserializer {
                         ((ObjectNode) treeNode).without(idAttributeName);
                     }
                 }
-            } else if (entityViewIdValueAccessor != null) {
+            } else if (rootJsonParser.getParsingContext().inRoot() && entityViewIdValueAccessor != null) {
                 id = entityViewIdValueAccessor.getValue(rootJsonParser, idType.getRawClass());
             } else {
                 id = null;
