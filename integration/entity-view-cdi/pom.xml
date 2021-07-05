@@ -124,15 +124,9 @@
 
         <!-- Preparation for Java 9+, include a dependency on the JAXB APIs -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
             <version>${version.jaxb-api}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-core</artifactId>
-            <version>${version.jaxb-core}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
@@ -141,9 +135,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
-            <version>1.2</version>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>${version.jta}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

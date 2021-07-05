@@ -131,14 +131,9 @@ This will also work when running on Java 8. We suggest you add the following dep
 
 ```xml
 <dependency>
-    <groupId>javax.xml.bind</groupId>
-    <artifactId>jaxb-api</artifactId>
-    <version>2.3.1</version>
-</dependency>
-<dependency>
-    <groupId>com.sun.xml.bind</groupId>
-    <artifactId>jaxb-core</artifactId>
-    <version>2.3.0.1</version>
+    <groupId>jakarta.xml.bind</groupId>
+    <artifactId>jakarta.xml.bind-api</artifactId>
+    <version>2.3.3</version>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
@@ -146,23 +141,23 @@ This will also work when running on Java 8. We suggest you add the following dep
     <version>2.3.3</version>
 </dependency>
 <dependency>
-    <groupId>javax.transaction</groupId>
-    <artifactId>javax.transaction-api</artifactId>
-    <version>1.2</version>
+    <groupId>jakarta.transaction</groupId>
+    <artifactId>jakarta.transaction-api</artifactId>
+    <version>1.3.3</version>
     <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
-    <groupId>javax.activation</groupId>
-    <artifactId>activation</artifactId>
-    <version>1.1.1</version>
+    <groupId>jakarta.activation</groupId>
+    <artifactId>jakarta.activation-api</artifactId>
+    <version>1.2.2</version>
     <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
-    <groupId>javax.annotation</groupId>
-    <artifactId>javax.annotation-api</artifactId>
-    <version>1.3.2</version>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>1.3.5</version>
     <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
