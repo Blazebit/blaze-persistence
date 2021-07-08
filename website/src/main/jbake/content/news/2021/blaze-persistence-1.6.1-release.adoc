@@ -1,0 +1,24 @@
+= Blaze-Persistence 1.6.1 Release
+Christian Beikov
+2021-07-08 0
+:description: Blaze-Persistence version 1.6.1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the first bug fix release of the 1.6 series. This release mainly contains bug fixes and one new feature that I would like to highlight.
+
+The Entity-View annotation processor was adapted to be able to run in an incremental fashion i.e. within an incremental Gradle build and was parallelized to improve compilation times.
+A big thank you goes out to https://kontextwork.de/[KontextWork] and their employees! They sponsored this feature as they had trouble with the build and compilation times and couldn't stand it anymore.
+
+Now we can all enjoy improved generation and compilation times :)
+
+As for the bug fixes, we improved the SQL we render for VALUES clauses and subqueries in the FROM clause to make it easier for certain database optimizers to efficient generate plans.
+We also improved the support for running on the module path. While migrating a client application we noticed some issues, but with 1.6.1 they should be gone!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#161[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
