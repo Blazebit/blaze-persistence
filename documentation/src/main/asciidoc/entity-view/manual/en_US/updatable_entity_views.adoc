@@ -390,10 +390,24 @@ interface CatUpdateView {
     Calendar getCreationDate();
     void setCreationDate(Calendar creationDate);
 
+    Holder getHolder();
+    
+    Address getHolderAddress();
+    
     @PrePersist
     default void prePersist(Cat c) {
         c.setAge(1);
         setCreationDate(Calendar.getInstance());
+    }
+    
+    /**
+     * Assume you need a copy of the Holders address in your relation here. While you set the holder as usual in the view
+     * you can use PrePersist to copy that field automatically.
+     */
+    @PrePersist
+    default void loadingRelationalFields(EntityViewManager entityViewManager, EntityManager entityManager, Cat c) {
+        var holder = entityManager.find(Holder.class, getHolder().getId());
+        this.setHolderAdress(holder.getAddress());
     }
 }
 ----
