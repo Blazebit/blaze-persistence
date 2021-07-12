@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.querydsl;
 
-import com.google.common.collect.ImmutableList;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Ops;
@@ -25,7 +24,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.SimpleExpression;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -72,7 +70,7 @@ public class WindowFunction<A> extends WindowDefinition<WindowFunction<A>, A> {
     public SimpleExpression<A> getValue() {
         SimpleExpression<A> value = this.value;
         if (value == null) {
-            this.value = value = Expressions.template(target.getType(), "{0} over ({1})", (List<?>) ImmutableList.of(target, super.getValue()));
+            this.value = value = Expressions.template(target.getType(), "{0} over ({1})", target, super.getValue());
         }
         return value;
     }

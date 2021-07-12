@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.querydsl;
 
-import com.google.common.collect.ImmutableList;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operator;
 import com.querydsl.core.types.dsl.SimpleOperation;
@@ -40,7 +39,7 @@ public class WindowOver<T> extends SimpleOperation<T> {
      * @param op operator
      */
     public WindowOver(Class<? extends T> type, Operator op) {
-        super(type, op, ImmutableList.<Expression<?>>of());
+        super(type, op);
     }
 
     /**
@@ -51,7 +50,7 @@ public class WindowOver<T> extends SimpleOperation<T> {
      * @param arg argument
      */
     public WindowOver(Class<? extends T> type, Operator op, Expression<?> arg) {
-        super(type, op, ImmutableList.<Expression<?>>of(arg));
+        super(type, op, arg);
     }
 
     /**
@@ -63,7 +62,7 @@ public class WindowOver<T> extends SimpleOperation<T> {
      * @param arg2 argument
      */
     public WindowOver(Class<? extends T> type, Operator op, Expression<?> arg1, Expression<?> arg2) {
-        super(type, op, ImmutableList.of(arg1, arg2));
+        super(type, op, arg1, arg2);
     }
 
     /**
