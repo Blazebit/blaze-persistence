@@ -177,7 +177,7 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <version>${blaze-persistence.version}</version>
 </dependency>
 
-<!-- QueryDSL integration module -->
+<!-- Querydsl integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
