@@ -10,7 +10,7 @@ Christian Beikov
 :linkattrs:
 
 Wow, what a big release! There is so much good stuff in 1.5.0-Alpha2, you definitely should update, also because of some important bug fixes!
-Our biggest newcomers are the QueryDSL integration and Quarkus integration with support for native compilation when using our brand new annotation processor,
+Our biggest newcomers are the Querydsl integration and Quarkus integration with support for native compilation when using our brand new annotation processor,
 which generates entity view implementations during compilation. It also generates static metamodels and builder implementations and is useful also for non-Quarkus projects,
 but more on that in a blog post. Please consider updating soon to avoid running into a concurrency issue+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ that
 we discovered recently.

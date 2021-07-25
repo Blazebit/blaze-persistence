@@ -1,7 +1,8 @@
 [[querydsl-integration]]
-== QueryDSL 4 integration
+== Querydsl integration
 
-With the `blaze-persistence-integration-querydsl-expressions` features from {projectname} can be used in existing QueryDSL code.
+With the `blaze-persistence-integration-querydsl-expressions` features from {projectname} can be used in existing Querydsl code.
+The integration supports both Querydsl 4 and Querydsl 5.
 
 The `blaze-persistence-integration-querydsl-expressions` module implements an extended expression model for JPQL.Next, the query and expression language of {projectname}.
 The module provides a `BlazeJPAQuery` as a default implementation of `JPQLNextQuery`, which extends the all familiar `JPQLQuery`. `BlazeJPAQuery` is analog to `JPAQuery`.
@@ -11,11 +12,11 @@ Users can implement extensions on top of `JPQLNextQuery` by extending `AbstractB
 This allows for the queries to be executed through {projectname} JPQL.Next query engine.
 Be sure to use the `JPQLNextTemplates` or any `Templates` implementation that includes the extensions from `JPQLNextTemplates` when using JPQL.Next specific features (e.g. window functions, values clauses, set operations, common table expressions).
 
-This module aims to be an API that is as close to the original QueryDSL API as possible.
+This module aims to be an API that is as close to the original Querydsl API as possible.
 Where features did not exist in `querydsl-jpa`, but did exist in `querydsl-sql`, we stayed as close to the existing SQL implementation as possible.
 This includes the implementation for window functions, common table expressions (CTEs) and union queries which was the basis for all types of set expressions.
 
-Staying close to QueryDSL's API however, also means that the API is not as fluent as {projectname} users are accustomed to.
+Staying close to Querydsl's API however, also means that the API is not as fluent as {projectname} users are accustomed to.
 This means that creating common table expressions or complex set operations may lead to superfluous code.
 
 As outlined in the <<maven-querydsl-setup,setup section>> you need the following dependencies for the integration:
@@ -41,7 +42,7 @@ The dependencies for other JPA providers or other versions can be found in the <
 [[querydsl-features]]
 === Features
 
-The QueryDSL integration aims to make the full feature set from {projectname} Core available. This includes:
+The Querydsl integration aims to make the full feature set from {projectname} Core available. This includes:
 
 * Common Table Expressoins (CTEs) and recursive CTEs
 * Subquery joins
