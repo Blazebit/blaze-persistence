@@ -183,7 +183,6 @@ public class GraphQLEntityViewSupportFactory {
             String typeName = getObjectTypeName(managedView);
             List<FieldDefinition> fieldDefinitions = new ArrayList<>();
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
-                FieldDefinition fieldDefinition = new FieldDefinition(attribute.getName());
                 Type type;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
@@ -198,12 +197,22 @@ public class GraphQLEntityViewSupportFactory {
                 } else {
                     type = new ListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
                 }
-                fieldDefinition.setType(type);
+                FieldDefinition fieldDefinition = new FieldDefinition(attribute.getName(), type);
                 fieldDefinitions.add(fieldDefinition);
             }
             List<Type> implementsTypes = new ArrayList<>(0);
             List<Directive> directives = new ArrayList<>(0);
-            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, new ObjectTypeDefinition(typeName, implementsTypes, directives, fieldDefinitions));
+            addObjectTypeDefinition(
+                typeRegistry,
+                typeNameToClass,
+                managedView,
+                ObjectTypeDefinition.newObjectTypeDefinition()
+                  .name(typeName)
+                  .implementz(implementsTypes)
+                  .directives(directives)
+                  .fieldDefinitions(fieldDefinitions)
+                .build()
+            );
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -229,24 +238,35 @@ public class GraphQLEntityViewSupportFactory {
             if (isImplementRelayNode()) {
                 implementTypes.add(new TypeName("Node"));
             }
-            ObjectTypeDefinition nodeType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Node", implementTypes, objectTypeDefinition.getDirectives(), objectTypeDefinition.getFieldDefinitions());
+            ObjectTypeDefinition nodeType = ObjectTypeDefinition.newObjectTypeDefinition()
+                .name(objectTypeDefinition.getName() + "Node")
+                .implementz(implementTypes)
+                .directives(objectTypeDefinition.getDirectives())
+                .fieldDefinitions(objectTypeDefinition.getFieldDefinitions())
+                .build();
 
             if (!typeRegistry.getType("Node").isPresent() && isImplementRelayNode() && isDefineRelayNodeIfNotExist()) {
                 List<FieldDefinition> nodeFields = new ArrayList<>(4);
                 nodeFields.add(new FieldDefinition("id", new NonNullType(new TypeName("ID"))));
-                typeRegistry.add(new InterfaceTypeDefinition("Node", nodeFields, new ArrayList<>()));
+                typeRegistry.add(InterfaceTypeDefinition.newInterfaceTypeDefinition().name("Node").definitions(nodeFields).build());
             }
 
             List<FieldDefinition> edgeFields = new ArrayList<>(2);
             edgeFields.add(new FieldDefinition("node", new NonNullType(new TypeName(nodeType.getName()))));
             edgeFields.add(new FieldDefinition("cursor", new NonNullType(new TypeName("String"))));
-            ObjectTypeDefinition edgeType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Edge", new ArrayList<>(), new ArrayList<>(), edgeFields);
+            ObjectTypeDefinition edgeType = ObjectTypeDefinition.newObjectTypeDefinition()
+                .name(objectTypeDefinition.getName() + "Edge")
+                .fieldDefinitions(edgeFields)
+              .build();
 
             List<FieldDefinition> connectionFields = new ArrayList<>(2);
             connectionFields.add(new FieldDefinition("edges", new ListType(new TypeName(edgeType.getName()))));
             connectionFields.add(new FieldDefinition("pageInfo", new NonNullType(new TypeName("PageInfo"))));
             connectionFields.add(new FieldDefinition("totalCount", new NonNullType(new TypeName("Int"))));
-            ObjectTypeDefinition connectionType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Connection", new ArrayList<>(), new ArrayList<>(), connectionFields);
+            ObjectTypeDefinition connectionType =  ObjectTypeDefinition.newObjectTypeDefinition()
+                .name(objectTypeDefinition.getName() + "Connection")
+                .fieldDefinitions(connectionFields)
+              .build();
 
             if (!typeRegistry.getType("PageInfo").isPresent() && isDefineRelayNodeIfNotExist()) {
                 List<FieldDefinition> pageInfoFields = new ArrayList<>(4);
@@ -254,7 +274,10 @@ public class GraphQLEntityViewSupportFactory {
                 pageInfoFields.add(new FieldDefinition("hasPreviousPage", new NonNullType(new TypeName("Boolean"))));
                 pageInfoFields.add(new FieldDefinition("startCursor", new TypeName("String")));
                 pageInfoFields.add(new FieldDefinition("endCursor", new TypeName("String")));
-                typeRegistry.add(new ObjectTypeDefinition("PageInfo", new ArrayList<>(), new ArrayList<>(), pageInfoFields));
+                typeRegistry.add(ObjectTypeDefinition.newObjectTypeDefinition()
+                  .name("PageInfo")
+                  .fieldDefinitions(pageInfoFields)
+                  .build());
             }
 
             registerManagedViewType(typeRegistry, typeNameToClass, managedView, nodeType);
@@ -296,7 +319,11 @@ public class GraphQLEntityViewSupportFactory {
         List<FieldDefinition> fields = new ArrayList<>();
         fields.add(new FieldDefinition("key", key));
         fields.add(new FieldDefinition("value", value));
-        typeRegistry.add(new ObjectTypeDefinition(entryName, new ArrayList<>(), new ArrayList<>(), fields));
+        typeRegistry.add(ObjectTypeDefinition.newObjectTypeDefinition()
+            .name(entryName)
+            .fieldDefinitions(fields)
+            .build()
+        );
         return new ListType(new TypeName(entryName));
     }
 
@@ -396,7 +423,11 @@ public class GraphQLEntityViewSupportFactory {
                         enumValueDefinitions.add(new EnumValueDefinition(enumConstant.name(), new ArrayList<>(0)));
                     }
 
-                    typeRegistry.add(new EnumTypeDefinition(typeName, enumValueDefinitions, new ArrayList<>(0)));
+                    typeRegistry.add(EnumTypeDefinition.newEnumTypeDefinition()
+                        .name(typeName)
+                        .enumValueDefinitions(enumValueDefinitions)
+                      .build()
+                    );
                 }
             } else {
                 typeName = "String";

@@ -23,13 +23,14 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
-import graphql.language.Field;
+
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
-
+import graphql.schema.SelectedField;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -37,7 +38,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -198,9 +198,7 @@ public class GraphQLEntityViewSupport {
         }
         EntityViewSetting<T, PaginatedCriteriaBuilder<T>> setting = (EntityViewSetting<T, PaginatedCriteriaBuilder<T>>) (EntityViewSetting<?, ?>) createSetting(entityViewClass, dataFetchingEnvironment, objectRoot);
 
-        Map<String, List<Field>> map = dataFetchingEnvironment.getSelectionSet().get();
-
-        if (!map.containsKey(totalCountName)) {
+        if (dataFetchingEnvironment.getSelectionSet().getFields(totalCountName).isEmpty()) {
             setting.setProperty(ConfigurationProperties.PAGINATION_DISABLE_COUNT_QUERY, Boolean.TRUE);
         }
 
@@ -212,7 +210,7 @@ public class GraphQLEntityViewSupport {
                 elementCursorPath = elementRoot + "/" + elementCursorName;
             }
 
-            if (map.containsKey(elementCursorPath)) {
+            if (dataFetchingEnvironment.getSelectionSet().getFields(elementCursorPath).isEmpty()) {
                 setting.setProperty(ConfigurationProperties.PAGINATION_EXTRACT_ALL_KEYSETS, Boolean.TRUE);
             }
         }
@@ -250,7 +248,9 @@ public class GraphQLEntityViewSupport {
     }
 
     public String getElementTypeName(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
-        GraphQLType type = dataFetchingEnvironment.getFieldTypeInfo().getType();
+        final GraphQLFieldDefinition fieldDefinition = dataFetchingEnvironment.getFieldDefinition();
+
+        GraphQLType type = fieldDefinition.getType();
         if (type instanceof GraphQLNonNull) {
             type = ((GraphQLNonNull) type).getWrappedType();
         }
@@ -281,7 +281,7 @@ public class GraphQLEntityViewSupport {
             }
         }
 
-        return type.getName();
+        return ((GraphQLObjectType) type).getName();
     }
 
     /**
@@ -424,13 +424,13 @@ public class GraphQLEntityViewSupport {
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
         String prefix = elementRoot == null || elementRoot.isEmpty() ? "" : elementRoot + "/";
-        Collection<String> keys = dataFetchingEnvironment.getSelectionSet().get().keySet();
+        Collection<SelectedField> fields = dataFetchingEnvironment.getSelectionSet().getFields();
         StringBuilder sb = new StringBuilder();
-        OUTER: for (String key : keys) {
+        OUTER: for (SelectedField selectedField : fields) {
             sb.setLength(0);
             int fieldStartIndex = 0;
-            for (int i = 0; i < key.length(); i++) {
-                final char c = key.charAt(i);
+            for (int i = 0; i < selectedField.getName().length(); i++) {
+                final char c = selectedField.getName().charAt(i);
                 if (i < prefix.length()) {
                     if (c != prefix.charAt(i)) {
                         continue OUTER;
