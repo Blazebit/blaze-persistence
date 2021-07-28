@@ -429,8 +429,8 @@ public class GraphQLEntityViewSupport {
         OUTER: for (SelectedField selectedField : fields) {
             sb.setLength(0);
             int fieldStartIndex = 0;
-            for (int i = 0; i < selectedField.getFullyQualifiedName().length(); i++) {
-                final char c = selectedField.getFullyQualifiedName().charAt(i);
+            for (int i = 0; i < selectedField.getQualifiedName().length(); i++) {
+                final char c = selectedField.getQualifiedName().charAt(i);
                 if (i < prefix.length()) {
                     if (c != prefix.charAt(i)) {
                         continue OUTER;
