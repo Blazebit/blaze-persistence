@@ -186,7 +186,11 @@ public class GraphQLEntityViewSupportFactory {
                 Type type;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
-                    if (singularAttribute.isId()) {
+                    if (singularAttribute.isSubview() && singularAttribute.isId()) {
+                        // EmbeddedId
+                        type = getElementType(typeRegistry, singularAttribute);
+                    } else if (singularAttribute.isId()) {
+                        // Usual numeric ID
                         type = getIdType(typeRegistry, singularAttribute);
                     } else {
                         type = getElementType(typeRegistry, singularAttribute);
