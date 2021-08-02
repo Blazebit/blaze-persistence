@@ -513,6 +513,7 @@ import com.blazebit.persistence.impl.function.window.percentrank.PercentRankFunc
 import com.blazebit.persistence.impl.function.window.rank.RankFunction;
 import com.blazebit.persistence.impl.function.window.row.RowNumberFunction;
 import com.blazebit.persistence.impl.function.window.sum.SumFunction;
+import com.blazebit.persistence.impl.util.CriteriaBuilderConfigurationContributorComparator;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.CriteriaBuilderConfigurationContributor;
@@ -534,6 +535,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1876,7 +1878,15 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     private void loadExtensions() {
+        List<CriteriaBuilderConfigurationContributor> contributors = new ArrayList<>();
+
         for (CriteriaBuilderConfigurationContributor contributor : ServiceLoader.load(CriteriaBuilderConfigurationContributor.class)) {
+            contributors.add(contributor);
+        }
+
+        Collections.sort(contributors, new CriteriaBuilderConfigurationContributorComparator());
+
+        for (CriteriaBuilderConfigurationContributor contributor : contributors) {
             contributor.contribute(this);
         }
     }
@@ -2007,4 +2017,5 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         properties.setProperty(propertyName, value);
         return this;
     }
+
 }

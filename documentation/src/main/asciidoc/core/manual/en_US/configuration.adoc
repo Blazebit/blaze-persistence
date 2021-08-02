@@ -255,4 +255,5 @@ A little integration layer to extract the dbms of an entity manager and register
 [[service-loader-configuration-integrators]]
 === Extending configuration from integrations
 
-Integrations may provide additional configuration to the bootstrapping `CriteriaBuilderConfiguration` through a `CriteriaBuilderConfigurationContributor` Service Provider.
+Integrations may provide additional configuration to the bootstrapping `CriteriaBuilderConfiguration` through a `CriteriaBuilderConfigurationContributor` Service Provider that would otherwise need to be registered manually with the `CriteriaBuilderConfiguration`.
+Example use cases include extensions providing additional dialects or custom functions for dialect specific types.
