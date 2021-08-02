@@ -251,3 +251,8 @@ For more information refer to the <<customize-dbms-dialect,Customize DBMS dialec
 === Entity manager factory integrators
 
 A little integration layer to extract the dbms of an entity manager and register `JpqlFunctionGroup` instances with the entity manager. This is normally provided by an integration module for persistence providers.
+
+[[service-loader-configuration-integrators]]
+=== Extending configuration from integrations
+
+Integrations may provide additional configuration to the bootstrapping `CriteriaBuilderConfiguration` through a `CriteriaBuilderConfigurationContributor` Service Provider.

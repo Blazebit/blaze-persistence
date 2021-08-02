@@ -515,6 +515,7 @@ import com.blazebit.persistence.impl.function.window.row.RowNumberFunction;
 import com.blazebit.persistence.impl.function.window.sum.SumFunction;
 import com.blazebit.persistence.parser.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.CriteriaBuilderConfigurationContributor;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -567,6 +568,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         loadEntityManagerIntegrator();
         loadDbmsDialects();
         loadFunctions();
+        loadExtensions();
     }
 
     // NOTE: When adding a function here, you might want to also add it in AbstractCoreTest so it is recognized
@@ -1870,6 +1872,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         if (iterator.hasNext()) {
             EntityManagerFactoryIntegrator enricher = iterator.next();
             entityManagerIntegrators.add(enricher);
+        }
+    }
+
+    private void loadExtensions() {
+        for (CriteriaBuilderConfigurationContributor contributor : ServiceLoader.load(CriteriaBuilderConfigurationContributor.class)) {
+            contributor.contribute(this);
         }
     }
 
