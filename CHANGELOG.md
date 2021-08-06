@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Introduction of the `CriteriaBuilderConfigurationContributors` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
 
 ### Bug fixes
 None yet
