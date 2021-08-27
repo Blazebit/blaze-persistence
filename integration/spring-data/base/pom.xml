@@ -29,6 +29,19 @@
         </dependencies>
     </dependencyManagement>
 
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.jenkins-ci.org</id>
+            <url>https://repo.jenkins-ci.org/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <dependencies>
         <dependency>
             <groupId>com.blazebit</groupId>
@@ -64,6 +77,26 @@
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infradna.tool</groupId>
+            <artifactId>bridge-method-annotation</artifactId>
+            <version>${version.bridge-injector}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jenkins-ci</groupId>
+                    <artifactId>annotation-indexer</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- We need a newer version to be compatible with JDK9+ -->
+        <dependency>
+            <groupId>org.jenkins-ci</groupId>
+            <artifactId>annotation-indexer</artifactId>
+            <version>${version.bridge-injector-indexer}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -110,6 +143,70 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.bsc.maven</groupId>
+                <artifactId>maven-processor-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>process</id>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <!-- source output directory -->
+                            <outputDirectory>target/generated/resources</outputDirectory>
+                            <processors>
+                                <processor>org.jvnet.hudson.annotation_indexer.AnnotationProcessorImpl</processor>
+                            </processors>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.infradna.tool</groupId>
+                        <artifactId>bridge-method-annotation</artifactId>
+                        <version>${version.bridge-injector}</version>
+                    </dependency>
+                    <!-- We need a newer version to be compatible with JDK9+ -->
+                    <dependency>
+                        <groupId>org.jenkins-ci</groupId>
+                        <artifactId>annotation-indexer</artifactId>
+                        <version>${version.bridge-injector-indexer}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>com.infradna.tool</groupId>
+                <artifactId>bridge-method-injector</artifactId>
+                <version>${version.bridge-injector}</version>
+                <executions>
+                    <execution>
+                        <id>bridge-injector</id>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <!-- Replace the old ASM version by the new one to support JDK9+ -->
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm-debug-all</artifactId>
+                        <version>CUSTOM</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm</artifactId>
+                        <version>${version.bridge-injector-asm}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.ow2.asm</groupId>
+                        <artifactId>asm-commons</artifactId>
+                        <version>${version.bridge-injector-asm}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -211,6 +308,44 @@
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.5.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.5-spring}</version.spring>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.source>1.8</maven.compiler.source>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.5}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!--
+                    Disable the creation of bridge methods for this particular profile,
+                    because otherwise we will end up with duplicate methods,
+                    as the normal compilation process would create the necessary bridge methods already.
+                    The bridge methods are only needed in the profile that is used for releasing i.e. the default one,
+                    because we want the artifact to support all spring-data versions.
+                     -->
+                    <plugin>
+                        <groupId>com.infradna.tool</groupId>
+                        <artifactId>bridge-method-injector</artifactId>
+                        <version>${version.bridge-injector}</version>
+                        <executions>
+                            <execution>
+                                <id>bridge-injector</id>
+                                <phase>NONE</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 

@@ -374,6 +374,22 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>spring-data-2.5.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.5-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-2.5}</version.spring.data>
+                <version.spring.hateoas>1.3.3</version.spring.hateoas>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>
