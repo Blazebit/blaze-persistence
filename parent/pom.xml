@@ -106,6 +106,9 @@
         <version.spring-data-2.4>2.4.1</version.spring-data-2.4>
         <version.spring-data-2.4-spring>5.3.1</version.spring-data-2.4-spring>
         <version.spring-data-2.4-spring-boot>2.4.0</version.spring-data-2.4-spring-boot>
+        <version.spring-data-2.5>2.5.4</version.spring-data-2.5>
+        <version.spring-data-2.5-spring>5.3.9</version.spring-data-2.5-spring>
+        <version.spring-data-2.5-spring-boot>2.5.4</version.spring-data-2.5-spring-boot>
 
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>

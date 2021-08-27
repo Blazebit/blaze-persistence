@@ -389,6 +389,24 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>spring-data-2.5.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.5-spring}</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.5}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>

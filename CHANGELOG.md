@@ -9,6 +9,7 @@ Not yet released
 ### New features
 
 * Introduction of the `CriteriaBuilderConfigurationContributors` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
+* Add support for Spring Boot/Data 2.5
 
 ### Bug fixes
 

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.data.repository;
 
 import com.blazebit.persistence.KeysetPage;
+import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -120,12 +121,18 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     }
 
     @Override
-    public Pageable next() {
+    // Since we compile with Spring Data 1.11 as basis, we need to generate only the bridge for PageRequest
+    @WithBridgeMethods({PageRequest.class})
+//    @WithBridgeMethods({Pageable.class})
+    public KeysetPageRequest next() {
         return new KeysetPageRequest(keysetPage, getSort(), getIntOffset() + getPageSize(), getPageSize(), isWithCountQuery(), isWithExtractAllKeysets());
     }
 
     @Override
-    public Pageable previousOrFirst() {
+    // Since we compile with Spring Data 1.11 as basis, we need to generate only the bridge for PageRequest
+    @WithBridgeMethods({PageRequest.class})
+//    @WithBridgeMethods({Pageable.class})
+    public KeysetPageRequest previousOrFirst() {
         if (getIntOffset() == 0) {
             return this;
         }
@@ -133,7 +140,10 @@ public class KeysetPageRequest extends PageRequest implements KeysetPageable {
     }
 
     @Override
-    public Pageable first() {
+    // Since we compile with Spring Data 1.11 as basis, we need to generate only the bridge for PageRequest
+    @WithBridgeMethods({PageRequest.class})
+//    @WithBridgeMethods({Pageable.class})
+    public KeysetPageRequest first() {
         if (getIntOffset() == 0) {
             return this;
         }
