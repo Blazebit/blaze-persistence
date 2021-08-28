@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.persistence.view.testsuite;
 
-package com.blazebit.persistence.view.testsuite.basic.model;
-
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.testsuite.TypeUseAnnotation;
-import com.blazebit.persistence.view.testsuite.entity.NamedEntity;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.6.2
  */
-@EntityView(NamedEntity.class)
-public interface NamedView extends IdHolderView<Integer> {
-
-    @TypeUseAnnotation
-    public String getName();
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE_USE, ElementType.METHOD})
+public @interface TypeUseAnnotation {
 }
