@@ -263,11 +263,11 @@ public class SelectTest extends AbstractCoreTest {
                 + caseWhenAge("1.0D", "2.0D") + ", "
                 + caseWhenAge("1.1BD", "2.1BD") + ", "
                 + caseWhenAge("1BI", "2BI") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
-                + caseWhenAge("{d '2016-01-01'}", "{d '2016-10-10'}") + ", "
-                + caseWhenAge("{t '01:01:01'}", "{t '10:10:10'}") + ", "
-                + caseWhenAge("{ts '2016-01-01 01:01:01.001000000'}", "{ts '2016-10-10 10:10:10.010000000'}") + ", "
+                + caseWhenAge(tsLiteral("{ts '2016-01-01 00:00:00'}"), tsLiteral("{ts '2016-10-10 00:00:00'}")) + ", "
+                + caseWhenAge(tsLiteral("{ts '2016-01-01 00:00:00'}"), tsLiteral("{ts '2016-10-10 00:00:00'}")) + ", "
+                + caseWhenAge(dateLiteral("{d '2016-01-01'}"), dateLiteral("{d '2016-10-10'}")) + ", "
+                + caseWhenAge(timeLiteral("{t '01:01:01'}"), timeLiteral("{t '10:10:10'}")) + ", "
+                + caseWhenAge(tsLiteral("{ts '2016-01-01 01:01:01.001000000'}"), tsLiteral("{ts '2016-10-10 10:10:10.010000000'}")) + ", "
                 + caseWhenAge("'1'", "'2'")
                 + " FROM Document document", criteriaBuilder.getQueryString());
     }

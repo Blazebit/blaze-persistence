@@ -43,6 +43,7 @@ import com.blazebit.persistence.testsuite.tx.TxWork;
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -476,12 +477,45 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         }
     }
 
+    protected static String tsLiteral(LocalDateTime value) {
+        String literalValue = TypeUtils.getConverter(LocalDateTime.class, null).toString(value);
+        if (jpaProvider.supportsTemporalLiteral()) {
+            return literalValue;
+        } else {
+            return function("LITERAL_TIMESTAMP", TypeUtils.STRING_CONVERTER.toString(literalValue));
+        }
+    }
+
+    protected static String tsLiteral(String literalValue) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            return literalValue;
+        } else {
+            return function("LITERAL_TIMESTAMP", TypeUtils.STRING_CONVERTER.toString(literalValue));
+        }
+    }
+
     protected static String tsLiteral(Calendar value) {
         String literalValue = TypeUtils.CALENDAR_CONVERTER.toString(value);
         if (jpaProvider.supportsTemporalLiteral()) {
             return literalValue;
         } else {
-            return function("LITERAL_CALENDAR", TypeUtils.STRING_CONVERTER.toString(literalValue) );
+            return function("LITERAL_CALENDAR", TypeUtils.STRING_CONVERTER.toString(literalValue));
+        }
+    }
+
+    protected static String dateLiteral(String literalValue) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            return literalValue;
+        } else {
+            return function("LITERAL_DATE", TypeUtils.STRING_CONVERTER.toString(literalValue));
+        }
+    }
+
+    protected static String timeLiteral(String literalValue) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            return literalValue;
+        } else {
+            return function("LITERAL_TIME", TypeUtils.STRING_CONVERTER.toString(literalValue));
         }
     }
 
