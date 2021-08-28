@@ -23,6 +23,7 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.ArithmeticExpression;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
+import com.blazebit.persistence.parser.expression.DateLiteral;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.ListIndexExpression;
@@ -35,6 +36,8 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PathReference;
 import com.blazebit.persistence.parser.expression.QualifiedExpression;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.expression.TimeLiteral;
+import com.blazebit.persistence.parser.expression.TimestampLiteral;
 import com.blazebit.persistence.parser.expression.TreatExpression;
 import com.blazebit.persistence.parser.expression.WindowDefinition;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
@@ -49,6 +52,8 @@ import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.parser.util.LiteralFunctionTypeConverter;
+import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -62,8 +67,11 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Type;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -639,6 +647,55 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (needsBrackets) {
             sb.append(')');
         }
+    }
+    @Override
+    public void visit(DateLiteral expression) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            super.visit(expression);
+        } else {
+            Date value = expression.getValue();
+            if (value instanceof java.sql.Date) {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super java.sql.Date>) TypeUtils.DATE_CONVERTER, (java.sql.Date) value);
+            } else {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super Date>) TypeUtils.DATE_AS_DATE_CONVERTER, value);
+            }
+        }
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            super.visit(expression);
+        } else {
+            Date value = expression.getValue();
+            if (value instanceof java.sql.Time) {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super Time>) TypeUtils.TIME_CONVERTER, (java.sql.Time) value);
+            } else {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super Date>) TypeUtils.DATE_AS_TIME_CONVERTER, value);
+            }
+        }
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        if (jpaProvider.supportsTemporalLiteral()) {
+            super.visit(expression);
+        } else {
+            Date value = expression.getValue();
+            if (value instanceof java.sql.Timestamp) {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super Timestamp>) TypeUtils.TIMESTAMP_CONVERTER, (java.sql.Timestamp) value);
+            } else {
+                appendTemporalLiteralEmulation((LiteralFunctionTypeConverter<? super Date>) TypeUtils.DATE_TIMESTAMP_CONVERTER, value);
+            }
+        }
+    }
+
+    private <T> void appendTemporalLiteralEmulation(LiteralFunctionTypeConverter<? super T> converter, T value) {
+        String functionInvocation = jpaProvider.getCustomFunctionInvocation(converter.getLiteralFunctionName(), 1);
+        String literalValue = converter.toString(value);
+        sb.append(functionInvocation);
+        TypeUtils.STRING_CONVERTER.appendTo(literalValue, sb);
+        sb.append(')');
     }
 
     @Override

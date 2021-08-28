@@ -11,7 +11,8 @@ Not yet released
 * Introduction of the `CriteriaBuilderConfigurationContributors` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
 
 ### Bug fixes
-None yet
+
+* Fix support for Java 8 type temporal literals
 
 ### Backwards-incompatible changes
 
