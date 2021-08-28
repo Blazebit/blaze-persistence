@@ -338,7 +338,7 @@ public class TypeDescriptor {
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
-            viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
+            viewIdAccessor = Accessors.forSubviewAssociationId(evm, viewType, attributeIdAttributeName, true);
             entityIdAccessor = Accessors.forEntityMapping(evm, viewType.getEntityClass(), attributeIdAttributeName);
         }
         Class<?> viewTypeClass = viewType.getJavaType();
@@ -399,7 +399,7 @@ public class TypeDescriptor {
         AttributeAccessor viewIdAccessor = null;
         AttributeAccessor entityIdAccessor = null;
         if (viewType instanceof ViewType<?>) {
-            viewIdAccessor = Accessors.forViewId(evm, (ViewType<?>) viewType, true);
+            viewIdAccessor = Accessors.forSubviewAssociationId(evm, viewType, attributeIdAttributeName, true);
             entityIdAccessor = Accessors.forEntityMapping(evm, viewType.getEntityClass(), attributeIdAttributeName);
         }
         if (evm.getMetamodel().getEntityMetamodel().getEntity(viewType.getEntityClass()) == null) {

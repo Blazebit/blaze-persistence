@@ -90,6 +90,14 @@ public abstract class AbstractEntityLoader implements EntityLoader {
         return null;
     }
 
+    protected static javax.persistence.metamodel.SingularAttribute<?, ?> associationIdMappingOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, String attributeIdAttributeName) {
+        if (subviewType instanceof ViewType<?>) {
+            ExtendedManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, subviewType.getEntityClass());
+            return (SingularAttribute<?, ?>) managedType.getAttributes().get(attributeIdAttributeName).getAttribute();
+        }
+        return null;
+    }
+
     @Override
     public Class<?> getEntityClass() {
         return entityClass;
