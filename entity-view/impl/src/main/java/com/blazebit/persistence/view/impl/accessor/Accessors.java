@@ -53,6 +53,16 @@ public final class Accessors {
         return new ViewIdAttributeAccessor(evm, viewType, readonly);
     }
 
+    public static AttributeAccessor forSubviewAssociationId(EntityViewManagerImpl evm, ManagedViewType<?> viewType, String attributeMapping, boolean readonly) {
+        if (attributeMapping != null) {
+            AttributeAccessor viewIdAccessor = Accessors.forEntityMappingAsViewAccessor(evm, viewType, attributeMapping, readonly);
+            if (viewIdAccessor != null) {
+                return viewIdAccessor;
+            }
+        }
+        return Accessors.forViewId(evm, (ViewType<?>) viewType, readonly);
+    }
+
     public static AttributeAccessor forViewAttribute(EntityViewManagerImpl evm, MethodAttribute<?, ?> attribute, boolean readonly) {
         if (readonly || ((AbstractMethodAttribute<?, ?>) attribute).getDirtyStateIndex() == -1) {
             return new ViewAttributeAccessor(evm, attribute, readonly);

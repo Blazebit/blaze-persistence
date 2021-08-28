@@ -13,6 +13,7 @@ Not yet released
 ### Bug fixes
 
 * Fix support for Java 8 type temporal literals
+* Fix issues with persisting updatable non-PK subview mapping referring to PK-Id view
 
 ### Backwards-incompatible changes
 
