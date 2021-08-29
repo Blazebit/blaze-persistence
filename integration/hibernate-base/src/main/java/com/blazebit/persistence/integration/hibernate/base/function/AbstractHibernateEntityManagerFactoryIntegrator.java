@@ -22,20 +22,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.hibernate.Session;
 import org.hibernate.Version;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.InformixDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.InterbaseDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -47,9 +34,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -120,19 +109,10 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
     }
 
     protected String getDbmsName(EntityManagerFactory emf, EntityManager em, Dialect dialect) {
-        if (dialect instanceof MySQLDialect) {
-            try {
-                Class<?> mysql8Dialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.MySQL8Dialect");
-                if (mysql8Dialect.isInstance(dialect)) {
-                    return "mysql8";
-                }
-                Class<?> mariaDbDialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.MariaDB10Dialect");
-                if (mariaDbDialect.isInstance(dialect)) {
-                    return "mysql8";
-                }
-            } catch (ClassNotFoundException e) {
-                // Ignore
-            }
+        Set<String> classNames = getClassNames(dialect);
+        if (classNames.contains("org.hibernate.dialect.MySQL8Dialect") || classNames.contains("org.hibernate.dialect.MariaDB10Dialect")) {
+            return "mysql8";
+        } else if (classNames.contains("org.hibernate.dialect.MySQLDialect")) {
             try {
                 boolean close = em == null;
                 EntityManager entityManager = em == null ? emf.createEntityManager() : em;
@@ -151,39 +131,42 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             } catch (Exception ex) {
                 throw new RuntimeException("Could not determine the MySQL Server version!", ex);
             }
-        } else if (dialect instanceof DB2Dialect) {
+        } else if (classNames.contains("org.hibernate.dialect.DB2Dialect")) {
             return "db2";
-        } else if (dialect instanceof PostgreSQL81Dialect) {
+        } else if (classNames.contains("org.hibernate.dialect.PostgreSQL81Dialect") || classNames.contains("org.hibernate.dialect.PostgreSQLDialect")) {
             return "postgresql";
-        } else if (dialect instanceof Oracle8iDialect || dialect instanceof Oracle9Dialect) {
+        } else if (classNames.contains("org.hibernate.dialect.Oracle8iDialect") || classNames.contains("org.hibernate.dialect.Oracle9Dialect") || classNames.contains("org.hibernate.dialect.OracleDialect")) {
             return "oracle";
-        } else if (dialect instanceof SQLServerDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.SQLServerDialect")) {
             return "microsoft";
-        } else if (dialect instanceof SybaseDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.SybaseDialect")) {
             return "sybase";
-        } else if (dialect instanceof H2Dialect) {
+        } else if (classNames.contains("org.hibernate.dialect.H2Dialect")) {
             return "h2";
-        } else if (dialect instanceof CUBRIDDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.CUBRIDDialect")) {
             return "cubrid";
-        } else if (dialect instanceof HSQLDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.HSQLDialect")) {
             return "hsql";
-        } else if (dialect instanceof InformixDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.InformixDialect")) {
             return "informix";
-        } else if (dialect instanceof IngresDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.IngresDialect")) {
             return "ingres";
-        } else if (dialect instanceof InterbaseDialect) {
+        } else if (classNames.contains("org.hibernate.dialect.InterbaseDialect")) {
             return "interbase";
+        } else if (classNames.contains("org.hibernate.dialect.CockroachDB192Dialect")) {
+            return "cockroach";
         } else {
-            try {
-                Class<?> cockroachDialect = dialect.getClass().getClassLoader().loadClass("org.hibernate.dialect.CockroachDB192Dialect");
-                if (cockroachDialect.isInstance(dialect)) {
-                    return "cockroach";
-                }
-            } catch (ClassNotFoundException e) {
-                // Ignore
-            }
             return null;
         }
+    }
+
+    private Set<String> getClassNames(Dialect dialect) {
+        Set<String> classNames = new HashSet<>();
+        Class<?> c = dialect.getClass();
+        do {
+            classNames.add(c.getName());
+        } while ((c = c.getSuperclass()) != Object.class);
+        return classNames;
     }
 
     @Override

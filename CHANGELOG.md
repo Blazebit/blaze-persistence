@@ -19,6 +19,7 @@ Not yet released
 * Fix support for Java 8 type temporal literals
 * Fix issues with persisting updatable non-PK subview mapping referring to PK-Id view
 * Fix issues with entity-view annotation processor and type use annotations
+* Get rid of static dialect references to avoid eager initialization causing issues with native compilation
 
 ### Backwards-incompatible changes
 
