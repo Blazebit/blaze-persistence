@@ -10,6 +10,9 @@ Not yet released
 
 * Introduction of the `CriteriaBuilderConfigurationContributors` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
 * Add support for Spring Boot/Data 2.5
+* Get rid of unnecessary correlation joins when entity view fetches are used
+* Support plural attribute key/index access in `@Limit(order = "")` expression
+* Automatically fetch attributes necessary for attribute sorters/filters
 
 ### Bug fixes
 

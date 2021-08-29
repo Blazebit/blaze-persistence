@@ -56,7 +56,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
     private final Map<String, List<AttributeFilterActivation>> attributeFilters;
     private final Map<String, Object> optionalParameters;
     private final Map<String, Object> properties;
-    private final List<String> fetches;
+    private final Set<String> fetches;
     
     private KeysetPage keysetPage;
     private boolean keysetPaginated;
@@ -73,7 +73,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
         this.attributeFilters = new LinkedHashMap<>();
         this.optionalParameters = new HashMap<>();
         this.properties = new HashMap<>();
-        this.fetches = new ArrayList<>();
+        this.fetches = new HashSet<>();
     }
 
     private EntityViewSetting(Class<T> entityViewClass, int firstResult, int maxResults, boolean paginate, String viewConstructorName) {
@@ -92,7 +92,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
         this.attributeFilters = new LinkedHashMap<>();
         this.optionalParameters = new HashMap<>();
         this.properties = new HashMap<>();
-        this.fetches = new ArrayList<>();
+        this.fetches = new HashSet<>();
     }
 
     private EntityViewSetting(EntityViewSetting<? super T, ?> original, Class<T> subtype) {
@@ -109,7 +109,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
         this.attributeFilters = new LinkedHashMap<>(original.attributeFilters);
         this.optionalParameters = new HashMap<>(original.optionalParameters);
         this.properties = new HashMap<>(original.properties);
-        this.fetches = new ArrayList<>(original.fetches);
+        this.fetches = new HashSet<>(original.fetches);
     }
 
     /**
@@ -712,7 +712,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> implem
      * @since 1.4.0
      */
     public Collection<String> getFetches() {
-        return Collections.unmodifiableList(fetches);
+        return Collections.unmodifiableSet(fetches);
     }
 
     /**

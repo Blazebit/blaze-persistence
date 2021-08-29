@@ -30,11 +30,13 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
  */
 public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
+    private final String attributePath;
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final boolean updatable;
     private final boolean nullIfEmpty;
 
-    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable, boolean nullIfEmpty) {
+    public SubviewTupleTransformerFactory(String attributePath, ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable, boolean nullIfEmpty) {
+        this.attributePath = attributePath;
         this.template = template;
         this.updatable = updatable;
         this.nullIfEmpty = nullIfEmpty;
@@ -52,6 +54,9 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        if (!entityViewConfiguration.hasSubFetches(attributePath)) {
+            return new NullTupleTransformer(template);
+        }
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, 0, true, nullIfEmpty);
         if (updatable) {
             return new UpdatableSubviewTupleTransformer(template, objectBuilder, nullIfEmpty);

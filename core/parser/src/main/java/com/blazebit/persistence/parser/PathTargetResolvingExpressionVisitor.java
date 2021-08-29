@@ -92,6 +92,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     protected List<PathPosition> pathPositions;
     protected final EntityMetamodel metamodel;
     protected final Type<?> rootType;
+    protected final Attribute<?, ?> rootAttribute;
     protected final Map<String, Type<?>> rootTypes;
 
     /**
@@ -176,13 +177,14 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     }
 
     public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> rootType, String skipBaseNodeAlias) {
-        this(metamodel, rootType, skipBaseNodeAlias, Collections.<String, Type<?>>emptyMap());
+        this(metamodel, rootType, null, skipBaseNodeAlias, Collections.<String, Type<?>>emptyMap());
     }
 
-    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> rootType, String skipBaseNodeAlias, Map<String, Type<?>> rootTypes) {
+    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Type<?> rootType, Attribute<?, ?> rootAttribute, String skipBaseNodeAlias, Map<String, Type<?>> rootTypes) {
         this.metamodel = metamodel;
         this.pathPositions = new ArrayList<>();
         this.rootType = rootType;
+        this.rootAttribute = rootAttribute;
         this.rootTypes = withRootType(rootTypes, rootType, skipBaseNodeAlias);
         clear();
     }
@@ -201,7 +203,7 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     public void clear() {
         pathPositions.clear();
-        pathPositions.add(currentPosition = new PathPosition(rootType, null));
+        pathPositions.add(currentPosition = new PathPosition(rootType, rootAttribute));
     }
 
     private Type<?> getType(Type<?> baseType, Attribute<?, ?> attribute) {

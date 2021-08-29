@@ -40,13 +40,13 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -100,10 +100,20 @@ public final class EntityViewSettingHelper {
             optionalParameters.putAll(setting.getOptionalParameters());
             optionalParameters = Collections.unmodifiableMap(optionalParameters);
         }
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), setting.getFetches(), managedView);
+        Collection<String> requestedFetches;
+        if (setting.getFetches().isEmpty() || !setting.hasAttributeFilters() && !setting.hasAttributeSorters()) {
+            requestedFetches = setting.getFetches();
+        } else {
+            requestedFetches = new HashSet<>(setting.getFetches());
+            addFetchesForNonMappingAttributes(setting.getAttributeFilterActivations().keySet(), managedView, requestedFetches);
+            addFetchesForNonMappingAttributes(setting.getAttributeSorters().keySet(), managedView, requestedFetches);
+        }
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), requestedFetches, managedView);
         entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
-        applyAttributeFilters(setting, evm, criteriaBuilder, ef, managedView);
-        applyAttributeSorters(setting, evm, criteriaBuilder, ef, managedView);
+        Set<String> fetches = configuration.getFetches();
+        applyAttributeFilters(setting, evm, criteriaBuilder, entityViewRoot, fetches, managedView);
+        applyViewFilters(setting, evm, criteriaBuilder, managedView);
+        applyAttributeSorters(setting, criteriaBuilder, entityViewRoot, fetches, managedView);
         applyOptionalParameters(optionalParameters, criteriaBuilder);
         Map<String, Object> properties = setting.getProperties();
 
@@ -218,6 +228,23 @@ public final class EntityViewSettingHelper {
         }
     }
 
+    private static void addFetchesForNonMappingAttributes(Set<String> attributePaths, ManagedViewTypeImplementor<?> managedView, Collection<String> requestedFetches) {
+        NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes = (NavigableMap<String, AbstractMethodAttribute<?, ?>>) managedView.getRecursiveAttributes();
+        OUTER: for (String attributePath : attributePaths) {
+            int dotIndex = attributePath.length();
+            do {
+                String path = attributePath.substring(0, dotIndex);
+                AbstractMethodAttribute<?, ?> methodAttribute = recursiveAttributes.get(path);
+                // If we encounter a non-mapping attribute, we must fetch it so that we can later filter/sort based on the alias
+                // For mapping attributes we are able to build a mapping expression but for others, that's not possible
+                if (methodAttribute.getCorrelationProviderFactory() != null || methodAttribute.getSubqueryProviderFactory() != null) {
+                    requestedFetches.add(attributePath);
+                    continue OUTER;
+                }
+            } while ((dotIndex = attributePath.lastIndexOf('.', dotIndex - 1)) != -1);
+        }
+    }
+
     private static boolean getBooleanProperty(Map<String, Object> properties, String key, boolean defaultValue) {
         Object o = properties.get(key);
         if (o == null) {
@@ -256,14 +283,6 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ManagedViewTypeImplementor<?> managedView) {
-        ViewMetamodel metamodel = evm.getMetamodel();
-        Metamodel jpaMetamodel = cb.getMetamodel();
-
-        applyAttributeFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, managedView);
-        applyViewFilters(setting, evm, cb, managedView);
-    }
-
     private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ManagedViewTypeImplementor<?> viewType) {
         // Add named view filter
         for (String filterName : setting.getViewFilters()) {
@@ -281,7 +300,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
+    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
         String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
         for (Map.Entry<String, List<EntityViewSetting.AttributeFilterActivation>> attributeFilterEntry : setting.getAttributeFilterActivations().entrySet()) {
@@ -293,6 +312,17 @@ public final class EntityViewSettingHelper {
             }
             if (attributeName.length() != entry.getKey().length()) {
                 throw new IllegalArgumentException("No support yet for entity attribute filtering!");
+            }
+            if (sb == null) {
+                sb = new StringBuilder(name.length() + attributeName.length() + 1);
+            } else {
+                sb.setLength(0);
+            }
+            String attributeExpression;
+            if (fetches.isEmpty() || fetches.contains(attributeName)) {
+                attributeExpression = buildAlias(sb, name, attributeName);
+            } else {
+                attributeExpression = buildMapping(sb, cb, viewRoot, recursiveAttributes, attributeName);
             }
             for (EntityViewSetting.AttributeFilterActivation filterActivation : attributeFilterEntry.getValue()) {
                 Class<? extends AttributeFilterProvider> filterClass;
@@ -324,33 +354,14 @@ public final class EntityViewSettingHelper {
                 }
 
                 AttributeFilterProvider<?> filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
-                if (sb == null) {
-                    sb = new StringBuilder(name.length() + attributeName.length() + 1);
-                } else {
-                    sb.setLength(0);
-                }
-                filter.apply(cb, buildAlias(sb, name, attributeName));
+                filter.apply(cb, attributeExpression);
             }
         }
     }
 
-    private static String buildAlias(StringBuilder sb, String name, String attributeName) {
-        sb.append(name).append('_');
-        for (int i = 0; i < attributeName.length(); i++) {
-            char c = attributeName.charAt(i);
-            if (c == '.') {
-                sb.append('_');
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ManagedViewTypeImplementor<?> entityViewRoot) {
+    private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) {
         String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
-
         for (Map.Entry<String, Sorter> attributeSorterEntry : setting.getAttributeSorters().entrySet()) {
             String attributeName = attributeSorterEntry.getKey();
             NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes = (NavigableMap<String, AbstractMethodAttribute<?, ?>>) entityViewRoot.getRecursiveAttributes();
@@ -376,8 +387,48 @@ public final class EntityViewSettingHelper {
             } else {
                 sb.setLength(0);
             }
-            sorter.apply(cb, buildAlias(sb, name, attributeName));
+            String attributeExpression;
+            if (fetches.isEmpty() || fetches.contains(attributeName)) {
+                attributeExpression = buildAlias(sb, name, attributeName);
+            } else {
+                attributeExpression = buildMapping(sb, cb, viewRoot, recursiveAttributes, attributeName);
+            }
+            sorter.apply(cb, attributeExpression);
         }
+    }
+
+    private static String buildMapping(StringBuilder sb, CriteriaBuilder<?> cb, String viewRoot, NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes, String attributePath) {
+        int dotIndex = -1;
+        String parent;
+        sb.append(viewRoot);
+        while ((dotIndex = attributePath.indexOf('.', dotIndex + 1)) != -1) {
+            parent = sb.toString();
+            sb.setLength(0);
+            AbstractMethodAttribute<?, ?> methodAttribute = recursiveAttributes.get(attributePath.substring(0, dotIndex));
+            // This is ensured by addFetchesForNonMappingAttributes
+            assert methodAttribute instanceof MappingAttribute<?, ?>;
+            methodAttribute.renderMapping(parent, cb, sb);
+        }
+        parent = sb.toString();
+        sb.setLength(0);
+        AbstractMethodAttribute<?, ?> methodAttribute = recursiveAttributes.get(attributePath);
+        // This is ensured by addFetchesForNonMappingAttributes
+        assert methodAttribute instanceof MappingAttribute<?, ?>;
+        methodAttribute.renderMapping(parent, cb, sb);
+        return sb.toString();
+    }
+
+    private static String buildAlias(StringBuilder sb, String name, String attributeName) {
+        sb.append(name).append('_');
+        for (int i = 0; i < attributeName.length(); i++) {
+            char c = attributeName.charAt(i);
+            if (c == '.') {
+                sb.append('_');
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
 }
