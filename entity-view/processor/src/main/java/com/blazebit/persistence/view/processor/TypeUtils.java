@@ -79,7 +79,7 @@ public final class TypeUtils {
     }
 
     public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
-        if (type instanceof TypeVariable) {
+        if (type.getKind() == TypeKind.TYPEVAR) {
             final TypeMirror compositeUpperBound = ((TypeVariable) type).getUpperBound();
             return extractClosestRealTypeAsString(compositeUpperBound, context);
         } else {
@@ -89,7 +89,7 @@ public final class TypeUtils {
     }
 
     public static String toTypeString(DeclaredType declaredType, TypeMirror typeMirror, Context context) {
-        if (typeMirror instanceof TypeVariable) {
+        if (typeMirror.getKind() == TypeKind.TYPEVAR) {
             typeMirror = context.getTypeUtils().asMemberOf(declaredType, ((TypeVariable) typeMirror).asElement());
         }
         return TypeRenderingVisitor.toString(typeMirror);
@@ -196,6 +196,12 @@ public final class TypeUtils {
         for (int i = 0; i < superClasses.size(); i++) {
             TypeMirror superClass = superClasses.get(i);
             final Element superClassElement = ((DeclaredType) superClass).asElement();
+            // The lazy initialization of class symbols is unfortunately not thread safe,
+            // so we force the initialization here in a synchronized block.
+            // This should be fine as this process happens very early and should initialize all the necessary bits
+            synchronized (superClassElement) {
+                superClassElement.getKind();
+            }
             for (Element enclosedElement : superClassElement.getEnclosedElements()) {
                 String name = enclosedElement.getSimpleName().toString();
                 if ("<init>".equals(name)) {
@@ -265,7 +271,7 @@ public final class TypeUtils {
         }
 
         public static String toString(TypeMirror typeMirror) {
-            if (typeMirror instanceof TypeVariable) {
+            if (typeMirror.getKind() == TypeKind.TYPEVAR) {
                 // Top level type variables don't need to render the upper bound as `T extends Type`
                 final Element typeVariableElement = ((TypeVariable) typeMirror).asElement();
                 if (typeVariableElement instanceof TypeParameterElement) {
