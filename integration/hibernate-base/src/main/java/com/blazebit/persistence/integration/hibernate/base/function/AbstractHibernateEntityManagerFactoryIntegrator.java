@@ -208,7 +208,11 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                     function = dbmsFunctionMap.get(null);
                 }
                 if (function == null) {
-                    LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
+                    if (functions.containsKey(functionName)) {
+                        LOG.finest("Using ORM registered function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation.");
+                    } else {
+                        LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
+                    }
                 } else {
                     functions.put(functionName, new HibernateJpqlFunctionAdapter(function));
                 }

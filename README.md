@@ -181,10 +181,10 @@ OpenJPA integration              | N/A                                  | (Curre
 Entity View CDI integration      | CDI 1.0                              | 1.0, 1.1, 1.2, 2.0
 Entity View Spring integration   | Spring 4.3                           | 4.3, 5.0, 5.1, 5.2
 DeltaSpike Data integration      | DeltaSpike 1.7                       | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2, 2.3
-Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.3, Spring WebMvc 4.3 - 5.2
-Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.3, Spring WebFlux 5.0 - 5.2
-Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2   | Spring Data 2.3, Spring WebMvc 5.2, Spring HATEOAS 1.0+
+Spring Data integration          | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5
+Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.5, Spring WebMvc 4.3 - 5.2
+Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.5, Spring WebFlux 5.0 - 5.2
+Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2   | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
 Jackson integration              | 2.8.11                               | 2.8.11+
 GraphQL integration              | 5.2                                  | 5.2+
 JAX-RS integration               | Any JAX-RS version                   | Any JAX-RS version

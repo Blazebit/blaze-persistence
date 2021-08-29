@@ -802,12 +802,19 @@ public class TypeUtils {
 
         try {
             c.put(Class.forName("java.time.LocalDate"), LocalDateTypeConverter.INSTANCE);
+            temporalConverters.add(LocalDateTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.LocalTime"), LocalTimeTypeConverter.INSTANCE);
+            temporalConverters.add(LocalTimeTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeTypeConverter.INSTANCE);
+            temporalConverters.add(LocalDateTimeTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.Instant"), InstantTypeConverter.INSTANCE);
+            temporalConverters.add(InstantTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.ZonedDateTime"), ZonedDateTimeTypeConverter.INSTANCE);
+            temporalConverters.add(ZonedDateTimeTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.OffsetTime"), OffsetTimeTypeConverter.INSTANCE);
+            temporalConverters.add(OffsetTimeTypeConverter.INSTANCE);
             c.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeTypeConverter.INSTANCE);
+            temporalConverters.add(OffsetDateTimeTypeConverter.INSTANCE);
         } catch (Exception ex) {
             // Ignore
         }

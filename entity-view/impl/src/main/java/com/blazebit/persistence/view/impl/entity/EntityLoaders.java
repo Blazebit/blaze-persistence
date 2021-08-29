@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.entity;
 
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.accessor.Accessors;
 import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -25,6 +26,8 @@ import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
+import javax.persistence.metamodel.BasicType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,6 +66,8 @@ public final class EntityLoaders {
 
     private static EntityLoader buildReferenceEntityLoader(EntityViewManagerImpl evm, Map<Object, EntityViewUpdaterImpl> localCache, ManagedViewType<?> subviewType, String attributeIdAttributeName) {
         boolean forceQuery = false;
+        SingularAttribute<?, ?> attributeIdAttribute;
+        ViewToEntityMapper viewIdMapper;
         if (subviewType instanceof ViewType<?> && attributeIdAttributeName != null) {
             MethodAttribute<?, ?> idAttribute = ((ViewType<?>) subviewType).getIdAttribute();
             if (!attributeIdAttributeName.equals(((MappingAttribute<?, ?>) idAttribute).getMapping())) {
@@ -73,14 +78,33 @@ public final class EntityLoaders {
                 if (managedType.getAttribute(attributeIdAttributeName).getAttribute().getJavaMember() instanceof Field) {
                     forceQuery = !evm.getJpaProvider().supportsProxyParameterForNonPkAssociation();
                 }
+                if (Accessors.forEntityMappingAsViewAccessor(evm, subviewType, attributeIdAttributeName, true) == null) {
+                    // If no attribute on the subview exists for the attribute id attribute, we have to fallback to the primary key and force a query lookup
+                    attributeIdAttribute = AbstractEntityLoader.viewIdMappingOf(evm, subviewType);
+                    viewIdMapper = EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType);
+                    forceQuery = !evm.getJpaProvider().supportsProxyParameterForNonPkAssociation();
+                } else {
+                    attributeIdAttribute = AbstractEntityLoader.associationIdMappingOf(evm, subviewType, attributeIdAttributeName);
+                    if (attributeIdAttribute.getType() instanceof BasicType<?>) {
+                        viewIdMapper = null;
+                    } else {
+                        throw new UnsupportedOperationException("Composite or association based natural keys for associations are not yet supported!");
+                    }
+                }
+            } else {
+                attributeIdAttribute = AbstractEntityLoader.viewIdMappingOf(evm, subviewType);
+                viewIdMapper = EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType);
             }
+        } else {
+            attributeIdAttribute = AbstractEntityLoader.viewIdMappingOf(evm, subviewType);
+            viewIdMapper = EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType);
         }
         return new ReferenceEntityLoader(
             evm,
             subviewType.getEntityClass(),
             AbstractEntityLoader.jpaIdOf(evm, subviewType),
-            AbstractEntityLoader.viewIdMappingOf(evm, subviewType),
-            EntityViewUpdaterImpl.createViewIdMapper(evm, localCache, subviewType),
+            attributeIdAttribute,
+            viewIdMapper,
             evm.getEntityIdAccessor(),
             forceQuery
         );

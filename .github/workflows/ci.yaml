@@ -65,10 +65,15 @@ jobs:
             jdk: 8
             spring-data: spring-data-2.3.x
             deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.4.x
+            deltaspike: deltaspike-1.9
           - rdbms: postgresql
             provider: hibernate-apt
             jdk: 8
-            spring-data: spring-data-2.4.x
+            spring-data: spring-data-2.5.x
             deltaspike: deltaspike-1.9
             
 ################################################
@@ -416,12 +421,12 @@ jobs:
             provider: hibernate-5.2
             jdk: 16
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.4.x
+            spring-data: spring-data-2.5.x
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 17
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.4.x
+            spring-data: spring-data-2.5.x
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 11
@@ -432,20 +437,20 @@ jobs:
             jdk: 15
             build-jdk: 15
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.4.x
+            spring-data: spring-data-2.5.x
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 16
             build-jdk: 16
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.4.x
+            spring-data: spring-data-2.5.x
 # Neither Spring nor Deltaspike support reading JDK 17 class files yet
 #          - rdbms: h2
 #            provider: hibernate-5.2
 #            jdk: 17
 #            build-jdk: 17
 #            deltaspike: deltaspike-1.9
-#            spring-data: spring-data-2.4.x
+#            spring-data: spring-data-2.5.x
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file

@@ -304,17 +304,45 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hibernate-apt</id>
+            <id>spring-data-2.5.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.4-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.4-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.5-spring-boot}</version.spring.boot>
                 <version.hibernate>${version.hibernate-5.4}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.4}</version>
+                    <version>${version.spring-data-2.5}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.aspectj</groupId>
+                    <artifactId>aspectjweaver</artifactId>
+                    <version>1.9.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hibernate-apt</id>
+            <properties>
+                <version.spring>${version.spring-data-2.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.5-spring-boot}</version.spring.boot>
+                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.5}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
