@@ -33,9 +33,10 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Christian Beikov
@@ -43,12 +44,13 @@ import java.util.Set;
  */
 public final class EntityViewConfiguration {
 
+    private static final NavigableSet<String> EMPTY_SET = new TreeSet<>();
     private final FullQueryBuilder<?, ?> criteriaBuilder;
     private final ExpressionFactory expressionFactory;
     private final ViewJpqlMacro viewJpqlMacro;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
     private final Map<String, Object> optionalParameters;
-    private final Set<String> fetches;
+    private final NavigableSet<String> fetches;
     private final Map<String, Integer> batchSizeConfiguration;
     private final Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration;
 
@@ -60,7 +62,7 @@ public final class EntityViewConfiguration {
         this(criteriaBuilder, expressionFactory, viewJpqlMacro, embeddingViewJpqlMacro, optionalParameters, properties, getFetches(fetches, managedViewType));
     }
 
-    private EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, Set<String> fetches) {
+    private EntityViewConfiguration(FullQueryBuilder<?, ?> criteriaBuilder, ExpressionFactory expressionFactory, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Map<String, Object> optionalParameters, Map<String, Object> properties, NavigableSet<String> fetches) {
         Map<String, Integer> batchSizeConfiguration = new HashMap<String, Integer>(properties.size());
         Map<String, BatchCorrelationMode> expectBatchCorrelationValuesConfiguration = new HashMap<>(properties.size());
 
@@ -111,7 +113,7 @@ public final class EntityViewConfiguration {
         this.criteriaBuilder.registerMacro("embedding_view", embeddingViewJpqlMacro);
     }
 
-    private EntityViewConfiguration(EntityViewConfiguration original, FullQueryBuilder<?, ?> criteriaBuilder, Set<String> fetches, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
+    private EntityViewConfiguration(EntityViewConfiguration original, FullQueryBuilder<?, ?> criteriaBuilder, NavigableSet<String> fetches, EmbeddingViewJpqlMacro embeddingViewJpqlMacro) {
         this.criteriaBuilder = criteriaBuilder;
         this.expressionFactory = original.expressionFactory;
         this.viewJpqlMacro = original.viewJpqlMacro;
@@ -122,12 +124,12 @@ public final class EntityViewConfiguration {
         this.expectBatchCorrelationValuesConfiguration = original.expectBatchCorrelationValuesConfiguration;
     }
 
-    private static Set<String> getFetches(Collection<String> fetches, String attributePath) {
-        Set<String> filteredFetches;
+    private static NavigableSet<String> getFetches(Collection<String> fetches, String attributePath) {
+        NavigableSet<String> filteredFetches;
         if (fetches.isEmpty()) {
-            filteredFetches = Collections.emptySet();
+            filteredFetches = EMPTY_SET;
         } else {
-            filteredFetches = new HashSet<>(fetches.size());
+            filteredFetches = new TreeSet<>();
             String prefix = attributePath + ".";
             for (String fetch : fetches) {
                 if (fetch.startsWith(prefix)) {
@@ -139,12 +141,12 @@ public final class EntityViewConfiguration {
         return filteredFetches;
     }
 
-    private static Set<String> getFetches(Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
-        Set<String> filteredFetches;
+    private static NavigableSet<String> getFetches(Collection<String> fetches, ManagedViewTypeImplementor<?> managedViewType) {
+        NavigableSet<String> filteredFetches;
         if (fetches.isEmpty()) {
-            filteredFetches = Collections.emptySet();
+            filteredFetches = EMPTY_SET;
         } else {
-            filteredFetches = new HashSet<>(fetches.size());
+            filteredFetches = new TreeSet<>();
             if (managedViewType instanceof ViewType<?>) {
                 addIdFetches((ViewType<?>) managedViewType, filteredFetches, new StringBuilder());
             }
@@ -230,6 +232,14 @@ public final class EntityViewConfiguration {
 
     public Set<String> getFetches() {
         return fetches;
+    }
+
+    public boolean hasSubFetches(String attributePath) {
+        if (fetches.isEmpty()) {
+            return true;
+        }
+        String fetchedPath = fetches.ceiling(attributePath);
+        return fetchedPath != null && (fetchedPath.length() == attributePath.length() || fetchedPath.startsWith(attributePath) && fetchedPath.length() > attributePath.length() && fetchedPath.charAt(attributePath.length()) == '.');
     }
 
     public ViewJpqlMacro getViewJpqlMacro() {

@@ -27,6 +27,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.StaticPathCorrelationProvider;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.NullTupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
@@ -77,6 +78,9 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
 
     @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        if (!entityViewConfiguration.hasSubFetches(attributePath)) {
+            return new NullTupleTransformer(template);
+        }
         // TODO: Fix view conversion for correlated attributes somehow
         // Before, we passed a FullQueryBuilder instead of a ParameterHolder but that doesn't work for view conversion
         // I'm not yet sure how view conversion could work with correlations, but casting the parameter holder here isn't very nice

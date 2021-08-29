@@ -23,7 +23,6 @@ import com.blazebit.persistence.OrderByBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
-import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
@@ -276,22 +275,26 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         correlationResultExpression = mappingExpression;
                         // When using @Limit in combination with JOIN fetching, we need to adapt the correlation expression when array expressions are used
                         if (fetchStrategy == FetchStrategy.JOIN && !orderByItems.isEmpty() && mappingExpression instanceof PathExpression) {
-                            PathExpression pathExpression = (PathExpression) mappingExpression;
-                            int arrayIndex = pathExpression.getExpressions().size() - 1;
-                            do {
-                                if (pathExpression.getExpressions().get(arrayIndex) instanceof ArrayExpression) {
-                                    break;
-                                }
-                                arrayIndex--;
-                            } while (arrayIndex > 0);
-
-                            // If we encounter an array, we must correlate the path as a whole instead
-                            if (arrayIndex != -1) {
-                                correlated = null;
-                                correlationPath = mappingString;
-                                correlationResult = "";
-                                correlationResultExpression = new PathExpression();
-                            }
+//                            PathExpression pathExpression = (PathExpression) mappingExpression;
+//                            int arrayIndex = pathExpression.getExpressions().size() - 1;
+//                            do {
+//                                if (pathExpression.getExpressions().get(arrayIndex) instanceof ArrayExpression) {
+//                                    break;
+//                                }
+//                                arrayIndex--;
+//                            } while (arrayIndex > 0);
+//
+//                            // If we encounter an array, we must correlate the path as a whole instead
+//                            if (arrayIndex != -1) {
+//                                correlated = null;
+//                                correlationPath = mappingString;
+//                                correlationResult = "";
+//                                correlationResultExpression = new PathExpression();
+//                            }
+                            correlated = null;
+                            correlationPath = mappingString;
+                            correlationResult = "";
+                            correlationResultExpression = new PathExpression();
                         }
                     }
                 }
@@ -921,11 +924,23 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         Class<?> expressionType = getJavaType();
         Class<?> keyType = null;
         Class<?> elementType = null;
-        ManagedType<?> elementManagedType = context.getEntityMetamodel().getManagedType(getElementType().getJavaType());
-        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(elementManagedType, context.getEntityMetamodel(), context.getJpqlFunctions(), declaringType.getEntityViewRootTypes());
+        ManagedType<?> elementManagedType;
+        javax.persistence.metamodel.Attribute<?, ?> elementAttribute;
+        if (possibleTargetTypes.size() != 1) {
+            if (getElementType() instanceof ManagedViewType<?>) {
+                elementManagedType = context.getEntityMetamodel().getManagedType(((ManagedViewType<?>) getElementType()).getEntityClass());
+            } else {
+                elementManagedType = context.getEntityMetamodel().getManagedType(getElementType().getJavaType());
+            }
+            elementAttribute = null;
+        } else {
+            elementManagedType = context.getEntityMetamodel().getManagedType(possibleTargetTypes.get(0).getLeafBaseValueClass());
+            elementAttribute = possibleTargetTypes.get(0).getLeafMethod();
+        }
+        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(elementManagedType, elementAttribute, context.getEntityMetamodel(), context.getJpqlFunctions(), declaringType.getEntityViewRootTypes());
 
         if (fetches.length != 0) {
-            if (elementManagedType == null) {
+            if (context.getEntityMetamodel().getManagedType(getElementType().getJavaType()) == null) {
                 context.addError("Specifying fetches for non-entity attribute type [" + Arrays.toString(fetches) + "] at the " + getLocation() + " is not allowed!");
             } else {
                 for (int i = 0; i < fetches.length; i++) {

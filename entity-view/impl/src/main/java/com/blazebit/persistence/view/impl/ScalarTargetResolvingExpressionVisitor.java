@@ -126,7 +126,11 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     }
 
     public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
-        super(metamodel, managedType, null, rootTypes);
+        this(managedType, null, metamodel, functions, rootTypes);
+    }
+
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, Attribute<?, ?> rootAttribute, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+        super(metamodel, managedType, rootAttribute, null, rootTypes);
         this.managedType = managedType;
         this.functions = functions;
         this.parametersAllowed = false;

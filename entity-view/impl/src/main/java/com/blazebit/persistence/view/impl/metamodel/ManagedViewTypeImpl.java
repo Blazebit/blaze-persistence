@@ -378,12 +378,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 // recursiveSubviewAttributes.put("KEY(" + attribute.getName() + ")", attribute.key());
                 context.onViewTypeFinished(keyType, new KeyTypeSubviewAttributeCollector<>(attribute, recursiveAttributes, recursiveSubviewAttributes, keyType, context));
             }
+            recursiveAttributes.put(attribute.getName(), attribute);
             if (attribute.getElementType() instanceof ManagedViewTypeImplementor<?>) {
                 final ManagedViewTypeImplementor<Object> elementType = (ManagedViewTypeImplementor<Object>) attribute.getElementType();
                 recursiveSubviewAttributes.put(attribute.getName(), attribute);
                 context.onViewTypeFinished(elementType, new ElementTypeSubviewAttributeCollector<>(attribute, recursiveAttributes, recursiveSubviewAttributes, elementType, context));
-            } else {
-                recursiveAttributes.put(attribute.getName(), attribute);
             }
         }
         this.recursiveAttributes = recursiveAttributes;

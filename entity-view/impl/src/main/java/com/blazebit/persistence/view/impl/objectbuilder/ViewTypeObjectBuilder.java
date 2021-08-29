@@ -108,7 +108,8 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             }
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
-                if (fetches.contains(mapper.getAttributePath())) {
+                String attributePath = mapper.getAttributePath();
+                if (attributePath != null && fetches.contains(attributePath)) {
                     mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
