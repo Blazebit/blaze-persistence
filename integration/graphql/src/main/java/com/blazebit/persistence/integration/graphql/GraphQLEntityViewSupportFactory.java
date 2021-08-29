@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.reflection.ReflectionUtils;
-import graphql.language.Directive;
+import graphql.language.Definition;
 import graphql.language.EnumTypeDefinition;
 import graphql.language.EnumValueDefinition;
 import graphql.language.FieldDefinition;
@@ -38,6 +38,8 @@ import graphql.language.TypeName;
 import graphql.schema.idl.TypeDefinitionRegistry;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -56,6 +58,22 @@ import java.util.Set;
 public class GraphQLEntityViewSupportFactory {
 
     private static final Map<Class<?>, String> TYPES;
+    private static final Method TYPE_REGISTRY_ADD;
+    private static final Constructor<ObjectTypeDefinition> OBJECT_TYPE_DEFINITION_CONSTRUCTOR;
+    private static final Method OBJECT_TYPE_DEFINITION_NEW_BUILDER;
+    private static final Method OBJECT_TYPE_DEFINITION_BUILDER_NAME;
+    private static final Method OBJECT_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS;
+    private static final Method OBJECT_TYPE_DEFINITION_BUILDER_BUILD;
+    private static final Constructor<InterfaceTypeDefinition> INTERFACE_TYPE_DEFINITION_CONSTRUCTOR;
+    private static final Method INTERFACE_TYPE_DEFINITION_NEW_BUILDER;
+    private static final Method INTERFACE_TYPE_DEFINITION_BUILDER_NAME;
+    private static final Method INTERFACE_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS;
+    private static final Method INTERFACE_TYPE_DEFINITION_BUILDER_BUILD;
+    private static final Constructor<EnumTypeDefinition> ENUM_TYPE_DEFINITION_CONSTRUCTOR;
+    private static final Method ENUM_TYPE_DEFINITION_NEW_BUILDER;
+    private static final Method ENUM_TYPE_DEFINITION_BUILDER_NAME;
+    private static final Method ENUM_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS;
+    private static final Method ENUM_TYPE_DEFINITION_BUILDER_BUILD;
 
     static {
         Map<Class<?>, String> types = new HashMap<>();
@@ -79,6 +97,67 @@ public class GraphQLEntityViewSupportFactory {
         types.put(Character.class, "Char");
         types.put(String.class, "String");
         TYPES = types;
+
+        Method typeRegistryAdd = null;
+        try {
+            typeRegistryAdd = TypeDefinitionRegistry.class.getMethod("add", Class.forName("graphql.language.SDLDefinition"));
+        } catch (Exception ex) {
+            try {
+                typeRegistryAdd = TypeDefinitionRegistry.class.getMethod("add", Class.forName("graphql.language.Definition"));
+            } catch (Exception ex2) {
+                RuntimeException runtimeException = new RuntimeException("Could not initialize accessors for graphql-java", ex2);
+                runtimeException.addSuppressed(ex);
+                throw runtimeException;
+            }
+        }
+        TYPE_REGISTRY_ADD = typeRegistryAdd;
+        OBJECT_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(ObjectTypeDefinition.class, String.class, List.class, List.class, List.class);
+        INTERFACE_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(InterfaceTypeDefinition.class, String.class, List.class, List.class);
+        ENUM_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(EnumTypeDefinition.class, String.class, List.class, List.class);
+        Method objectTypeDefinitionNewBuilder = null;
+        Method objectTypeDefinitionBuilderName = null;
+        Method objectTypeDefinitionBuilderFieldDefinitions = null;
+        Method objectTypeDefinitionBuilderBuild = null;
+        Method interfaceTypeDefinitionNewBuilder = null;
+        Method interfaceTypeDefinitionBuilderName = null;
+        Method interfaceTypeDefinitionBuilderFieldDefinitions = null;
+        Method interfaceTypeDefinitionBuilderBuild = null;
+        Method enumTypeDefinitionNewBuilder = null;
+        Method enumTypeDefinitionBuilderName = null;
+        Method enumTypeDefinitionBuilderFieldDefinitions = null;
+        Method enumTypeDefinitionBuilderBuild = null;
+        if (OBJECT_TYPE_DEFINITION_CONSTRUCTOR == null) {
+            try {
+                objectTypeDefinitionNewBuilder = ObjectTypeDefinition.class.getMethod("newObjectTypeDefinition");
+                objectTypeDefinitionBuilderName = Class.forName("graphql.language.ObjectTypeDefinition$Builder").getMethod("name", String.class);
+                objectTypeDefinitionBuilderFieldDefinitions = Class.forName("graphql.language.ObjectTypeDefinition$Builder").getMethod("fieldDefinitions", List.class);
+                objectTypeDefinitionBuilderBuild = Class.forName("graphql.language.ObjectTypeDefinition$Builder").getMethod("build");
+
+                interfaceTypeDefinitionNewBuilder = InterfaceTypeDefinition.class.getMethod("newInterfaceTypeDefinition");
+                interfaceTypeDefinitionBuilderName = Class.forName("graphql.language.InterfaceTypeDefinition$Builder").getMethod("name", String.class);
+                interfaceTypeDefinitionBuilderFieldDefinitions = Class.forName("graphql.language.InterfaceTypeDefinition$Builder").getMethod("definitions", List.class);
+                interfaceTypeDefinitionBuilderBuild = Class.forName("graphql.language.InterfaceTypeDefinition$Builder").getMethod("build");
+
+                enumTypeDefinitionNewBuilder = EnumTypeDefinition.class.getMethod("newEnumTypeDefinition");
+                enumTypeDefinitionBuilderName = Class.forName("graphql.language.EnumTypeDefinition$Builder").getMethod("name", String.class);
+                enumTypeDefinitionBuilderFieldDefinitions = Class.forName("graphql.language.EnumTypeDefinition$Builder").getMethod("enumValueDefinitions", List.class);
+                enumTypeDefinitionBuilderBuild = Class.forName("graphql.language.EnumTypeDefinition$Builder").getMethod("build");
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not initialize accessors for graphql-java", ex);
+            }
+        }
+        OBJECT_TYPE_DEFINITION_NEW_BUILDER = objectTypeDefinitionNewBuilder;
+        OBJECT_TYPE_DEFINITION_BUILDER_NAME = objectTypeDefinitionBuilderName;
+        OBJECT_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS = objectTypeDefinitionBuilderFieldDefinitions;
+        OBJECT_TYPE_DEFINITION_BUILDER_BUILD = objectTypeDefinitionBuilderBuild;
+        INTERFACE_TYPE_DEFINITION_NEW_BUILDER = interfaceTypeDefinitionNewBuilder;
+        INTERFACE_TYPE_DEFINITION_BUILDER_NAME = interfaceTypeDefinitionBuilderName;
+        INTERFACE_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS = interfaceTypeDefinitionBuilderFieldDefinitions;
+        INTERFACE_TYPE_DEFINITION_BUILDER_BUILD = interfaceTypeDefinitionBuilderBuild;
+        ENUM_TYPE_DEFINITION_NEW_BUILDER = enumTypeDefinitionNewBuilder;
+        ENUM_TYPE_DEFINITION_BUILDER_NAME = enumTypeDefinitionBuilderName;
+        ENUM_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS = enumTypeDefinitionBuilderFieldDefinitions;
+        ENUM_TYPE_DEFINITION_BUILDER_BUILD = enumTypeDefinitionBuilderBuild;
     }
 
     private boolean defineNormalTypes;
@@ -95,6 +174,14 @@ public class GraphQLEntityViewSupportFactory {
     public GraphQLEntityViewSupportFactory(boolean defineNormalTypes, boolean defineRelayTypes) {
         this.defineNormalTypes = defineNormalTypes;
         this.defineRelayTypes = defineRelayTypes;
+    }
+
+    private static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
+        try {
+            return clazz.getConstructor(String.class, List.class, List.class, List.class);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
     }
 
     /**
@@ -183,11 +270,14 @@ public class GraphQLEntityViewSupportFactory {
             String typeName = getObjectTypeName(managedView);
             List<FieldDefinition> fieldDefinitions = new ArrayList<>();
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
-                FieldDefinition fieldDefinition = new FieldDefinition(attribute.getName());
                 Type type;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
-                    if (singularAttribute.isId()) {
+                    if (singularAttribute.isSubview() && singularAttribute.isId()) {
+                        // EmbeddedId
+                        type = getElementType(typeRegistry, singularAttribute);
+                    } else if (singularAttribute.isId()) {
+                        // Usual numeric ID
                         type = getIdType(typeRegistry, singularAttribute);
                     } else {
                         type = getElementType(typeRegistry, singularAttribute);
@@ -198,12 +288,10 @@ public class GraphQLEntityViewSupportFactory {
                 } else {
                     type = new ListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
                 }
-                fieldDefinition.setType(type);
+                FieldDefinition fieldDefinition = new FieldDefinition(attribute.getName(), type);
                 fieldDefinitions.add(fieldDefinition);
             }
-            List<Type> implementsTypes = new ArrayList<>(0);
-            List<Directive> directives = new ArrayList<>(0);
-            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, new ObjectTypeDefinition(typeName, implementsTypes, directives, fieldDefinitions));
+            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, newObjectTypeDefinition(typeName, fieldDefinitions));
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -220,6 +308,63 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLEntityViewSupport(typeNameToClass, serializableBasicTypes);
     }
 
+    protected ObjectTypeDefinition newObjectTypeDefinition(String typeName, List<FieldDefinition> fieldDefinitions) {
+        try {
+            if (OBJECT_TYPE_DEFINITION_CONSTRUCTOR != null) {
+//                new ObjectTypeDefinition(typeName, implementsTypes, directives, fieldDefinitions);
+                return OBJECT_TYPE_DEFINITION_CONSTRUCTOR.newInstance(typeName, new ArrayList<>(0), new ArrayList<>(0), fieldDefinitions);
+            } else {
+//                ObjectTypeDefinition.newObjectTypeDefinition()
+//                        .name(typeName)
+//                        .fieldDefinitions(fieldDefinitions)
+//                        .build()
+                Object newObjectTypeDefinitionBuilder = OBJECT_TYPE_DEFINITION_NEW_BUILDER.invoke(null);
+                OBJECT_TYPE_DEFINITION_BUILDER_NAME.invoke(newObjectTypeDefinitionBuilder, typeName);
+                OBJECT_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS.invoke(newObjectTypeDefinitionBuilder, fieldDefinitions);
+                return (ObjectTypeDefinition) OBJECT_TYPE_DEFINITION_BUILDER_BUILD.invoke(newObjectTypeDefinitionBuilder);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not build object type definition", e);
+        }
+    }
+
+    protected InterfaceTypeDefinition newInterfaceTypeDefinition(String name, List<FieldDefinition> fieldDefinitions) {
+        try {
+            if (INTERFACE_TYPE_DEFINITION_CONSTRUCTOR != null) {
+//                return new InterfaceTypeDefinition(name, fieldDefinitions, new ArrayList<>(0));
+                return INTERFACE_TYPE_DEFINITION_CONSTRUCTOR.newInstance(name, fieldDefinitions, new ArrayList<>(0));
+            } else {
+//                InterfaceTypeDefinition.newInterfaceTypeDefinition().name(name).definitions(fieldDefinitions).build()
+                Object newInterfaceTypeDefinitionBuilder = INTERFACE_TYPE_DEFINITION_NEW_BUILDER.invoke(null);
+                INTERFACE_TYPE_DEFINITION_BUILDER_NAME.invoke(newInterfaceTypeDefinitionBuilder, name);
+                INTERFACE_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS.invoke(newInterfaceTypeDefinitionBuilder, fieldDefinitions);
+                return (InterfaceTypeDefinition) INTERFACE_TYPE_DEFINITION_BUILDER_BUILD.invoke(newInterfaceTypeDefinitionBuilder);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not build object type definition", e);
+        }
+    }
+
+    protected EnumTypeDefinition newEnumTypeDefinition(String typeName, List<EnumValueDefinition> enumValueDefinitions) {
+        try {
+            if (ENUM_TYPE_DEFINITION_CONSTRUCTOR != null) {
+//                return new EnumTypeDefinition(typeName, enumValueDefinitions, new ArrayList<>(0));
+                return ENUM_TYPE_DEFINITION_CONSTRUCTOR.newInstance(typeName, enumValueDefinitions, new ArrayList<>(0));
+            } else {
+//                EnumTypeDefinition.newEnumTypeDefinition()
+//                        .name(typeName)
+//                        .enumValueDefinitions(enumValueDefinitions)
+//                        .build()
+                Object newEnumTypeDefinitionBuilder = ENUM_TYPE_DEFINITION_NEW_BUILDER.invoke(null);
+                ENUM_TYPE_DEFINITION_BUILDER_NAME.invoke(newEnumTypeDefinitionBuilder, typeName);
+                ENUM_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS.invoke(newEnumTypeDefinitionBuilder, enumValueDefinitions);
+                return (EnumTypeDefinition) ENUM_TYPE_DEFINITION_BUILDER_BUILD.invoke(newEnumTypeDefinitionBuilder);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not build object type definition", e);
+        }
+    }
+
     protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition) {
         if (isDefineNormalTypes()) {
             registerManagedViewType(typeRegistry, typeNameToClass, managedView, objectTypeDefinition);
@@ -229,24 +374,24 @@ public class GraphQLEntityViewSupportFactory {
             if (isImplementRelayNode()) {
                 implementTypes.add(new TypeName("Node"));
             }
-            ObjectTypeDefinition nodeType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Node", implementTypes, objectTypeDefinition.getDirectives(), objectTypeDefinition.getFieldDefinitions());
+            ObjectTypeDefinition nodeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Node", objectTypeDefinition.getFieldDefinitions());
 
             if (!typeRegistry.getType("Node").isPresent() && isImplementRelayNode() && isDefineRelayNodeIfNotExist()) {
                 List<FieldDefinition> nodeFields = new ArrayList<>(4);
                 nodeFields.add(new FieldDefinition("id", new NonNullType(new TypeName("ID"))));
-                typeRegistry.add(new InterfaceTypeDefinition("Node", nodeFields, new ArrayList<>()));
+                addDefinition(typeRegistry, newInterfaceTypeDefinition("Node", nodeFields));
             }
 
             List<FieldDefinition> edgeFields = new ArrayList<>(2);
             edgeFields.add(new FieldDefinition("node", new NonNullType(new TypeName(nodeType.getName()))));
             edgeFields.add(new FieldDefinition("cursor", new NonNullType(new TypeName("String"))));
-            ObjectTypeDefinition edgeType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Edge", new ArrayList<>(), new ArrayList<>(), edgeFields);
+            ObjectTypeDefinition edgeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Edge", edgeFields);
 
             List<FieldDefinition> connectionFields = new ArrayList<>(2);
             connectionFields.add(new FieldDefinition("edges", new ListType(new TypeName(edgeType.getName()))));
             connectionFields.add(new FieldDefinition("pageInfo", new NonNullType(new TypeName("PageInfo"))));
             connectionFields.add(new FieldDefinition("totalCount", new NonNullType(new TypeName("Int"))));
-            ObjectTypeDefinition connectionType = new ObjectTypeDefinition(objectTypeDefinition.getName() + "Connection", new ArrayList<>(), new ArrayList<>(), connectionFields);
+            ObjectTypeDefinition connectionType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Connection", connectionFields);
 
             if (!typeRegistry.getType("PageInfo").isPresent() && isDefineRelayNodeIfNotExist()) {
                 List<FieldDefinition> pageInfoFields = new ArrayList<>(4);
@@ -254,7 +399,7 @@ public class GraphQLEntityViewSupportFactory {
                 pageInfoFields.add(new FieldDefinition("hasPreviousPage", new NonNullType(new TypeName("Boolean"))));
                 pageInfoFields.add(new FieldDefinition("startCursor", new TypeName("String")));
                 pageInfoFields.add(new FieldDefinition("endCursor", new TypeName("String")));
-                typeRegistry.add(new ObjectTypeDefinition("PageInfo", new ArrayList<>(), new ArrayList<>(), pageInfoFields));
+                addDefinition(typeRegistry, newObjectTypeDefinition("PageInfo", pageInfoFields));
             }
 
             registerManagedViewType(typeRegistry, typeNameToClass, managedView, nodeType);
@@ -263,8 +408,16 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
+    protected void addDefinition(TypeDefinitionRegistry typeRegistry, Definition<?> definition) {
+        try {
+            TYPE_REGISTRY_ADD.invoke(typeRegistry, definition);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not add definition", e);
+        }
+    }
+
     protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition) {
-        typeRegistry.add(objectTypeDefinition);
+        addDefinition(typeRegistry, objectTypeDefinition);
         Class<?> old;
         if ((old = typeNameToClass.put(objectTypeDefinition.getName(), managedView.getJavaType())) != null) {
             throw new IllegalArgumentException("Type with name '" + objectTypeDefinition.getName() + "' is registered multiple times: [" + old.getName() + ", " + managedView.getJavaType().getName() + "]!");
@@ -296,7 +449,7 @@ public class GraphQLEntityViewSupportFactory {
         List<FieldDefinition> fields = new ArrayList<>();
         fields.add(new FieldDefinition("key", key));
         fields.add(new FieldDefinition("value", value));
-        typeRegistry.add(new ObjectTypeDefinition(entryName, new ArrayList<>(), new ArrayList<>(), fields));
+        addDefinition(typeRegistry, newObjectTypeDefinition(entryName, fields));
         return new ListType(new TypeName(entryName));
     }
 
@@ -396,7 +549,7 @@ public class GraphQLEntityViewSupportFactory {
                         enumValueDefinitions.add(new EnumValueDefinition(enumConstant.name(), new ArrayList<>(0)));
                     }
 
-                    typeRegistry.add(new EnumTypeDefinition(typeName, enumValueDefinitions, new ArrayList<>(0)));
+                    addDefinition(typeRegistry, newEnumTypeDefinition(typeName, enumValueDefinitions));
                 }
             } else {
                 typeName = "String";

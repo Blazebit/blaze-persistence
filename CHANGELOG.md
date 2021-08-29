@@ -13,6 +13,7 @@ Not yet released
 * Get rid of unnecessary correlation joins when entity view fetches are used
 * Support plural attribute key/index access in `@Limit(order = "")` expression
 * Automatically fetch attributes necessary for attribute sorters/filters
+* Ensure graphql-java 9.2 - 16.2 work properly and add a Netflix DGS sample application
 
 ### Bug fixes
 

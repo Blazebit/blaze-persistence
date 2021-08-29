@@ -23,8 +23,8 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
-import graphql.language.Field;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
@@ -33,11 +33,11 @@ import graphql.schema.GraphQLType;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,7 +53,7 @@ public class GraphQLEntityViewSupport {
      * Default name for the page size field.
      */
     public static final String PAGE_SIZE_NAME = "first";
-    /**
+    /**w
      * Default name for the page size field.
      */
     public static final String RELAY_LAST_NAME = "last";
@@ -88,6 +88,28 @@ public class GraphQLEntityViewSupport {
 
     // GraphQL defines meta fields that can be used on any type: https://graphql.org/learn/queries/#meta-fields
     private static final Set<String> META_FIELDS = new HashSet<>(Arrays.asList("__typename"));
+
+    private static final Method GET_QUALIFIED_NAME;
+    private static final Method GET_FIELDS;
+
+    static {
+        Method getQualifiedName = null;
+        Method getFields = null;
+        try {
+            getQualifiedName = Class.forName("graphql.schema.SelectedField").getMethod("getQualifiedName");
+            getFields = DataFetchingFieldSelectionSet.class.getMethod("getFields");
+        } catch (Exception e) {
+            try {
+                getFields = DataFetchingFieldSelectionSet.class.getMethod("get");
+            } catch (NoSuchMethodException noSuchMethodException) {
+                RuntimeException runtimeException = new RuntimeException("Could not initialize accessors for graphql-java runtime", noSuchMethodException);
+                runtimeException.addSuppressed(e);
+                throw runtimeException;
+            }
+        }
+        GET_QUALIFIED_NAME = getQualifiedName;
+        GET_FIELDS = getFields;
+    }
 
     private final Map<String, Class<?>> typeNameToClass;
     private final Set<String> serializableBasicTypes;
@@ -198,9 +220,7 @@ public class GraphQLEntityViewSupport {
         }
         EntityViewSetting<T, PaginatedCriteriaBuilder<T>> setting = (EntityViewSetting<T, PaginatedCriteriaBuilder<T>>) (EntityViewSetting<?, ?>) createSetting(entityViewClass, dataFetchingEnvironment, objectRoot);
 
-        Map<String, List<Field>> map = dataFetchingEnvironment.getSelectionSet().get();
-
-        if (!map.containsKey(totalCountName)) {
+        if (!dataFetchingEnvironment.getSelectionSet().contains(totalCountName)) {
             setting.setProperty(ConfigurationProperties.PAGINATION_DISABLE_COUNT_QUERY, Boolean.TRUE);
         }
 
@@ -212,7 +232,7 @@ public class GraphQLEntityViewSupport {
                 elementCursorPath = elementRoot + "/" + elementCursorName;
             }
 
-            if (map.containsKey(elementCursorPath)) {
+            if (dataFetchingEnvironment.getSelectionSet().contains(elementCursorPath)) {
                 setting.setProperty(ConfigurationProperties.PAGINATION_EXTRACT_ALL_KEYSETS, Boolean.TRUE);
             }
         }
@@ -250,7 +270,7 @@ public class GraphQLEntityViewSupport {
     }
 
     public String getElementTypeName(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
-        GraphQLType type = dataFetchingEnvironment.getFieldTypeInfo().getType();
+        GraphQLType type = dataFetchingEnvironment.getFieldDefinition().getType();
         if (type instanceof GraphQLNonNull) {
             type = ((GraphQLNonNull) type).getWrappedType();
         }
@@ -281,7 +301,7 @@ public class GraphQLEntityViewSupport {
             }
         }
 
-        return type.getName();
+        return ((GraphQLObjectType) type).getName();
     }
 
     /**
@@ -424,30 +444,63 @@ public class GraphQLEntityViewSupport {
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
         String prefix = elementRoot == null || elementRoot.isEmpty() ? "" : elementRoot + "/";
-        Collection<String> keys = dataFetchingEnvironment.getSelectionSet().get().keySet();
         StringBuilder sb = new StringBuilder();
-        OUTER: for (String key : keys) {
-            sb.setLength(0);
-            int fieldStartIndex = 0;
-            for (int i = 0; i < key.length(); i++) {
-                final char c = key.charAt(i);
-                if (i < prefix.length()) {
-                    if (c != prefix.charAt(i)) {
-                        continue OUTER;
-                    } else {
-                        continue;
+        DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
+        try {
+            if (GET_QUALIFIED_NAME == null) {
+                Collection<String> keys = ((Map<String, ?>) GET_FIELDS.invoke(selectionSet)).keySet();
+                OUTER: for (String key : keys) {
+                    sb.setLength(0);
+                    int fieldStartIndex = 0;
+                    for (int i = 0; i < key.length(); i++) {
+                        final char c = key.charAt(i);
+                        if (i < prefix.length()) {
+                            if (c != prefix.charAt(i)) {
+                                continue OUTER;
+                            } else {
+                                continue;
+                            }
+                        }
+                        if (c == '/') {
+                            sb.append('.');
+                            fieldStartIndex = sb.length();
+                        } else {
+                            sb.append(c);
+                        }
+                    }
+                    if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                        setting.fetch(sb.toString());
                     }
                 }
-                if (c == '/') {
-                    sb.append('.');
-                    fieldStartIndex = sb.length();
-                } else {
-                    sb.append(c);
+            } else {
+                Collection<Object> fields = (Collection<Object>) GET_FIELDS.invoke(selectionSet);
+                OUTER: for (Object field : fields) {
+                    sb.setLength(0);
+                    int fieldStartIndex = 0;
+                    String key = (String) GET_QUALIFIED_NAME.invoke(field);
+                    for (int i = 0; i < key.length(); i++) {
+                        final char c = key.charAt(i);
+                        if (i < prefix.length()) {
+                            if (c != prefix.charAt(i)) {
+                                continue OUTER;
+                            } else {
+                                continue;
+                            }
+                        }
+                        if (c == '/') {
+                            sb.append('.');
+                            fieldStartIndex = sb.length();
+                        } else {
+                            sb.append(c);
+                        }
+                    }
+                    if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                        setting.fetch(sb.toString());
+                    }
                 }
             }
-            if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                setting.fetch(sb.toString());
-            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not apply fetches", e);
         }
     }
 

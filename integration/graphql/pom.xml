@@ -33,8 +33,9 @@
         </dependency>
         <dependency>
             <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java-tools</artifactId>
-            <version>5.2.4</version>
+            <artifactId>graphql-java</artifactId>
+            <version>9.2</version>
+<!--            <version>16.0</version>-->
         </dependency>
         <dependency>
             <groupId>javax</groupId>
