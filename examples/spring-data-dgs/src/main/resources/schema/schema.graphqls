@@ -1,0 +1,4 @@
+type Query {
+    catById(id: ID!): CatWithOwnerView
+    findAll(first: Int, last:Int, offset: Int, before: String, after: String): CatWithOwnerViewConnection!
+}
