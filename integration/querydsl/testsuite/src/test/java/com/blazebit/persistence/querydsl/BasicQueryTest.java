@@ -139,7 +139,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testResultStream() {
         doInJPA(entityManager -> {
             BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, cbf).from(document)
@@ -337,8 +338,9 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testFromValuesStream() {
         doInJPA(entityManager -> {
             Document theBook = new Document();
@@ -470,8 +472,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testCTEStream() {
         doInJPA(entityManager -> {
             try (Stream<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
