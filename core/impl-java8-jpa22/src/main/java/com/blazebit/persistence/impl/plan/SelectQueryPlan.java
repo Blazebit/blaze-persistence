@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.plan;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  *
@@ -24,6 +25,8 @@ import java.util.List;
  * @since 1.2.0
  */
 public interface SelectQueryPlan<T> {
+
+    public Stream<T> getResultStream();
 
     public List<T> getResultList();
 

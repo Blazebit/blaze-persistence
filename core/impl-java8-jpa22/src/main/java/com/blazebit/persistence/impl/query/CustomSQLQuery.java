@@ -25,6 +25,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * @author Christian Beikov
@@ -62,14 +63,13 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     @Override
     public Query setHint(String hintName, Object value) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        delegate.setHint(hintName, value);
+        return this;
     }
 
     @Override
     public Map<String, Object> getHints() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return delegate.getHints();
     }
 
     @Override
@@ -100,5 +100,9 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
             throw new PersistenceException("Unsupported unwrap: " + cls.getName());
         }
         return delegate.unwrap(cls);
+    }
+
+    public Stream getResultStream() {
+        throw new IllegalArgumentException("Can not call getResultList on a modification query!");
     }
 }

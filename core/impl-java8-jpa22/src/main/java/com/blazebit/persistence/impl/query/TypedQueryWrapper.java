@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -222,4 +223,9 @@ public class TypedQueryWrapper<X> implements TypedQuery<X> {
     public <T> T unwrap(Class<T> type) {
         return delegate.unwrap(type);
     }
+
+    public Stream<X> getResultStream() {
+        return delegate.getResultStream();
+    }
+
 }

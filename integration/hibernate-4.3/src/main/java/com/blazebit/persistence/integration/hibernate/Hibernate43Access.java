@@ -315,4 +315,10 @@ public class Hibernate43Access implements HibernateAccess {
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
     }
+
+    @Override
+    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
+        throw new UnsupportedOperationException();
+    }
+
 }

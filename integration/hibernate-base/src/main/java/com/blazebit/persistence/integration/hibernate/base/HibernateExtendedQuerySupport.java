@@ -321,7 +321,24 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw hibernateAccess.convert(em, he);
         }
     }
-    
+
+    @Override
+    public Object getResultStream(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
+        EntityManager em = serviceProvider.getService(EntityManager.class);
+        try {
+            return stream(serviceProvider, em, participatingQueries, query, sqlOverride, queryPlanCacheEnabled);
+        } catch (QueryExecutionRequestException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
+            throw new IllegalStateException(he);
+        } catch (TypeMismatchException e) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
+            throw new IllegalArgumentException(e);
+        } catch (HibernateException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
+            throw hibernateAccess.convert(em, he);
+        }
+    }
+
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
@@ -386,6 +403,37 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         autoFlush(querySpaces, session);
         return hibernateAccess.performList(queryPlan, session, queryParameters);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Object stream(com.blazebit.persistence.spi.ServiceProvider serviceProvider, EntityManager em, List<Query> participatingQueries, Query query, String finalSql, boolean queryPlanCacheEnabled) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        SessionFactoryImplementor sfi = session.getFactory();
+
+        if (session.isClosed()) {
+            throw new PersistenceException("Entity manager is closed!");
+        }
+
+        // Create combined query parameters
+        List<String> queryStrings = new ArrayList<>(participatingQueries.size());
+        Set<String> querySpaces = new HashSet<>();
+        QueryParamEntry queryParametersEntry = createQueryParameters(em, query, participatingQueries, queryStrings, querySpaces);
+        QueryParameters queryParameters = queryParametersEntry.queryParameters;
+
+        QueryPlanCacheKey cacheKey = queryPlanCacheEnabled ? createCacheKey(finalSql, participatingQueries, queryStrings) : null;
+        CacheEntry<QueryPlanCacheValue> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
+        QueryPlanCacheValue queryPlanCacheValue = queryPlanEntry.getValue();
+        HQLQueryPlan queryPlan = queryPlanCacheValue.getQueryPlan();
+
+        if (!queryPlanEntry.isFromCache()) {
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, null, false, serviceProvider.getService(DbmsDialect.class));
+            if (queryPlanCacheEnabled) {
+                putQueryPlanIfAbsent(sfi, cacheKey, queryPlanCacheValue);
+            }
+        }
+
+        autoFlush(querySpaces, session);
+        return hibernateAccess.performStream(queryPlan, session, queryParameters);
     }
 
     @Override

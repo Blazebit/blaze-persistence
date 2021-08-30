@@ -27,6 +27,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * @author Christian Beikov
@@ -63,14 +64,13 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     @Override
     public TypedQuery<ReturningResult<T>> setHint(String hintName, Object value) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        delegate.setHint(hintName, value);
+        return this;
     }
 
     @Override
     public Map<String, Object> getHints() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return delegate.getHints();
     }
 
     @Override
@@ -169,6 +169,11 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     public TypedQuery<ReturningResult<T>> setParameter(int position, Date value, TemporalType temporalType) {
         super.setParameter(position, value, temporalType);
         return this;
+    }
+
+    public Stream<ReturningResult<T>> getResultStream() {
+        bindParameters();
+        return querySpecification.createSelectPlan(firstResult, maxResults).getResultStream();
     }
 
 }

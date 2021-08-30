@@ -102,6 +102,19 @@ public interface ExtendedQuerySupport {
     public List getResultList(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled);
 
     /**
+     * Returns the result stream of the Query by replacing the SQL with the given overriding SQL query.
+     *
+     * @param serviceProvider The service provider to access {@linkplain EntityManager} and others
+     * @param participatingQueries The list of participating queries from which to combine parameters
+     * @param query The main query to execute
+     * @param sqlOverride The actual SQL query to execute instead of the query's original SQL
+     * @param queryPlanCacheEnabled Designates whether query plans can be cached and reused
+     * @return The result of the query
+     * @since 1.6.2
+     */
+    public Object getResultStream(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled);
+
+    /**
      * Returns the single result of the Query by replacing the SQL with the given overriding SQL query.
      *
      * @param serviceProvider The service provider to access {@linkplain EntityManager} and others
