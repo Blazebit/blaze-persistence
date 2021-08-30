@@ -98,7 +98,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
     }
 
     public Stream<ReturningResult<T>> getResultStream() {
-        return Stream.of(getSingleResult());
+        return getResultList().stream();
     }
 
 }

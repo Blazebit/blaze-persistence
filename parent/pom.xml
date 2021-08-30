@@ -185,11 +185,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-core-impl-java8-jpa22</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-impl-jar</artifactId>
                 <version>${project.version}</version>
             </dependency>

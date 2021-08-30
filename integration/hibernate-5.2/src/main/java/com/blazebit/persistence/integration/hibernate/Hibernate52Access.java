@@ -130,10 +130,15 @@ public class Hibernate52Access implements HibernateAccess {
 
     @Override
     public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
-        ScrollableResultsImplementor scrollableResults = queryPlan.performScroll(queryParameters, sessionImplementor);
+        final ScrollableResultsImplementor scrollableResults = queryPlan.performScroll(queryParameters, sessionImplementor);
         final Iterator<Object> iterator = new ScrollableResultsIterator(scrollableResults);
         final Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL);
-        return StreamSupport.stream(spliterator, false).onClose(scrollableResults::close);
+        return StreamSupport.stream(spliterator, false).onClose(new Runnable() {
+            @Override
+            public void run() {
+                scrollableResults.close();
+            }
+        });
     }
 
     @Override
@@ -248,10 +253,9 @@ public class Hibernate52Access implements HibernateAccess {
         @Override
         public Object next() {
             Object[] next = scrollableResults.get();
-            if ( next.length == 1 ) {
+            if (next.length == 1) {
                 return next[0];
-            }
-            else {
+            } else {
                 return next;
             }
         }
