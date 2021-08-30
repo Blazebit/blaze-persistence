@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * @author Christian Beikov
@@ -65,14 +66,13 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
 
     @Override
     public TypedQuery<X> setHint(String hintName, Object value) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        delegate.setHint(hintName, value);
+        return this;
     }
 
     @Override
     public Map<String, Object> getHints() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        return delegate.getHints();
     }
 
     @Override
@@ -173,4 +173,10 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
         super.setParameter(position, value, temporalType);
         return this;
     }
+
+    public Stream<X> getResultStream() {
+        bindParameters();
+        return querySpecification.createSelectPlan(firstResult, maxResults).getResultStream();
+    }
+
 }

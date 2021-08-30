@@ -118,4 +118,9 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
+    @Override
+    public Object getResultStream(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
+        throw new UnsupportedOperationException();
+    }
+
 }

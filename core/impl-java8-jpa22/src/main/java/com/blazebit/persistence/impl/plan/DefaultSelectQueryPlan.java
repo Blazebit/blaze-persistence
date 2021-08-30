@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.plan;
 
 import javax.persistence.Query;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  *
@@ -49,4 +50,11 @@ public class DefaultSelectQueryPlan<T> implements SelectQueryPlan<T> {
         query.setMaxResults(maxResults);
         return (T) query.getSingleResult();
     }
+
+    public Stream<T> getResultStream() {
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+        return query.getResultStream();
+    }
+
 }

@@ -39,5 +39,6 @@
         <module>api-jar</module>
         <module>impl-jar</module>
         <module>parser-jar</module>
+        <module>impl-java8-jpa22</module>
     </modules>
 </project>

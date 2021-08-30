@@ -20,6 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
@@ -72,4 +73,16 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
         
         return builder.buildList(newList);
     }
+
+    public Stream<X> getResultStream() {
+        Stream<X> resultStream = super.getResultStream();
+        return resultStream.map(tuple -> {
+            if (tuple instanceof Object[]) {
+                return builder.build((Object[]) tuple);
+            } else {
+                return builder.build(new Object[] { tuple });
+            }
+        }).onClose(resultStream::close);
+    }
+
 }

@@ -27,6 +27,7 @@ import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  *
@@ -95,4 +96,9 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         }
         return new DefaultReturningResult<T>(resultList, updateCount, dbmsDialect, objectBuilder);
     }
+
+    public Stream<ReturningResult<T>> getResultStream() {
+        return Stream.of(getSingleResult());
+    }
+
 }

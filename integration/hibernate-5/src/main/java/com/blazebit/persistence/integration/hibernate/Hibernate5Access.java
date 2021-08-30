@@ -320,4 +320,9 @@ public class Hibernate5Access implements HibernateAccess {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
     }
 
+    @Override
+    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
+        throw new UnsupportedOperationException();
+    }
+
 }

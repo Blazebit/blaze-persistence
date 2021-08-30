@@ -21,6 +21,7 @@ import com.blazebit.persistence.spi.ServiceProvider;
 
 import javax.persistence.Query;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  *
@@ -63,5 +64,12 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
         return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
+    }
+
+    @Override
+    public Stream<T> getResultStream() {
+        baseQuery.setFirstResult(firstResult);
+        baseQuery.setMaxResults(maxResults);
+        return (Stream<T>) extendedQuerySupport.getResultStream(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 }
