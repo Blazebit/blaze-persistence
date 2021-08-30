@@ -25,6 +25,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -57,7 +58,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.logging.Logger;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Christian Beikov
@@ -125,7 +129,15 @@ public class Hibernate4Access implements HibernateAccess {
 
     @Override
     public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
-        return performList(queryPlan, sessionImplementor, queryParameters).stream();
+        final ScrollableResults scrollableResults = queryPlan.performScroll(queryParameters, sessionImplementor);
+        final Iterator<Object> iterator = new ScrollableResultsIterator(scrollableResults);
+        final Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL);
+        return StreamSupport.stream(spliterator, false).onClose(new Runnable() {
+            @Override
+            public void run() {
+                scrollableResults.close();
+            }
+        });
     }
 
     @Override
@@ -319,4 +331,40 @@ public class Hibernate4Access implements HibernateAccess {
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
     }
+
+    /**
+     * Iterator over {@code ScrollableResults}.
+     *
+     * @author Jan-Willem Gmelig Meyling
+     * @since 1.6.2
+     */
+    private static class ScrollableResultsIterator implements Iterator<Object> {
+        private final ScrollableResults scrollableResults;
+
+        public ScrollableResultsIterator(ScrollableResults scrollableResults) {
+            this.scrollableResults = scrollableResults;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return scrollableResults.next();
+        }
+
+        @Override
+        public Object next() {
+            Object[] next = scrollableResults.get();
+            if (next.length == 1) {
+                return next[0];
+            } else {
+                return next;
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove");
+        }
+
+    }
+
 }
