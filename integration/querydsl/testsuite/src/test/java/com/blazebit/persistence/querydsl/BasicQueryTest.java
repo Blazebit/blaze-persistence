@@ -57,6 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.blazebit.persistence.querydsl.JPQLNextExpressions.*;
 import static com.blazebit.persistence.querydsl.SetUtils.intersect;
@@ -134,6 +135,21 @@ public class BasicQueryTest extends AbstractCoreTest {
 
             List<Tuple> fetch = query.fetch();
             assertFalse(fetch.isEmpty());
+        });
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testResultStream() {
+        doInJPA(entityManager -> {
+            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, cbf).from(document)
+                    .select(document.name.as("blep"), document.name.substring(0, 2))
+                    .where(document.name.length().gt(1));
+
+            try (Stream<Tuple> stream = query.stream()) {
+                Tuple next = stream.iterator().next();
+                assertNotNull(next);
+            }
         });
     }
 
@@ -321,6 +337,26 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testFromValuesStream() {
+        doInJPA(entityManager -> {
+            Document theBook = new Document();
+            theBook.setId(1337L);
+            theBook.setName("test");
+
+            try (Stream<Document> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+                    .fromValues(document, Collections.singleton(theBook))
+                    .select(document)
+                    .stream()) {
+
+                Document result = fetch.iterator().next();
+                assertNotNull(result);
+            }
+
+        });
+    }
+
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
@@ -430,6 +466,21 @@ public class BasicQueryTest extends AbstractCoreTest {
                     .fetch();
 
             assertNotNull(fetch);
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testCTEStream() {
+        doInJPA(entityManager -> {
+            try (Stream<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+                    .with(idHolderCTE, idHolderCTE.id).as(select(document.id).from(document))
+                    .select(idHolderCTE.id).from(idHolderCTE)
+                    .stream()) {
+                Long next = fetch.iterator().next();
+                assertNotNull(next);
+            }
         });
     }
 
