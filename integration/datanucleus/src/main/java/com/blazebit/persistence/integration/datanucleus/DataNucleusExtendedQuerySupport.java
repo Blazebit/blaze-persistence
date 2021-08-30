@@ -86,7 +86,13 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
         applySql(query, sqlOverride);
         return query.getResultList();
     }
-    
+
+    @Override
+    public Object getResultStream(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
+        applySql(query, sqlOverride);
+        return query.getResultList().stream();
+    }
+
     @Override
     public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
         applySql(query, sqlOverride);
@@ -116,11 +122,6 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public Object getResultStream(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride, boolean queryPlanCacheEnabled) {
-        throw new UnsupportedOperationException();
     }
 
 }

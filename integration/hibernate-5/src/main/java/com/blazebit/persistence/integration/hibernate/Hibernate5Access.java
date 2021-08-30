@@ -133,6 +133,11 @@ public class Hibernate5Access implements HibernateAccess {
     }
 
     @Override
+    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
+        return performList(queryPlan, sessionImplementor, queryParameters).stream();
+    }
+
+    @Override
     public void doExecute(StatementExecutor executor, String delete, QueryParameters parameters, SessionImplementor session, List<ParameterSpecification> parameterSpecifications) {
         try {
             DO_EXECUTE_METHOD.invoke(executor, parameters, session, delete, parameterSpecifications);
@@ -318,11 +323,6 @@ public class Hibernate5Access implements HibernateAccess {
     @Override
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
-    }
-
-    @Override
-    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
-        throw new UnsupportedOperationException();
     }
 
 }
