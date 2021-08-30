@@ -124,6 +124,11 @@ public class Hibernate4Access implements HibernateAccess {
     }
 
     @Override
+    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
+        return performList(queryPlan, sessionImplementor, queryParameters).stream();
+    }
+
+    @Override
     public int performExecuteUpdate(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
         return queryPlan.performExecuteUpdate(queryParameters, sessionImplementor);
     }
@@ -313,10 +318,5 @@ public class Hibernate4Access implements HibernateAccess {
     @Override
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
-    }
-
-    @Override
-    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
-        throw new UnsupportedOperationException();
     }
 }
