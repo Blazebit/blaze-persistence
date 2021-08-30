@@ -43,6 +43,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.query.internal.AbstractProducedQuery;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.type.Type;
@@ -52,9 +53,13 @@ import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.logging.Logger;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Christian Beikov
@@ -121,6 +126,19 @@ public class Hibernate60Access implements HibernateAccess {
     @Override
     public List<Object> performList(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
         return queryPlan.performList(queryParameters, sessionImplementor);
+    }
+
+    @Override
+    public Object performStream(HQLQueryPlan queryPlan, SessionImplementor sessionImplementor, QueryParameters queryParameters) {
+        final ScrollableResultsImplementor scrollableResults = queryPlan.performScroll(queryParameters, sessionImplementor);
+        final Iterator<Object> iterator = new ScrollableResultsIterator(scrollableResults);
+        final Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL);
+        return StreamSupport.stream(spliterator, false).onClose(new Runnable() {
+            @Override
+            public void run() {
+                scrollableResults.close();
+            }
+        });
     }
 
     @Override
@@ -212,6 +230,35 @@ public class Hibernate60Access implements HibernateAccess {
     @Override
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
+    }
+
+    /**
+     * Iterator over {@code ScrollableResultsImplementor}.
+     *
+     * @author Jan-Willem Gmelig Meyling
+     * @since 1.6.2
+     */
+    private static class ScrollableResultsIterator implements Iterator<Object> {
+        private final ScrollableResultsImplementor scrollableResults;
+
+        public ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
+            this.scrollableResults = scrollableResults;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !scrollableResults.isClosed() && scrollableResults.next();
+        }
+
+        @Override
+        public Object next() {
+            Object[] next = scrollableResults.get();
+            if (next.length == 1) {
+                return next[0];
+            } else {
+                return next;
+            }
+        }
     }
 
 }
