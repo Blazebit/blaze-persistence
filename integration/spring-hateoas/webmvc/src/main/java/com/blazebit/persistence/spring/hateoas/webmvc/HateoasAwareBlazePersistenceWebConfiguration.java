@@ -43,12 +43,12 @@ public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersisten
 
     private final List<? extends UriComponentsContributor> uriComponentsContributors;
 
-    @Autowired
     public HateoasAwareBlazePersistenceWebConfiguration(
             EntityViewManager entityViewManager,
             @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
-            @Lazy List<UriComponentsContributor> uriComponentsContributors) {
-        super(entityViewManager, conversionService);
+            @Lazy List<UriComponentsContributor> uriComponentsContributors,
+            @Autowired(required = false) ObjectMapper objectMapper) {
+        super(entityViewManager, conversionService, objectMapper);
         this.uriComponentsContributors = uriComponentsContributors;
     }
 
@@ -74,7 +74,7 @@ public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersisten
     @Bean
     @Override
     public HateoasKeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new HateoasKeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject());
+        return new HateoasKeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject(), objectMapper());
     }
 
     @Bean
@@ -84,20 +84,15 @@ public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersisten
     }
 
     @Bean
-    public ObjectMapper keysetObjectMapper() {
-        return new ObjectMapper();
-    }
-
-    @Bean
     public KeysetAwarePagedResourcesAssembler<?> keysetPagedResourcesAssembler() {
-        return new KeysetAwarePagedResourcesAssembler<Object>(keysetPageableResolver(), null, keysetObjectMapper());
+        return new KeysetAwarePagedResourcesAssembler<Object>(keysetPageableResolver(), null, objectMapper());
     }
 
     @Bean
     public KeysetAwarePagedResourcesAssemblerArgumentResolver keysetPagedResourcesAssemblerArgumentResolver() {
         WebMvcLinkBuilderFactory linkBuilderFactory = new WebMvcLinkBuilderFactory();
         linkBuilderFactory.setUriComponentsContributors(uriComponentsContributors);
-        return new KeysetAwarePagedResourcesAssemblerArgumentResolver(keysetPageableResolver(), linkBuilderFactory, keysetObjectMapper());
+        return new KeysetAwarePagedResourcesAssemblerArgumentResolver(keysetPageableResolver(), linkBuilderFactory, objectMapper());
     }
 
 }

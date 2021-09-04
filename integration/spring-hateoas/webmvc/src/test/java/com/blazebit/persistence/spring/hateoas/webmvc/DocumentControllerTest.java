@@ -58,7 +58,8 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         // When / Then
         mockMvc.perform(get("/documents?size=1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(header().stringValues(HttpHeaders.LINK, (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":" + d1.getId() + "}"))));
+                .andExpect(header().stringValues(HttpHeaders.LINK, (Matcher<Iterable<String>>) (Matcher<?>) hasItem(containsString("{\"id\":" + d1.getId() + "}"))))
+                .andExpect(content().string(containsString("\"someInstant\"")));
     }
 
     @Test

@@ -27,6 +27,7 @@ import com.blazebit.persistence.deltaspike.data.rest.PageableDefault;
 import com.blazebit.persistence.deltaspike.data.rest.SortDefault;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -54,6 +55,8 @@ public class KeysetPageableParamConverterProvider implements ParamConverterProvi
     private PageableConfiguration pageableConfiguration;
     @Inject
     private KeysetPageableConfiguration keysetPageableConfiguration;
+    @Inject
+    private Instance<ObjectMapper> objectMapper;
 
     @Override
     public <T> ParamConverter<T> getConverter(Class<T> rawType, Type type, Annotation[] annotations) {
@@ -93,7 +96,13 @@ public class KeysetPageableParamConverterProvider implements ParamConverterProvi
                 pageableConfiguration = keysetPageableConfiguration = resolveKeysetPageableConfiguration(keysetConfig, pageableDefault, sortDefaults);
             }
 
-            return (ParamConverter<T>) new KeysetPageableParamConverter(keysetDomainClass, MAPPER, requestUriInfo, pageableConfiguration, keysetPageableConfiguration);
+            ObjectMapper mapper;
+            if (objectMapper.isUnsatisfied()) {
+                mapper = MAPPER;
+            } else {
+                mapper = objectMapper.get();
+            }
+            return (ParamConverter<T>) new KeysetPageableParamConverter(keysetDomainClass, mapper, requestUriInfo, pageableConfiguration, keysetPageableConfiguration);
         }
 
         return null;

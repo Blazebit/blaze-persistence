@@ -16,6 +16,7 @@ Not yet released
 * Ensure graphql-java 9.2 - 16.2 work properly and add a Netflix DGS sample application
 * Add support for SmallRye GraphQL in the GraphQL integration
 * Add support for Netflix DGS `@DgsData` and MicroProfile GraphQL annotations
+* Add support for chunk-processing via `Query#getResultStream`
 
 ### Bug fixes
 
@@ -24,6 +25,7 @@ Not yet released
 * Fix issues with entity-view annotation processor and type use annotations
 * Get rid of static dialect references to avoid eager initialization causing issues with native compilation
 * Make entity view subview ids non-null in the GraphQL model
+* Rely on optionally provided `ObjectMapper` in Spring integrations to avoid missing module issues
 
 ### Backwards-incompatible changes
 

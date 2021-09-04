@@ -22,6 +22,7 @@ import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewAwareMapp
 import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdHandlerInterceptor;
 import com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,20 +45,26 @@ import java.util.List;
 public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
     protected final ObjectFactory<ConversionService> conversionService;
+    protected final ObjectMapper objectMapper;
     private final EntityViewManager entityViewManager;
 
-    @Autowired
     public BlazePersistenceWebConfiguration(
       EntityViewManager entityViewManager,
-      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService
+      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
+      @Autowired(required = false) ObjectMapper objectMapper
     ) {
         this.entityViewManager = entityViewManager;
         this.conversionService = conversionService;
+        this.objectMapper = objectMapper == null ? new ObjectMapper() : objectMapper.copy();
+    }
+
+    protected ObjectMapper objectMapper() {
+        return objectMapper;
     }
 
     @Bean
     public KeysetPageableArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject());
+        return new KeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject(), objectMapper());
     }
 
     @Bean

@@ -208,7 +208,8 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-1.x-spring}</version.spring>
+                <!-- For some strange reason this doesn't work with 4.3.9.RELEASE. Since this is old anyway, let's just use 4.3.3.RELEASE here -->
+                <version.spring>4.3.3.RELEASE</version.spring>
                 <version.spring.boot>${version.spring-data-1.x-spring-boot}</version.spring.boot>
             </properties>
 

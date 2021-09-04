@@ -5,7 +5,6 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 
 = 2.2 Kang
 
-** Chunk-Processing support
 ** Spatial/Range datatype support
 ** RDBMS array datatype support
 ** Full query parser and EntityManager implementation
@@ -36,6 +35,7 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** CDI/Spring integration for listeners and services
 ** DataNucleus 5.1 integration
 ** Returning clause emulation
+** Chunk-Processing support
 
 = 1.5 Zemo *[RELEASED]*
 
