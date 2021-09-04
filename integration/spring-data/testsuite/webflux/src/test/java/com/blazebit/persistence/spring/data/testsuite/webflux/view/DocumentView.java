@@ -22,6 +22,8 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 
+import java.time.Instant;
+
 /**
  * @author Moritz Becker
  * @since 1.5.0
@@ -41,4 +43,8 @@ public interface DocumentView {
 
     @MappingParameter("optionalParameter")
     String getOptionalParameter();
+
+    default Instant getSomeInstant() {
+        return Instant.now();
+    }
 }

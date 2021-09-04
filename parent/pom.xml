@@ -89,7 +89,7 @@
         <version.deltaspike-1.9>1.9.5</version.deltaspike-1.9>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
-        <version.spring-data-1.x-spring>4.3.3.RELEASE</version.spring-data-1.x-spring>
+        <version.spring-data-1.x-spring>4.3.9.RELEASE</version.spring-data-1.x-spring>
         <version.spring-data-1.x-spring-boot>1.5.4.RELEASE</version.spring-data-1.x-spring-boot>
         <version.spring-data-2.0>2.0.4.RELEASE</version.spring-data-2.0>
         <version.spring-data-2.0-spring>5.0.4.RELEASE</version.spring-data-2.0-spring>

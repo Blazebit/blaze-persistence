@@ -74,7 +74,7 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     private static final KeysetPageable DEFAULT_PAGE_REQUEST;
     private static final org.springframework.data.domain.Sort UNSORTED;
     private final ConcurrentMap<PropertyCacheKey, Class<? extends Serializable>> propertyTypeCache = new ConcurrentHashMap<>();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
     private final SortHandlerMethodArgumentResolver sortResolver;
     private final ConversionService conversionService;
     private KeysetPageable fallbackPageable = DEFAULT_PAGE_REQUEST;
@@ -106,13 +106,14 @@ public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandler
     }
 
     public KeysetPageableHandlerMethodArgumentResolver(ConversionService conversionService) {
-        this(null, conversionService);
+        this(null, conversionService, null);
     }
 
-    public KeysetPageableHandlerMethodArgumentResolver(SortHandlerMethodArgumentResolver sortResolver, ConversionService conversionService) {
+    public KeysetPageableHandlerMethodArgumentResolver(SortHandlerMethodArgumentResolver sortResolver, ConversionService conversionService, ObjectMapper objectMapper) {
         super(sortResolver = sortResolver == null ? new SortHandlerMethodArgumentResolver() : sortResolver);
         this.sortResolver = sortResolver;
         this.conversionService = conversionService;
+        this.mapper = objectMapper == null ? new ObjectMapper() : objectMapper;
     }
 
     /**

@@ -85,7 +85,8 @@ public class DocumentControllerTest extends AbstractSpringTest {
                 .expectStatus().isOk()
                 .expectBody()
                 // Then
-                .jsonPath("$.name").isEqualTo(updateView.getName());
+                .jsonPath("$.name").isEqualTo(updateView.getName())
+                .jsonPath("$.someInstant").exists();
     }
 
     @Test

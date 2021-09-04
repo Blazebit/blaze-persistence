@@ -35,11 +35,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Moritz Becker
@@ -76,7 +76,8 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         mockMvc.perform(get("/documents?offset={offset}&size={size}", 1, 2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.numberOfElements", is(1)))
-                .andExpect(jsonPath("$.content[0].id", is(d2.getId().intValue())));
+                .andExpect(jsonPath("$.content[0].id", is(d2.getId().intValue())))
+                .andExpect(content().string(containsString("\"someInstant\"")));
     }
 
     @Test

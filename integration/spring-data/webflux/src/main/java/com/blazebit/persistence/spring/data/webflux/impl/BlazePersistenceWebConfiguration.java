@@ -22,6 +22,7 @@ import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewIdAwareW
 import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewIdValueAccessorImpl;
 import com.blazebit.persistence.spring.data.webflux.impl.json.EntityViewTypedDecoderHttpMessageReader;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -42,11 +43,19 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     private final EntityViewManager entityViewManager;
     private final ObjectProvider<ConversionService> conversionServiceFactory;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager, ObjectProvider<ConversionService> conversionServiceFactory) {
+    public BlazePersistenceWebConfiguration(
+            EntityViewManager entityViewManager,
+            ObjectProvider<ConversionService> conversionServiceFactory,
+            @Autowired(required = false) ObjectMapper objectMapper) {
         this.entityViewManager = entityViewManager;
         this.conversionServiceFactory = conversionServiceFactory;
+        this.objectMapper = objectMapper == null ? new ObjectMapper() : objectMapper.copy();
+    }
+
+    protected ObjectMapper objectMapper() {
+        return objectMapper;
     }
 
     @Bean
@@ -56,7 +65,7 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     @Bean
     public KeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver());
+        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver(), objectMapper());
     }
 
     @Bean

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.spring.hateoas.webmvc;
 
 import com.blazebit.persistence.spring.data.webmvc.impl.KeysetPageableHandlerMethodArgumentResolver;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
@@ -34,11 +35,15 @@ public class HateoasKeysetPageableHandlerMethodArgumentResolver extends KeysetPa
     private static final HateoasSortHandlerMethodArgumentResolver DEFAULT_SORT_RESOLVER = new HateoasSortHandlerMethodArgumentResolver();
 
     public HateoasKeysetPageableHandlerMethodArgumentResolver() {
-        super(DEFAULT_SORT_RESOLVER, null);
+        super(DEFAULT_SORT_RESOLVER, null, null);
     }
 
     public HateoasKeysetPageableHandlerMethodArgumentResolver(HateoasSortHandlerMethodArgumentResolver sortResolver, ConversionService conversionService) {
-        super(getDefaultedSortResolver(sortResolver), conversionService);
+        this(sortResolver, conversionService, null);
+    }
+
+    public HateoasKeysetPageableHandlerMethodArgumentResolver(HateoasSortHandlerMethodArgumentResolver sortResolver, ConversionService conversionService, ObjectMapper mapper) {
+        super(getDefaultedSortResolver(sortResolver), conversionService, mapper);
     }
 
     @Override
