@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.persistence.TypedQuery;
 
@@ -60,6 +61,11 @@ public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, F
     @Override
     public T getSingleResult() {
         return getQuery().getSingleResult();
+    }
+
+    @Override
+    public Stream<T> getResultStream() {
+        return getQuery().getResultStream();
     }
 
 }

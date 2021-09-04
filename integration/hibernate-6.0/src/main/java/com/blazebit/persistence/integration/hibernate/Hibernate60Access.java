@@ -20,6 +20,7 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.HibernateAccess;
 import com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport;
 import com.blazebit.persistence.integration.hibernate.base.HibernateReturningResult;
+import com.blazebit.persistence.integration.hibernate.base.ScrollableResultsIterator;
 import com.blazebit.persistence.spi.DbmsDialect;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -230,35 +231,6 @@ public class Hibernate60Access implements HibernateAccess {
     @Override
     public ParameterTranslations createParameterTranslations(List<ParameterSpecification> queryParameterSpecifications) {
         return new ParameterTranslationsImpl(queryParameterSpecifications);
-    }
-
-    /**
-     * Iterator over {@code ScrollableResultsImplementor}.
-     *
-     * @author Jan-Willem Gmelig Meyling
-     * @since 1.6.2
-     */
-    private static class ScrollableResultsIterator implements Iterator<Object> {
-        private final ScrollableResultsImplementor scrollableResults;
-
-        public ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
-            this.scrollableResults = scrollableResults;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return !scrollableResults.isClosed() && scrollableResults.next();
-        }
-
-        @Override
-        public Object next() {
-            Object[] next = scrollableResults.get();
-            if (next.length == 1) {
-                return next[0];
-            } else {
-                return next;
-            }
-        }
     }
 
 }

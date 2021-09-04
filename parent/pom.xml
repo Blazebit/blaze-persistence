@@ -113,6 +113,8 @@
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
+        <version.jpa-api>2.2.3</version.jpa-api>
+
         <version.weld>3.1.5.Final</version.weld>
         <version.quarkus>1.11.0.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
@@ -507,6 +509,13 @@
                 <groupId>org.apache.openejb</groupId>
                 <artifactId>javaee-api</artifactId>
                 <version>${version.openejb.javaee-api}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>${version.jpa-api}</version>
                 <scope>provided</scope>
             </dependency>
 

@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  *
@@ -451,4 +452,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         return getTypedQuery(null, null).getSingleResult();
     }
 
+    public Stream<T> getResultStream() {
+        return getTypedQuery(null, null).getResultStream();
+    }
 }
