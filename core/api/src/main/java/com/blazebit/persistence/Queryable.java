@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A base interface for builders that querying.
@@ -57,5 +58,12 @@ public interface Queryable<T, X extends Queryable<T, X>> {
      * @return The single result
      */
     public T getSingleResult();
+
+    /**
+     * Execute the query and return the result as a type Stream.
+     *
+     * @return The stream of the results
+     */
+    public Stream<T> getResultStream();
 
 }
