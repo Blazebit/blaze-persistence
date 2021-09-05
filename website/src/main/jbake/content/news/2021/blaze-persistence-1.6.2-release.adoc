@@ -1,0 +1,26 @@
+= Blaze-Persistence 1.6.2 Release
+Christian Beikov
+2021-09-05 0
+:description: Blaze-Persistence version 1.6.2 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the second bug fix release of the 1.6 series. This release contains not only bug fixes, but also quite a few new features/integrations that I would like to highlight.
+
+I'm very happy that https://github.com/EugenMayer[Eugen Mayer] from https://kontextwork.de/[KontextWork] did some extensive testing of the GraphQL integration (which obviously uncovered some bugs)
+and prototyped the support for newer graphql-java versions as required for integrating with the Netflix DGS runtime.
+Thanks to his help, we now also have an example that showcases how our GraphQL integration can be used with Netflix DGS. On top of that, we also added support for SmallRye GraphQL through the Microprofile GraphQL API,
+as well as added an example application for that and updated the documentation by describing the necessary steps to setup the integration for the various runtimes.
+
+The support for Spring Boot/Data 2.5 is now also ensured and verified as we added a new profile for testing the new version.
+
+Thanks a lot to https://github.com/jwgmeligmeyling[Jan-Willem Gmelig Meyling] for his great work for the support for QueryDSL 5.0, the new `FunctionContributor` SPI
+and the support for chunk-processing results through the new `Stream<T> getResultStream()` method that was also introduced with JPA 2.2 on `javax.persistence.Query`.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#162[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

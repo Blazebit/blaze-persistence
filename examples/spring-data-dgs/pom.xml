@@ -199,6 +199,9 @@
         <!-- Use Spring Boot 2.3 as a minimum for DGS as it requires Kotlin 1.4 which only works on Spring Boot 2.3 AFAIK -->
         <profile>
             <id>spring-data-1.11.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.3-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
