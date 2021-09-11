@@ -17,10 +17,13 @@
 package com.blazebit.persistence.integration.graphql;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
@@ -69,6 +72,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * A factory for creating a support class for using entity views in a GraphQL environment.
@@ -246,6 +250,7 @@ public class GraphQLEntityViewSupportFactory {
     private boolean defineRelayTypes;
     private Boolean implementRelayNode;
     private boolean defineRelayNodeIfNotExist = false;
+    private Pattern typeFilterPattern;
     private Map<String, GraphQLScalarType> scalarTypeMap;
 
     /**
@@ -343,6 +348,7 @@ public class GraphQLEntityViewSupportFactory {
      * Returns the scalar types as map with the type name as key.
      *
      * @return the scalar types as map with the type name as key
+     * @since 1.6.2
      */
     public Map<String, GraphQLScalarType> getScalarTypeMap() {
         return scalarTypeMap;
@@ -352,9 +358,30 @@ public class GraphQLEntityViewSupportFactory {
      * Sets the scalar types as map with the type name as key.
      *
      * @param scalarTypeMap the scalar type map
+     * @since 1.6.2
      */
     public void setScalarTypeMap(Map<String, GraphQLScalarType> scalarTypeMap) {
         this.scalarTypeMap = scalarTypeMap;
+    }
+
+    /**
+     * Returns the type filter pattern to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @return the type filter pattern
+     * @since 1.6.3
+     */
+    public Pattern getTypeFilterPattern() {
+        return typeFilterPattern;
+    }
+
+    /**
+     * Sets the type filter pattern to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @param typeFilterPattern the type filter pattern
+     * @since 1.6.3
+     */
+    public void setTypeFilterPattern(Pattern typeFilterPattern) {
+        this.typeFilterPattern = typeFilterPattern;
     }
 
     /**
@@ -366,9 +393,13 @@ public class GraphQLEntityViewSupportFactory {
      * @return a new {@link GraphQLEntityViewSupport}
      */
     public GraphQLEntityViewSupport create(TypeDefinitionRegistry typeRegistry, EntityViewManager entityViewManager) {
+        EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
         Map<String, Class<?>> typeNameToClass = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
+            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()) {
+                continue;
+            }
             String typeName = getObjectTypeName(managedView);
             String description = getDescription(managedView.getJavaType());
             List<FieldDefinition> fieldDefinitions = new ArrayList<>();
@@ -379,14 +410,11 @@ public class GraphQLEntityViewSupportFactory {
                 Type type;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
-                    if (singularAttribute.isSubview() && singularAttribute.isId()) {
-                        // EmbeddedId
-                        type = new NonNullType(getElementType(typeRegistry, singularAttribute));
-                    } else if (singularAttribute.isId()) {
+                    if (singularAttribute.isId() && !singularAttribute.isSubview()) {
                         // Usual numeric ID
                         type = getIdType(typeRegistry, singularAttribute);
                     } else {
-                        type = new NonNullType(getElementType(typeRegistry, singularAttribute));
+                        type = getElementType(typeRegistry, singularAttribute, entityMetamodel);
                     }
                 } else if (attribute instanceof MapAttribute<?, ?, ?>) {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
@@ -403,7 +431,7 @@ public class GraphQLEntityViewSupportFactory {
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
-        for (javax.persistence.metamodel.Type<?> basicType : entityViewManager.getService(EntityMetamodel.class).getBasicTypes()) {
+        for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
             }
@@ -427,10 +455,14 @@ public class GraphQLEntityViewSupportFactory {
     public GraphQLEntityViewSupport create(GraphQLSchema.Builder schemaBuilder, EntityViewManager entityViewManager) {
         Set<GraphQLType> additionalTypes = isDefineNormalTypes() ? getAndClearAdditionalTypes(schemaBuilder) : Collections.emptySet();
 
+        EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
         Map<String, Class<?>> typeNameToClass = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
+            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()) {
+                continue;
+            }
             String typeName = getObjectTypeName(managedView);
             String description = getDescription(managedView.getJavaType());
             GraphQLObjectType.Builder builder = GraphQLObjectType.newObject().name(typeName);
@@ -447,10 +479,10 @@ public class GraphQLEntityViewSupportFactory {
                 GraphQLOutputType type;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
-                    if (singularAttribute.isId()) {
+                    if (singularAttribute.isId() && !singularAttribute.isSubview()) {
                         type = getIdType(singularAttribute);
                     } else {
-                        type = new GraphQLNonNull(getElementType(schemaBuilder, singularAttribute, registeredTypeNames));
+                        type = getElementType(schemaBuilder, singularAttribute, registeredTypeNames, entityMetamodel);
                     }
                 } else if (attribute instanceof MapAttribute<?, ?, ?>) {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
@@ -466,7 +498,7 @@ public class GraphQLEntityViewSupportFactory {
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
-        for (javax.persistence.metamodel.Type<?> basicType : entityViewManager.getService(EntityMetamodel.class).getBasicTypes()) {
+        for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
             }
@@ -949,15 +981,21 @@ public class GraphQLEntityViewSupportFactory {
      *
      * @param typeRegistry The type registry
      * @param singularAttribute The singular attribute
+     * @param entityMetamodel The entity metamodel
      * @return The type
      */
-    protected Type getElementType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute) {
+    protected Type getElementType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute, EntityMetamodel entityMetamodel) {
         com.blazebit.persistence.view.metamodel.Type elementType = singularAttribute.getType();
+        Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(typeRegistry, elementType.getJavaType());
+            type = getScalarType(typeRegistry, elementType.getJavaType());
         } else {
-            return getObjectType((ManagedViewType<?>) elementType);
+            type = getObjectType((ManagedViewType<?>) elementType);
         }
+        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+            type = new NonNullType(type);
+        }
+        return type;
     }
 
     /**
@@ -981,15 +1019,21 @@ public class GraphQLEntityViewSupportFactory {
      *
      * @param schemaBuilder The schema builder
      * @param singularAttribute The singular attribute
+     * @param entityMetamodel The entity metamodel
      * @return The type
      */
-    protected GraphQLOutputType getElementType(GraphQLSchema.Builder schemaBuilder, SingularAttribute<?, ?> singularAttribute, Map<Class<?>, String> registeredTypeNames) {
+    protected GraphQLOutputType getElementType(GraphQLSchema.Builder schemaBuilder, SingularAttribute<?, ?> singularAttribute, Map<Class<?>, String> registeredTypeNames, EntityMetamodel entityMetamodel) {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = singularAttribute.getType();
+        GraphQLOutputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            type = getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
-            return getObjectTypeReference((ManagedViewType<?>) elementType);
+            type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
+        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+            type = new GraphQLNonNull(type);
+        }
+        return type;
     }
 
     /**
@@ -1110,5 +1154,21 @@ public class GraphQLEntityViewSupportFactory {
             }
         }
         return new GraphQLTypeReference(typeName);
+    }
+
+    protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
+        if (attribute instanceof MappingAttribute<?, ?>) {
+            AbstractAttribute<?, ?> attr = (AbstractAttribute<?, ?>) attribute;
+            Map<String, javax.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
+            if (rootTypes.isEmpty()) {
+                rootTypes = Collections.singletonMap("this", attr.getDeclaringType().getJpaManagedType());
+            }
+            else {
+                rootTypes = new HashMap<>(rootTypes);
+                rootTypes.put("this", attr.getDeclaringType().getJpaManagedType());
+            }
+            return !ExpressionUtils.isNullable(entityMetamodel, rootTypes, attr.getMappingExpression());
+        }
+        return false;
     }
 }
