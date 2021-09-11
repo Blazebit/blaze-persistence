@@ -41,8 +41,8 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     }
 
     @Override
-    public void prepareAlias(RenderContext context) {
-        mapJoin.prepareAlias(context);
+    public String resolveAlias(RenderContext context) {
+        return mapJoin.resolveAlias(context);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class MapKeyBasePath<K, V> extends AbstractPath<Map<K, V>> implements Pat
     @Override
     public void renderPathExpression(RenderContext context) {
         if (mapJoin instanceof TreatedPath<?>) {
-            ((TreatedPath) mapJoin).getTreatedPath().renderPathExpression(context);
+            ((TreatedPath<?>) mapJoin).getTreatedPath().renderPathExpression(context);
         } else {
             mapJoin.renderPathExpression(context);
         }

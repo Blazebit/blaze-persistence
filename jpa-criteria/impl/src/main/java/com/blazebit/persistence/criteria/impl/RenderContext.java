@@ -50,9 +50,9 @@ public interface RenderContext {
         ORDER_BY
     }
 
-    public String generateAlias(Class<?> entityClass);
+    public String resolveAlias(Object aliasedObject, Class<?> entityClass);
 
-    public String generateAlias(String name);
+    public String resolveAlias(Object aliasedObject, String name);
 
     public String generateSubqueryAlias(InternalQuery<?> query);
 

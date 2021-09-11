@@ -191,7 +191,7 @@ public class SingularAttributeJoin<Z, X> extends AbstractJoin<Z, X> {
 
         @Override
         public void render(RenderContext context) {
-            prepareAlias(context);
+            resolveAlias(context);
             final StringBuilder buffer = context.getBuffer();
             buffer.append("TREAT(")
                     .append(getAlias())

@@ -151,10 +151,9 @@ public class EntityJoin<Z, X> extends AbstractJoin<Z, X> {
 
         @Override
         public void render(RenderContext context) {
-            prepareAlias(context);
             final StringBuilder buffer = context.getBuffer();
             buffer.append("TREAT(")
-                    .append(getAlias())
+                    .append(resolveAlias(context))
                     .append(" AS ")
                     .append(getTreatType().getName())
                     .append(')');

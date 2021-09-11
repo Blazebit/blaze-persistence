@@ -170,15 +170,15 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
         return attribute;
     }
 
-    public void prepareAlias(RenderContext context) {
+    public String resolveAlias(RenderContext context) {
         AbstractPath<?> base = getBasePath();
         if (base != null) {
-            base.prepareAlias(context);
+            base.resolveAlias(context);
         }
+        return null;
     }
 
     public void renderPathExpression(RenderContext context) {
-        prepareAlias(context);
         getBasePath().renderPathExpression(context);
         context.getBuffer()
                 .append('.')

@@ -105,14 +105,12 @@ public class RootImpl<X> extends AbstractFrom<X, X> implements BlazeRoot<X>, Ser
 
     @Override
     public void renderPathExpression(RenderContext context) {
-        prepareAlias(context);
-        context.getBuffer().append(getAlias());
+        context.getBuffer().append(resolveAlias(context));
     }
 
     @Override
     public void render(RenderContext context) {
-        prepareAlias(context);
-        context.getBuffer().append(getAlias());
+        context.getBuffer().append(resolveAlias(context));
     }
 
     /**
@@ -174,10 +172,9 @@ public class RootImpl<X> extends AbstractFrom<X, X> implements BlazeRoot<X>, Ser
 
         @Override
         public void render(RenderContext context) {
-            prepareAlias(context);
             final StringBuilder buffer = context.getBuffer();
             buffer.append("TREAT(")
-                    .append(getAlias())
+                    .append(resolveAlias(context))
                     .append(" AS ")
                     .append(getTreatType().getName())
                     .append(')');

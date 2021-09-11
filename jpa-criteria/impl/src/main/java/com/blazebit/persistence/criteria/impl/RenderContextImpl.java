@@ -26,6 +26,7 @@ import javax.persistence.criteria.Selection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +36,9 @@ import java.util.Map;
  */
 public class RenderContextImpl implements RenderContext {
 
-    private final Map<ParameterExpression<?>, String> explicitParameterMapping = new HashMap<ParameterExpression<?>, String>();
-    private final Map<String, ParameterExpression<?>> explicitParameterNameMapping = new HashMap<String, ParameterExpression<?>>();
-    private final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
+    private final Map<ParameterExpression<?>, String> explicitParameterMapping = new HashMap<>();
+    private final Map<String, ParameterExpression<?>> explicitParameterNameMapping = new HashMap<>();
+    private final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<>();
 
     private final StringBuilder buffer;
     private final List<SubqueryInitiator<?>> subqueryInitiatorStack;
@@ -47,7 +48,8 @@ public class RenderContextImpl implements RenderContext {
     private int explicitParameterCount = 0;
 
     private int subqueryAliasCount = 0;
-    private Map<String, InternalQuery<?>> aliasToSubqueries = new HashMap<String, InternalQuery<?>>();
+    private Map<String, InternalQuery<?>> aliasToSubqueries = new HashMap<>();
+    private Map<Object, String> objectAliases = new IdentityHashMap<>();
 
     public RenderContextImpl() {
         this.buffer = new StringBuilder();
@@ -93,17 +95,22 @@ public class RenderContextImpl implements RenderContext {
     }
 
     @Override
-    public String generateAlias(Class<?> entityClass) {
-        return generateAlias(entityClass.getSimpleName());
+    public String resolveAlias(Object aliasedObject, Class<?> entityClass) {
+        return resolveAlias(aliasedObject, entityClass.getSimpleName());
     }
 
     @Override
-    public String generateAlias(String name) {
+    public String resolveAlias(Object aliasedObject, String name) {
+        String alias = objectAliases.get(aliasedObject);
+        if (alias != null) {
+            return alias;
+        }
         int dotIndex = name.lastIndexOf('.');
         if (dotIndex != -1) {
             name = name.substring(dotIndex + 1);
         }
-        return "generated" + name + "_" + aliasCount++;
+        objectAliases.put(aliasedObject, alias = "generated" + name + "_" + aliasCount++);
+        return alias;
     }
 
     @Override
