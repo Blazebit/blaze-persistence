@@ -1496,6 +1496,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return mapping;
     }
 
+    public Expression getMappingExpression() {
+        return mappingExpression;
+    }
+
     @Override
     public final boolean isSubquery() {
         return mappingType == MappingType.SUBQUERY;

@@ -8,11 +8,12 @@ Not yet released
 
 ### New features
 
-None yet
+* Introduce type filter pattern for `GraphQLEntityViewSupportFactory`
+* Infer nullability in the GraphQL schema from the entity view mapping expressions
 
 ### Bug fixes
 
-None yet
+* Fix issues with wrongly marking all attributes as non-null in the GraphQL schema
 
 ### Backwards-incompatible changes
 
