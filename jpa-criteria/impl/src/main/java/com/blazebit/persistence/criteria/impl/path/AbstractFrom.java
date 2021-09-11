@@ -88,8 +88,7 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
 
     @Override
     public void renderPathExpression(RenderContext context) {
-        prepareAlias(context);
-        context.getBuffer().append(getAlias());
+        context.getBuffer().append(resolveAlias(context));
     }
 
     @Override
@@ -104,22 +103,27 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    public void prepareAlias(RenderContext context) {
-        if (getAlias() == null) {
-            if (isCorrelated()) {
-                setAlias(getCorrelationParent().getAlias());
-            } else if (getJavaType() == null) {
-                setAlias(context.generateAlias(((EntityType<?>) getManagedType()).getName()));
-            } else {
-                setAlias(context.generateAlias(getJavaType()));
+    public String resolveAlias(RenderContext context) {
+        if (getAttribute() != null && getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
+            return getBasePath().resolveAlias(context) + "." + getAttribute().getName();
+        } else {
+            String alias = getAlias();
+            if (alias == null) {
+                if (isCorrelated()) {
+                    alias = getCorrelationParent().getAlias();
+                } else if (getJavaType() == null) {
+                    alias = context.resolveAlias(this, ((EntityType<?>) getManagedType()).getName());
+                } else {
+                    alias = context.resolveAlias(this, getJavaType());
+                }
             }
+            return alias;
         }
     }
 
     @Override
     public void render(RenderContext context) {
-        prepareAlias(context);
-        context.getBuffer().append(getAlias());
+        context.getBuffer().append(resolveAlias(context));
     }
 
     @Override

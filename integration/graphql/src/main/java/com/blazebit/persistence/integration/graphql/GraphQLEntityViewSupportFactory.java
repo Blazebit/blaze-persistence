@@ -1162,8 +1162,7 @@ public class GraphQLEntityViewSupportFactory {
             Map<String, javax.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
             if (rootTypes.isEmpty()) {
                 rootTypes = Collections.singletonMap("this", attr.getDeclaringType().getJpaManagedType());
-            }
-            else {
+            } else {
                 rootTypes = new HashMap<>(rootTypes);
                 rootTypes.put("this", attr.getDeclaringType().getJpaManagedType());
             }

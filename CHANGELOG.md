@@ -14,6 +14,7 @@ Not yet released
 ### Bug fixes
 
 * Fix issues with wrongly marking all attributes as non-null in the GraphQL schema
+* Fix JPA Criteria joins rendering over embeddables
 
 ### Backwards-incompatible changes
 

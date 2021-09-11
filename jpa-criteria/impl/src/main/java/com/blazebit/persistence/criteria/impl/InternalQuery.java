@@ -447,12 +447,8 @@ public class InternalQuery<T> implements Serializable {
         context.setClauseType(ClauseType.FROM);
 
         for (BlazeRoot<?> r : roots) {
-            ((AbstractFrom<?, ?>) r).prepareAlias(context);
-            if (r.getAlias() != null) {
-                cb.from(r.getModel(), r.getAlias());
-            } else {
-                cb.from(r.getModel());
-            }
+            String alias = ((AbstractFrom<?, ?>) r).resolveAlias(context);
+            cb.from(r.getModel(), alias);
         }
 
         for (RootImpl<?> r : roots) {
@@ -462,12 +458,7 @@ public class InternalQuery<T> implements Serializable {
 
     @SuppressWarnings("unchecked")
     private void renderJoins(FromBuilder<?> cb, RenderContextImpl context, AbstractFrom<?, ?> r, boolean fetching) {
-        String path;
-        if (r.getAlias() != null) {
-            path = r.getAlias();
-        } else {
-            path = "";
-        }
+        String path = r.resolveAlias(context);
 
         renderJoins(cb, null, true, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins());
         Collection<TreatedPath<?>> treatedPaths = (Collection<TreatedPath<?>>) (Collection) r.getTreatedPaths();
@@ -486,47 +477,31 @@ public class InternalQuery<T> implements Serializable {
         context.setClauseType(ClauseType.FROM);
 
         for (RootImpl<?> r : roots) {
-            r.prepareAlias(context);
+            String alias = r.resolveAlias(context);
             if (cb == null) {
-                if (r.getAlias() != null) {
-                    cb = initiator.from(r.getJavaType(), r.getAlias());
-                } else {
-                    cb = initiator.from(r.getJavaType());
-                }
+                cb = initiator.from(r.getJavaType(), alias);
             } else {
-                if (r.getAlias() != null) {
-                    cb.from(r.getJavaType(), r.getAlias());
-                } else {
-                    cb.from(r.getJavaType());
-                }
+                cb.from(r.getJavaType(), alias);
             }
         }
 
         if (correlationRoots != null) {
             for (AbstractFrom<?, ?> r : correlationRoots) {
-                r.prepareAlias(context);
+                String alias = r.resolveAlias(context);
                 Set<BlazeJoin<?, ?>> joins = (Set<BlazeJoin<?, ?>>) (Set<?>) r.getBlazeJoins();
 
                 for (BlazeJoin<?, ?> j : joins) {
                     AbstractJoin<?, ?> join = (AbstractJoin<?, ?>) j;
-                    join.prepareAlias(context);
+                    String joinAlias = join.resolveAlias(context);
                     EntityType<?> treatJoinType = join.getTreatJoinType();
-                    String path = getPath(r.getAlias(), j, treatJoinType);
+                    String path = getPath(alias, j, treatJoinType);
                     if (j.getAttribute() != null && j.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED) {
                         cb = (SubqueryBuilder<?>) renderJoins(cb, initiator, false, context, path, (Set<BlazeJoin<?, ?>>) (Set<?>) j.getBlazeJoins());
                     } else {
                         if (cb == null) {
-                            if (j.getAlias() != null) {
-                                cb = initiator.from(path, j.getAlias());
-                            } else {
-                                cb = initiator.from(path);
-                            }
+                            cb = initiator.from(path, joinAlias);
                         } else {
-                            if (j.getAlias() != null) {
-                                cb.from(path, j.getAlias());
-                            } else {
-                                cb.from(path);
-                            }
+                            cb.from(path, joinAlias);
                         }
                     }
                 }
@@ -562,10 +537,9 @@ public class InternalQuery<T> implements Serializable {
         for (BlazeJoin<?, ?> j : joins) {
             AbstractJoin<?, ?> join = (AbstractJoin<?, ?>) j;
             EntityType<?> treatJoinType = join.getTreatJoinType();
-            join.prepareAlias(context);
+            String alias = join.resolveAlias(context);
             // TODO: implicit joins?
             String path = getPath(parentPath, j, treatJoinType);
-            String alias = j.getAlias();
             JoinOnBuilder<?> onBuilder = null;
 
             // "Join" relations in embeddables
@@ -731,15 +705,15 @@ public class InternalQuery<T> implements Serializable {
                 gb.groupBy(expression);
             } else {
                 throw new IllegalArgumentException("Subqueries are not supported in the group by clause!");
-                //            MultipleSubqueryInitiator<?> initiator = gb.groupBySubqueries(expression);
-                //
-                //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
-                //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
-                //                subqueryEntry.getValue().renderSubquery(context);
-                //                context.popSubqueryInitiator();
-                //            }
-                //
-                //            initiator.end();
+//                MultipleSubqueryInitiator<?> initiator = gb.groupBySubqueries(expression);
+//
+//                for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
+//                    context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
+//                    subqueryEntry.getValue().renderSubquery(context);
+//                    context.popSubqueryInitiator();
+//                }
+//
+//                initiator.end();
             }
         }
     }
@@ -792,15 +766,15 @@ public class InternalQuery<T> implements Serializable {
                 ob.orderBy(expression, order.isAscending(), nullsFirst);
             } else {
                 throw new IllegalArgumentException("Subqueries are not supported in the order by clause!");
-                //            MultipleSubqueryInitiator<?> initiator = ob.groupBySubqueries(expression);
-                //
-                //            for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
-                //                context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
-                //                subqueryEntry.getValue().renderSubquery(context);
-                //                context.popSubqueryInitiator();
-                //            }
-                //
-                //            initiator.end();
+//                MultipleSubqueryInitiator<?> initiator = ob.orderBySubqueries(expression);
+//
+//                for (Map.Entry<String, InternalQuery<?>> subqueryEntry : aliasToSubqueries.entrySet()) {
+//                    context.pushSubqueryInitiator(initiator.with(subqueryEntry.getKey()));
+//                    subqueryEntry.getValue().renderSubquery(context);
+//                    context.popSubqueryInitiator();
+//                }
+//
+//                initiator.end();
             }
         }
     }

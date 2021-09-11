@@ -169,10 +169,9 @@ public class MapAttributeJoin<O, K, V> extends AbstractPluralAttributeJoin<O, Ma
 
         @Override
         public void render(RenderContext context) {
-            prepareAlias(context);
             final StringBuilder buffer = context.getBuffer();
             buffer.append("TREAT(")
-                    .append(getAlias())
+                    .append(resolveAlias(context))
                     .append(" AS ")
                     .append(getTreatType().getName())
                     .append(')');
