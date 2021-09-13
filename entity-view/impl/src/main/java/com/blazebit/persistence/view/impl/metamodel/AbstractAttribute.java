@@ -1128,7 +1128,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     try {
                         Map<String, javax.persistence.metamodel.Type<?>> rootTypes = new HashMap<>(declaringType.getEntityViewRootTypes());
                         rootTypes.put(correlationKeyAlias, managedType);
-                        ScalarTargetResolvingExpressionVisitor correlationVisitor = new ScalarTargetResolvingExpressionVisitor(elementManagedType, context.getEntityMetamodel(), context.getJpqlFunctions(), rootTypes);
+                        ScalarTargetResolvingExpressionVisitor correlationVisitor = new ScalarTargetResolvingExpressionVisitor(correlated, context.getEntityMetamodel(), context.getJpqlFunctions(), rootTypes);
                         correlationPredicate.accept(correlationVisitor);
                     } catch (SyntaxErrorException ex) {
                         context.addError("Syntax error in the condition expression '" + correlationPredicate + "' of the " + getLocation() + ": " + ex.getMessage());
