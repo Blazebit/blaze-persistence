@@ -273,7 +273,7 @@ qualifiedPath
     ;
 
 simpleSubpath
-    : identifier (DOT identifier)*
+    : identifier (DOT identifierNonStart)*
     ;
 
 generalSubpath
@@ -395,7 +395,7 @@ parameterOrLiteral
     ;
 
 entityTypeOrEnumLiteral
-    : identifier ((DOT | DOLLAR) identifier)*
+    : identifier ((DOT | DOLLAR) identifierNonStart)*
     ;
 
 // ############################################################################
@@ -642,4 +642,10 @@ identifier
     | WHERE
     | WINDOW
     | WITH
+    ;
+
+identifierNonStart
+    : identifier
+    | TRUE
+    | FALSE
     ;

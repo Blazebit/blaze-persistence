@@ -15,6 +15,8 @@ Not yet released
 
 * Fix issues with wrongly marking all attributes as non-null in the GraphQL schema
 * Fix JPA Criteria joins rendering over embeddables
+* Fix correlation predicate root type in validation
+* Allow usage of TRUE and FALSE as path continuation tokens
 
 ### Backwards-incompatible changes
 
@@ -26,7 +28,7 @@ None yet
 
 ### New features
 
-* Introduction of the `CriteriaBuilderConfigurationContributors` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
+* Introduction of the `CriteriaBuilderConfigurationContributor` SPI which allows third party libraries to extend the default `CriteriaBuilderConfiguration`.
 * Add support for Spring Boot/Data 2.5
 * Get rid of unnecessary correlation joins when entity view fetches are used
 * Support plural attribute key/index access in `@Limit(order = "")` expression

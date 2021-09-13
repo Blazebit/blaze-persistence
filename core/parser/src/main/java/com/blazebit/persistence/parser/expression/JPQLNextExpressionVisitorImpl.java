@@ -42,6 +42,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
@@ -699,8 +700,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     @Override
     public Expression visitSimpleSubpath(JPQLNextParser.SimpleSubpathContext ctx) {
-        List<JPQLNextParser.IdentifierContext> identifierContexts = ctx.identifier();
-        int size = identifierContexts.size();
+        int size = (ctx.getChildCount() + 1) >> 1;
 
         // handle entity and enum literals
         if (size >= minEnumSegmentCount) {
@@ -719,18 +719,18 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
         ArrayList<PathElementExpression> pathElementExpressions = new ArrayList<>(size);
 
-        for (int i = 0; i < size; i++) {
-            pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
+        for (int i = 0; i < ctx.children.size(); i += 2) {
+            pathElementExpressions.add(new PropertyExpression(ctx.children.get(i).getText()));
         }
         return new PathExpression(pathElementExpressions);
     }
 
     public Expression visitGeneralSubpath(JPQLNextParser.GeneralSubpathContext ctx, PathElementExpression initialPathElement) {
-        List<JPQLNextParser.IdentifierContext> identifierContexts = ctx.simpleSubpath().identifier();
+        List<ParseTree> identifierContexts = ctx.simpleSubpath().children;
         JPQLNextParser.PredicateOrExpressionContext expression = ctx.predicateOrExpression();
 
         boolean literalPossible = true;
-        int size = identifierContexts.size();
+        int size = (identifierContexts.size() + 1) >> 1;
         int initialSize = size + (initialPathElement == null ? 0 : 1);
         ArrayList<PathElementExpression> pathElementExpressions = new ArrayList<>(initialSize);
         PathExpression pathExpression = new PathExpression(pathElementExpressions);
@@ -763,7 +763,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             }
 
             if (processPathElements) {
-                for (int i = 0; i < size; i++) {
+                for (int i = 0; i < identifierContexts.size(); i += 2) {
                     pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
                 }
                 if (expression != null) {
@@ -777,10 +777,10 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             }
 
             literalPossible = false;
-            identifierContexts = ctx.simpleSubpath().identifier();
+            identifierContexts = ctx.simpleSubpath().children;
             expression = ctx.predicateOrExpression();
 
-            size = identifierContexts.size();
+            size = (identifierContexts.size() + 1) >> 1;
             initialSize += size;
             pathElementExpressions.ensureCapacity(initialSize);
         } while (true);
