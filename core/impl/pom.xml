@@ -215,6 +215,7 @@
                                         opens com.blazebit.persistence.impl.function.entity to org.hibernate.orm.core, eclipselink;
                                         uses com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
                                         uses com.blazebit.persistence.spi.ExtendedQuerySupport;
+                                        uses com.blazebit.persistence.spi.CriteriaBuilderConfigurationContributor;
                                         provides com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider with com.blazebit.persistence.impl.CriteriaBuilderConfigurationProviderImpl;
                                     }
                                 </moduleInfoSource>
