@@ -40,7 +40,7 @@ public interface DocumentWithCTE {
     String getName();
 
     @MappingCorrelatedSimple(correlated = DocumentOwnersCTE.class,
-            correlationBasis = "owner",
+            correlationBasis = "owner.id",
             correlationExpression = "id = correlationKey",
             correlationResult = "documentCount",
             fetch = FetchStrategy.JOIN)
