@@ -31,6 +31,7 @@ import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.countwrapper.CountWrapperFunction;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
@@ -46,7 +47,9 @@ import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.AttributeAccessor;
@@ -141,13 +144,21 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass) {
+        return copyCriteriaBuilder(resultClass, true);
+    }
+
+    @Override
+    public <Y> CriteriaBuilderImpl<Y> copyCriteriaBuilder(Class<Y> resultClass, boolean copyOrderBy) {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling copy() on a CriteriaBuilder that was transformed to a PaginatedCriteriaBuilder is not allowed.");
+        }
         prepareAndCheck();
         MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
         mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
         newBuilder.fromClassExplicitlySet = true;
 
-        newBuilder.applyFrom(this, true, true, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
+        newBuilder.applyFrom(this, true, true, false, copyOrderBy, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
 
         return newBuilder;
     }
@@ -187,8 +198,12 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
         newBuilder.fromClassExplicitlySet = true;
+        applyPageIdQueryInto(newBuilder, keysetPage, firstResult, maxResults, identifierExpressionsToUse, false);
+        return newBuilder;
+    }
 
-        newBuilder.applyFrom(this, true, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
+    protected void applyPageIdQueryInto(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> newBuilder, KeysetPage keysetPage, int firstResult, int maxResults, ResolvedExpression[] identifierExpressionsToUse, boolean withAlias) {
+        ExpressionCopyContext expressionCopyContext = newBuilder.applyFrom(this, true, false, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
         newBuilder.setFirstResult(firstResult);
         newBuilder.setMaxResults(maxResults);
 
@@ -210,30 +225,25 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             newBuilder.keysetManager.initialize(orderByExpressions);
         }
 
-        String[] identifierToUseSelectAliases = new String[identifierExpressionsToUse.length];
+        // Applying order by items needs special care for page id queries because we have to re-alias the items to avoid collisions
         Map<String, Integer> identifierExpressionStringMap = new HashMap<>(identifierExpressionsToUse.length);
-
         for (int i = 0; i < identifierExpressionsToUse.length; i++) {
             identifierExpressionStringMap.put(identifierExpressionsToUse[i].getExpressionString(), i);
         }
+        String[] identifierToUseSelectAliases = newBuilder.orderByManager.applyFrom(orderByManager, identifierExpressionStringMap);
 
-        Integer index;
-        for (int i = 0; i < orderByExpressions.size(); i++) {
-            String potentialSelectAlias = orderByExpressions.get(i).getExpression().toString();
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-            if (aliasInfo instanceof SelectInfo) {
-                index = identifierExpressionStringMap.get(((SelectInfo) aliasInfo).getExpression().toString());
-                if (index != null) {
-                    identifierToUseSelectAliases[i] = potentialSelectAlias;
-                }
+        if (withAlias) {
+            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                List<Expression> args = new ArrayList<>(2);
+                args.add(identifierExpressionsToUse[i].getExpression().copy(expressionCopyContext));
+                args.add(new StringLiteral(ColumnTruncFunction.SYNTHETIC_COLUMN_PREFIX + i));
+                newBuilder.selectManager.select(new FunctionExpression(AliasFunction.FUNCTION_NAME, args), identifierToUseSelectAliases[i]);
+            }
+        } else {
+            for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(expressionCopyContext), identifierToUseSelectAliases[i]);
             }
         }
-        for (int i = 0; i < identifierExpressionsToUse.length; i++) {
-            newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(ExpressionCopyContext.EMPTY), identifierToUseSelectAliases[i]);
-        }
-        newBuilder.selectManager.setDefaultSelect();
-
-        return newBuilder;
     }
 
     private String getCountQueryStringWithoutCheck(long maximumCount) {

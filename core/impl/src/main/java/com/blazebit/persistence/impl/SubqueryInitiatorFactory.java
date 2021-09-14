@@ -68,7 +68,7 @@ public class SubqueryInitiatorFactory {
 
     private <T> SubqueryBuilderImpl<T> createSubqueryBuilder(T result, SubqueryBuilderListener<T> listener, boolean inExists, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, ClauseType clause) {
         SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, false, listener);
-        ExpressionCopyContext copyContext = subqueryBuilder.applyFrom(builder, builder.isMainQuery, !inExists, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
+        ExpressionCopyContext copyContext = subqueryBuilder.applyFrom(builder, builder.isMainQuery, !inExists, false, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
 
         if (inExists) {
             subqueryBuilder.selectManager.setDefaultSelect(null, Collections.singletonList(new SelectInfo(mainQuery.expressionFactory.createSimpleExpression("1"))), copyContext);

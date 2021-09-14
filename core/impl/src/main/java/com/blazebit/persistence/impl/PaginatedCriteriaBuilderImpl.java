@@ -51,7 +51,17 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.parser.expression.Expression;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.PathExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
+import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.parser.predicate.CompoundPredicate;
+import com.blazebit.persistence.parser.predicate.EqPredicate;
+import com.blazebit.persistence.parser.predicate.InPredicate;
+import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.AttributeAccessor;
 
 import javax.persistence.Parameter;
@@ -160,6 +170,50 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         builder.withForceIdQuery(withForceIdQuery);
         builder.withHighestKeysetOffset(highestOffset);
         return builder;
+    }
+
+    @Override
+    public <Y> CriteriaBuilderImpl<Y> copyCriteriaBuilder(Class<Y> resultClass, boolean copyOrderBy) {
+        CriteriaBuilderImpl<Y> criteriaBuilder = super.copyCriteriaBuilder(resultClass, copyOrderBy);
+        criteriaBuilder.setFirstResult(0);
+        criteriaBuilder.setMaxResults(Integer.MAX_VALUE);
+
+        ResolvedExpression[] identifierExpressions = getIdentifierExpressions();
+        ResolvedExpression[] resultUniqueExpressions = getUniqueIdentifierExpressions();
+
+        if (resultUniqueExpressions != null) {
+            identifierExpressions = resultUniqueExpressions;
+        }
+
+        SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(criteriaBuilder.mainQuery, new QueryContext(criteriaBuilder, ClauseType.WHERE), criteriaBuilder.aliasManager, criteriaBuilder.joinManager, criteriaBuilder.mainQuery.subqueryExpressionFactory, null, false, null);
+        // We always need synthetic aliases for subquery select items because Hibernate does not resolve aliases in the order by clause of subqueries
+        applyPageIdQueryInto(subqueryBuilder, keysetPage, firstResult, maxResults, identifierExpressions, true);
+
+        subqueryBuilder.collectParameters();
+        Expression expression = new SubqueryExpression(subqueryBuilder);
+        if (needsNewIdList) {
+            List<Expression> subArgs = new ArrayList<>(2);
+            subArgs.add(expression);
+            subArgs.add(new NumericLiteral(Integer.toString(identifierExpressions.length), NumericType.INTEGER));
+            expression = new FunctionExpression(ColumnTruncFunction.FUNCTION_NAME, subArgs);
+        }
+        Predicate p;
+        if (identifierExpressions.length == 1) {
+            p = new InPredicate(identifierExpressions[0].getExpression(), expression);
+        } else {
+            List<Expression> args = new ArrayList<>(identifierExpressions.length + 2);
+            args.add(new StringLiteral("IN"));
+            for (int j = 0; j < identifierExpressions.length; j++) {
+                args.add(identifierExpressions[j].getExpression());
+            }
+            args.add(expression);
+            expression = new FunctionExpression(RowValueSubqueryComparisonFunction.FUNCTION_NAME, args);
+            p = new EqPredicate(expression, new NumericLiteral("0", NumericType.INTEGER));
+        }
+        CompoundPredicate predicate = criteriaBuilder.whereManager.rootPredicate.getPredicate();
+        predicate.getChildren().clear();
+        predicate.getChildren().add(p);
+        return criteriaBuilder;
     }
 
     @Override
@@ -1357,69 +1411,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
 
             sbSelectFrom.append(" WHERE ");
-            queryGenerator.setQueryBuffer(sbSelectFrom);
-            if (identifierExpressions.length == 1) {
-                identifierExpressions[0].getExpression().accept(queryGenerator);
-                sbSelectFrom.append(" IN ");
-                sbSelectFrom.append('(');
-
-                if (!externalRepresentation) {
-                    if (needsNewIdList) {
-                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
-                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
-                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
-                    }
-                }
-
-                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
-                appendPageIdQueryAsSubquery(sbSelectFrom, externalRepresentation);
-                sbSelectFrom.append(',').append(maxResults);
-                if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
-                    sbSelectFrom.append(',').append(firstResult);
-                }
-                sbSelectFrom.append(')');
-                if (!externalRepresentation) {
-                    if (needsNewIdList) {
-                        sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
-                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
-                        sbSelectFrom.append(')');
-                    }
-                }
-                sbSelectFrom.append(')');
-            } else {
-                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(RowValueSubqueryComparisonFunction.FUNCTION_NAME, 1))
-                        .append('\'').append("IN").append('\'');
-
-                for (int j = 0; j < identifierExpressions.length; j++) {
-                    sbSelectFrom.append(',');
-                    identifierExpressions[j].getExpression().accept(queryGenerator);
-                }
-                sbSelectFrom.append(',');
-
-                if (!externalRepresentation) {
-                    if (needsNewIdList) {
-                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
-                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
-                        sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
-                    }
-                }
-
-                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
-                appendPageIdQueryAsSubquery(sbSelectFrom, externalRepresentation);
-                sbSelectFrom.append(',').append(maxResults);
-                if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
-                    sbSelectFrom.append(',').append(firstResult);
-                }
-                sbSelectFrom.append(')');
-                if (!externalRepresentation) {
-                    if (needsNewIdList) {
-                        sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
-                    } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
-                        sbSelectFrom.append(')');
-                    }
-                }
-                sbSelectFrom.append(") = 0");
-            }
+            appendPageIdPredicate(sbSelectFrom, externalRepresentation, identifierExpressions);
 
             if (!whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
@@ -1461,6 +1453,74 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
 
         return sbSelectFrom.toString();
+    }
+
+    private void appendPageIdPredicate(StringBuilder sbSelectFrom, boolean externalRepresentation, ResolvedExpression[] identifierExpressions) {
+        StringBuilder original = queryGenerator.getQueryBuffer();
+        queryGenerator.setQueryBuffer(sbSelectFrom);
+        if (identifierExpressions.length == 1) {
+            identifierExpressions[0].getExpression().accept(queryGenerator);
+            sbSelectFrom.append(" IN ");
+            sbSelectFrom.append('(');
+
+            if (!externalRepresentation) {
+                if (needsNewIdList) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
+                }
+            }
+
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+            appendPageIdQueryAsSubquery(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append(',').append(maxResults);
+            if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
+                sbSelectFrom.append(',').append(firstResult);
+            }
+            sbSelectFrom.append(')');
+            if (!externalRepresentation) {
+                if (needsNewIdList) {
+                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                    sbSelectFrom.append(')');
+                }
+            }
+            sbSelectFrom.append(')');
+        } else {
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(RowValueSubqueryComparisonFunction.FUNCTION_NAME, 1))
+                    .append('\'').append("IN").append('\'');
+
+            for (int j = 0; j < identifierExpressions.length; j++) {
+                sbSelectFrom.append(',');
+                identifierExpressions[j].getExpression().accept(queryGenerator);
+            }
+            sbSelectFrom.append(',');
+
+            if (!externalRepresentation) {
+                if (needsNewIdList) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(ColumnTruncFunction.FUNCTION_NAME, 1));
+                } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(QueryWrapperFunction.FUNCTION_NAME, 1));
+                }
+            }
+
+            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+            appendPageIdQueryAsSubquery(sbSelectFrom, externalRepresentation);
+            sbSelectFrom.append(',').append(maxResults);
+            if (firstResult != 0 && (keysetMode == KeysetMode.NONE || keysetManager.getKeysetLink().getKeyset().getTuple() == null)) {
+                sbSelectFrom.append(',').append(firstResult);
+            }
+            sbSelectFrom.append(')');
+            if (!externalRepresentation) {
+                if (needsNewIdList) {
+                    sbSelectFrom.append(",").append(identifierExpressions.length).append(')');
+                } else if (!mainQuery.dbmsDialect.supportsLimitInQuantifiedPredicateSubquery()) {
+                    sbSelectFrom.append(')');
+                }
+            }
+            sbSelectFrom.append(") = 0");
+        }
+        queryGenerator.setQueryBuffer(original);
     }
 
     @Override

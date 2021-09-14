@@ -18,6 +18,8 @@ Not yet released
 * Fix correlation predicate root type in validation
 * Allow usage of TRUE and FALSE as path continuation tokens
 * Fix coalescing add/remove operations to avoid constraint violation if new object should be persisted
+* Fix entity view pagination issue with joined collection and subselect fetching
+* Implement support for subselect fetching when main query builder has LIMIT/OFFSET and/or ORDER BY clause
 
 ### Backwards-incompatible changes
 

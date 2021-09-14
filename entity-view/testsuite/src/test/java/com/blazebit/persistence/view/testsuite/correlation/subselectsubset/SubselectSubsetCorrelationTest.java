@@ -50,6 +50,7 @@ public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
 
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p")
                 .orderByDesc("name")
+                .orderByDesc("id")
                 .setMaxResults(2);
         EntityViewSetting<PersonSubselectView, CriteriaBuilder<PersonSubselectView>> setting =
                 EntityViewSetting.create(PersonSubselectView.class);

@@ -286,7 +286,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 new SizeTransformerGroup(sizeTransformationVisitor, this, orderByManager, selectManager, joinManager, groupByManager, parameterManager));
         this.resultType = builder.resultType;
 
-        applyFrom(builder, isMainQuery, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping, copyContext);
+        applyFrom(builder, isMainQuery, true, true, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), joinManagerMapping, copyContext);
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, QueryContext queryContext, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder, boolean implicitFromClause) {
@@ -374,7 +374,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext);
 
-    ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+    ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, boolean copyOrderBy, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         if (copyMainQuery) {
             copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager), false);
             mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
@@ -387,7 +387,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         whereManager.applyFrom(builder.whereManager, copyContext);
         havingManager.applyFrom(builder.havingManager, copyContext);
         groupByManager.applyFrom(builder.groupByManager, clauseExclusions, copyContext);
-        orderByManager.applyFrom(builder.orderByManager, copyContext);
+        if (copyOrderBy) {
+            orderByManager.applyFrom(builder.orderByManager, copyContext);
+        }
 
         setFirstResult(builder.firstResult);
         setMaxResults(builder.maxResults);

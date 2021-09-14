@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.Path;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.AttributeFilterProvider;
@@ -108,15 +109,20 @@ public final class EntityViewSettingHelper {
             addFetchesForNonMappingAttributes(setting.getAttributeFilterActivations().keySet(), managedView, requestedFetches);
             addFetchesForNonMappingAttributes(setting.getAttributeSorters().keySet(), managedView, requestedFetches);
         }
-        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), requestedFetches, managedView);
-        entityViewRoot = evm.applyObjectBuilder(managedView, mappingConstructor, entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0);
+        Path root = criteriaBuilder.getPath(entityViewRoot);
+        entityViewRoot = root.getPath();
+        Q queryBuilder = getQueryBuilder(setting, criteriaBuilder, entityViewRoot, managedView, setting.getProperties());
+        EntityViewConfiguration configuration = new EntityViewConfiguration(queryBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), requestedFetches, managedView);
+        queryBuilder.selectNew(evm.createObjectBuilder(managedView, mappingConstructor, root.getJavaType(), entityViewRoot, null, criteriaBuilder, configuration, 0, 0, false));
         Set<String> fetches = configuration.getFetches();
-        applyAttributeFilters(setting, evm, criteriaBuilder, entityViewRoot, fetches, managedView);
-        applyViewFilters(setting, evm, criteriaBuilder, managedView);
-        applyAttributeSorters(setting, criteriaBuilder, entityViewRoot, fetches, managedView);
-        applyOptionalParameters(optionalParameters, criteriaBuilder);
-        Map<String, Object> properties = setting.getProperties();
+        applyAttributeFilters(setting, evm, queryBuilder, entityViewRoot, fetches, managedView);
+        applyViewFilters(setting, evm, queryBuilder, managedView);
+        applyAttributeSorters(setting, queryBuilder, entityViewRoot, fetches, managedView);
+        applyOptionalParameters(optionalParameters, queryBuilder);
+        return queryBuilder;
+    }
 
+    private static <T, Q extends FullQueryBuilder<T, Q>> Q getQueryBuilder(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot, ManagedViewTypeImplementor<?> managedView, Map<String, Object> properties) {
         if (setting.isPaginated()) {
             KeysetPage keysetPage = setting.getKeysetPage();
             boolean forceUseKeyset = keysetPage != null && getBooleanProperty(properties, ConfigurationProperties.PAGINATION_FORCE_USE_KEYSET, false);
@@ -272,7 +278,7 @@ public final class EntityViewSettingHelper {
         return expressions.toArray(new String[expressions.size()]);
     }
 
-    private static void applyOptionalParameters(Map<String, Object> optionalParameters, CriteriaBuilder<?> normalCb) {
+    private static <T, Q extends FullQueryBuilder<T, Q>> void applyOptionalParameters(Map<String, Object> optionalParameters, Q normalCb) {
         // Add optional parameters
         if (!optionalParameters.isEmpty()) {
             for (Map.Entry<String, Object> paramEntry : optionalParameters.entrySet()) {
@@ -283,7 +289,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ManagedViewTypeImplementor<?> viewType) {
+    private static <T, Q extends FullQueryBuilder<T, Q>> void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, Q cb, ManagedViewTypeImplementor<?> viewType) {
         // Add named view filter
         for (String filterName : setting.getViewFilters()) {
             ViewFilterMapping filterMapping = ((ViewType<?>) viewType).getViewFilter(filterName);
@@ -300,7 +306,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
+    private static <T, Q extends FullQueryBuilder<T, Q>> void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, Q cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) throws IllegalArgumentException {
         String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
         for (Map.Entry<String, List<EntityViewSetting.AttributeFilterActivation>> attributeFilterEntry : setting.getAttributeFilterActivations().entrySet()) {
@@ -359,7 +365,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) {
+    private static <T, Q extends FullQueryBuilder<T, Q>> void applyAttributeSorters(EntityViewSetting<?, ?> setting, Q cb, String viewRoot, Set<String> fetches, ManagedViewTypeImplementor<?> entityViewRoot) {
         String name = entityViewRoot.getJavaType().getSimpleName();
         StringBuilder sb = null;
         for (Map.Entry<String, Sorter> attributeSorterEntry : setting.getAttributeSorters().entrySet()) {
@@ -397,7 +403,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static String buildMapping(StringBuilder sb, CriteriaBuilder<?> cb, String viewRoot, NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes, String attributePath) {
+    private static <T, Q extends FullQueryBuilder<T, Q>> String buildMapping(StringBuilder sb, Q cb, String viewRoot, NavigableMap<String, AbstractMethodAttribute<?, ?>> recursiveAttributes, String attributePath) {
         int dotIndex = -1;
         String parent;
         sb.append(viewRoot);

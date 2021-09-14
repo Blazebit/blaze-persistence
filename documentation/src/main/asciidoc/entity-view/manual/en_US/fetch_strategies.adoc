@@ -186,8 +186,6 @@ The path to the attribute is based on the entity view which is queried and can a
 The `SUBSELECT` strategy will create one query for every attribute that uses it and is especially efficient for bigger collections.
 It creates a separate query based on the outer query and applies the `CorrelationProvider` to it.
 
-WARNING: Correlating subviews that contain collections when using `firstResult`/`maxResults` or applying an entity view on queries that use `ORDER BY` select aliases does not yet work. For more information also see https://github.com/Blazebit/blaze-persistence/issues/370[#370]
-
 Let's look at an example that shows what happens
 
 [source,java]

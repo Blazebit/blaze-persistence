@@ -72,7 +72,7 @@ public abstract class AbstractMySQLDatabaseCleaner implements DatabaseCleaner {
         try (Statement s = c.createStatement()) {
             // Collect schema names
             LOG.log(Level.FINEST, "Collect table names: START");
-            ResultSet rs = s.executeQuery("SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + schemaName + "'");
+            ResultSet rs = s.executeQuery("SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA " + (schemaName == null ? "NOT IN ('information_schema', 'performance_schema', 'mysql', 'sys')" : "= '" + schemaName + "'"));
 
             StringBuilder sb = new StringBuilder("DROP TABLE ");
             if (rs.next()) {

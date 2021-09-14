@@ -17,17 +17,20 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.coltrunc.ColumnTruncFunction;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.GeneralCaseExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.predicate.CompoundPredicate;
@@ -39,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -77,6 +81,43 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
         for (OrderByInfo info : orderByManager.orderByInfos) {
             orderBy(subqueryInitFactory.reattachSubqueries(info.getExpression().copy(copyContext), ClauseType.ORDER_BY), info.ascending, info.nullFirst);
         }
+    }
+
+    String[] applyFrom(OrderByManager orderByManager, Map<String, Integer> identifierExpressionStringMap) {
+        String[] identifierToUseSelectAliases = new String[identifierExpressionStringMap.size()];
+        for (int i = 0; i < orderByManager.orderByInfos.size(); i++) {
+            OrderByInfo info = orderByManager.orderByInfos.get(i);
+            String potentialSelectAlias = info.getExpressionString();
+            AliasInfo aliasInfo = orderByManager.aliasManager.getAliasInfo(potentialSelectAlias);
+            Expression expression;
+            if (aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
+                Integer selectItemIndex = identifierExpressionStringMap.get(selectInfo.getExpression().toString());
+                if (selectItemIndex != null) {
+                    // We need to use the same alias as in the SQL because Hibernate for some reason does not resolve aliases in the order by clause of subqueries
+                    String alias = ColumnTruncFunction.SYNTHETIC_COLUMN_PREFIX + selectItemIndex;
+                    identifierToUseSelectAliases[selectItemIndex] = alias;
+                    expression = new PathExpression(new PropertyExpression(alias));
+                } else {
+                    // We have an order by item with an alias that is not part of the identifier expression map
+                    Expression copiedSelectExpression = selectInfo.getExpression().copy(ExpressionCopyContext.EMPTY);
+                    if (selectInfo.getExpression() instanceof PathExpression) {
+                        expression = copiedSelectExpression;
+                    } else {
+                        String alias = aliasManager.generateRootAlias("_generated_alias");
+                        selectManager.select(copiedSelectExpression, alias);
+                        List<Expression> args = new ArrayList<>(2);
+                        args.add(new PathExpression(new PropertyExpression(alias)));
+                        args.add(new StringLiteral(alias));
+                        expression = new FunctionExpression(AliasFunction.FUNCTION_NAME, args);
+                    }
+                }
+            } else {
+                expression = info.getExpression().copy(ExpressionCopyContext.EMPTY);
+            }
+            orderBy(subqueryInitFactory.reattachSubqueries(expression, ClauseType.ORDER_BY), info.ascending, info.nullFirst);
+        }
+        return identifierToUseSelectAliases;
     }
 
     @Override
