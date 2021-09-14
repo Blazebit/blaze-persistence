@@ -1973,30 +1973,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 Collection<Object> addedObjects = a.getAddedObjects();
                 Collection<Object> removedObjects = a.getRemovedObjects();
 
-                if (!removed.isEmpty()) {
-                    for (Object addedObject : addedObjects) {
-                        Object id = idAccessor.getValue(addedObject);
-                        if (id == null) {
-                            id = addedObject;
-                        }
-                        removed.remove(id);
-                    }
-                }
-                for (Object removedObject : removedObjects) {
-                    Object id = idAccessor.getValue(removedObject);
-                    if (id == null) {
-                        id = removedObject;
-                    }
-                    added.remove(id);
-                    removed.put(id, removedObject);
-                }
-                for (Object addedObject : addedObjects) {
-                    Object id = idAccessor.getValue(addedObject);
-                    if (id == null) {
-                        id = addedObject;
-                    }
-                    added.put(id, addedObject);
-                }
+                handleAddedAndRemovedObjects(idAccessor, added, removed, addedObjects, removedObjects);
             }
             return new Map[]{ added, removed };
         }
@@ -2006,18 +1983,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Collection<Object> addedObjects = a.getAddedObjects();
             Collection<Object> removedObjects = a.getRemovedObjects();
 
-            if (!removed.isEmpty()) {
-                for (Object addedObject : addedObjects) {
-                    removed.remove(addedObject);
-                }
-            }
-            for (Object removedObject : removedObjects) {
-                added.remove(removedObject);
-                removed.put(removedObject, removedObject);
-            }
-            for (Object addedObject : addedObjects) {
-                added.put(addedObject, addedObject);
-            }
+            handleAddedAndRemovedObjects(added, removed, addedObjects, removedObjects);
         }
         return new Map[]{ added, removed };
     }
@@ -2034,30 +2000,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 Collection<Object> addedObjects = a.getAddedObjects(collection);
                 Collection<Object> removedObjects = a.getRemovedObjects(collection);
 
-                if (!removed.isEmpty()) {
-                    for (Object addedObject : addedObjects) {
-                        Object id = idAccessor.getValue(addedObject);
-                        if (id == null) {
-                            id = addedObject;
-                        }
-                        removed.remove(id);
-                    }
-                }
-                for (Object removedObject : removedObjects) {
-                    Object id = idAccessor.getValue(removedObject);
-                    if (id == null) {
-                        id = removedObject;
-                    }
-                    added.remove(id);
-                    removed.put(id, removedObject);
-                }
-                for (Object addedObject : addedObjects) {
-                    Object id = idAccessor.getValue(addedObject);
-                    if (id == null) {
-                        id = addedObject;
-                    }
-                    added.put(id, addedObject);
-                }
+                handleAddedAndRemovedObjects(idAccessor, added, removed, addedObjects, removedObjects);
             }
             return new Map[]{ added, removed };
         }
@@ -2067,20 +2010,69 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
             Collection<Object> addedObjects = a.getAddedObjects(collection);
             Collection<Object> removedObjects = a.getRemovedObjects(collection);
 
-            if (!removed.isEmpty()) {
-                for (Object addedObject : addedObjects) {
-                    removed.remove(addedObject);
-                }
-            }
-            for (Object removedObject : removedObjects) {
-                added.remove(removedObject);
-                removed.put(removedObject, removedObject);
-            }
-            for (Object addedObject : addedObjects) {
-                added.put(addedObject, addedObject);
-            }
+            handleAddedAndRemovedObjects(added, removed, addedObjects, removedObjects);
         }
         return new Map[]{ added, removed };
+    }
+
+    private void handleAddedAndRemovedObjects(AttributeAccessor idAccessor, Map<Object, Object> added, Map<Object, Object> removed, Collection<Object> addedObjects, Collection<Object> removedObjects) {
+        if (!removed.isEmpty()) {
+            for (Object addedObject : addedObjects) {
+                Object id = idAccessor.getValue(addedObject);
+                boolean willPersist;
+                if (id == null) {
+                    id = addedObject;
+                    willPersist = elementDescriptor.shouldJpaPersist();
+                } else {
+                    willPersist = addedObject instanceof EntityViewProxy && ((EntityViewProxy) addedObject).$$_isNew();
+                }
+                Object droppedRemoved = removed.remove(id);
+                if (droppedRemoved != null && willPersist) {
+                    // We must retain the remove operation if the added object should be persisted
+                    removed.put(id, droppedRemoved);
+                }
+            }
+        }
+        for (Object removedObject : removedObjects) {
+            Object id = idAccessor.getValue(removedObject);
+            if (id == null) {
+                id = removedObject;
+            }
+            added.remove(id);
+            removed.put(id, removedObject);
+        }
+        for (Object addedObject : addedObjects) {
+            Object id = idAccessor.getValue(addedObject);
+            if (id == null) {
+                id = addedObject;
+            }
+            added.put(id, addedObject);
+        }
+    }
+
+    private void handleAddedAndRemovedObjects(Map<Object, Object> added, Map<Object, Object> removed, Collection<Object> addedObjects, Collection<Object> removedObjects) {
+        if (!removed.isEmpty()) {
+            for (Object addedObject : addedObjects) {
+                boolean willPersist;
+                if (elementDescriptor.isJpaEntity()) {
+                    willPersist = elementDescriptor.shouldJpaPersist();
+                } else {
+                    willPersist = addedObject instanceof EntityViewProxy && ((EntityViewProxy) addedObject).$$_isNew();
+                }
+                Object droppedRemoved = removed.remove(added);
+                if (droppedRemoved != null && willPersist) {
+                    // We must retain the remove operation if the added object should be persisted
+                    removed.put(droppedRemoved, droppedRemoved);
+                }
+            }
+        }
+        for (Object removedObject : removedObjects) {
+            added.remove(removedObject);
+            removed.put(removedObject, removedObject);
+        }
+        for (Object addedObject : addedObjects) {
+            added.put(addedObject, addedObject);
+        }
     }
 
     // Determines how many objects are dirty, ignoring the ones that are added/removed via actions

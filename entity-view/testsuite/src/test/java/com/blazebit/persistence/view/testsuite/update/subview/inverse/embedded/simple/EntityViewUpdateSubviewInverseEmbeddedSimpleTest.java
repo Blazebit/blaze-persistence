@@ -306,6 +306,33 @@ public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEn
         assertNotEquals(resultList.get(0).getId(), resultList.get(1).getId());
     }
 
+    @Test
+    public void testReplaceInverseCollectionElementWithNewElement() {
+        // Given
+        UpdatableLegacyOrderView newOrder = evm.create(UpdatableLegacyOrderView.class);
+        UpdatableLegacyOrderPositionView position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setPositionId(0);
+        position.setArticleNumber("123");
+        newOrder.getPositions().add(position);
+        update(newOrder);
+        em.clear();
+
+        // When
+        position = evm.create(UpdatableLegacyOrderPositionView.class);
+        position.getId().setOrderId(newOrder.getId());
+        position.getId().setPositionId(0);
+        position.setArticleNumber("456");
+        newOrder.getPositions().clear();
+        newOrder.getPositions().add(position);
+        update(newOrder);
+        em.clear();
+
+        // Then
+        LegacyOrder legacyOrder = em.find(LegacyOrder.class, newOrder.getId());
+        Assert.assertEquals(1, legacyOrder.getPositions().size());
+        Assert.assertEquals("456", legacyOrder.getPositions().iterator().next().getArticleNumber());
+    }
+
     @Override
     protected void reload() {
     }

@@ -17,6 +17,7 @@ Not yet released
 * Fix JPA Criteria joins rendering over embeddables
 * Fix correlation predicate root type in validation
 * Allow usage of TRUE and FALSE as path continuation tokens
+* Fix coalescing add/remove operations to avoid constraint violation if new object should be persisted
 
 ### Backwards-incompatible changes
 
