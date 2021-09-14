@@ -100,6 +100,31 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
+    //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    public void testSubselectCorrelationIdPaginated() {
+        EntityViewManager evm = build(
+                DocumentSimpleCorrelationViewSubselectId.class,
+                SimpleDocumentCorrelatedView.class,
+                SimplePersonCorrelatedSubView.class,
+                SimpleVersionCorrelatedView.class
+        );
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        EntityViewSetting<DocumentSimpleCorrelationViewSubselectId, PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewSubselectId>> setting;
+        setting = EntityViewSetting.create(DocumentSimpleCorrelationViewSubselectId.class, 0, 1);
+        setting.addAttributeSorter("id", Sorters.ascending());
+        PaginatedCriteriaBuilder<DocumentSimpleCorrelationViewSubselectId> cb = evm.applySetting(setting, criteria);
+        PagedList<DocumentSimpleCorrelationViewSubselectId> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+        assertEquals(4, results.getTotalSize());
+    }
+
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
+    // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
     public void testFilterSortJoinCorrelatedSingularViewPaginated() {

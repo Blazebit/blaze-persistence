@@ -37,6 +37,7 @@
         <module.name>com.blazebit.persistence.view.testsuite</module.name>
         <testBasePackage>com.blazebit.persistence.view.testsuite</testBasePackage>
         <surefireForkCount>2</surefireForkCount>
+        <test>EntityViewTestsuite*</test>
     </properties>
 
     <dependencies>
@@ -162,7 +163,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -204,7 +205,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -245,7 +246,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -286,7 +287,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -363,7 +364,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -442,7 +443,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>
@@ -490,7 +491,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>EntityViewTestsuite*</test>
+                            <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <systemPropertyVariables>

@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
@@ -43,6 +44,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -50,6 +53,8 @@ import java.util.Map;
  * @since 1.2.0
  */
 public abstract class AbstractCorrelatedSubselectTupleListTransformer extends AbstractCorrelatedTupleListTransformer {
+
+    private static final Logger LOG = Logger.getLogger(AbstractCorrelatedSubselectTupleListTransformer.class.getName());
 
     protected final EntityViewManagerImpl evm;
     protected final String viewRootAlias;
@@ -135,15 +140,32 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformer extends Ab
 
         EmbeddingViewJpqlMacro embeddingViewJpqlMacro = entityViewConfiguration.getEmbeddingViewJpqlMacro();
         ViewJpqlMacro viewJpqlMacro = entityViewConfiguration.getViewJpqlMacro();
-        this.criteriaBuilder = queryBuilder.copy(Object[].class);
-        int originalFirstResult = -1;
-        int originalMaxResults = -1;
-        // A copied query that is extended with further joins can't possibly use the limits provided by the outer query
-        if (criteriaBuilder instanceof LimitBuilder<?>) {
-            LimitBuilder<?> limitBuilder = (LimitBuilder<?>) criteriaBuilder;
-            limitBuilder.setFirstResult(originalFirstResult = 0);
-            limitBuilder.setMaxResults(originalMaxResults = Integer.MAX_VALUE);
+        if (queryBuilder instanceof PaginatedCriteriaBuilder<?>) {
+            this.criteriaBuilder = queryBuilder.copyCriteriaBuilder(Object[].class, false);
+        } else {
+            LimitBuilder<?> limitBuilder = (LimitBuilder<?>) queryBuilder;
+            // To set the limit, we need the JPA provider to support this
+            if (jpaProvider.supportsSubqueryInFunction() && (limitBuilder.getFirstResult() > 0 || limitBuilder.getMaxResults() < Integer.MAX_VALUE)) {
+                // In case the outer query defines a limit/offset and this is not a paginated criteria builder
+                // we must turn this query builder into a paginated criteria builder first
+                try {
+                    this.criteriaBuilder = queryBuilder.copyCriteriaBuilder(Object[].class, true)
+                            .page(limitBuilder.getFirstResult(), limitBuilder.getMaxResults())
+                            .copyCriteriaBuilder(Object[].class, false);
+                } catch (IllegalStateException ex) {
+                    LOG.log(Level.WARNING, "Could not create a paginated criteria builder for SUBSELECT fetching which might lead to bad performance", ex);
+                    this.criteriaBuilder = queryBuilder.copyCriteriaBuilder(Object[].class, false);
+                }
+            } else {
+                // Regular query without limit/offset
+                this.criteriaBuilder = queryBuilder.copyCriteriaBuilder(Object[].class, false);
+            }
         }
+        int originalFirstResult = 0;
+        int originalMaxResults = Integer.MAX_VALUE;
+        // A copied query that is extended with further joins can't possibly use the limits provided by the outer query
+        ((LimitBuilder<?>) criteriaBuilder).setFirstResult(originalFirstResult);
+        ((LimitBuilder<?>) criteriaBuilder).setMaxResults(originalMaxResults);
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, false, viewRootEntityClass, idAttributePath, viewRootExpression);
         this.criteriaBuilder.registerMacro("view", viewJpqlMacro);
         this.criteriaBuilder.registerMacro("view_root", viewRootJpqlMacro);

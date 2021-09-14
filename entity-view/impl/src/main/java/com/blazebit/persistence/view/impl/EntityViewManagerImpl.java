@@ -1319,13 +1319,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return null;
     }
 
-    public String applyObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset) {
-        Path root = getPath(criteriaBuilder, entityViewRoot);
-        String path = root.getPath();
-        criteriaBuilder.selectNew(createObjectBuilder(viewType, mappingConstructor, root.getJavaType(), path, null, criteriaBuilder, configuration, offset, 0, false));
-        return path;
-    }
-
     public ObjectBuilder<?> createObjectBuilder(ManagedViewTypeImplementor<?> viewType, MappingConstructorImpl<?> mappingConstructor, String entityViewRoot, String embeddingViewPath, FullQueryBuilder<?, ?> criteriaBuilder, EntityViewConfiguration configuration, int offset, int suffix, boolean nullFlatViewIfEmpty) {
         Path root = getPath(criteriaBuilder, entityViewRoot);
         return createObjectBuilder(viewType, mappingConstructor, root.getJavaType(), root.getPath(), embeddingViewPath, criteriaBuilder, configuration, offset, suffix, nullFlatViewIfEmpty);

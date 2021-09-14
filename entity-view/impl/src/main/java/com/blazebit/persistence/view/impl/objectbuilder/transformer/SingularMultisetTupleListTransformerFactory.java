@@ -74,7 +74,7 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
             if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
                 FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
                 if (hasSelectOrSubselectFetchedAttributes) {
-                    queryBuilder = queryBuilder.copy(Object[].class);
+                    queryBuilder = queryBuilder.copyCriteriaBuilder(Object[].class, false);
                     queryBuilder.innerJoin(mapping, multisetResultAlias);
                     parameterHolder = queryBuilder;
                 }

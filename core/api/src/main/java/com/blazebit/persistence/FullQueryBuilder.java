@@ -41,6 +41,17 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     public <Y> FullQueryBuilder<Y, ?> copy(Class<Y> resultClass);
 
     /**
+     * Copies this query builder into a new {@link CriteriaBuilder}, using it's projection as an overridable default.
+     *
+     * @param <Y> The type of the result class
+     * @param resultClass The result class of the query
+     * @param copyOrderBy Whether the order by clause should be copied
+     * @return A new CriteriaBuilder
+     * @since 1.6.3
+     */
+    public <Y> CriteriaBuilder<Y> copyCriteriaBuilder(Class<Y> resultClass, boolean copyOrderBy);
+
+    /**
      * Returns a query that counts the results that would be produced if the current query was run.
      *
      * @return A query for determining the count of the result list represented by this query builder

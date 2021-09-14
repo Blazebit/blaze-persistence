@@ -16,40 +16,37 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-
 import com.blazebit.persistence.ConfigurationProperties;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.DefaultKeysetPage;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -1285,5 +1282,32 @@ public class PaginationTest extends AbstractCoreTest {
                 .setParameter("param", new byte[]{ 1 });
 
         cb.getResultList();
+    }
+
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class })
+    public void testUsePaginatedCriteriaBuilderCopyAsSubquery() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .leftJoinOn(Person.class, "p")
+                .on("p.name").like(true).value("Karl%").noEscape()
+                .end()
+                .select("d.name").select("p.name")
+                .orderByAsc("d.id");
+        PagedList<Tuple> firstPage = cb.page(null, 0, 1).getResultList();
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.page(
+                firstPage.getKeysetPage(),
+                1,
+                1
+        );
+        PagedList<Tuple> secondPage = pcb.getResultList();
+        CriteriaBuilder<Document> newCb = cbf.create(em, Document.class)
+                .from(Document.class, "newD")
+                .where("newD.id").in(pcb.copyCriteriaBuilder(Object[].class, false))
+                    .select("d.id")
+                .end();
+        List<Document> resultList = newCb.getResultList();
+        assertEquals(secondPage.get(0).get(0), resultList.get(0).getName());
     }
 }

@@ -211,7 +211,7 @@ public class CTEManager extends CTEBuilderListenerImpl {
         CTEKey cteKey = getCteKey(cteEntity, null, inlineOwner);
         assertCteNameAvailable(cteKey);
         FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, queryContext, cteKey, inline, (Class<Object>) cteClass, result, this, parentAliasManager, parentJoinManager);
-        cteBuilder.applyFrom(builder, true, false, false, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
+        cteBuilder.applyFrom(builder, true, false, false, true, Collections.<ClauseType>emptySet(), Collections.<JoinNode>emptySet(), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
         this.onBuilderStarted(cteBuilder);
         return cteBuilder;
     }
