@@ -89,21 +89,21 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
         basicUserTypes.put(java.util.Calendar.class, CalendarBasicUserType.INSTANCE);
         basicUserTypes.put(java.util.GregorianCalendar.class, CalendarBasicUserType.INSTANCE);
 
-        basicUserTypes.put(java.lang.Class.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(java.util.Currency.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(java.util.Locale.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(java.util.UUID.class, ImmutableBasicUserType.INSTANCE);
-        basicUserTypes.put(java.net.URL.class, ImmutableBasicUserType.INSTANCE);
+        basicUserTypes.put(java.lang.Class.class, ClassBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.Currency.class, CurrencyBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.Locale.class, LocaleBasicUserType.INSTANCE);
+        basicUserTypes.put(java.util.UUID.class, UUIDBasicUserType.INSTANCE);
+        basicUserTypes.put(java.net.URL.class, URLBasicUserType.INSTANCE);
 
         // Java 8 time types
         try {
             basicUserTypes.put(Class.forName("java.time.LocalDate"), LocalDateBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.LocalTime"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.LocalTime"), LocalTimeBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.LocalDateTime"), LocalDateTimeBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.OffsetTime"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.OffsetTime"), OffsetTimeBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.OffsetDateTime"), OffsetDateTimeBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.ZonedDateTime"), ZoneDateTimeBasicUserType.INSTANCE);
-            basicUserTypes.put(Class.forName("java.time.Duration"), ImmutableBasicUserType.INSTANCE);
+            basicUserTypes.put(Class.forName("java.time.Duration"), DurationBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Instant"), InstantBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.MonthDay"), ImmutableBasicUserType.INSTANCE);
             basicUserTypes.put(Class.forName("java.time.Year"), ImmutableBasicUserType.INSTANCE);
@@ -222,8 +222,8 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
         BasicUserType<?> userType = basicUserTypes.get(clazz);
         if (userType == null) {
             if (clazz.isEnum()) {
-                // Enums are always considered immutable
-                userType = ImmutableBasicUserType.INSTANCE;
+                //noinspection rawtypes
+                userType = new EnumBasicUserType<>((Class<Enum>) clazz);
             } else if (Date.class.isAssignableFrom(clazz)) {
                 userType = DateBasicUserType.INSTANCE;
             } else if (Calendar.class.isAssignableFrom(clazz)) {

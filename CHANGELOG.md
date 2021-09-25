@@ -10,6 +10,7 @@ Not yet released
 
 * Introduce type filter pattern for `GraphQLEntityViewSupportFactory`
 * Infer nullability in the GraphQL schema from the entity view mapping expressions
+* Implement MULTISET support for types `Enum`, `Locale`, `Currency`, `Class`, `Duration`, `LocalTime`, `OffsetTime`, `URL` and `UUID`
 
 ### Bug fixes
 

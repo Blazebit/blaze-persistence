@@ -20,7 +20,6 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
-import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.MutableBasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
@@ -119,8 +118,8 @@ public class DefaultBasicUserTypeRegistry implements BasicUserTypeRegistry {
         BasicUserType<?> userType = basicUserTypes.get(clazz);
         if (userType == null) {
             if (clazz.isEnum()) {
-                // Enums are always considered immutable
-                userType = ImmutableBasicUserType.INSTANCE;
+                //noinspection rawtypes
+                userType = new EnumBasicUserType<>((Class<Enum>) clazz);
             } else if (entityMetamodel.getEntity(clazz) != null) {
                 userType = entityBasicUserType;
             } else if (Date.class.isAssignableFrom(clazz)) {
