@@ -1209,11 +1209,26 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public void checkNestedAttribute(List<AbstractAttribute<?, ?>> parents, ManagedType<?> managedType, MetamodelBuildingContext context, boolean hasMultisetParent) {
         if (hasMultisetParent) {
-            if (!isQueryParameter() && getElementType() instanceof BasicTypeImpl<?>) {
-                context.checkMultisetSupport(parents, this, ((BasicTypeImpl<?>) getElementType()).getUserType());
+            if (!isQueryParameter()) {
+                if (getElementType() instanceof BasicTypeImpl<?>) {
+                    context.checkMultisetSupport(parents, this, ((BasicTypeImpl<?>) getElementType()).getUserType());
+                }
+                if (getKeyType() instanceof BasicTypeImpl<?>) {
+                    context.checkMultisetSupport(parents, this, ((BasicTypeImpl<?>) getKeyType()).getUserType());
+                }
             }
         } else {
-            hasMultisetParent = fetchStrategy == FetchStrategy.MULTISET;
+            if (fetchStrategy == FetchStrategy.MULTISET) {
+                hasMultisetParent = true;
+                if (!isQueryParameter()) {
+                    if (getElementType() instanceof BasicTypeImpl<?>) {
+                        context.checkMultisetSupport(this, ((BasicTypeImpl<?>) getElementType()).getUserType());
+                    }
+                    if (getKeyType() instanceof BasicTypeImpl<?>) {
+                        context.checkMultisetSupport(this, ((BasicTypeImpl<?>) getKeyType()).getUserType());
+                    }
+                }
+            }
         }
         if (!parents.isEmpty()) {
             if (getDeclaringType().getMappingType() == Type.MappingType.FLAT_VIEW) {

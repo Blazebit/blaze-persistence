@@ -116,4 +116,6 @@ public interface MetamodelBuildingContext {
     public Map<Class<?>, CTEProvider> getCteProviders();
 
     void checkMultisetSupport(List<AbstractAttribute<?, ?>> parents, AbstractAttribute<?, ?> attribute, BasicUserType<?> userType);
+
+    void checkMultisetSupport(AbstractAttribute<?, ?> attribute, BasicUserType<?> userType);
 }
