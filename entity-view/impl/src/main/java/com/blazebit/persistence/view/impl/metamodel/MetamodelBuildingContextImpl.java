@@ -490,6 +490,14 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
+    public void checkMultisetSupport(AbstractAttribute<?, ?> attribute, BasicUserType<?> userType) {
+        if (!multisetSupport.get(userType)) {
+            addError("The basic type " + userType.getClass().getName() + " of the " + attribute.getLocation() + " does not support MULTISET fetching! Please switch to a different fetch strategy " +
+                    " or register a custom user type as described in https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html#entity-view-basic-user-type-spi");
+        }
+    }
+
+    @Override
     public Map<String, JpqlFunction> getJpqlFunctions() {
         return jpqlFunctions;
     }
