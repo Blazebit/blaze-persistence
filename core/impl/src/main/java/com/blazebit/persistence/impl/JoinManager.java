@@ -77,7 +77,6 @@ import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
@@ -467,7 +466,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     attributePaths.add(prefix + valuesLikeAttribute.getAttribute().getName());
                 }
-                simpleValue = type instanceof BasicType<?>;
+                simpleValue = type.getPersistenceType() == Type.PersistenceType.BASIC;
             }
         }
 

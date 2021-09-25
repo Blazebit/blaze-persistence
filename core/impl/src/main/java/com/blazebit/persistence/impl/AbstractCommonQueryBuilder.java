@@ -114,7 +114,6 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
@@ -1031,7 +1030,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
         if (valuesLikeAttribute.getAttribute() instanceof SingularAttribute<?, ?>) {
             singular = true;
-            if (((SingularAttribute<?, ?>) valuesLikeAttribute.getAttribute()).getType() instanceof BasicType<?>) {
+            if (((SingularAttribute<?, ?>) valuesLikeAttribute.getAttribute()).getType().getPersistenceType() == Type.PersistenceType.BASIC) {
                 if (valuesLikeAttribute.getColumnTypes().length != 1) {
                     throw new IllegalArgumentException("Unsupported VALUES clause use with multi-column attribute type " + Arrays.toString(valuesLikeAttribute.getColumnTypes()) + "! Consider creating a synthetic type like a @CTE entity to hold this attribute and use that type via fromIdentifiableValues instead!");
                 }
@@ -1045,7 +1044,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String columnType = keyColumnTypes.values().iterator().next();
             return fromValuesLike(entityBaseClass, elementClass, columnType, alias, valueCount, valuesLikeClause, valuesLikeAttribute, false, qualificationExpression);
         } else {
-            if (((PluralAttribute<?, ?, ?>) valuesLikeAttribute.getAttribute()).getElementType() instanceof BasicType<?>) {
+            if (((PluralAttribute<?, ?, ?>) valuesLikeAttribute.getAttribute()).getElementType().getPersistenceType() == Type.PersistenceType.BASIC) {
                 if (valuesLikeAttribute.getColumnTypes().length != 1) {
                     throw new IllegalArgumentException("Unsupported VALUES clause use with multi-column attribute type " + Arrays.toString(valuesLikeAttribute.getColumnTypes()) + "! Consider creating a synthetic type like a @CTE entity to hold this attribute and use that type via fromIdentifiableValues instead!");
                 }

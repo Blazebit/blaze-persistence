@@ -90,9 +90,6 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         this.entityViewConfiguration = entityViewConfiguration;
         this.correlationAlias = CorrelationProviderHelper.getDefaultCorrelationAlias(attributePath);
         this.indexCorrelator = indexCorrelator;
-        this.indexExpression = indexExpression == null ? null : PrefixingQueryGenerator.prefix(ef, indexExpression, correlationAlias, viewRootType.getEntityViewRootTypes().keySet(), true);
-        this.fetches = prefix(correlationAlias, fetches);
-        this.indexFetches = prefix(this.indexExpression, indexFetches);
         if (limiter == null) {
             this.correlationExternalAlias = correlationAlias;
         } else {
@@ -103,6 +100,9 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
         } else {
             this.correlationResult = PrefixingQueryGenerator.prefix(ef, correlationResult, correlationExternalAlias, viewRootType.getEntityViewRootTypes().keySet(), true);
         }
+        this.indexExpression = indexExpression == null ? null : PrefixingQueryGenerator.prefix(ef, indexExpression, this.correlationResult, viewRootType.getEntityViewRootTypes().keySet(), true);
+        this.fetches = prefix(correlationAlias, fetches);
+        this.indexFetches = prefix(this.indexExpression, indexFetches);
     }
 
     private static String[] prefix(String prefix, String[] fetches) {

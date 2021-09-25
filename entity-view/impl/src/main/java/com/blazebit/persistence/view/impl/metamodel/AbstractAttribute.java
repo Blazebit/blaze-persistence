@@ -626,7 +626,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         if (mapping.getMappingIndex() != null) {
             indexMapping = mapping.getMappingIndex().value();
             if (indexMapping.isEmpty()) {
-                indexMapping = "INDEX(" + getMapping() + ")";
+                indexMapping = "INDEX(this)";
             }
         }
         return indexMapping;

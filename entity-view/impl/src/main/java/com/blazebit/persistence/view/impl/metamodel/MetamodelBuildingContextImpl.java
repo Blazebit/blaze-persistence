@@ -38,6 +38,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
+import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
 import com.blazebit.persistence.view.impl.JpqlMacroAdapter;
@@ -57,6 +58,9 @@ import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -272,13 +276,15 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Attribute<?, ?> rootAttribute, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClass);
         String expression;
         if (mapping instanceof Mapping) {
             expression = ((Mapping) mapping).value();
         } else if (mapping instanceof IdMapping) {
             expression = ((IdMapping) mapping).value();
+        } else if (mapping instanceof MappingIndex) {
+            expression = ((MappingIndex) mapping).value();
         } else if (mapping instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple m = (MappingCorrelatedSimple) mapping;
             managedType = entityMetamodel.getManagedType(m.correlated());
@@ -339,12 +345,24 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
         expression = AbstractAttribute.stripThisFromMapping(expression);
         // The result is "THIS" apparently, so the possible target type is the managed type
         if (expression.isEmpty()) {
+            Class<?> leafBaseClass = managedType.getJavaType();
+            Class<?> leafBaseKeyClass = null;
+            Class<?> leafBaseValueClass = null;
+            if (rootAttribute instanceof PluralAttribute<?, ?, ?>) {
+                leafBaseClass = rootAttribute.getJavaType();
+                leafBaseValueClass = ((PluralAttribute<?, ?, ?>) rootAttribute).getElementType().getJavaType();
+                if (rootAttribute instanceof MapAttribute<?, ?, ?>) {
+                    leafBaseKeyClass = ((MapAttribute<?, ?, ?>) rootAttribute).getKeyJavaType();
+                }
+            } else if (rootAttribute instanceof SingularAttribute<?, ?>) {
+                leafBaseClass = rootAttribute.getJavaType();
+            }
             return Collections.<ScalarTargetResolvingExpressionVisitor.TargetType>singletonList(new ScalarTargetResolvingExpressionVisitor.TargetTypeImpl(
-                    false,
-                    null,
-                    managedType.getJavaType(),
-                    null,
-                    null
+                    leafBaseValueClass != null,
+                    rootAttribute,
+                    leafBaseClass,
+                    leafBaseKeyClass,
+                    leafBaseValueClass
             ));
         }
         Expression simpleExpression = typeValidationExpressionFactory.createSimpleExpression(expression, false, false, true);
@@ -357,7 +375,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
                 // Apparently it's not an attribute, so let it run through
             }
         }
-        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, entityMetamodel, jpqlFunctions, rootTypes);
+        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, rootAttribute, entityMetamodel, jpqlFunctions, rootTypes);
         simpleExpression.accept(visitor);
         return visitor.getPossibleTargetTypes();
     }

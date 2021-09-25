@@ -79,7 +79,6 @@ import javassist.bytecode.Descriptor;
 import javax.persistence.EntityManager;
 import javax.persistence.PrePersist;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
@@ -259,7 +258,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 SingularAttribute<?, ?> attribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
                 if (!attribute.isVersion() && !attribute.isOptional() && !extendedAttribute.getElementClass().isPrimitive()) {
                     // The attribute could be the id attribute of an owned *ToOne association
-                    if ((attribute.getType() instanceof BasicType<?> || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
+                    if ((attribute.getType().getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.BASIC || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
                         List<Attribute<?, ?>> attributePath = extendedAttribute.getAttributePath();
                         // So we check the *ToOne attribute instead
                         for (int i = attributePath.size() - 2; i >= 0; i--) {

@@ -26,8 +26,8 @@ import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.metamodel.BasicType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +85,7 @@ public final class EntityLoaders {
                     forceQuery = !evm.getJpaProvider().supportsProxyParameterForNonPkAssociation();
                 } else {
                     attributeIdAttribute = AbstractEntityLoader.associationIdMappingOf(evm, subviewType, attributeIdAttributeName);
-                    if (attributeIdAttribute.getType() instanceof BasicType<?>) {
+                    if (attributeIdAttribute.getType().getPersistenceType() == Type.PersistenceType.BASIC) {
                         viewIdMapper = null;
                     } else {
                         throw new UnsupportedOperationException("Composite or association based natural keys for associations are not yet supported!");

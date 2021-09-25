@@ -23,6 +23,8 @@ Not yet released
 * Implement support for subselect fetching when main query builder has LIMIT/OFFSET and/or ORDER BY clause
 * Fix compatibility with Quarkus 2.1+ by registering `ValuesEntity` in deployment integration
 * Fix checking more uses of MULTISET fetching for proper type support
+* Consider map key for updatable flat view identity when doing MULTISET fetching
+* Ensure mapping index expressions are properly type validated
 
 ### Backwards-incompatible changes
 

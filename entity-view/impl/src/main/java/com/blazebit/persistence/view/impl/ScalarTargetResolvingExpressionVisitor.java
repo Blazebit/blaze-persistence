@@ -359,7 +359,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
         } else {
-            currentPosition.setCurrentType(null);
+            PathPosition left = resolve(expression.getLeft());
+            PathPosition right = resolve(expression.getRight());
+            if (left.getCurrentType() == null || left.getCurrentType() == right.getCurrentType()) {
+                currentPosition.setCurrentType(right.getCurrentType());
+            } else {
+                currentPosition.setCurrentType(left.getCurrentType());
+            }
         }
     }
 
@@ -368,7 +374,7 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentType(metamodel.type(expression.getNumericType().getJavaType()));
         } else {
-            currentPosition.setCurrentType(null);
+            expression.getExpression().accept(this);
         }
     }
 
