@@ -371,7 +371,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             return possibleTargets;
         }
         try {
-            return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMapping(), viewMapping.getViewRootTypes(context));
+            return possibleTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), null, getMapping(), viewMapping.getViewRootTypes(context));
         } catch (RuntimeException ex) {
             StringWriter sw = new StringWriter();
             sw.append("Exception while resolving type for ").append(getErrorLocation()).append(":\n");
@@ -385,8 +385,16 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
         if (possibleIndexTargets != null) {
             return possibleIndexTargets;
         }
+        MappingIndex mappingIndex = getMappingIndex();
+        if (mappingIndex == null) {
+            return possibleIndexTargets = Collections.emptyList();
+        }
         try {
-            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), getMappingIndex(), viewMapping.getViewRootTypes(context));
+            List<ScalarTargetResolvingExpressionVisitor.TargetType> possibleTargetTypes = getPossibleTargetTypes(context);
+            if (possibleTargetTypes.isEmpty()) {
+                return possibleIndexTargets = Collections.emptyList();
+            }
+            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), possibleTargetTypes.get(0).getLeafMethod(), mappingIndex, viewMapping.getViewRootTypes(context));
         } catch (RuntimeException ex) {
             StringWriter sw = new StringWriter();
             sw.append("Exception while resolving index type for ").append(getErrorLocation()).append(":\n");
