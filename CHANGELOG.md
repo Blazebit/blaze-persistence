@@ -20,6 +20,7 @@ Not yet released
 * Fix coalescing add/remove operations to avoid constraint violation if new object should be persisted
 * Fix entity view pagination issue with joined collection and subselect fetching
 * Implement support for subselect fetching when main query builder has LIMIT/OFFSET and/or ORDER BY clause
+* Fix compatibility with Quarkus 2.1+ by registering `ValuesEntity` in deployment integration
 
 ### Backwards-incompatible changes
 

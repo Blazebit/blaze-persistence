@@ -35,6 +35,7 @@ import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
+import io.quarkus.hibernate.orm.deployment.AdditionalJpaModelBuildItem;
 import io.quarkus.hibernate.orm.deployment.PersistenceUnitDescriptorBuildItem;
 import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
 import io.quarkus.runtime.configuration.ConfigurationException;
@@ -45,6 +46,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,6 +88,22 @@ class BlazePersistenceProcessor {
     @BuildStep
     AdditionalIndexedClassesBuildItem addBlazePersistenceInstanceAnnotationToIndex() {
         return new AdditionalIndexedClassesBuildItem(BlazePersistenceInstance.class.getName());
+    }
+
+    @BuildStep
+    void addBlazePersistenceEntities(BuildProducer<AdditionalJpaModelBuildItem> jpaModelBuildItemBuildProducer) {
+        Constructor<AdditionalJpaModelBuildItem> constructor = (Constructor<AdditionalJpaModelBuildItem>) AdditionalJpaModelBuildItem.class.getDeclaredConstructors()[0];
+        Object argument;
+        if (constructor.getParameterTypes()[0] == Class.class) {
+            argument = ValuesEntity.class;
+        } else {
+            argument = ValuesEntity.class.getName();
+        }
+        try {
+            jpaModelBuildItemBuildProducer.produce(constructor.newInstance(argument));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not add ValuesEntity class to persistence unit!", e);
+        }
     }
 
     @BuildStep
