@@ -20,7 +20,6 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.criteria.Expression;
 
@@ -39,18 +38,6 @@ public class ConcatFunction extends AbstractExpression<String> {
         super(criteriaBuilder, String.class);
         this.string1 = expression1;
         this.string2 = expression2;
-    }
-
-    public ConcatFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string1, String string2) {
-        this(criteriaBuilder, string1, wrap(criteriaBuilder, string2));
-    }
-
-    public ConcatFunction(BlazeCriteriaBuilderImpl criteriaBuilder, String string1, Expression<String> string2) {
-        this(criteriaBuilder, wrap(criteriaBuilder, string1), string2);
-    }
-
-    private static Expression<String> wrap(BlazeCriteriaBuilderImpl criteriaBuilder, String string) {
-        return new LiteralExpression<String>(criteriaBuilder, string);
     }
 
     @Override

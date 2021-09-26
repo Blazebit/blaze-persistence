@@ -203,7 +203,7 @@ public class SelectTest extends AbstractCoreTest {
         );
 
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT CASE document.idx WHEN 1 THEN 1 ELSE 2 END, CASE document.idx WHEN 1 THEN 'a' ELSE 'b' END FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT CASE document.idx WHEN :generated_param_0 THEN 1 ELSE 2 END, CASE document.idx WHEN :generated_param_3 THEN 'a' ELSE 'b' END FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -272,8 +272,9 @@ public class SelectTest extends AbstractCoreTest {
                 + " FROM Document document", criteriaBuilder.getQueryString());
     }
 
-    private static String caseWhenAge(String result, String otherwise) {
-        return "CASE WHEN document.age < 12L THEN " + result + " ELSE " + otherwise + " END";
+    private int paramCount;
+    private String caseWhenAge(String result, String otherwise) {
+        return "CASE WHEN document.age < :generated_param_" + (paramCount++) + " THEN " + result + " ELSE " + otherwise + " END";
     }
 
     private static Calendar calendarOf(int year, int month, int day) {
@@ -315,7 +316,7 @@ public class SelectTest extends AbstractCoreTest {
         cq.select(cb.sum(root.get(Document_.id), 1L));
 
         CriteriaBuilder<Long> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id + 1L FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id + :generated_param_0 FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -327,7 +328,7 @@ public class SelectTest extends AbstractCoreTest {
         cq.select(cb.diff(root.get(Document_.id), cb.toLong(cb.mod(cb.toInteger(root.get(Document_.age)), 1))));
 
         CriteriaBuilder<Long> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id - MOD(document.age,1) FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id - MOD(document.age,:generated_param_0) FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -477,7 +478,7 @@ public class SelectTest extends AbstractCoreTest {
         ));
 
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT CONCAT(document.name,'-Test'), LOWER(document.name), UPPER(document.name), SUBSTRING(document.name,1), LENGTH(document.name), TRIM(BOTH FROM document.name), LOCATE('abc',document.name) FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT CONCAT(document.name,:generated_param_0), LOWER(document.name), UPPER(document.name), SUBSTRING(document.name,:generated_param_1), LENGTH(document.name), TRIM(BOTH FROM document.name), LOCATE(:generated_param_2,document.name) FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -492,7 +493,7 @@ public class SelectTest extends AbstractCoreTest {
         ));
 
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT COALESCE(document.name,'Doc'), NULLIF(1,1) FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT COALESCE(document.name,:generated_param_0), NULLIF(1,:generated_param_1) FROM Document document", criteriaBuilder.getQueryString());
     }
 
     @Test
@@ -504,7 +505,7 @@ public class SelectTest extends AbstractCoreTest {
                 cb.greaterThan(root.get(Document_.age), 0L)
         );
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT CASE WHEN document.age > 0L THEN true ELSE false END FROM Document document", criteriaBuilder.getQueryString());
+        assertEquals("SELECT CASE WHEN document.age > :generated_param_0 THEN true ELSE false END FROM Document document", criteriaBuilder.getQueryString());
     }
 
     public static class DocumentResult {

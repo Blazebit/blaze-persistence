@@ -294,7 +294,13 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(LikePredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        if (predicate.getLeft().accept(this)) {
+            return true;
+        }
+        if (predicate.getRight().accept(this)) {
+            return true;
+        }
+        return predicate.getEscapeCharacter() != null && predicate.getEscapeCharacter().accept(this);
     }
 
     @Override

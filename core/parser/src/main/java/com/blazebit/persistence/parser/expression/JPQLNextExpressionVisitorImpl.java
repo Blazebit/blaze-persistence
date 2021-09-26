@@ -211,17 +211,21 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     @Override
     public Expression visitTimestampLiteral(JPQLNextParser.TimestampLiteralContext ctx) {
-        return new TimestampLiteral(TypeUtils.TIMESTAMP_CONVERTER.convert(ctx.dateTimeLiteralText().getText()));
+        return new TimestampLiteral(TypeUtils.TIMESTAMP_CONVERTER.convert(unquote(ctx.dateTimeLiteralText().getText())));
     }
 
     @Override
     public Expression visitDateLiteral(JPQLNextParser.DateLiteralContext ctx) {
-        return new DateLiteral(TypeUtils.DATE_CONVERTER.convert(ctx.dateTimeLiteralText().getText()));
+        return new DateLiteral(TypeUtils.DATE_CONVERTER.convert(unquote(ctx.dateTimeLiteralText().getText())));
     }
 
     @Override
     public Expression visitTimeLiteral(JPQLNextParser.TimeLiteralContext ctx) {
-        return new TimeLiteral(TypeUtils.TIME_CONVERTER.convert(ctx.dateTimeLiteralText().getText()));
+        return new TimeLiteral(TypeUtils.TIME_CONVERTER.convert(unquote(ctx.dateTimeLiteralText().getText())));
+    }
+
+    private String unquote(String s) {
+        return s.substring(1, s.length() - 1);
     }
 
     @Override
@@ -272,7 +276,71 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 return NullExpression.INSTANCE;
             case JPQLNextLexer.STRING_LITERAL:
             case JPQLNextLexer.CHARACTER_LITERAL:
-                return new StringLiteral(node.getText());
+                String text = node.getText();
+                StringBuilder sb = new StringBuilder(text.length());
+                int end = text.length() - 1;
+                char delimiter = text.charAt(0);
+                for (int i = 1; i < end; i++) {
+                    char c = text.charAt(i);
+                    switch (c) {
+                        case '\'':
+                            if (delimiter == '\'') {
+                                i++;
+                            }
+                            break;
+                        case '"':
+                            if (delimiter == '"') {
+                                i++;
+                            }
+                            break;
+                        case '\\':
+                            if ((i + 1) < end) {
+                                char nextChar = text.charAt(++i);
+                                switch (nextChar) {
+                                    case 'b':
+                                        c = '\b';
+                                        break;
+                                    case 't':
+                                        c = '\t';
+                                        break;
+                                    case 'n':
+                                        c = '\n';
+                                        break;
+                                    case 'f':
+                                        c = '\f';
+                                        break;
+                                    case 'r':
+                                        c = '\r';
+                                        break;
+                                    case '\\':
+                                        c = '\\';
+                                        break;
+                                    case '\'':
+                                        c = '\'';
+                                        break;
+                                    case '"':
+                                        c = '"';
+                                        break;
+                                    case '`':
+                                        c = '`';
+                                        break;
+                                    case 'u':
+                                        c = (char) Integer.parseInt(text.substring(i + 1, i + 5), 16);
+                                        i += 4;
+                                        break;
+                                    default:
+                                        sb.append('\\');
+                                        c = nextChar;
+                                        break;
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    sb.append(c);
+                }
+                return new StringLiteral(sb.toString());
             case JPQLNextLexer.TRUE:
                 return new BooleanLiteral(true);
             case JPQLNextLexer.FALSE:
@@ -961,15 +1029,13 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     @Override
     public Expression visitLikePredicate(JPQLNextParser.LikePredicateContext ctx) {
-        Character escapeCharacter;
+        Expression escapeCharacter;
         if (ctx.escape == null) {
             escapeCharacter = null;
         } else {
-            Expression expression = ctx.escape.accept(this);
-            if (expression instanceof LiteralExpression<?>) {
-                escapeCharacter = ((LiteralExpression) expression).getValue().toString().charAt(0);
-            } else {
-                throw new SyntaxErrorException("Only a character literal is allowed as escape character in like predicate: " + getInputText(ctx));
+            escapeCharacter = ctx.escape.accept(this);
+            if (!(escapeCharacter instanceof LiteralExpression<?>) && !(escapeCharacter instanceof ParameterExpression)) {
+                throw new SyntaxErrorException("Only a character literal or parameter expression is allowed as escape character in like predicate: " + getInputText(ctx));
             }
         }
         return new LikePredicate(

@@ -201,7 +201,7 @@ public class LikeTest extends AbstractCoreTest {
     private String getCaseInsensitiveLike(String property, String likeParam, Character escape, boolean negated) {
         String res = "UPPER(" + property + ")" + (negated ? " NOT": "") + " LIKE UPPER(" + likeParam + ")";
         if (escape != null) {
-            res += " ESCAPE UPPER('" + escapeCharacter(escape) + "')";
+            res += " ESCAPE '" + escapeCharacter(escape) + "'";
         }
         return res;
     }

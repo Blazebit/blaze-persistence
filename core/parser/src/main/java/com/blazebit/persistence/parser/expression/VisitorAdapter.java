@@ -250,6 +250,9 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     public void visit(LikePredicate predicate) {
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
+        if (predicate.getEscapeCharacter() != null) {
+            predicate.getEscapeCharacter().accept(this);
+        }
     }
 
     @Override

@@ -20,7 +20,6 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.criteria.Expression;
 
@@ -39,12 +38,6 @@ public class NullifFunction<T> extends AbstractExpression<T> {
         super(criteriaBuilder, determineType(javaType, expression1));
         this.expression1 = expression1;
         this.expression2 = expression2;
-    }
-
-    public NullifFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, Expression<? extends T> expression1, Object expression2) {
-        super(criteriaBuilder, determineType(javaType, expression1));
-        this.expression1 = expression1;
-        this.expression2 = new LiteralExpression<Object>(criteriaBuilder, expression2);
     }
 
     @SuppressWarnings({"unchecked"})

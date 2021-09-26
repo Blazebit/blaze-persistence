@@ -648,17 +648,16 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLike() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, null), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, (Expression) null), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
-//    @Test
-    @Test(expected = SyntaxErrorException.class)
+    @Test
     public void testLikeEscapeParameter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE :x THEN 0 ELSE 1 END");
-//
-//        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, 'x'), _int("0"))), _int("1"));
-//        assertEquals(expected, result);
+
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, parameter("x")), _int("0"))), _int("1"));
+        assertEquals(expected, result);
     }
 
     @Test
@@ -673,7 +672,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotLike() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT LIKE 'abc' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, null, true), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, (Expression) null, true), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 

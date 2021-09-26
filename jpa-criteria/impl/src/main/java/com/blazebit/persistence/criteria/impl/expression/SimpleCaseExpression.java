@@ -44,10 +44,10 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
      */
     public class WhenClause {
 
-        private final LiteralExpression<C> condition;
+        private final Expression<C> condition;
         private final Expression<? extends R> result;
 
-        public WhenClause(LiteralExpression<C> condition, Expression<? extends R> result) {
+        public WhenClause(Expression<C> condition, Expression<? extends R> result) {
             this.condition = condition;
             this.result = result;
         }
@@ -73,18 +73,12 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
 
     @Override
     public SimpleCase<C, R> when(C condition, R result) {
-        return when(condition, literal(result));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private LiteralExpression<R> literal(R result) {
-        final Class<R> type = result != null ? (Class<R>) result.getClass() : getJavaType();
-        return new LiteralExpression<R>(criteriaBuilder, type, result);
+        return when(condition, criteriaBuilder.value(result));
     }
 
     @Override
     public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
-        WhenClause whenClause = new WhenClause(new LiteralExpression<C>(criteriaBuilder, condition), result);
+        WhenClause whenClause = new WhenClause(criteriaBuilder.value(condition), result);
         whenClauses.add(whenClause);
         adjustJavaType(result);
         return this;
@@ -99,7 +93,7 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
 
     @Override
     public Expression<R> otherwise(R result) {
-        return otherwise(literal(result));
+        return otherwise(criteriaBuilder.value(result));
     }
 
     @Override

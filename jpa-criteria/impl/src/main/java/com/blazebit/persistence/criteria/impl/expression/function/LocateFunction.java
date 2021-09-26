@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria.impl.expression.function;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.criteria.Expression;
 
@@ -46,14 +45,6 @@ public class LocateFunction extends AbstractFunctionExpression<Integer> {
 
     public LocateFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> pattern, Expression<String> string) {
         this(criteriaBuilder, pattern, string, null);
-    }
-
-    public LocateFunction(BlazeCriteriaBuilderImpl criteriaBuilder, String pattern, Expression<String> string) {
-        this(criteriaBuilder, new LiteralExpression<String>(criteriaBuilder, pattern), string, null);
-    }
-
-    public LocateFunction(BlazeCriteriaBuilderImpl criteriaBuilder, String pattern, Expression<String> string, int start) {
-        this(criteriaBuilder, new LiteralExpression<String>(criteriaBuilder, pattern), string, new LiteralExpression<Integer>(criteriaBuilder, start));
     }
 
     @Override

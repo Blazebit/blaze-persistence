@@ -59,7 +59,7 @@ public class GroupByTest extends AbstractCoreTest {
         cq.having(cb.gt(cb.count(root.get(Document_.id)), 1));
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.age, COUNT(document.id) FROM Document document GROUP BY document.age HAVING COUNT(document.id) > 1L", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.age, COUNT(document.id) FROM Document document GROUP BY document.age HAVING COUNT(document.id) > :generated_param_0", criteriaBuilder.getQueryString());
     }
     
 }

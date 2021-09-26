@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria.impl;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
-import com.blazebit.persistence.criteria.impl.expression.ParameterExpressionImpl;
 
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
@@ -37,7 +36,6 @@ import java.util.Map;
 public class RenderContextImpl implements RenderContext {
 
     private final Map<ParameterExpression<?>, String> explicitParameterMapping = new HashMap<>();
-    private final Map<String, ParameterExpression<?>> explicitParameterNameMapping = new HashMap<>();
     private final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<>();
 
     private final StringBuilder buffer;
@@ -146,13 +144,11 @@ public class RenderContextImpl implements RenderContext {
                     throw new IllegalArgumentException("Positional parameters are not supported in criteria queries!");
                 } else {
                     jpaqlParameterName = generateParameterName();
-                    ((ParameterExpressionImpl<?>) criteriaQueryParameter).setName(jpaqlParameterName);
                 }
             } else {
                 jpaqlParameterName = criteriaQueryParameter.getName();
             }
 
-            explicitParameterNameMapping.put(jpaqlParameterName, criteriaQueryParameter);
             explicitParameterMapping.put(criteriaQueryParameter, jpaqlParameterName);
         }
         return jpaqlParameterName;
@@ -172,8 +168,8 @@ public class RenderContextImpl implements RenderContext {
         return parameterName;
     }
 
-    public Map<String, ParameterExpression<?>> getExplicitParameterNameMapping() {
-        return explicitParameterNameMapping;
+    public Map<ParameterExpression<?>, String> getExplicitParameterMapping() {
+        return explicitParameterMapping;
     }
 
     public List<ImplicitParameterBinding> getImplicitParameterBindings() {

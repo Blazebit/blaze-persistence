@@ -532,7 +532,26 @@ public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean
 
     @Override
     public Boolean visit(LikePredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        if (referenceExpression.getClass() != predicate.getClass()) {
+            return Boolean.TRUE;
+        }
+        LikePredicate referencePredicate = (LikePredicate) referenceExpression;
+        if (referencePredicate.isNegated() != predicate.isNegated()) {
+            return Boolean.TRUE;
+        }
+        referenceExpression = referencePredicate.getLeft();
+        if (predicate.getLeft().accept(this)) {
+            return Boolean.TRUE;
+        }
+        referenceExpression = referencePredicate.getRight();
+        if (predicate.getRight().accept(this)) {
+            return Boolean.TRUE;
+        }
+        referenceExpression = referencePredicate.getEscapeCharacter();
+        if (referenceExpression == null && predicate.getEscapeCharacter() == null) {
+            return Boolean.TRUE;
+        }
+        return referenceExpression != null && predicate.getEscapeCharacter() != null && predicate.getEscapeCharacter().accept(this);
     }
 
     @Override

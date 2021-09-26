@@ -545,6 +545,7 @@ trimSpecification
 trimCharacter
     : CHARACTER_LITERAL
     | STRING_LITERAL
+    | parameter
     ;
 
 identifier

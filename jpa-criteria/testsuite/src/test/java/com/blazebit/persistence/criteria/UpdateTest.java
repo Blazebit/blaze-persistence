@@ -92,7 +92,7 @@ public class UpdateTest extends AbstractCoreTest {
         query.set(Document_.idx, cb.sum(subquery, 1));
 
         UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
-        assertEquals("UPDATE Document d SET d.idx = (SELECT " + function("CAST_INTEGER", "COUNT(owner)") + " FROM d.owner owner) + 1", criteriaBuilder.getQueryString());
+        assertEquals("UPDATE Document d SET d.idx = (SELECT " + function("CAST_INTEGER", "COUNT(owner)") + " FROM d.owner owner) + :generated_param_0", criteriaBuilder.getQueryString());
         criteriaBuilder.getQuery();
     }
 }

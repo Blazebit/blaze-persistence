@@ -287,12 +287,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         }
         if (predicate.getEscapeCharacter() != null) {
             sb.append(" ESCAPE ");
-            if (!predicate.isCaseSensitive()) {
-                sb.append("UPPER(");
-            }
-            sb.append("'").append(escapeCharacter(predicate.getEscapeCharacter())).append("'");
-            if (!predicate.isCaseSensitive()) {
-                sb.append(")");
+            if (predicate.getEscapeCharacter() instanceof StringLiteral) {
+                TypeUtils.STRING_CONVERTER.appendTo(escapeCharacter(((StringLiteral) predicate.getEscapeCharacter()).getValue().charAt(0)), sb);
+            } else {
+                predicate.getEscapeCharacter().accept(this);
             }
         }
         setParameterRenderingMode(oldParameterRenderingMode);

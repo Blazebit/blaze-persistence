@@ -38,27 +38,11 @@ public class LikePredicate extends AbstractSimplePredicate {
         this(criteriaBuilder, negated, matchExpression, pattern, null);
     }
 
-    public LikePredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<String> matchExpression, String pattern) {
-        this(criteriaBuilder, negated, matchExpression, new LiteralExpression<String>(criteriaBuilder, pattern));
-    }
-
     public LikePredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<String> matchExpression, Expression<String> pattern, Expression<Character> escapeCharacter) {
         super(criteriaBuilder, negated);
         this.matchExpression = matchExpression;
         this.pattern = pattern;
         this.escapeCharacter = escapeCharacter;
-    }
-
-    public LikePredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
-        this(criteriaBuilder, negated, matchExpression, pattern, new LiteralExpression<Character>(criteriaBuilder, escapeCharacter));
-    }
-
-    public LikePredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<String> matchExpression, String pattern, char escapeCharacter) {
-        this(criteriaBuilder, negated, matchExpression, new LiteralExpression<String>(criteriaBuilder, pattern), new LiteralExpression<Character>(criteriaBuilder, escapeCharacter));
-    }
-
-    public LikePredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
-        this(criteriaBuilder, negated, matchExpression, new LiteralExpression<String>(criteriaBuilder, pattern), escapeCharacter);
     }
 
     @Override
@@ -68,7 +52,9 @@ public class LikePredicate extends AbstractSimplePredicate {
 
     @Override
     public void visitParameters(ParameterVisitor visitor) {
-        visitor.visit(escapeCharacter);
+        if (escapeCharacter != null) {
+            visitor.visit(escapeCharacter);
+        }
         visitor.visit(matchExpression);
         visitor.visit(pattern);
     }

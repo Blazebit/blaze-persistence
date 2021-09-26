@@ -30,26 +30,35 @@ import javax.persistence.criteria.ParameterExpression;
 public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements ParameterExpression<T> {
 
     private static final long serialVersionUID = 1L;
+    private static final Object NULL_VALUE = new Object();
 
-    private String name;
+    private final String name;
+    private final T value;
+
+    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+        this(criteriaBuilder, javaType, (String) null);
+    }
 
     public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, String name) {
         super(criteriaBuilder, javaType);
         this.name = name;
+        this.value = null;
     }
 
-    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, T value) {
+        //noinspection unchecked
+        this(criteriaBuilder, (Class<T>) value.getClass(), value);
+    }
+
+    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, T value) {
         super(criteriaBuilder, javaType);
         this.name = null;
+        this.value = value == null ? (T) NULL_VALUE : value;
     }
 
     @Override
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override
@@ -62,6 +71,14 @@ public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements
         return getJavaType();
     }
 
+    public T getValue() {
+        return value;
+    }
+
+    public T getRealValue() {
+        return value == NULL_VALUE ? null : value;
+    }
+
     @Override
     public void visitParameters(ParameterVisitor visitor) {
         visitor.add(this);
@@ -69,7 +86,14 @@ public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements
 
     @Override
     public void render(RenderContext context) {
-        final String paramName = context.registerExplicitParameter(this);
+        final String paramName;
+        if (value == null) {
+            paramName = context.registerExplicitParameter(this);
+        } else if (value == NULL_VALUE) {
+            paramName = context.registerLiteralParameterBinding(null, getJavaType());
+        } else {
+            paramName = context.registerLiteralParameterBinding(value, getJavaType());
+        }
         context.getBuffer().append(':').append(paramName);
     }
 

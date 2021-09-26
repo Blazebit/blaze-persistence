@@ -211,7 +211,7 @@ The property can be changed for a criteria builder before adding a CTE.
 [[QUERY_PLAN_CACHE_ENABLED]]
 ==== QUERY_PLAN_CACHE_ENABLED
 
-Enables or disbales the caching and reuse of query plans.
+Enables or disables the caching and reuse of query plans.
 Valid values for this property are `true` and `false`.
 The property can be changed for a criteria builder before constructing a query.
 
@@ -221,6 +221,35 @@ The property can be changed for a criteria builder before constructing a query.
 | Type | String/boolean
 | Default | true
 | Applicable | Always
+|====================
+
+[[CRITERIA_NEGATION_WRAPPER]]
+==== CRITERIA_NEGATION_WRAPPER
+
+Controls is JPA Criteria predicates should be wrapped in a negation predicate instead of copied with negation being propagated.
+Valid values for this property are `true` and `false`.
+The property can be changed for a criteria builder before constructing a query.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.criteria_negation_wrapper
+| Type | String/boolean
+| Default | true
+| Applicable | Configuration only
+|====================
+
+[[CRITERIA_VALUE_AS_PARAMETER]]
+==== CRITERIA_VALUE_AS_PARAMETER
+
+Controls if values passed ot the JPA `CriteraBuilder` API should be rendered as parameters or literals.
+Valid values for this property are `true` and `false`.
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.criteria_value_as_parameter
+| Type | String/boolean
+| Default | true
+| Applicable | Configuration only
 |====================
 
 [[configuration-jpql-functions]]

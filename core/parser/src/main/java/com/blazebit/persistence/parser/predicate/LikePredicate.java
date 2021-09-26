@@ -18,6 +18,7 @@ package com.blazebit.persistence.parser.predicate;
 
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.expression.StringLiteral;
 
 /**
  *
@@ -28,15 +29,21 @@ import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 public class LikePredicate extends BinaryExpressionPredicate {
 
     private final boolean caseSensitive;
-    private final Character escapeCharacter;
+    private Expression escapeCharacter;
 
     public LikePredicate(Expression left, Expression right, boolean caseSensitive, Character escapeCharacter) {
-        super(left, right);
-        this.caseSensitive = caseSensitive;
-        this.escapeCharacter = escapeCharacter;
+        this(left, right, caseSensitive, escapeCharacter == null ? null : new StringLiteral(escapeCharacter.toString()), false);
+    }
+
+    public LikePredicate(Expression left, Expression right, boolean caseSensitive, Expression escapeCharacter) {
+        this(left, right, caseSensitive, escapeCharacter, false);
     }
 
     public LikePredicate(Expression left, Expression right, boolean caseSensitive, Character escapeCharacter, boolean negated) {
+        this(left, right, caseSensitive, escapeCharacter == null ? null : new StringLiteral(escapeCharacter.toString()), negated);
+    }
+
+    public LikePredicate(Expression left, Expression right, boolean caseSensitive, Expression escapeCharacter, boolean negated) {
         super(left, right, negated);
         this.caseSensitive = caseSensitive;
         this.escapeCharacter = escapeCharacter;
@@ -61,8 +68,12 @@ public class LikePredicate extends BinaryExpressionPredicate {
         return caseSensitive;
     }
 
-    public Character getEscapeCharacter() {
+    public Expression getEscapeCharacter() {
         return escapeCharacter;
+    }
+
+    public void setEscapeCharacter(Expression escapeCharacter) {
+        this.escapeCharacter = escapeCharacter;
     }
 
     @Override

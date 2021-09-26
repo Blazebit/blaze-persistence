@@ -20,7 +20,6 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import javax.persistence.criteria.Expression;
@@ -51,7 +50,7 @@ public class CoalesceFunction<T> extends AbstractExpression<T> implements Coales
 
     @Override
     public Coalesce<T> value(T value) {
-        return value(new LiteralExpression<T>(criteriaBuilder, value));
+        return value(criteriaBuilder.value(value));
     }
 
     @Override

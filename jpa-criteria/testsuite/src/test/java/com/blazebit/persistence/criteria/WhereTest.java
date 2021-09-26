@@ -75,11 +75,12 @@ public class WhereTest extends AbstractCoreTest {
         ));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE document.id = 1L AND document.creationDate > :generated_param_0 " +
-                "AND document.lastModified <> :generated_param_1 AND LOWER(:generated_param_2) = :generated_param_3 AND document.idx / document.someValue >= 999999999L", criteriaBuilder.getQueryString());
-        assertEquals(GregorianCalendar.class, criteriaBuilder.getParameter("generated_param_0").getParameterType());
-        assertEquals(Date.class, criteriaBuilder.getParameter("generated_param_1").getParameterType());
-        assertEquals(String.class, criteriaBuilder.getParameter("generated_param_2").getParameterType());
+        assertEquals("SELECT document.id FROM Document document WHERE document.id = :generated_param_0 AND document.creationDate > :generated_param_1 " +
+                "AND document.lastModified <> :generated_param_2 AND LOWER('ABC') = :generated_param_3 AND document.idx / document.someValue >= :generated_param_4", criteriaBuilder.getQueryString());
+        assertEquals(Long.class, criteriaBuilder.getParameter("generated_param_0").getParameterType());
+        assertEquals(GregorianCalendar.class, criteriaBuilder.getParameter("generated_param_1").getParameterType());
+        assertEquals(Date.class, criteriaBuilder.getParameter("generated_param_2").getParameterType());
+        assertEquals(String.class, criteriaBuilder.getParameter("generated_param_3").getParameterType());
     }
 
     @Test
@@ -117,7 +118,7 @@ public class WhereTest extends AbstractCoreTest {
         );
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE CASE document.age WHEN 0L THEN 1 WHEN 10L THEN 2 ELSE 0 END = 1" +
+        assertEquals("SELECT document.id FROM Document document WHERE CASE document.age WHEN :generated_param_0 THEN :generated_param_1 WHEN :generated_param_2 THEN :generated_param_3 ELSE :generated_param_4 END = :generated_param_5" +
                 "", criteriaBuilder.getQueryString());
     }
 
@@ -158,12 +159,12 @@ public class WhereTest extends AbstractCoreTest {
                 "AND 1 = 0 " +
                 "AND document.id IN " + listParameter("generated_param_0") + " " +
                 "AND document.id IN " + listParameter("generated_param_1") + " " +
+                "AND document.id IN (0L) " +
+                "AND document.id IN (0L) " +
                 "AND document.id IN " + listParameter("generated_param_2") + " " +
-                "AND document.id IN " + listParameter("generated_param_3") + " " +
-                "AND document.id IN " + listParameter("generated_param_4") + " " +
                 "AND document.id IN (SELECT 0L FROM Document sub) " +
                 "AND document.id IN " + listParameter("collectionParam") + " " +
-                "AND (SELECT 0L FROM Document sub) IN " + listParameter("generated_param_5") +
+                "AND (SELECT 0L FROM Document sub) IN " + listParameter("generated_param_3") +
                 "", criteriaBuilder.getQueryString());
     }
 
@@ -267,7 +268,7 @@ public class WhereTest extends AbstractCoreTest {
                 new String[]{ "document IS NOT NULL", "document IS NULL"},
                 new String[]{ "document.name LIKE :generated_param", "document.name NOT LIKE :generated_param", null},
                 new String[]{ "document.name NOT LIKE :generated_param", "document.name LIKE :generated_param"},
-                new String[]{ "document.id BETWEEN 0L AND 0L", "document.id NOT BETWEEN 0L AND 0L", null},
+                new String[]{ "document.id BETWEEN :generated_param AND :generated_param", "document.id NOT BETWEEN :generated_param AND :generated_param", null},
                 new String[]{ "1 = 1", "1 = 0", "1 <> 1"},
                 new String[]{ "1 = 0", "1 = 1", "1 <> 0"},
                 new String[]{ "document.archived = true", "document.archived = false", "document.archived <> true"},
@@ -374,16 +375,16 @@ public class WhereTest extends AbstractCoreTest {
                     }
                 }
 
-                int index = element.indexOf(paramPrefix);
-                if (index < 0) {
-                    variations.append(element);
-                } else {
-                    variations.append(element, 0, index);
+                int start = 0;
+                int index;
+                while ((index = element.indexOf(paramPrefix, start)) != -1) {
+                    variations.append(element, start, index);
                     variations.append(paramPrefix);
                     variations.append('_');
                     variations.append(paramCount++);
-                    variations.append(element, index + paramPrefix.length(), element.length());
+                    start = index + paramPrefix.length();
                 }
+                variations.append(element, start, element.length());
             }
 
             if (parens) {
@@ -416,8 +417,8 @@ public class WhereTest extends AbstractCoreTest {
         );
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE (document.id BETWEEN 1L AND 10L AND document.id >= 1L AND document.id <= 10L) OR (document.name LIKE :generated_param_0 AND document.name IS NOT NULL)", criteriaBuilder.getQueryString());
-        assertEquals("abc%", criteriaBuilder.getParameterValue("generated_param_0"));
+        assertEquals("SELECT document.id FROM Document document WHERE (document.id BETWEEN :generated_param_0 AND :generated_param_1 AND document.id >= :generated_param_2 AND document.id <= :generated_param_3) OR (document.name LIKE :generated_param_4 AND document.name IS NOT NULL)", criteriaBuilder.getQueryString());
+        assertEquals("abc%", criteriaBuilder.getParameterValue("generated_param_4"));
     }
 
     @Test
@@ -445,7 +446,7 @@ public class WhereTest extends AbstractCoreTest {
         );
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > :generated_param_1 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > :generated_param_2 THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
     }
@@ -517,5 +518,20 @@ public class WhereTest extends AbstractCoreTest {
 //
 //        assertTrue(Arrays.equals((Byte[]) q.getParameterValue("wrapperBytes"), q.getParameterValue(wrapperBytes)));
 //        assertTrue(q.getParameters().contains(wrapperBytes));
+    }
+
+    @Test
+    public void likeWithEscapeCharacter() {
+        BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
+        BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
+        Root<Document> root = cq.from(Document.class, "document");
+
+        cq.select(root.get(Document_.id));
+        cq.where(cb.like(root.get(Document_.name), "abc\\_%", '\\'));
+
+        CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
+        assertEquals("SELECT document.id FROM Document document WHERE document.name LIKE :generated_param_0 ESCAPE :generated_param_1", criteriaBuilder.getQueryString());
+        assertEquals("abc\\_%", criteriaBuilder.getParameterValue("generated_param_0"));
+        assertEquals('\\', criteriaBuilder.getParameterValue("generated_param_1"));
     }
 }
