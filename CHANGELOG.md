@@ -28,6 +28,7 @@ Not yet released
 * Fix parsing of `LIKE` predicate with parameter in `ESCAPE`
 * Fix literal parsing issues with a single backslash to match the requirements of the JPA spec
 * Fix rendering of literals in JPA Criteria and introduce configuration option to control value rendering
+* Fix base URI determination in Spring HATEOAS integration to be compatible with Spring HATEOAS 1.3.4
 
 ### Backwards-incompatible changes
 
