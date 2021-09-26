@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria.impl.expression.function;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.Expression;
@@ -32,7 +31,6 @@ public class TrimFunction extends AbstractFunctionExpression<String> {
 
     public static final String NAME = "TRIM";
     public static final Trimspec DEFAULT_TRIMSPEC = Trimspec.BOTH;
-    public static final char DEFAULT_TRIM_CHAR = ' ';
 
     private static final long serialVersionUID = 1L;
 
@@ -47,32 +45,23 @@ public class TrimFunction extends AbstractFunctionExpression<String> {
         this.trimSource = trimSource;
     }
 
-    public TrimFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Trimspec trimspec, char trimCharacter, Expression<String> trimSource) {
-        super(criteriaBuilder, String.class, NAME);
-        this.trimspec = trimspec;
-        this.trimCharacter = new LiteralExpression<Character>(criteriaBuilder, trimCharacter);
-        this.trimSource = trimSource;
-    }
-
     public TrimFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> trimSource) {
-        this(criteriaBuilder, DEFAULT_TRIMSPEC, DEFAULT_TRIM_CHAR, trimSource);
+        this(criteriaBuilder, DEFAULT_TRIMSPEC, null, trimSource);
     }
 
     public TrimFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<Character> trimCharacter, Expression<String> trimSource) {
         this(criteriaBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource);
     }
 
-    public TrimFunction(BlazeCriteriaBuilderImpl criteriaBuilder, char trimCharacter, Expression<String> trimSource) {
-        this(criteriaBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource);
-    }
-
     public TrimFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Trimspec trimspec, Expression<String> trimSource) {
-        this(criteriaBuilder, trimspec, DEFAULT_TRIM_CHAR, trimSource);
+        this(criteriaBuilder, trimspec, null, trimSource);
     }
 
     @Override
     public void visitParameters(ParameterVisitor visitor) {
-        visitor.visit(trimCharacter);
+        if (trimCharacter != null) {
+            visitor.visit(trimCharacter);
+        }
         visitor.visit(trimSource);
     }
 
@@ -81,15 +70,10 @@ public class TrimFunction extends AbstractFunctionExpression<String> {
         final StringBuilder buffer = context.getBuffer();
         buffer.append("TRIM(");
         buffer.append(trimspec.name());
-        buffer.append(' ');
-
-        if (trimCharacter.getClass().isAssignableFrom(LiteralExpression.class)) {
-            // Use character as literal if possible because some databases don't support parameters for the character
-            buffer.append(((LiteralExpression<Character>) trimCharacter).getLiteral());
-        } else {
+        if (trimCharacter != null) {
+            buffer.append(' ');
             context.apply(trimCharacter);
         }
-
         buffer.append(" FROM ");
         context.apply(trimSource);
         buffer.append(')');

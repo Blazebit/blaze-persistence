@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria.impl.expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.RenderContext.ClauseType;
 import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
@@ -61,23 +60,12 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public void render(RenderContext context) {
         final StringBuilder buffer = context.getBuffer();
-        if (context.getClauseType() == ClauseType.SELECT) {
-            // some drivers/dbms do not like parameters in the select clause
-            final TypeConverter converter = TypeUtils.getConverter(literal.getClass(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
-
-            if (converter != null) {
-                converter.appendTo(literal, buffer);
-            } else {
-                String type = literal == null ? "unknown" : literal.getClass().getName();
-                throw new IllegalArgumentException("Could render '" + literal + "' of type '" + type + "' as string!");
-            }
+        final TypeConverter converter = TypeUtils.getConverter(literal.getClass(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
+        if (converter != null) {
+            converter.appendTo(literal, buffer);
         } else {
-            if (TypeUtils.isNumeric(literal) || TypeUtils.isBoolean(literal)) {
-                ((TypeConverter) TypeUtils.getConverter(literal.getClass(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet())).appendTo(literal, buffer);
-            } else {
-                final String paramName = context.registerLiteralParameterBinding(getLiteral(), getJavaType());
-                buffer.append(':').append(paramName);
-            }
+            final String paramName = context.registerLiteralParameterBinding(getLiteral(), getJavaType());
+            buffer.append(':').append(paramName);
         }
     }
 

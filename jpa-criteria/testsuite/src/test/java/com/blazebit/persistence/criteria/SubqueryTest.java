@@ -76,7 +76,7 @@ public class SubqueryTest extends AbstractCoreTest {
         cq.select(root.get(Document_.id));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM document.owner subOwner WHERE subOwner.id = 0L GROUP BY subOwner.age HAVING COUNT(subOwner.id) > 2L)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE EXISTS (SELECT 1 FROM document.owner subOwner WHERE subOwner.id = :generated_param_0 GROUP BY subOwner.age HAVING COUNT(subOwner.id) > :generated_param_1)", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(root, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());
@@ -101,7 +101,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
 
-        assertEquals("SELECT document.id FROM Document document JOIN document.people person WHERE EXISTS (SELECT person FROM " + correlationPath("person.ownedDocuments", Document.class, "subDoc", "owner.id = person.id AND subDoc.age > 1L", " WHERE subDoc.age > 1L") + ")", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document JOIN document.people person WHERE EXISTS (SELECT person FROM " + correlationPath("person.ownedDocuments", Document.class, "subDoc", "owner.id = person.id AND subDoc.age > :generated_param_0", " WHERE subDoc.age > :generated_param_0") + ")", criteriaBuilder.getQueryString());
         assertEquals(1, subquery.getCorrelatedJoins().size());
         assertEquals(people, correlatedRoot.getCorrelationParent());
         assertTrue(correlatedRoot.isCorrelated());

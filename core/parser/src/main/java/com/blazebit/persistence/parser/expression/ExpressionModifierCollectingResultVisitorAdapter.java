@@ -30,6 +30,7 @@ import com.blazebit.persistence.parser.expression.modifier.ExpressionListModifie
 import com.blazebit.persistence.parser.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.GeneralCaseExpressionDefaultModifier;
 import com.blazebit.persistence.parser.expression.modifier.InPredicateLeftModifier;
+import com.blazebit.persistence.parser.expression.modifier.LikePredicateEscapeModifier;
 import com.blazebit.persistence.parser.expression.modifier.ListIndexExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.MapEntryExpressionModifier;
 import com.blazebit.persistence.parser.expression.modifier.MapKeyExpressionModifier;
@@ -375,7 +376,16 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
 
     @Override
     public Boolean visit(LikePredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        if (Boolean.TRUE == predicate.getLeft().accept(this)) {
+            onModifier(new BinaryExpressionPredicateLeftModifier(predicate));
+        }
+        if (Boolean.TRUE == predicate.getRight().accept(this)) {
+            onModifier(new BinaryExpressionPredicateRightModifier(predicate));
+        }
+        if (predicate.getEscapeCharacter() != null && Boolean.TRUE == predicate.getEscapeCharacter().accept(this)) {
+            onModifier(new LikePredicateEscapeModifier(predicate));
+        }
+        return Boolean.FALSE;
     }
 
     @Override

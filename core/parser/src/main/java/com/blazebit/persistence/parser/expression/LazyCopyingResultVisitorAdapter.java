@@ -414,8 +414,9 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
     public Expression visit(LikePredicate predicate) {
         Expression leftExpr = predicate.getLeft().accept(this);
         Expression rightExpr = predicate.getRight().accept(this);
-        if (leftExpr != predicate.getLeft() || rightExpr != predicate.getRight()) {
-            return new LikePredicate(leftExpr, rightExpr, predicate.isCaseSensitive(), predicate.getEscapeCharacter(), predicate.isNegated());
+        Expression escapeCharacterExpr = predicate.getEscapeCharacter() == null ? null : predicate.getEscapeCharacter().accept(this);
+        if (leftExpr != predicate.getLeft() || rightExpr != predicate.getRight() || escapeCharacterExpr != predicate.getEscapeCharacter()) {
+            return new LikePredicate(leftExpr, rightExpr, predicate.isCaseSensitive(), escapeCharacterExpr, predicate.isNegated());
         }
         return predicate;
     }

@@ -192,6 +192,25 @@ public final class ConfigurationProperties {
      */
     public static final String QUERY_PLAN_CACHE_ENABLED = "com.blazebit.persistence.query_plan_cache_enabled";
 
+    /**
+     * If set to true, JPA Criteria predicates are wrapped in a negation predicate instead of copied with negation being propagated.
+     * Valid values for this property are <code>true</code> and <code>false</code>.
+     * Default is <code>true</code>.
+     *
+     * @since 1.6.3
+     */
+    public static final String CRITERIA_NEGATION_WRAPPER = "com.blazebit.persistence.criteria_negation_wrapper";
+
+    /**
+     * If set to true, values passed to the JPA {@link javax.persistence.criteria.CriteriaBuilder} API are rendered as parameters,
+     * otherwise values are rendered as literals.
+     * Valid values for this property are <code>true</code> and <code>false</code>.
+     * Default is <code>true</code>.
+     *
+     * @since 1.6.3
+     */
+    public static final String CRITERIA_VALUE_AS_PARAMETER = "com.blazebit.persistence.criteria_value_as_parameter";
+
     private ConfigurationProperties() {
     }
 }

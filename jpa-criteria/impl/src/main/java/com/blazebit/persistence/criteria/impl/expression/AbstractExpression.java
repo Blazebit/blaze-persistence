@@ -24,7 +24,9 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Christian Beikov
@@ -56,25 +58,65 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
 
     @Override
     public Predicate in(Object... values) {
-        return criteriaBuilder.in(this, values);
+        List<Expression<? extends T>> valueList = new ArrayList<>(values.length);
+        for (Object value : values) {
+            if (value instanceof Expression<?>) {
+                valueList.add((Expression<? extends T>) value);
+            } else if (value == null) {
+                valueList.add(criteriaBuilder.nullValue(getJavaType()));
+            } else {
+                valueList.add(criteriaBuilder.value((T) value));
+            }
+        }
+        return new InPredicate<T>(criteriaBuilder, this, valueList);
     }
 
     @Override
     @SuppressWarnings({"unchecked"})
     public Predicate in(Expression<?>... values) {
-        return criteriaBuilder.in(this, (Expression<? extends T>[]) values);
+        List<Expression<? extends T>> valueList = new ArrayList<>(values.length);
+        for (Expression<?> value : values) {
+            valueList.add((Expression<? extends T>) value);
+        }
+        return new InPredicate<T>(criteriaBuilder, this, valueList);
     }
 
     @Override
     @SuppressWarnings({"unchecked"})
     public Predicate in(Collection<?> values) {
-        return criteriaBuilder.in(this, (Collection<T>) values);
+        List<Expression<? extends T>> valueList = new ArrayList<>(values.size());
+        for (Object value : values) {
+            if (value instanceof Expression<?>) {
+                valueList.add((Expression<? extends T>) value);
+            } else if (value == null) {
+                valueList.add(criteriaBuilder.nullValue(getJavaType()));
+            } else {
+                valueList.add((Expression<? extends T>) criteriaBuilder.value(value));
+            }
+        }
+        return new InPredicate<T>(criteriaBuilder, this, valueList);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Predicate in(Expression<Collection<?>> values) {
-        return criteriaBuilder.in(this, values);
+        if (values instanceof LiteralExpression<?>) {
+            Collection<?> collection = ((LiteralExpression<Collection<?>>) values).getLiteral();
+            List<Expression<? extends T>> valueList = new ArrayList<>(collection.size());
+            for (Object value : collection) {
+                if (value instanceof Expression<?>) {
+                    valueList.add((Expression<? extends T>) value);
+                } else if (value == null) {
+                    valueList.add(criteriaBuilder.nullLiteral(getJavaType()));
+                } else {
+                    valueList.add((Expression<? extends T>) criteriaBuilder.literal(value));
+                }
+            }
+            return new InPredicate<T>(criteriaBuilder, this, valueList);
+        }
+        List<Expression<? extends T>> valueList = new ArrayList<>(1);
+        valueList.add((Expression<? extends T>) values);
+        return new InPredicate<T>(criteriaBuilder, this, valueList);
     }
 
     @SuppressWarnings({"unchecked"})

@@ -16,12 +16,14 @@
 
 package com.blazebit.persistence.criteria.impl;
 
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaDelete;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.BlazeCriteriaUpdate;
+import com.blazebit.persistence.criteria.BlazeExpression;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeListJoin;
 import com.blazebit.persistence.criteria.BlazeMapJoin;
@@ -113,15 +115,19 @@ import java.util.Set;
 public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaBuilderSupport, Serializable {
 
     private static final long serialVersionUID = 1L;
-    // TODO: make configurable
-    private static final boolean DO_WRAPPING = true;
 
     private final EntityMetamodel metamodel;
     private final CriteriaBuilderFactory cbf;
+    private final boolean negationWrapper;
+    private final boolean valueAsParameter;
 
     public BlazeCriteriaBuilderImpl(CriteriaBuilderFactory cbf) {
         this.metamodel = cbf.getService(EntityMetamodel.class);
         this.cbf = cbf;
+        String negationWrapper = cbf.getProperty(ConfigurationProperties.CRITERIA_NEGATION_WRAPPER);
+        this.negationWrapper = negationWrapper == null || negationWrapper.isEmpty() || Boolean.parseBoolean(negationWrapper);
+        String valueAsParameter = cbf.getProperty(ConfigurationProperties.CRITERIA_VALUE_AS_PARAMETER);
+        this.valueAsParameter = valueAsParameter == null || valueAsParameter.isEmpty() || Boolean.parseBoolean(valueAsParameter);
     }
 
     public EntityMetamodel getEntityMetamodel() {
@@ -133,7 +139,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     public <T extends AbstractPredicate> AbstractPredicate negate(T predicate) {
-        if (DO_WRAPPING) {
+        if (negationWrapper) {
             return new NotPredicate(this, predicate);
         } else {
             return predicate.copyNegated();
@@ -219,6 +225,23 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         }
 
         return selection;
+    }
+
+    public <T> BlazeExpression<T> nullValue(Class<T> javaType) {
+        if (valueAsParameter) {
+            return new ParameterExpressionImpl<>(this, javaType, (T) null);
+        } else {
+            return new NullLiteralExpression<>(this, javaType);
+        }
+    }
+
+    public <T> BlazeExpression<T> value(T value) {
+        checkValue(value);
+        if (valueAsParameter) {
+            return new ParameterExpressionImpl<T>(this, value);
+        } else {
+            return new LiteralExpression<T>(this, value);
+        }
     }
 
     @Override
@@ -376,12 +399,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Predicate equal(Expression<?> x, Object y) {
-        return new ComparisonPredicate(this, ComparisonOperator.EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.EQUAL, x, value(y));
     }
 
     @Override
     public Predicate notEqual(Expression<?> x, Object y) {
-        return new ComparisonPredicate(this, ComparisonOperator.NOT_EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.NOT_EQUAL, x, value(y));
     }
 
     @Override
@@ -406,22 +429,22 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x, Y y) {
-        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN, x, value(y));
     }
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate lessThan(Expression<? extends Y> x, Y y) {
-        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN, x, value(y));
     }
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
-        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN_OR_EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN_OR_EQUAL, x, value(y));
     }
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
-        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN_OR_EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN_OR_EQUAL, x, value(y));
     }
 
     @Override
@@ -446,27 +469,27 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Predicate gt(Expression<? extends Number> x, Number y) {
-        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN, x, value(y));
     }
 
     @Override
     public Predicate lt(Expression<? extends Number> x, Number y) {
-        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN, x, value(y));
     }
 
     @Override
     public Predicate ge(Expression<? extends Number> x, Number y) {
-        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN_OR_EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.GREATER_THAN_OR_EQUAL, x, value(y));
     }
 
     @Override
     public Predicate le(Expression<? extends Number> x, Number y) {
-        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN_OR_EQUAL, x, y);
+        return new ComparisonPredicate(this, ComparisonOperator.LESS_THAN_OR_EQUAL, x, value(y));
     }
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> expression, Y lowerBound, Y upperBound) {
-        return new BetweenPredicate<Y>(this, false, expression, lowerBound, upperBound);
+        return new BetweenPredicate<Y>(this, false, expression, value(lowerBound), value(upperBound));
     }
 
     @Override
@@ -477,18 +500,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public <T> In<T> in(Expression<? extends T> expression) {
         return new InPredicate<T>(this, expression);
-    }
-
-    public <T> In<T> in(Expression<? extends T> expression, @SuppressWarnings("unchecked") Expression<? extends T>... values) {
-        return new InPredicate<T>(this, expression, values);
-    }
-
-    public <T> In<T> in(Expression<? extends T> expression, @SuppressWarnings("unchecked") T... values) {
-        return new InPredicate<T>(this, expression, values);
-    }
-
-    public <T> In<T> in(Expression<? extends T> expression, Collection<T> values) {
-        return new InPredicate<T>(this, expression, values);
     }
 
     @Override
@@ -503,22 +514,22 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Predicate like(Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
-        return new LikePredicate(this, false, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, false, matchExpression, pattern, value(escapeCharacter));
     }
 
     @Override
     public Predicate like(Expression<String> matchExpression, String pattern) {
-        return new LikePredicate(this, false, matchExpression, pattern);
+        return new LikePredicate(this, false, matchExpression, value(pattern));
     }
 
     @Override
     public Predicate like(Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
-        return new LikePredicate(this, false, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, false, matchExpression, value(pattern), escapeCharacter);
     }
 
     @Override
     public Predicate like(Expression<String> matchExpression, String pattern, char escapeCharacter) {
-        return new LikePredicate(this, false, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, false, matchExpression, value(pattern), value(escapeCharacter));
     }
 
     @Override
@@ -533,22 +544,22 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
-        return new LikePredicate(this, true, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, true, matchExpression, pattern, value(escapeCharacter));
     }
 
     @Override
     public Predicate notLike(Expression<String> matchExpression, String pattern) {
-        return new LikePredicate(this, true, matchExpression, pattern);
+        return new LikePredicate(this, true, matchExpression, value(pattern));
     }
 
     @Override
     public Predicate notLike(Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
-        return new LikePredicate(this, true, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, true, matchExpression, value(pattern), escapeCharacter);
     }
 
     @Override
     public Predicate notLike(Expression<String> matchExpression, String pattern, char escapeCharacter) {
-        return new LikePredicate(this, true, matchExpression, pattern, escapeCharacter);
+        return new LikePredicate(this, true, matchExpression, value(pattern), value(escapeCharacter));
     }
 
     /**********************
@@ -671,7 +682,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<String> substring(Expression<String> value, int start) {
-        return new SubstringFunction(this, value, start);
+        return new SubstringFunction(this, value, value(start));
     }
 
     @Override
@@ -681,7 +692,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<String> substring(Expression<String> value, int start, int length) {
-        return new SubstringFunction(this, value, start, length);
+        return new SubstringFunction(this, value, value(start), value(length));
     }
 
     @Override
@@ -706,12 +717,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<String> trim(char trimCharacter, Expression<String> trimSource) {
-        return new TrimFunction(this, trimCharacter, trimSource);
+        return new TrimFunction(this, value(trimCharacter), trimSource);
     }
 
     @Override
     public Expression<String> trim(Trimspec trimspec, char trimCharacter, Expression<String> trimSource) {
-        return new TrimFunction(this, trimspec, trimCharacter, trimSource);
+        return new TrimFunction(this, trimspec, value(trimCharacter), trimSource);
     }
 
     @Override
@@ -741,12 +752,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<Integer> locate(Expression<String> string, String pattern) {
-        return new LocateFunction(this, pattern, string);
+        return new LocateFunction(this, value(pattern), string);
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> string, String pattern, int start) {
-        return new LocateFunction(this, pattern, string, start);
+        return new LocateFunction(this, value(pattern), string, value(start));
     }
 
     @Override
@@ -756,12 +767,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<String> concat(Expression<String> string1, String string2) {
-        return new ConcatFunction(this, string1, string2);
+        return new ConcatFunction(this, string1, value(string2));
     }
 
     @Override
     public Expression<String> concat(String string1, Expression<String> string2) {
-        return new ConcatFunction(this, string1, string2);
+        return new ConcatFunction(this, value(string1), string2);
     }
 
     /**********************
@@ -806,7 +817,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(expression.getJavaType(), value.getClass());
-        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.ADD, expression, value);
+        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.ADD, expression, value(value));
     }
 
     @Override
@@ -815,7 +826,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(expression.getJavaType(), value.getClass());
-        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.MULTIPLY, expression, value);
+        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.MULTIPLY, expression, value(value));
     }
 
     @Override
@@ -824,7 +835,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(expression.getJavaType(), value.getClass());
-        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.SUBTRACT, expression, value);
+        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.SUBTRACT, expression, value(value));
     }
 
     @Override
@@ -833,7 +844,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(value.getClass(), expression.getJavaType());
-        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.ADD, value, expression);
+        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.ADD, value(value), expression);
     }
 
     @Override
@@ -842,7 +853,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(value.getClass(), expression.getJavaType());
-        return (BinaryArithmeticExpression<N>) new BinaryArithmeticExpression(this, resultType, BinaryArithmeticExpression.Operation.MULTIPLY, value, expression);
+        return (BinaryArithmeticExpression<N>) new BinaryArithmeticExpression(this, resultType, BinaryArithmeticExpression.Operation.MULTIPLY, value(value), expression);
     }
 
     @Override
@@ -851,7 +862,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(value.getClass(), expression.getJavaType());
-        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.SUBTRACT, value, expression);
+        return new BinaryArithmeticExpression<N>(this, resultType, BinaryArithmeticExpression.Operation.SUBTRACT, value(value), expression);
     }
 
     @Override
@@ -869,7 +880,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(expression.getJavaType(), value.getClass(), true);
-        return new BinaryArithmeticExpression<Number>(this, resultType, BinaryArithmeticExpression.Operation.DIVIDE, expression, value);
+        return new BinaryArithmeticExpression<Number>(this, resultType, BinaryArithmeticExpression.Operation.DIVIDE, expression, value(value));
     }
 
     @Override
@@ -878,7 +889,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         checkValue(value);
         checkExpression(expression);
         final Class resultType = BinaryArithmeticExpression.determineResultType(value.getClass(), expression.getJavaType(), true);
-        return new BinaryArithmeticExpression<Number>(this, resultType, BinaryArithmeticExpression.Operation.DIVIDE, value, expression);
+        return new BinaryArithmeticExpression<Number>(this, resultType, BinaryArithmeticExpression.Operation.DIVIDE, value(value), expression);
     }
 
     @Override
@@ -892,14 +903,14 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     public Expression<Integer> mod(Expression<Integer> expression, Integer value) {
         checkValue(value);
         checkExpression(expression);
-        return new BinaryArithmeticExpression<Integer>(this, Integer.class, BinaryArithmeticExpression.Operation.MOD, expression, value);
+        return new BinaryArithmeticExpression<Integer>(this, Integer.class, BinaryArithmeticExpression.Operation.MOD, expression, value(value));
     }
 
     @Override
     public Expression<Integer> mod(Integer value, Expression<Integer> expression) {
         checkValue(value);
         checkExpression(expression);
-        return new BinaryArithmeticExpression<Integer>(this, Integer.class, BinaryArithmeticExpression.Operation.MOD, value, expression);
+        return new BinaryArithmeticExpression<Integer>(this, Integer.class, BinaryArithmeticExpression.Operation.MOD, value(value), expression);
     }
 
     private void checkValue(Object value) {
@@ -993,12 +1004,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Y exp2) {
-        return coalesce((Class<Y>) null, exp1, exp2);
+    public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Y value) {
+        return coalesce((Class<Y>) null, exp1, value(value));
     }
 
-    public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y exp2) {
-        return new CoalesceFunction<Y>(this, type).value(exp1).value(exp2);
+    public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y value) {
+        return new CoalesceFunction<Y>(this, type).value(exp1).value(value);
     }
 
     @Override
@@ -1020,12 +1031,12 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
-    public <Y> Expression<Y> nullif(Expression<Y> exp1, Y exp2) {
-        return nullif(null, exp1, exp2);
+    public <Y> Expression<Y> nullif(Expression<Y> exp1, Y value) {
+        return nullif(null, exp1, value(value));
     }
 
-    public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Y exp2) {
-        return new NullifFunction<Y>(this, type, exp1, exp2);
+    public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Y value) {
+        return new NullifFunction<Y>(this, type, exp1, value(value));
     }
 
     @Override
@@ -1130,7 +1141,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
-        return new MemberOfPredicate<E, C>(this, false, e, (PluralAttributePath<C>) collectionExpression);
+        return new MemberOfPredicate<E, C>(this, false, value(e), (PluralAttributePath<C>) collectionExpression);
     }
 
     @Override
@@ -1138,7 +1149,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         if (!(collectionExpression instanceof PluralAttributePath<?>)) {
             throw illegalCollection(collectionExpression);
         }
-        return new MemberOfPredicate<E, C>(this, true, e, (PluralAttributePath<C>) collectionExpression);
+        return new MemberOfPredicate<E, C>(this, true, value(e), (PluralAttributePath<C>) collectionExpression);
     }
 
     @Override

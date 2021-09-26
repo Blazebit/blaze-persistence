@@ -66,6 +66,36 @@ public class TypeUtils {
         }
     };
 
+    public static final TypeConverter<Character> CHARACTER_CONVERTER = new AbstractTypeConverter<Character>() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public Character convert(Object value) {
+            return value == null ? null : value.toString().charAt(0);
+        }
+
+        @Override
+        public String toString(Character value) {
+            StringBuilder sb = new StringBuilder(3);
+            appendTo(value, sb);
+            return sb.toString();
+        }
+
+        @Override
+        public void appendTo(Character value, StringBuilder sb) {
+            sb.append('\'');
+            char c = value;
+            if (c == '\'') {
+                sb.append('\'');
+                sb.append('\'');
+            } else {
+                sb.append(c);
+            }
+            sb.append('\'');
+        }
+    };
+
     public static final TypeConverter<String> STRING_CONVERTER = new AbstractTypeConverter<String>() {
 
         private static final long serialVersionUID = 1L;
@@ -778,6 +808,8 @@ public class TypeUtils {
         c.put(Byte.TYPE, BYTE_CONVERTER);
         c.put(Short.class, SHORT_CONVERTER);
         c.put(Short.TYPE, SHORT_CONVERTER);
+        c.put(Character.class, CHARACTER_CONVERTER);
+        c.put(Character.TYPE, CHARACTER_CONVERTER);
         c.put(Integer.class, INTEGER_CONVERTER);
         c.put(Integer.TYPE, INTEGER_CONVERTER);
         c.put(Long.class, LONG_CONVERTER);

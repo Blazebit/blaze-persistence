@@ -19,7 +19,6 @@ package com.blazebit.persistence.criteria.impl.expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.parser.util.TypeUtils;
 
 import javax.persistence.criteria.Expression;
 
@@ -40,32 +39,6 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
         this.comparisonOperator = comparisonOperator;
         this.leftHandSide = leftHandSide;
         this.rightHandSide = rightHandSide;
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public ComparisonPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, ComparisonOperator comparisonOperator, Expression<?> leftHandSide, Object rightHandSide) {
-        super(criteriaBuilder, false);
-        this.comparisonOperator = comparisonOperator;
-        this.leftHandSide = leftHandSide;
-        if (TypeUtils.isNumeric(leftHandSide.getJavaType())) {
-            this.rightHandSide = new LiteralExpression(criteriaBuilder, TypeUtils.convert(rightHandSide, (Class<Number>) leftHandSide.getJavaType(), criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet()));
-        } else {
-            this.rightHandSide = new LiteralExpression(criteriaBuilder, rightHandSide);
-        }
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public <N extends Number> ComparisonPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, ComparisonOperator comparisonOperator, Expression<N> leftHandSide, Number rightHandSide) {
-        super(criteriaBuilder, false);
-        this.comparisonOperator = comparisonOperator;
-        this.leftHandSide = leftHandSide;
-        Class type = leftHandSide.getJavaType();
-        if (Number.class.equals(type)) {
-            this.rightHandSide = new LiteralExpression(criteriaBuilder, rightHandSide);
-        } else {
-            N converted = (N) TypeUtils.convert(rightHandSide, type, criteriaBuilder.getEntityMetamodel().getEnumTypes().keySet());
-            this.rightHandSide = new LiteralExpression<N>(criteriaBuilder, converted);
-        }
     }
 
     /**

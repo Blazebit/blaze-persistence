@@ -178,11 +178,23 @@ public class TestLiterals extends AbstractParserTest {
         StringLiteral result = (StringLiteral) parse("'abcd'");
         assertEquals(new StringLiteral("abcd"), result);
     }
+
+    @Test
+    public void testStringLiteralWithBackslash(){
+        StringLiteral result = (StringLiteral) parse("'a\\_'");
+        assertEquals(new StringLiteral("a\\_"), result);
+    }
     
     @Test
     public void testCharacterLiteral(){
         StringLiteral result = (StringLiteral) parse("'a'");
         assertEquals(new StringLiteral("a"), result);
+    }
+
+    @Test
+    public void testCharacterLiteralWithBackslash(){
+        StringLiteral result = (StringLiteral) parse("'\\'");
+        assertEquals(new StringLiteral("\\"), result);
     }
 
     @Test

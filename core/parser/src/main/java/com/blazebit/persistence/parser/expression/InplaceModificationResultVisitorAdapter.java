@@ -279,7 +279,11 @@ public abstract class InplaceModificationResultVisitorAdapter implements Express
 
     @Override
     public Expression visit(LikePredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        visit((BinaryExpressionPredicate) predicate);
+        if (predicate.getEscapeCharacter() != null) {
+            predicate.setEscapeCharacter(predicate.getEscapeCharacter().accept(this));
+        }
+        return predicate;
     }
 
     @Override

@@ -293,6 +293,9 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     @Override
     public Expression visit(LikePredicate predicate) {
         visitBinaryExpressionPredicate(predicate);
+        if (predicate.getEscapeCharacter() != null) {
+            predicate.setEscapeCharacter(predicate.getEscapeCharacter().accept(this));
+        }
         return predicate;
     }
 

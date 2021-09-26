@@ -41,10 +41,6 @@ public class MemberOfPredicate<E, C extends Collection<E>> extends AbstractSimpl
         this.collectionPath = collectionPath;
     }
 
-    public MemberOfPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, boolean negated, E element, PluralAttributePath<C> collectionPath) {
-        this(criteriaBuilder, negated, new LiteralExpression<E>(criteriaBuilder, element), collectionPath);
-    }
-
     @Override
     public AbstractPredicate copyNegated() {
         return new MemberOfPredicate<E, C>(criteriaBuilder, !isNegated(), elementExpression, collectionPath);

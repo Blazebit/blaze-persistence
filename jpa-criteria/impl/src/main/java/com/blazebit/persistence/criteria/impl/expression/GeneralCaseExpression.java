@@ -67,13 +67,7 @@ public class GeneralCaseExpression<R> extends AbstractExpression<R> implements C
 
     @Override
     public Case<R> when(Expression<Boolean> condition, R result) {
-        return when(condition, literal(result));
-    }
-
-    @SuppressWarnings({"unchecked"})
-    private LiteralExpression<R> literal(R result) {
-        final Class<R> type = result != null ? (Class<R>) result.getClass() : getJavaType();
-        return new LiteralExpression<R>(criteriaBuilder, type, result);
+        return when(condition, criteriaBuilder.value(result));
     }
 
     @Override
@@ -93,7 +87,7 @@ public class GeneralCaseExpression<R> extends AbstractExpression<R> implements C
 
     @Override
     public Expression<R> otherwise(R result) {
-        return otherwise(literal(result));
+        return otherwise(criteriaBuilder.value(result));
     }
 
     @Override

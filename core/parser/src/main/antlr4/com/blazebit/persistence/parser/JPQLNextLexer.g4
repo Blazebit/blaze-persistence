@@ -69,12 +69,12 @@ BIG_DECIMAL_LITERAL
     ;
 
 CHARACTER_LITERAL
-    : '\'' ( ESCAPE_SEQUENCE | ~('\''|'\\') ) '\'' {setText(getText().substring(1, getText().length()-1));}
+    : '\'' ( '\'\'' | ~('\'') ) '\''
     ;
 
 STRING_LITERAL
-    : '"' ( ESCAPE_SEQUENCE | ~('\\'|'"') )* '"' {setText(getText().substring(1, getText().length() - 1));}
-    | ('\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\'')+ {setText(getText().substring(1, getText().length() - 1).replace("''", "'"));}
+    : '"' ( '""' | ~('"') | ESCAPE_SEQUENCE )* '"'
+    | ('\'' ( '\'\'' | ~('\'') | ESCAPE_SEQUENCE )* '\'')+
     ;
 
 AFTER               : [aA] [fF] [tT] [eE] [rR];
@@ -212,5 +212,5 @@ IDENTIFIER
     ;
 
 QUOTED_IDENTIFIER
-    : '`' ( ESCAPE_SEQUENCE | ~('\\'|'`') )* '`'
+    : '`' ( '\\`' | ~('`') | ESCAPE_SEQUENCE )* '`'
     ;

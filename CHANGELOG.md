@@ -25,6 +25,9 @@ Not yet released
 * Fix checking more uses of MULTISET fetching for proper type support
 * Consider map key for updatable flat view identity when doing MULTISET fetching
 * Ensure mapping index expressions are properly type validated
+* Fix parsing of `LIKE` predicate with parameter in `ESCAPE`
+* Fix literal parsing issues with a single backslash to match the requirements of the JPA spec
+* Fix rendering of literals in JPA Criteria and introduce configuration option to control value rendering
 
 ### Backwards-incompatible changes
 

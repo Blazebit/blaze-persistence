@@ -74,7 +74,7 @@ public class JoinTest extends AbstractCoreTest {
         cq.where(cb.equal(p1.get(Person_.age), 1L));
 
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT generatedDocument_0 FROM Document generatedDocument_0 JOIN FETCH generatedDocument_0.partners generatedPerson_1 JOIN generatedDocument_0.partners generatedPerson_2 WHERE generatedPerson_2.age = 1L", criteriaBuilder.getQueryString());
+        assertEquals("SELECT generatedDocument_0 FROM Document generatedDocument_0 JOIN FETCH generatedDocument_0.partners generatedPerson_1 JOIN generatedDocument_0.partners generatedPerson_2 WHERE generatedPerson_2.age = :generated_param_0", criteriaBuilder.getQueryString());
     }
 
     @Test
