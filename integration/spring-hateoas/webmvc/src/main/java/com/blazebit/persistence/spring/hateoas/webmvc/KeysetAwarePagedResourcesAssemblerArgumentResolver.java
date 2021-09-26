@@ -83,7 +83,7 @@ public class KeysetAwarePagedResourcesAssemblerArgumentResolver implements Handl
         }
 
         try {
-            Link linkToMethod = linkBuilderFactory.linkTo(parameter.getDeclaringClass(), method).withSelfRel();
+            Link linkToMethod = linkBuilderFactory.linkTo(parameter.getDeclaringClass(), method, new Object[method.getParameterCount()]).withSelfRel();
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(linkToMethod.getHref());
             for (Map.Entry<String, String[]> entry : webRequest.getParameterMap().entrySet()) {
                 builder.queryParam(entry.getKey(), (Object[]) entry.getValue());
