@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.LongAdder;
         EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS,
         EntityViewAnnotationProcessor.GENERATE_DEEP_CONSTANTS,
         EntityViewAnnotationProcessor.OPTIONAL_PARAMETERS,
+        EntityViewAnnotationProcessor.THREADS,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
@@ -75,6 +76,7 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     public static final String CREATE_EMPTY_FLAT_VIEWS = "createEmptyFlatViews";
     public static final String GENERATE_DEEP_CONSTANTS = "generateDeepConstants";
     public static final String OPTIONAL_PARAMETERS = "optionalParameters";
+    public static final String THREADS = "threads";
 
     private Context context;
 
@@ -102,15 +104,39 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     }
 
     private void execute(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
-        int threads = Runtime.getRuntime().availableProcessors();
-        ExecutorService executorService = Executors.newFixedThreadPool(threads);
-        long start = System.nanoTime();
-        List<Future<?>> futures = new ArrayList<>();
-        discoverEntityViews(executorService, futures, roundEnvironment.getRootElements());
+        int threads = context.getThreads();
+        ExecutorService executorService;
+        if (threads == 1) {
+            executorService = Executors.newSingleThreadExecutor();
+        } else {
+            executorService = Executors.newFixedThreadPool(threads);
+        }
+        long initTime = System.nanoTime();
+        long start = initTime;
+        List<TypeElement> entityViews = new ArrayList<>();
+        discoverEntityViews(entityViews, roundEnvironment.getRootElements());
+        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor discovery took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        start = System.nanoTime();
+        List<Future<?>> futures = new ArrayList<>(entityViews.size());
+        start(executorService, entityViews, futures);
         await(futures);
-        context.logMessage(Diagnostic.Kind.NOTE, "Discovering " + context.getMetaEntityViews().size() + " entity views took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor analysis took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        start = System.nanoTime();
         int views = createMetaModelClasses(executorService);
-        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor processed " + views + " entity views with " + threads + " threads and took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor generation took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
+        context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor processed " + views + " entity views with " + threads + " threads and took overall " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - initTime) + "ms");
+    }
+
+    private void start(ExecutorService executorService, List<TypeElement> typeElements, List<Future<?>> futures) {
+        for (TypeElement typeElement : typeElements) {
+            futures.add(executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    AnnotationMetaEntityView metaEntity = new AnnotationMetaEntityView(typeElement, context);
+                    context.addMetaEntityViewToContext(metaEntity.getQualifiedName(), metaEntity);
+                }
+            }));
+        }
     }
 
     private static void await(List<Future<?>> futures) {
@@ -123,13 +149,13 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private void discoverEntityViews(ExecutorService executorService, List<Future<?>> futures, Collection<? extends Element> elements) {
+    private void discoverEntityViews(List<TypeElement> entityViews, Collection<? extends Element> elements) {
         for (Element element : elements) {
             if (isEntityView(element)) {
                 context.logMessage(Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString());
-                handleRootElementAnnotationMirrors(executorService, futures, element);
+                handleRootElementAnnotationMirrors(entityViews, element);
             }
-            discoverEntityViews(executorService, futures, element.getEnclosedElements());
+            discoverEntityViews(entityViews, element.getEnclosedElements());
         }
     }
 
@@ -225,17 +251,12 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void handleRootElementAnnotationMirrors(ExecutorService executorService, List<Future<?>> futures, final Element element) {
+    private void handleRootElementAnnotationMirrors(List<TypeElement> entityViews, final Element element) {
         if (!ElementKind.CLASS.equals(element.getKind()) && !ElementKind.INTERFACE.equals(element.getKind())) {
             return;
         }
-
-        futures.add(executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                AnnotationMetaEntityView metaEntity = new AnnotationMetaEntityView((TypeElement) element, context);
-                context.addMetaEntityViewToContext(metaEntity.getQualifiedName(), metaEntity);
-            }
-        }));
+        TypeElement typeElement = (TypeElement) element;
+        entityViews.add(typeElement);
+        context.initializeEntityViewElement(typeElement);
     }
 }

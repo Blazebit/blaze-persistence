@@ -36,6 +36,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
+import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,15 +85,23 @@ public final class TypeUtils {
             return extractClosestRealTypeAsString(compositeUpperBound, context);
         } else {
             final TypeMirror erasureType = context.getTypeUtils().erasure(type);
-            return TypeRenderingVisitor.toString(erasureType);
+            return TypeRenderingVisitor.toString(erasureType, context);
         }
     }
 
     public static String toTypeString(DeclaredType declaredType, TypeMirror typeMirror, Context context) {
         if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-            typeMirror = context.getTypeUtils().asMemberOf(declaredType, ((TypeVariable) typeMirror).asElement());
+            Element typeVarElement = ((TypeVariable) typeMirror).asElement();
+            typeMirror = asMemberOf(context, declaredType, typeVarElement);
         }
-        return TypeRenderingVisitor.toString(typeMirror);
+        return TypeRenderingVisitor.toString(typeMirror, context);
+    }
+
+    public static TypeMirror asMemberOf(Context context, DeclaredType containing, Element element) {
+        Types typeUtils = context.getTypeUtils();
+        synchronized (typeUtils) {
+            return typeUtils.asMemberOf(containing, element);
+        }
     }
 
     public static boolean containsAnnotation(Element element, String... annotations) {
@@ -196,12 +205,6 @@ public final class TypeUtils {
         for (int i = 0; i < superClasses.size(); i++) {
             TypeMirror superClass = superClasses.get(i);
             final Element superClassElement = ((DeclaredType) superClass).asElement();
-            // The lazy initialization of class symbols is unfortunately not thread safe,
-            // so we force the initialization here in a synchronized block.
-            // This should be fine as this process happens very early and should initialize all the necessary bits
-            synchronized (superClassElement) {
-                superClassElement.getKind();
-            }
             for (Element enclosedElement : superClassElement.getEnclosedElements()) {
                 String name = enclosedElement.getSimpleName().toString();
                 if ("<init>".equals(name)) {
@@ -250,7 +253,7 @@ public final class TypeUtils {
         }
     }
 
-    public static String getPackageName(Element element) {
+    public static String getPackageName(Context context, Element element) {
         Element parent = element.getEnclosingElement();
         while (parent.getKind() != ElementKind.PACKAGE) {
             parent = parent.getEnclosingElement();
@@ -264,13 +267,15 @@ public final class TypeUtils {
      */
     public static final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Object> {
 
+        private final Context context;
         private final StringBuilder sb = new StringBuilder();
         private final Set<TypeVariable> visitedTypeVariables = new HashSet<>();
 
-        private TypeRenderingVisitor() {
+        private TypeRenderingVisitor(Context context) {
+            this.context = context;
         }
 
-        public static String toString(TypeMirror typeMirror) {
+        public static String toString(TypeMirror typeMirror, Context context) {
             if (typeMirror.getKind() == TypeKind.TYPEVAR) {
                 // Top level type variables don't need to render the upper bound as `T extends Type`
                 final Element typeVariableElement = ((TypeVariable) typeMirror).asElement();
@@ -290,7 +295,7 @@ public final class TypeUtils {
                 // For top level type only the first type is relevant
                 typeMirror = ((IntersectionType) typeMirror).getBounds().get(0);
             }
-            final TypeRenderingVisitor typeRenderingVisitor = new TypeRenderingVisitor();
+            final TypeRenderingVisitor typeRenderingVisitor = new TypeRenderingVisitor(context);
             typeMirror.accept(typeRenderingVisitor, null);
             return typeRenderingVisitor.sb.toString();
         }

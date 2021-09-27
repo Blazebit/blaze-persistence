@@ -109,12 +109,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
             switch (annotationMirror.getAnnotationType().toString()) {
                 case Constants.ENTITY_VIEW:
-                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-                        if ("value".equals(entry.getKey().getSimpleName().toString())) {
-                            entityClass = entry.getValue().getValue().toString();
-                            break;
-                        }
-                    }
+                    entityClass = TypeUtils.getAnnotationValue(annotationMirror, "value").toString();
                     break;
                 case Constants.UPDATABLE_ENTITY_VIEW:
                     updatable = true;
@@ -138,7 +133,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         Element entityVersionAttribute = null;
         String jpaManagedBaseClass = null;
         TypeElement entityTypeElement = context.getTypeElement(entityClass);
-        for (Element member : TypeUtils.getAllMembers(entityTypeElement, context)) {
+        for (Element member : context.getAllMembers(entityTypeElement)) {
             if (TypeUtils.containsAnnotation(member, Constants.VERSION)) {
                 entityVersionAttribute = member;
                 break;
@@ -168,7 +163,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         this.creatable = creatable;
         this.viewFilters = viewFilters;
 
-        Collection<Element> allMembers = TypeUtils.getAllMembers(element, context);
+        Iterable<? extends Element> allMembers = context.getAllMembers(element);
         MetaAttribute idMember = null;
         MetaAttribute versionMember = null;
         Map<String, MetaAttribute> members = new TreeMap<>();
@@ -285,6 +280,8 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
         if (constructors.isEmpty()) {
             constructors.add(new AnnotationMetaConstructor(this));
+        } else {
+            constructors.sort(MetaConstructor.NAME_COMPARATOR);
         }
 
         Map<String, TypeElement> foreignPackageSuperTypes = new LinkedHashMap<>();
@@ -299,7 +296,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                 if (!foreignPackageSuperTypes.containsKey(packageName)) {
                     foreignPackageSuperTypes.put(packageName, superClassElement);
                     for (TypeParameterElement typeParameter : superClassElement.getTypeParameters()) {
-                        foreignPackageSuperTypeVariables.add(context.getTypeUtils().asMemberOf((DeclaredType) element.asType(), typeParameter));
+                        foreignPackageSuperTypeVariables.add(TypeUtils.asMemberOf(context, (DeclaredType) element.asType(), typeParameter));
                     }
                 }
             }
@@ -568,7 +565,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
 
     @Override
     public String getSafeTypeVariable(String typeVariable) {
-        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) getTypeElement().asType()).getTypeArguments();
+        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) element.asType()).getTypeArguments();
         if (typeArguments.isEmpty()) {
             return typeVariable;
         }
