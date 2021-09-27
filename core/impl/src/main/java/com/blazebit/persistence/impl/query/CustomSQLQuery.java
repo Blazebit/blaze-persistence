@@ -23,6 +23,7 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -35,8 +36,8 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
     private final Query delegate;
 
-    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, transformers, valuesParameters, valuesBinders);
+    public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, Map<ParameterExpression<?>, String> criteriaNameMapping, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, criteriaNameMapping, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

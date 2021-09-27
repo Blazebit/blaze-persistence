@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 import com.blazebit.persistence.impl.util.SetView;
@@ -24,6 +25,7 @@ import com.blazebit.persistence.spi.CteQueryWrapper;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,11 +49,13 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     protected final Map<String, String> valuesElementParameters;
     protected final Map<String, Parameter<?>> parameters;
     protected final Map<String, ValueBinder> valueBinders;
+    protected final Map<ParameterExpression<?>, String> criteriaNameMapping;
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
-    public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+    public AbstractCustomQuery(QuerySpecification<T> querySpecification, Map<ParameterExpression<?>, String> criteriaNameMapping, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
         this.querySpecification = querySpecification;
+        this.criteriaNameMapping = criteriaNameMapping;
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
         Map<String, Parameter<?>> parameters = new HashMap<>();
         this.valueBinders = new HashMap<>(parameters.size());
@@ -60,7 +64,11 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
             String name = p.getName();
             ValuesParameterBinder valuesParameterBinder = valuesBinders.get(name);
             if (valuesParameterBinder == null) {
-                parameters.put(name, p);
+                if (p instanceof ParameterManager.ParameterImpl<?> && ((ParameterManager.ParameterImpl<Object>) p).getCriteriaParameter() != null) {
+                    parameters.put(name, ((ParameterManager.ParameterImpl<Object>) p).getCriteriaParameter());
+                } else {
+                    parameters.put(name, p);
+                }
                 valueBinders.put(name, null);
             } else {
                 ValuesParameter param = new ValuesParameter(name, valuesParameterBinder);
@@ -172,21 +180,25 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         }
     }
 
+    private String getName(Parameter<?> parameter) {
+        return criteriaNameMapping != null && parameter instanceof ParameterExpression<?> ? criteriaNameMapping.get(parameter) : parameter.getName();
+    }
+
     @Override
     public <T> Query setParameter(Parameter<T> param, T value) {
-        setParameter(param.getName(), value);
+        setParameter(getName(param), value);
         return this;
     }
 
     @Override
     public Query setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-        setParameter(param.getName(), value, temporalType);
+        setParameter(getName(param), value, temporalType);
         return this;
     }
 
     @Override
     public Query setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-        setParameter(param.getName(), value, temporalType);
+        setParameter(getName(param), value, temporalType);
         return this;
     }
 
@@ -254,7 +266,11 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     @Override
     public Parameter<?> getParameter(String name) {
-        return parameters.get(name);
+        Parameter<?> param = parameters.get(name);
+        if (param == null) {
+            throw new IllegalArgumentException("Couldn't find parameter with name '" + name + "'!");
+        }
+        return param;
     }
 
     @Override
@@ -278,17 +294,18 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
     @Override
     public boolean isBound(Parameter<?> param) {
-        ValuesParameter valuesParameter = valuesParameters.get(param.getName());
+        String name = getName(param);
+        ValuesParameter valuesParameter = valuesParameters.get(name);
         if (valuesParameter != null) {
             return valuesParameter.getValue() != null;
         }
 
-        return valueBinders.get(param.getName()) != null;
+        return valueBinders.get(name) != null;
     }
 
     @Override
     public <T> T getParameterValue(Parameter<T> param) {
-        return (T) getParameterValue(param.getName());
+        return (T) getParameterValue(getName(param));
     }
 
     @Override

@@ -37,10 +37,12 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,6 +67,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final ObjectBuilder<X> objectBuilder;
     private final Map<String, Parameter<?>> parameters;
     private final Map<String, ParameterLocation> parameterToQuery;
+    private final Map<ParameterExpression<?>, String> criteriaNameMapping;
     private final Object entityId;
     private int firstResult;
     private int pageSize;
@@ -79,7 +82,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final boolean inlinedIdQuery;
     private final boolean inlinedCountQuery;
 
-    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, boolean boundedCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Set<Parameter<?>> parameters,
+    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, boolean boundedCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Collection<ParameterManager.ParameterImpl<?>> parameters, Map<ParameterExpression<?>, String> criteriaNameMapping,
                                    Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery, boolean inlinedCountQuery) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;
@@ -101,10 +104,19 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
         this.forceFirstResult = forceFirstResult;
         this.inlinedIdQuery = inlinedIdQuery;
         this.inlinedCountQuery = inlinedCountQuery;
+        this.criteriaNameMapping = criteriaNameMapping;
 
         Map<String, Parameter<?>> params = new HashMap<>(parameters.size());
-        for (Parameter<?> parameter : parameters) {
-            params.put(getParameterName(parameter), parameter);
+        for (ParameterManager.ParameterImpl<?> parameter : parameters) {
+            String name = parameter.getName();
+            if (name == null) {
+                name = parameter.getPosition().toString();
+            }
+            if (parameter.getCriteriaParameter() == null) {
+                params.put(name, parameter);
+            } else {
+                params.put(name, parameter.getCriteriaParameter());
+            }
         }
 
         this.parameters = Collections.unmodifiableMap(params);
@@ -152,6 +164,9 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     }
 
     private String getParameterName(Parameter<?> parameter) {
+        if (criteriaNameMapping != null && parameter.getName() == null && parameter instanceof ParameterExpression<?>) {
+            return criteriaNameMapping.get(parameter);
+        }
         String name = parameter.getName();
         if (name == null) {
             return parameter.getPosition().toString();
@@ -512,20 +527,21 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-        if (param.getName() == null) {
+        String name = getParameterName(param);
+        if (name == null) {
             List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
                 query.setParameter(param.getPosition(), value);
             }
-        } else if (Character.isDigit(param.getName().charAt(0))) {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+        } else if (Character.isDigit(name.charAt(0))) {
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(Integer.parseInt(param.getName()), value);
+                query.setParameter(Integer.parseInt(name), value);
             }
         } else {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(param.getName(), value);
+                query.setParameter(name, value);
             }
         }
         return this;
@@ -533,20 +549,21 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-        if (param.getName() == null) {
+        String name = getParameterName(param);
+        if (name == null) {
             List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
                 query.setParameter(param.getPosition(), value, temporalType);
             }
-        } else if (Character.isDigit(param.getName().charAt(0))) {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+        } else if (Character.isDigit(name.charAt(0))) {
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(Integer.parseInt(param.getName()), value, temporalType);
+                query.setParameter(Integer.parseInt(name), value, temporalType);
             }
         } else {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(param.getName(), value, temporalType);
+                query.setParameter(name, value, temporalType);
             }
         }
         return this;
@@ -554,20 +571,21 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-        if (param.getName() == null) {
+        String name = getParameterName(param);
+        if (name == null) {
             List<Query> queries = parameterToQuery.get(Integer.toString(param.getPosition())).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
                 query.setParameter(param.getPosition(), value, temporalType);
             }
-        } else if (Character.isDigit(param.getName().charAt(0))) {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+        } else if (Character.isDigit(name.charAt(0))) {
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(Integer.parseInt(param.getName()), value, temporalType);
+                query.setParameter(Integer.parseInt(name), value, temporalType);
             }
         } else {
-            List<Query> queries = parameterToQuery.get(param.getName()).getQueries(countQuery, idQuery, objectQuery);
+            List<Query> queries = parameterToQuery.get(name).getQueries(countQuery, idQuery, objectQuery);
             for (Query query : queries) {
-                query.setParameter(param.getName(), value, temporalType);
+                query.setParameter(name, value, temporalType);
             }
         }
         return this;
@@ -668,7 +686,8 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public Parameter<?> getParameter(int position) {
-        Parameter<?> param = parameters.get(Integer.toString(position));
+        String string = Integer.toString(position);
+        Parameter<?> param = parameters.get(string);
         if (param == null) {
             throw new IllegalArgumentException("Couldn't find parameter with position '" + position + "'!");
         }

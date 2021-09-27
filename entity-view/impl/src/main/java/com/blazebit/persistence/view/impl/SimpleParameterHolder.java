@@ -20,6 +20,7 @@ import com.blazebit.persistence.ParameterHolder;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -78,6 +79,11 @@ public class SimpleParameterHolder implements ParameterHolder {
 
     @Override
     public ParameterHolder setParameterType(String name, Class type) {
+        return this;
+    }
+
+    @Override
+    public ParameterHolder registerCriteriaParameter(String name, ParameterExpression parameter) {
         return this;
     }
 }

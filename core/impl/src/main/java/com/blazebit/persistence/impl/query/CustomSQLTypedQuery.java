@@ -26,6 +26,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -40,8 +41,8 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
 
     private final Query delegate;
 
-    public CustomSQLTypedQuery(QuerySpecification querySpecification, Query delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, transformers, valuesParameters, valuesBinders);
+    public CustomSQLTypedQuery(QuerySpecification querySpecification, Query delegate, Map<ParameterExpression<?>, String> criteriaNameMapping, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, criteriaNameMapping, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

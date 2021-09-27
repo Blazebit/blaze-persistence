@@ -154,16 +154,16 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
         QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-        Query query = new CustomSQLQuery(
+        CustomSQLQuery query = new CustomSQLQuery(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
 
         parameterManager.parameterizeQuery(query);
-
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
 
@@ -177,13 +177,13 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
 
         parameterManager.parameterizeQuery(query);
-
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
 
@@ -250,7 +250,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 keyRestrictedLeftJoinAliases,
                 entityFunctionNodes,

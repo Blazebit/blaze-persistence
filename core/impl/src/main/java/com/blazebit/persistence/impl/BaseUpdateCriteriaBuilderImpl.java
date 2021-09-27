@@ -333,9 +333,10 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
             Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
             QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-            Query query = new CustomSQLQuery(
+            CustomSQLQuery query = new CustomSQLQuery(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
@@ -356,6 +357,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
         CustomReturningSQLTypedQuery<R> query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
@@ -402,7 +404,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 mainQuery.cteManager.isRecursive(),
                 ctes,

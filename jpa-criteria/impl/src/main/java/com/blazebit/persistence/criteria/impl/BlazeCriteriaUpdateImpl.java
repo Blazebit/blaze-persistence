@@ -157,7 +157,7 @@ public class BlazeCriteriaUpdateImpl<T> extends AbstractModificationCriteriaQuer
         }
 
         for (Map.Entry<ParameterExpression<?>, String> entry : context.getExplicitParameterMapping().entrySet()) {
-            updateCriteriaBuilder.setParameterType(entry.getValue(), entry.getKey().getParameterType());
+            updateCriteriaBuilder.registerCriteriaParameter(entry.getValue(), entry.getKey());
         }
 
         return updateCriteriaBuilder;

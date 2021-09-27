@@ -74,7 +74,7 @@ public class DefaultQuerySpecification implements QuerySpecification {
     }
 
     @Override
-    public Set<Parameter<?>> getParameters() {
+    public Collection<? extends Parameter<?>> getParameters() {
         return query.getParameters();
     }
 

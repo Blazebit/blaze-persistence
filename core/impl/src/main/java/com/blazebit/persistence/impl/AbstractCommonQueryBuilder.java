@@ -65,6 +65,7 @@ import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.impl.transform.ExpressionModifierVisitor;
 import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
 import com.blazebit.persistence.impl.transform.OuterFunctionVisitor;
@@ -72,6 +73,7 @@ import com.blazebit.persistence.impl.transform.SimpleTransformerGroup;
 import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
 import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
 import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionVisitor;
+import com.blazebit.persistence.impl.util.SetView;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
@@ -113,6 +115,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
@@ -1226,7 +1229,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public Set<? extends Parameter<?>> getParameters() {
-        return parameterManager.getParameters();
+        return new SetView<>(parameterManager.getParameters());
     }
 
     public Object getParameterValue(String name) {
@@ -1236,6 +1239,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public BuilderType setParameterType(String name, Class<?> type) {
         parameterManager.setParameterType(name, type);
+        return (BuilderType) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType registerCriteriaParameter(String name, ParameterExpression<?> parameter) {
+        parameterManager.registerCriteriaParameter(name, parameter);
         return (BuilderType) this;
     }
 
@@ -2821,12 +2830,25 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         final boolean needsSqlReplacement = isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty() || !isMainQuery && hasLimit();
         if (!needsSqlReplacement) {
-            TypedQuery<QueryResultType> baseQuery = createTypedQuery(baseQueryString);
-            parameterManager.parameterizeQuery(baseQuery);
-            return baseQuery;
+            TypedQuery<QueryResultType> query = (TypedQuery<QueryResultType>) em.createQuery(baseQueryString, selectManager.getExpectedQueryResultType());
+            if (firstResult != 0) {
+                query.setFirstResult(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                query.setMaxResults(maxResults);
+            }
+            if (isCacheable()) {
+                mainQuery.jpaProvider.setCacheable(query);
+            }
+
+            parameterManager.parameterizeQuery(query);
+            return applyObjectBuilder(query);
         }
 
-        TypedQuery<QueryResultType> baseQuery = createTypedQuery(baseQueryString);
+        TypedQuery<QueryResultType> baseQuery = (TypedQuery<QueryResultType>) em.createQuery(baseQueryString, selectManager.getExpectedQueryResultType());
+        if (isCacheable()) {
+            mainQuery.jpaProvider.setCacheable(baseQuery);
+        }
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         String limit = null;
         String offset = null;
@@ -2845,13 +2867,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         boolean shouldRenderCteNodes = lateralSb == null && renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.<CTENode>emptyList();
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterManager.getParameters(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes,
+                this, baseQuery, parameterManager.getParameterImpls(), parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
         );
 
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
@@ -3432,22 +3455,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         return getQuery();
     }
-    
-    @SuppressWarnings("unchecked")
-    protected TypedQuery<QueryResultType> createTypedQuery(String queryString) {
-        TypedQuery<QueryResultType> query = (TypedQuery<QueryResultType>) em.createQuery(queryString, selectManager.getExpectedQueryResultType());
-        if (firstResult != 0) {
-            query.setFirstResult(firstResult);
-        }
-        if (maxResults != Integer.MAX_VALUE) {
-            query.setMaxResults(maxResults);
-        }
-        if (isCacheable()) {
-            mainQuery.jpaProvider.setCacheable(query);
-        }
-
-        return applyObjectBuilder(query);
-    }
 
     @SuppressWarnings("unchecked")
     public KeysetBuilder<BuilderType> beforeKeyset() {
@@ -3913,7 +3920,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final TypedQuery<QueryResultType> applyObjectBuilder(TypedQuery<?> query) {
         ObjectBuilder<QueryResultType> selectObjectBuilder = selectManager.getSelectObjectBuilder();
         if (selectObjectBuilder != null) {
-            return  new ObjectBuilderTypedQuery<>(query, selectObjectBuilder);
+            return new ObjectBuilderTypedQuery<>(query, query instanceof AbstractCustomQuery<?> ? null : parameterManager.getCriteriaNameMapping(), selectObjectBuilder);
+        } else if (parameterManager.getCriteriaNameMapping() != null) {
+            return new TypedQueryWrapper<>((TypedQuery<QueryResultType>) query, parameterManager.getCriteriaNameMapping());
         } else {
             return (TypedQuery<QueryResultType>) query;
         }

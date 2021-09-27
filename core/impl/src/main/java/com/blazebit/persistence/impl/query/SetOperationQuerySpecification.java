@@ -44,7 +44,7 @@ public class SetOperationQuerySpecification<T> extends CustomQuerySpecification<
     private final boolean nested;
 
     public SetOperationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query leftMostQuery, Query baseQuery, List<Query> setOperands, SetOperationType operator,
-                                          List<? extends OrderByElement> orderByElements, boolean nested, Set<Parameter<?>> parameters, Set<String> parameterListNames, String limit, String offset,
+                                          List<? extends OrderByElement> orderByElements, boolean nested, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames, String limit, String offset,
                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                           boolean queryPlanCacheEnabled) {
         super(commonQueryBuilder, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, queryPlanCacheEnabled, null);

@@ -116,7 +116,7 @@ public class ViewJoinTests {
                             commentPath.get(TicketComment_.seen)));
 
             Predicate hasUnseenComments = criteriaBuilder.ge(criteriaBuilder
-                    .diff(commentCount, seenCommentCountSubquery), 0);
+                    .diff(commentCount, seenCommentCountSubquery), 0L);
 
             return criteriaBuilder.or(ticketSeen, hasUnseenComments);
         }, user);

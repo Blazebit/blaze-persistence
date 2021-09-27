@@ -175,12 +175,12 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
-        Query query = em.createQuery(getBaseQueryStringWithCheck(null, null));
-        Set<String> parameterListNames = parameterManager.getParameterListNames(query);
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
-        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         String[] returningColumns = getReturningColumns();
@@ -189,9 +189,9 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
 
         QuerySpecification querySpecification = new ModificationQuerySpecification(
                 this,
-                query,
+                baseQuery,
                 getCountExampleQuery(),
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 keyRestrictedLeftJoinAliases,
                 entityFunctionNodes,
@@ -206,9 +206,10 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
                 mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
 
-        query = new CustomSQLQuery(
+        CustomSQLQuery query = new CustomSQLQuery(
                 querySpecification,
-                query,
+                baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()

@@ -45,12 +45,14 @@ import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryCompariso
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.impl.query.AbstractCustomQuery;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
@@ -69,10 +71,10 @@ import javax.persistence.TypedQuery;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -461,7 +463,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 mainQuery.jpaProvider.setCacheable(countQuery);
             }
             parameterManager.parameterizeQuery(countQuery);
-            return countQuery;
+            return parameterManager.getCriteriaNameMapping() == null ? countQuery : new TypedQueryWrapper<>(countQuery, parameterManager.getCriteriaNameMapping());
         }
 
         TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
@@ -475,10 +477,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
-        Set<Parameter<?>> parameters = parameterManager.getParameters();
+        Collection<Parameter<?>> parameters;
         Map<String, String> valuesParameters = parameterManager.getValuesParameters();
         Map<String, ValuesParameterBinder> valuesBinders = parameterManager.getValuesBinders();
-        if (dualNode != null) {
+        if (dualNode == null) {
+            parameters = (Collection<Parameter<?>>) (Collection<?>) parameterManager.getParameterImpls();
+        } else {
+            parameters = new ArrayList<>(parameterManager.getParameters());
             String valueParameterName = dualNode.getAlias() + "_value_0";
             String[][] parameterNames = new String[1][1];
             parameterNames[0][0] = valueParameterName;
@@ -493,9 +498,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
         );
 
-        TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
+        CustomSQLTypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 valuesParameters,
                 valuesBinders
@@ -585,7 +591,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 idQuery,
                 objectQuery,
                 objectBuilder,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
+                parameterManager.getCriteriaNameMapping(),
                 entityId,
                 firstResult,
                 maxResults,
@@ -934,13 +941,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             boolean shouldRenderCteNodes = renderCteNodes(false);
             List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
 
-            Set<Parameter<?>> parameters = parameterManager.getParameters();
+            Collection<Parameter<?>> parameters;
             Map<String, String> valuesParameters = parameterManager.getValuesParameters();
             Map<String, ValuesParameterBinder> valuesBinders = parameterManager.getValuesBinders();
 
             boolean externalIdQuery = !isWithInlineIdQuery() && (hasCollections || withForceIdQuery);
             JoinNode dualNode = null;
             if (!externalIdQuery && firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
+                parameters = new ArrayList<>(parameterManager.getParameters());
                 dualNode = createDualNode();
                 String valueParameterName = dualNode.getAlias() + "_value_0";
                 String[][] parameterNames = new String[1][1];
@@ -950,8 +958,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 valuesParameters = new HashMap<>(valuesParameters);
                 valuesParameters.put(valueParameterName, dualNode.getAlias());
                 valuesBinders.put(dualNode.getAlias(), valuesParameterWrapper.getBinder());
+            } else {
+                parameters = (Collection<Parameter<?>>) (Collection<?>) parameterManager.getParameterImpls();
             }
-
             QuerySpecification querySpecification = new CustomQuerySpecification(
                     this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
                     mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
@@ -960,6 +969,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             query = new CustomSQLTypedQuery<T>(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     valuesParameters,
                     valuesBinders
@@ -990,7 +1000,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         if (transformerObjectBuilder != null) {
-            query = new ObjectBuilderTypedQuery<>(query, transformerObjectBuilder);
+            query = new ObjectBuilderTypedQuery<>(query, query instanceof AbstractCustomQuery<?> ? null : parameterManager.getCriteriaNameMapping(), transformerObjectBuilder);
+        } else if (parameterManager.getCriteriaNameMapping() != null) {
+            if (!(query instanceof CustomSQLTypedQuery<?>)) {
+                query = new TypedQueryWrapper<>(query, parameterManager.getCriteriaNameMapping());
+            }
         }
 
         return new AbstractMap.SimpleEntry<TypedQuery<T>, ObjectBuilder<T>>(query, objectBuilder);
@@ -1008,7 +1022,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             } else {
                 parameterManager.parameterizeQuery(idQuery);
             }
-            return idQuery;
+            return parameterManager.getCriteriaNameMapping() == null ? idQuery : new TypedQueryWrapper<>(idQuery, parameterManager.getCriteriaNameMapping());
         }
 
         TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
@@ -1019,13 +1033,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameterManager.getParameters(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
+                this, baseQuery, parameterManager.getParameterImpls(), parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
         );
 
-        TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
+        CustomSQLTypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
@@ -1064,9 +1079,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
-        Set<Parameter<?>> parameters = new HashSet<>(parameterManager.getParameters());
+        Collection<Parameter<?>> parameters;
         if (identifierExpressionsToUse.length == 1) {
+            parameters = new ArrayList<>(parameterManager.getParameters());
             parameters.add(baseQuery.getParameter(ID_PARAM_NAME));
+        } else {
+            parameters = (Collection<Parameter<?>>) (Collection<?>) parameterManager.getParameterImpls();
         }
         QuerySpecification querySpecification = new CustomQuerySpecification(
                 this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
@@ -1076,6 +1094,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()

@@ -26,6 +26,7 @@ import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -37,8 +38,8 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     private final TypedQuery<?> delegate;
 
-    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        super(querySpecification, transformers, valuesParameters, valuesBinders);
+    public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, Map<ParameterExpression<?>, String> criteriaNameMapping, Map<String, ParameterValueTransformer> transformers, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        super(querySpecification, criteriaNameMapping, transformers, valuesParameters, valuesBinders);
         this.delegate = delegate;
     }
 

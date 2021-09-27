@@ -105,9 +105,10 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
             Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
             QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-            Query query = new CustomSQLQuery(
+            CustomSQLQuery query = new CustomSQLQuery(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
@@ -128,6 +129,7 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
         CustomReturningSQLTypedQuery<R> query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
@@ -166,7 +168,7 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 mainQuery.cteManager.isRecursive(),
                 ctes,

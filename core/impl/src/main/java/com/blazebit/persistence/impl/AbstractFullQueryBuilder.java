@@ -45,6 +45,7 @@ import com.blazebit.persistence.impl.query.CustomQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
@@ -64,6 +65,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -646,9 +648,9 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         List<JoinNode> entityFunctions = null;
         boolean normalQueryMode = !useCountWrapper && (!isMainQuery || (!mainQuery.cteManager.hasCtes() && (entityFunctions = joinManager.getEntityFunctions(COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, true, alwaysIncludedNodes)).isEmpty() && keyRestrictedLeftJoins.isEmpty()));
 
-        Set<Parameter<?>> parameters = parameterManager.getParameters();
-        Map<String, String> valuesParameters = parameterManager.getValuesParameters();
-        Map<String, ValuesParameterBinder> valuesBinders = parameterManager.getValuesBinders();
+        Collection<Parameter<?>> parameters;
+        Map<String, String> valuesParameters;
+        Map<String, ValuesParameterBinder> valuesBinders;
         JoinNode dualNode = null;
         if (cachedMaximumCount == Long.MAX_VALUE) {
             if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS)) {
@@ -657,9 +659,15 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                     mainQuery.jpaProvider.setCacheable(countQuery);
                 }
                 parameterManager.parameterizeQuery(countQuery);
-                return countQuery;
+                return parameterManager.getCriteriaNameMapping() == null ? countQuery : new TypedQueryWrapper<>(countQuery, parameterManager.getCriteriaNameMapping());
             }
+            parameters = (Collection<Parameter<?>>) (Collection<?>) parameterManager.getParameterImpls();
+            valuesParameters = parameterManager.getValuesParameters();
+            valuesBinders = parameterManager.getValuesBinders();
         } else {
+            parameters = new ArrayList<>(parameterManager.getParameters());
+            valuesParameters = new HashMap<>(parameterManager.getValuesParameters());
+            valuesBinders = parameterManager.getValuesBinders();
             dualNode = createDualNode();
             entityFunctions = new ArrayList<>();
             entityFunctions.add(dualNode);
@@ -668,7 +676,6 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             parameterNames[0][0] = valueParameterName;
             ParameterManager.ValuesParameterWrapper valuesParameterWrapper = new ParameterManager.ValuesParameterWrapper(dualNode.getJavaType(), parameterNames, new AttributeAccessor[1]);
             parameters.add(new ParameterManager.ParameterImpl<Object>(dualNode.getAlias(), false, null, null, valuesParameterWrapper));
-            valuesParameters = new HashMap<>(valuesParameters);
             valuesParameters.put(valueParameterName, dualNode.getAlias());
             valuesBinders.put(dualNode.getAlias(), valuesParameterWrapper.getBinder());
         }
@@ -693,9 +700,10 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 useCountWrapper ? getCountExampleQuery() : null
         );
 
-        TypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
+        CustomSQLTypedQuery<Long> countQuery = new CustomSQLTypedQuery<>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 valuesParameters,
                 valuesBinders

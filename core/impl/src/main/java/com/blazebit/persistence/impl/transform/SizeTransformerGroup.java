@@ -63,7 +63,7 @@ public class SizeTransformerGroup implements ExpressionTransformerGroup<Expressi
 
     @Override
     public void beforeTransformationGroup() {
-        for (ParameterManager.ParameterImpl<?> parameter : (Set<ParameterManager.ParameterImpl<?>>) (Set<?>) parameterManager.getParameters()) {
+        for (ParameterManager.ParameterImpl<?> parameter : parameterManager.getParameterImpls()) {
             Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> set;
             // If a parameter is used in SELECT, ORDER BY or HAVING of our query builder,
             // and the parameter can't be represented as literal, we have to disable the count transformation.
