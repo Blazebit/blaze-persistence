@@ -325,7 +325,12 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 renderOrderBy(subQueryMetadata, (OrderByBuilder<?>) criteriaBuilder);
                 renderParameters(subQueryMetadata, (ParameterHolder<?>) criteriaBuilder);
                 renderConstants((ParameterHolder<?>) criteriaBuilder);
-                renderModifiers(subQueryMetadata.getModifiers(), (LimitBuilder<?>) criteriaBuilder);
+
+                // Limit / offset on full query is set outside of the renderer, based on whether we're rendering a full count query or not
+                if (!(criteriaBuilder instanceof Queryable)) {
+                    renderModifiers(subQueryMetadata.getModifiers(), (LimitBuilder<?>) criteriaBuilder);
+                }
+
                 return criteriaBuilder;
             }
 
@@ -345,7 +350,11 @@ public class BlazeCriteriaBuilderRenderer<T> {
             expression instanceof SubQueryExpression<?>) {
             QueryMetadata metadata = ((SubQueryExpression<?>) expression).getMetadata();
             renderOrderBy(metadata, (OrderByBuilder<?>) result);
-            renderModifiers(metadata.getModifiers(), (LimitBuilder<?>) result);
+
+            // Limit / offset on full query is set outside of the renderer, based on whether we're rendering a full count query or not
+            if (!(criteriaBuilder instanceof Queryable)) {
+                renderModifiers(metadata.getModifiers(), (LimitBuilder<?>) result);
+            }
         }
 
         return result;

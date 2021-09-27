@@ -168,7 +168,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     // TODO @Override
     protected Query createQuery(@Nullable QueryModifiers modifiers, boolean forCount) {
         if (forCount) {
-            return  getFullQueryBuilder(null).getCountQuery();
+            return  getFullQueryBuilder(modifiers).getCountQuery();
         }
 
         Queryable<T, ?> queryable = getQueryable(modifiers);
@@ -256,7 +256,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     @Override
     public long fetchCount() {
         try {
-            Query query = createQuery(null, true);
+            Query query = createQuery(getMetadata().getModifiers(), true);
             return (Long) query.getSingleResult();
         } finally {
             reset();
