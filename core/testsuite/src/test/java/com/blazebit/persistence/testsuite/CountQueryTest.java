@@ -142,6 +142,26 @@ public class CountQueryTest extends AbstractCoreTest {
     // NOTE: This requires advanced SQL support
     @Test
     @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void countQueryWithGroupByAndLimit() {
+        CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
+                .from(Document.class, "d")
+                .select("name")
+                .groupBy("name")
+                .orderByAsc("name")
+                .setFirstResult(1)
+                .setMaxResults(1);
+
+        // do not include joins that are only needed for the select clause
+        String expectedCountQuery = "SELECT COUNT(*) FROM (SELECT d.name FROM Document d GROUP BY d.name ORDER BY d.name ASC LIMIT 1 OFFSET 1)";
+        assertEquals(expectedCountQuery, crit.getCountQueryString());
+        assertEquals(expectedCountQuery, crit.getQueryRootCountQueryString());
+        crit.getCountQuery().getResultList();
+        crit.getQueryRootCountQuery().getResultList();
+    }
+
+    // NOTE: This requires advanced SQL support
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     public void countQueryFromHavingQuery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("d.id")

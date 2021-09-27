@@ -301,7 +301,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     protected final boolean isComplexCountQuery() {
-        return !havingManager.isEmpty() || hasGroupBy && selectManager.isDistinct();
+        return !havingManager.isEmpty() || hasGroupBy && selectManager.isDistinct() || hasLimit() && !(this instanceof PaginatedCriteriaBuilderImpl<?>);
     }
 
     protected final String getDualNodeAlias() {
@@ -685,6 +685,14 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         Query baseQuery = em.createQuery(countQueryString);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        String limit = null;
+        String offset = null;
+        if (firstResult != 0) {
+            offset = Integer.toString(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+            limit = Integer.toString(maxResults);
+        }
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
         List<EntityFunctionNode> entityFunctionNodes;
         if (dualNode == null) {
@@ -695,7 +703,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new CustomQuerySpecification(
-                this, baseQuery, parameters, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes,
+                this, baseQuery, parameters, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(),
                 useCountWrapper ? getCountExampleQuery() : null
         );

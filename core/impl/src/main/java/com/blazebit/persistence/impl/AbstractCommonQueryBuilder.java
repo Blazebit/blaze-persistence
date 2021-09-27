@@ -3776,9 +3776,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
             appendGroupByClause(sbSelectFrom);
             appendWindowClause(sbSelectFrom, externalRepresentation);
-            if (!countWrapped || externalRepresentation && !isMainQuery && hasLimit()) {
+            if (!countWrapped || hasLimit()) {
                 appendOrderByClause(sbSelectFrom);
-                if (externalRepresentation && !isMainQuery) {
+                if (externalRepresentation && (!isMainQuery || countWrapped)) {
                     applyJpaLimit(sbSelectFrom);
                 }
             }
