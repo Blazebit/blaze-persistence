@@ -24,7 +24,6 @@ import javax.persistence.Query;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -41,7 +40,7 @@ public interface QuerySpecification<T> {
 
     public List<Query> getParticipatingQueries();
 
-    public Set<Parameter<?>> getParameters();
+    public Collection<? extends Parameter<?>> getParameters();
 
     public Map<String, String> getAddedCtes();
 

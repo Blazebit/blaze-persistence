@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
@@ -108,7 +109,19 @@ public interface ParameterHolder<X extends ParameterHolder<X>> {
      * @param type The value of the parameter that should be set
      * @return The query builder for chaining calls
      * @since 1.2.0
+     * @deprecated Use {@link #registerCriteriaParameter(String, ParameterExpression)} instead
      */
+    @Deprecated
     public X setParameterType(String name, Class<?> type);
+
+    /**
+     * Registers the given JPA Criteria parameter under the given name.
+     *
+     * @param name The name of the parameter for which the expression should be registered
+     * @param parameter The JPA Criteria parameter that should be registered
+     * @return The query builder for chaining calls
+     * @since 1.6.3
+     */
+    public X registerCriteriaParameter(String name, ParameterExpression<?> parameter);
     
 }

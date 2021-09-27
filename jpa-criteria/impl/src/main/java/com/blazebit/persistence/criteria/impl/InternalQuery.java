@@ -290,7 +290,7 @@ public class InternalQuery<T> implements Serializable {
         }
 
         for (Map.Entry<ParameterExpression<?>, String> entry : context.getExplicitParameterMapping().entrySet()) {
-            cb.setParameterType(entry.getValue(), entry.getKey().getParameterType());
+            cb.registerCriteriaParameter(entry.getValue(), entry.getKey());
         }
 
         return cb;

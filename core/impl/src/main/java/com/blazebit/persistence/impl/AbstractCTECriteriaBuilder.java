@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.query.CTEQuerySpecification;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.QueryWrapper;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
@@ -133,7 +134,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,
                     query,
-                    parameterManager.getParameters(),
+                    parameterManager.getParameterImpls(),
                     parameterListNames,
                     limit,
                     offset,
@@ -144,12 +145,16 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             query = new CustomSQLQuery(
                     querySpecification,
                     query,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
         } else {
             query = em.createQuery(baseQueryString);
+            if (parameterManager.getCriteriaNameMapping() != null) {
+                query = new QueryWrapper(query, parameterManager.getCriteriaNameMapping());
+            }
         }
 
         parameterManager.parameterizeQuery(query);

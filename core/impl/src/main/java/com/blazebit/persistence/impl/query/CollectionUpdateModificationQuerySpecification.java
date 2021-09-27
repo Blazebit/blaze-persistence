@@ -23,6 +23,7 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class CollectionUpdateModificationQuerySpecification<T> extends UpdateMod
 
     private final Map<String, String> columnExpressionRemappings;
 
-    public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Set<Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public CollectionUpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                           boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled,
                                                           String tableToUpdate, String tableAlias, String[] idColumns, List<String> setColumns, Map<String, String> aliasMapping, Query updateExampleQuery, Map<String, String> columnExpressionRemappings) {
         super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled, tableToUpdate, tableAlias, idColumns, setColumns, aliasMapping, updateExampleQuery);

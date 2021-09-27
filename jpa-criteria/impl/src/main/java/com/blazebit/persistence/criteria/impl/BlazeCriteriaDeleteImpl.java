@@ -62,7 +62,7 @@ public class BlazeCriteriaDeleteImpl<T> extends AbstractModificationCriteriaQuer
         }
 
         for (Map.Entry<ParameterExpression<?>, String> entry : context.getExplicitParameterMapping().entrySet()) {
-            deleteCriteriaBuilder.setParameterType(entry.getValue(), entry.getKey().getParameterType());
+            deleteCriteriaBuilder.registerCriteriaParameter(entry.getValue(), entry.getKey());
         }
 
         return deleteCriteriaBuilder;

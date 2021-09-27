@@ -20,29 +20,28 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.0
  */
-public class TypedQueryWrapper<X> implements TypedQuery<X> {
+public class TypedQueryWrapper<X> extends QueryWrapper implements TypedQuery<X> {
     
-    protected final TypedQuery<X> delegate;
-
-    public TypedQueryWrapper(TypedQuery<X> delegate) {
-        this.delegate = delegate;
+    public TypedQueryWrapper(TypedQuery<X> delegate, Map<ParameterExpression<?>, String> criteriaNameMapping) {
+        super(delegate, criteriaNameMapping);
     }
 
+    @Override
     public TypedQuery<X> getDelegate() {
-        return delegate;
+        return (TypedQuery<X>) delegate;
     }
 
     @Override
@@ -52,176 +51,91 @@ public class TypedQueryWrapper<X> implements TypedQuery<X> {
 
     @Override
     public X getSingleResult() {
-        return delegate.getSingleResult();
+        return (X) delegate.getSingleResult();
     }
 
     @Override
     public TypedQuery<X> setMaxResults(int i) {
-        delegate.setMaxResults(i);
+        super.setMaxResults(i);
         return this;
     }
 
     @Override
     public TypedQuery<X> setFirstResult(int i) {
-        delegate.setFirstResult(i);
+        super.setFirstResult(i);
         return this;
     }
 
     @Override
     public TypedQuery<X> setHint(String string, Object o) {
-        delegate.setHint(string, o);
+        super.setHint(string, o);
         return this;
     }
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> prmtr, T t) {
-        // required for Hibernate 4.2
-        if (prmtr.getName() == null) {
-            delegate.setParameter(prmtr, t);
-        } else {
-            delegate.setParameter(prmtr.getName(), t);
-        }
+        super.setParameter(prmtr, t);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Calendar> prmtr, Calendar clndr, TemporalType tt) {
-        delegate.setParameter(prmtr, clndr, tt);
+        super.setParameter(prmtr, clndr, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Date> prmtr, Date date, TemporalType tt) {
-        delegate.setParameter(prmtr, date, tt);
+        super.setParameter(prmtr, date, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(String string, Object o) {
-        delegate.setParameter(string, o);
+        super.setParameter(string, o);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(String string, Calendar clndr, TemporalType tt) {
-        delegate.setParameter(string, clndr, tt);
+        super.setParameter(string, clndr, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(String string, Date date, TemporalType tt) {
-        delegate.setParameter(string, date, tt);
+        super.setParameter(string, date, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int i, Object o) {
-        delegate.setParameter(i, o);
+        super.setParameter(i, o);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int i, Calendar clndr, TemporalType tt) {
-        delegate.setParameter(i, clndr, tt);
+        super.setParameter(i, clndr, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int i, Date date, TemporalType tt) {
-        delegate.setParameter(i, date, tt);
+        super.setParameter(i, date, tt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setFlushMode(FlushModeType fmt) {
-        delegate.setFlushMode(fmt);
+        super.setFlushMode(fmt);
         return this;
     }
 
     @Override
     public TypedQuery<X> setLockMode(LockModeType lmt) {
-        delegate.setLockMode(lmt);
+        super.setLockMode(lmt);
         return this;
-    }
-
-    @Override
-    public int executeUpdate() {
-        return delegate.executeUpdate();
-    }
-
-    @Override
-    public int getMaxResults() {
-        return delegate.getMaxResults();
-    }
-
-    @Override
-    public int getFirstResult() {
-        return delegate.getFirstResult();
-    }
-
-    @Override
-    public Map<String, Object> getHints() {
-        return delegate.getHints();
-    }
-
-    @Override
-    public Set<Parameter<?>> getParameters() {
-        return delegate.getParameters();
-    }
-
-    @Override
-    public Parameter<?> getParameter(String string) {
-        return delegate.getParameter(string);
-    }
-
-    @Override
-    public <T> Parameter<T> getParameter(String string, Class<T> type) {
-        return delegate.getParameter(string, type);
-    }
-
-    @Override
-    public Parameter<?> getParameter(int i) {
-        return delegate.getParameter(i);
-    }
-
-    @Override
-    public <T> Parameter<T> getParameter(int i, Class<T> type) {
-        return delegate.getParameter(i, type);
-    }
-
-    @Override
-    public boolean isBound(Parameter<?> prmtr) {
-        return delegate.isBound(prmtr);
-    }
-
-    @Override
-    public <T> T getParameterValue(Parameter<T> prmtr) {
-        return delegate.getParameterValue(prmtr);
-    }
-
-    @Override
-    public Object getParameterValue(String string) {
-        return delegate.getParameterValue(string);
-    }
-
-    @Override
-    public Object getParameterValue(int i) {
-        return delegate.getParameterValue(i);
-    }
-
-    @Override
-    public FlushModeType getFlushMode() {
-        return delegate.getFlushMode();
-    }
-
-    @Override
-    public LockModeType getLockMode() {
-        return delegate.getLockMode();
-    }
-
-    @Override
-    public <T> T unwrap(Class<T> type) {
-        return delegate.unwrap(type);
     }
 
     public Stream<X> getResultStream() {

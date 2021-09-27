@@ -32,6 +32,7 @@ import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.QueryWrapper;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -211,7 +212,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     this,
                     query,
                     getCountExampleQuery(),
-                    parameterManager.getParameters(),
+                    parameterManager.getParameterImpls(),
                     parameterListNames,
                     mainQuery.cteManager.isRecursive(),
                     ctes,
@@ -227,16 +228,19 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             query = new CustomSQLQuery(
                     querySpecification,
                     query,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck(null, null));
+            if (parameterManager.getCriteriaNameMapping() != null) {
+                query = new QueryWrapper(query, parameterManager.getCriteriaNameMapping());
+            }
         }
 
         parameterManager.parameterizeQuery(query);
-
         return query;
     }
 
@@ -381,7 +385,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 mainQuery.cteManager.isRecursive(),
                 ctes,
@@ -397,6 +401,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                 querySpecification,
                 exampleQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()

@@ -20,12 +20,14 @@ import com.blazebit.persistence.ObjectBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.ParameterExpression;
 
 /**
  *
@@ -37,8 +39,8 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
     private final ObjectBuilder<X> builder;
 
     @SuppressWarnings("unchecked")
-    public ObjectBuilderTypedQuery(TypedQuery<?> delegate, ObjectBuilder<X> builder) {
-        super((TypedQuery<X>) delegate);
+    public ObjectBuilderTypedQuery(TypedQuery<?> delegate, Map<ParameterExpression<?>, String> criteriaNameMapping, ObjectBuilder<X> builder) {
+        super((TypedQuery<X>) delegate, criteriaNameMapping);
         this.builder = builder;
     }
 

@@ -390,7 +390,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                 setOperationManager.getOperator(),
                 getOrderByElements(),
                 setOperationManager.isNested(),
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 limit,
                 offset,
@@ -407,6 +407,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
                 querySpecification,
                 baseQuery,
+                parameterManager.getCriteriaNameMapping(),
                 parameterManager.getTransformers(),
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()

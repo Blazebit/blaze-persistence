@@ -217,16 +217,16 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
             QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-            Query query = new CustomSQLQuery(
+            CustomSQLQuery query = new CustomSQLQuery(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
 
             parameterManager.parameterizeQuery(query);
-
             return query;
         }
     }
@@ -241,13 +241,13 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
             CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                     querySpecification,
                     exampleQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
 
             parameterManager.parameterizeQuery(query);
-
             return query;
         }
     }
@@ -315,7 +315,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 mainQuery.cteManager.isRecursive(),
                 ctes,

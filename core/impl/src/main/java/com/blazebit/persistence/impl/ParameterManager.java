@@ -70,6 +70,7 @@ public class ParameterManager {
     private final Map<String, String> valuesParameters = new TreeMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
+    private Map<javax.persistence.criteria.ParameterExpression<?>, String> criteriaNameMapping;
     private int positionalOffset = -1; // Records the last positional parameter index that was used
 
     public ParameterManager(JpaProvider jpaProvider, EntityMetamodel entityMetamodel) {
@@ -190,16 +191,20 @@ public class ParameterManager {
 
     void collectParameterListNames(Query q, Set<String> parameterListNames, String skippedParameterPrefix) {
         for (Parameter<?> p: q.getParameters()) {
-            String name = p.getName();
+            String parameterName = p.getName();
             // In case of positional parameters, we convert the position to a string and look it up instead
-            if (name == null) {
-                name = p.getPosition().toString();
-            } else if (skippedParameterPrefix != null && name.startsWith(skippedParameterPrefix)) {
+            if (parameterName == null) {
+                if (criteriaNameMapping != null && p instanceof javax.persistence.criteria.ParameterExpression<?>) {
+                    parameterName = criteriaNameMapping.get(p);
+                } else {
+                    parameterName = p.getPosition().toString();
+                }
+            } else if (skippedParameterPrefix != null && parameterName.startsWith(skippedParameterPrefix)) {
                 continue;
             }
-            ParameterImpl<?> parameter = getParameter(name);
+            ParameterImpl<?> parameter = getParameter(parameterName);
             if (parameter != null && parameter.isCollectionValued()) {
-                parameterListNames.add(name);
+                parameterListNames.add(parameterName);
             }
         }
     }
@@ -214,7 +219,11 @@ public class ParameterManager {
             String parameterName = p.getName();
             // In case of positional parameters, we convert the position to a string and look it up instead
             if (parameterName == null) {
-                parameterName = p.getPosition().toString();
+                if (criteriaNameMapping != null && p instanceof javax.persistence.criteria.ParameterExpression<?>) {
+                    parameterName = criteriaNameMapping.get(p);
+                } else {
+                    parameterName = p.getPosition().toString();
+                }
             } else if (skippedParameterPrefix != null && parameterName.startsWith(skippedParameterPrefix)) {
                 continue;
             }
@@ -246,18 +255,23 @@ public class ParameterManager {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public ParameterImpl<?> getParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        ParameterImpl<?> parameter = parameters.get(parameterName);
-        return parameter;
+        return parameters.get(parameterName);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Set<Parameter<?>> getParameters() {
-        return new HashSet<Parameter<?>>(parameters.values());
+    public Collection<Parameter<?>> getParameters() {
+        return (Collection<Parameter<?>>) (Collection<?>) parameters.values();
+    }
+
+    public Collection<ParameterImpl<?>> getParameterImpls() {
+        return parameters.values();
+    }
+
+    public Map<javax.persistence.criteria.ParameterExpression<?>, String> getCriteriaNameMapping() {
+        return criteriaNameMapping;
     }
 
     public Map<String, String> getValuesParameters() {
@@ -487,6 +501,7 @@ public class ParameterManager {
     }
 
     @SuppressWarnings({ "unchecked" })
+    @Deprecated
     public void setParameterType(String parameterName, Class<?> type) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
@@ -497,6 +512,21 @@ public class ParameterManager {
         }
         // TODO: maybe we should do some checks here?
         parameter.setParameterType((Class) type);
+    }
+
+    public <X> void registerCriteriaParameter(String parameterName, javax.persistence.criteria.ParameterExpression<X> parameterExpression) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        ParameterImpl<X> parameter = (ParameterImpl<X>) parameters.get(parameterName);
+        if (parameter == null) {
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+        }
+        parameter.setCriteriaParameter(parameterExpression);
+        if (criteriaNameMapping == null) {
+            criteriaNameMapping = new HashMap<>();
+        }
+        criteriaNameMapping.put(parameterExpression, parameterName);
     }
 
     public int getPositionalOffset() {
@@ -521,6 +551,7 @@ public class ParameterManager {
         private final Map<ClauseType, Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>>> clauseTypes;
         private boolean usedInImplicitGroupBy;
         private Class<T> parameterType;
+        private javax.persistence.criteria.ParameterExpression<T> criteriaParameter;
         private T value;
         private boolean valueSet;
         private ParameterValueTransformer transformer;
@@ -597,6 +628,15 @@ public class ParameterManager {
 
         public void setParameterType(Class<T> parameterType) {
             this.parameterType = parameterType;
+        }
+
+        public javax.persistence.criteria.ParameterExpression<T> getCriteriaParameter() {
+            return criteriaParameter;
+        }
+
+        public void setCriteriaParameter(javax.persistence.criteria.ParameterExpression<T> criteriaParameter) {
+            this.criteriaParameter = criteriaParameter;
+            this.parameterType = criteriaParameter.getParameterType();
         }
 
         public boolean isUsedInGroupBy() {

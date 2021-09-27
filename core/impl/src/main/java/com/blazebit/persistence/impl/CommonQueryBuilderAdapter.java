@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.criteria.ParameterExpression;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -75,6 +76,11 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     @Override
     public BuilderType setParameterType(String name, Class<?> type) {
         return builder.setParameterType(name, type);
+    }
+
+    @Override
+    public BuilderType registerCriteriaParameter(String name, ParameterExpression<?> parameter) {
+        return builder.registerCriteriaParameter(name, parameter);
     }
 
     @Override

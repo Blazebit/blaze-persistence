@@ -56,7 +56,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
     protected final DbmsStatementType statementType;
     protected final Query baseQuery;
-    protected final Set<Parameter<?>> parameters;
+    protected final Collection<? extends Parameter<?>> parameters;
     protected final Map<String, Collection<?>> listParameters;
     protected final String limit;
     protected final String offset;
@@ -75,7 +75,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     protected List<Query> participatingQueries;
     protected Map<String, String> addedCtes;
 
-    public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Set<Parameter<?>> parameters, Set<String> listParameters, String limit, String offset,
+    public CustomQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Collection<? extends Parameter<?>> parameters, Set<String> listParameters, String limit, String offset,
                                     List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCtes,
                                     boolean queryPlanCacheEnabled, Query countWrapperExampleQuery) {
         this.em = commonQueryBuilder.getEntityManager();
@@ -137,9 +137,8 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Set<Parameter<?>> getParameters() {
-        return (Set<Parameter<?>>) (Set) parameters;
+    public Collection<? extends Parameter<?>> getParameters() {
+        return parameters;
     }
 
     @Override

@@ -326,16 +326,16 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
             Query baseQuery = em.createQuery(getBaseQueryStringWithCheck(null, null));
             QuerySpecification querySpecification = getQuerySpecification(baseQuery, getCountExampleQuery(), getReturningColumns(), null, includedModificationStates);
 
-            Query query = new CustomSQLQuery(
+            CustomSQLQuery query = new CustomSQLQuery(
                     querySpecification,
                     baseQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
 
             parameterManager.parameterizeQuery(query);
-
             return query;
         }
     }
@@ -350,13 +350,13 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
             CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
                     querySpecification,
                     exampleQuery,
+                    parameterManager.getCriteriaNameMapping(),
                     parameterManager.getTransformers(),
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
 
             parameterManager.parameterizeQuery(query);
-
             return query;
         }
     }
@@ -461,7 +461,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                 this,
                 baseQuery,
                 exampleQuery,
-                parameterManager.getParameters(),
+                parameterManager.getParameterImpls(),
                 parameterListNames,
                 mainQuery.cteManager.isRecursive(),
                 ctes,
