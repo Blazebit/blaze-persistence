@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.querydsl;
 
+import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.Queryable;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
@@ -35,6 +36,7 @@ import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.group.GroupBy;
 import com.querydsl.core.types.SubQueryExpression;
@@ -67,6 +69,7 @@ import static com.blazebit.persistence.testsuite.entity.QDocument.document;
 import static com.blazebit.persistence.testsuite.entity.QIdHolderCTE.idHolderCTE;
 import static com.blazebit.persistence.testsuite.entity.QPerson.person;
 import static com.blazebit.persistence.testsuite.entity.QRecursiveEntity.recursiveEntity;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
@@ -102,13 +105,67 @@ public class BasicQueryTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {
+        cleanDatabase();
         doInJPA(entityManager -> {
-            Person person = new Person();
-            person.setName("Person");
-            Document testEntity = new Document();
-            testEntity.setName("bogus");
-            testEntity.setOwner(person);
-            entityManager.persist(testEntity);
+            for (int i = 0; i < 10; i++) {
+                Person person = new Person();
+                person.setName("Person " + i);
+                Document testEntity = new Document();
+                testEntity.setName("bogus " + i);
+                testEntity.setOwner(person);
+                entityManager.persist(testEntity);
+            }
+        });
+    }
+
+    @Test
+    public void testFetchResults() {
+        doInJPA(em -> {
+            QueryResults<Person> personQueryResults = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person)
+                    .limit(1)
+                    .offset(1)
+                    .orderBy(person.id.asc())
+                    .fetchResults();
+
+            assertEquals(1L, personQueryResults.getResults().size());
+            assertEquals(1L, personQueryResults.getOffset());
+            assertEquals(1L, personQueryResults.getLimit());
+            assertEquals(10L, personQueryResults.getTotal());
+        });
+    }
+
+    // NOTE: This requires advanced SQL support
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void testFetchCount() {
+        doInJPA(em -> {
+            long totalCount = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person)
+                    .limit(1)
+                    .offset(1)
+                    .orderBy(person.id.asc())
+                    .fetchCount();
+
+            assertEquals(1L, totalCount);
+        });
+    }
+
+    @Test
+    public void testPagination() {
+        doInJPA(em -> {
+            PagedList<Person> personQueryResults = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person)
+                    .orderBy(person.id.asc())
+                    .fetchPage(1, 1);
+
+            assertEquals(1L, personQueryResults.size());
+            assertEquals(1L, personQueryResults.getMaxResults());
+            assertEquals(1L, personQueryResults.getFirstResult());
+            assertEquals(10L, personQueryResults.getTotalSize());
         });
     }
 
