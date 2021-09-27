@@ -562,7 +562,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
                         }
                         metamodelClass.getDeclaredField(attribute.getName()).set(null, relationConstructor.newInstance(path));
                     }
-                } else {
+                } else if (attribute.getJavaMethod() != null) {
                     metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
                 }
                 for (AttributeFilterMapping<?, ?> filter : attribute.getFilters()) {

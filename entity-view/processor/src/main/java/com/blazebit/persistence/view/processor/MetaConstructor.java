@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.TypeElement;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,13 @@ import java.util.Map;
  * @since 1.5.0
  */
 public interface MetaConstructor {
+
+    Comparator<MetaConstructor> NAME_COMPARATOR = new Comparator<MetaConstructor>() {
+        @Override
+        public int compare(MetaConstructor o1, MetaConstructor o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
 
     MetaEntityView getHostingEntity();
 

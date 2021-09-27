@@ -4,6 +4,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.StaticMetamodel;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
 import javax.annotation.Generated;
@@ -15,6 +16,7 @@ public abstract class BView_ {
     public static volatile MethodSingularAttribute<BView, Integer> id;
     public static volatile MethodSingularAttribute<BView, String> name;
     public static volatile MethodSingularAttribute<BView, Integer> parent;
+    public static volatile AttributeFilterMapping<BView, Integer> id_filter;
 
     public static final String ID = "id";
     public static final String NAME = "name";

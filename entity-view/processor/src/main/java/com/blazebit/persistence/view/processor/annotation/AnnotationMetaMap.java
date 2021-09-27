@@ -83,8 +83,9 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
             if (getElement().getKind() == ElementKind.PARAMETER) {
                 sb.append("new ").append(importCollectionType(importContext)).append("<>()");
             } else {
+
                 sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?, ?>) ");
-                sb.append(importContext.importType(TypeUtils.getDerivedTypeName(getHostingEntity().getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
+                sb.append(importContext.importType(getDerivedTypeName() + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append('.')
                         .append(getPropertyName());
                 if (isSubview()) {
                     sb.append(".attr()");

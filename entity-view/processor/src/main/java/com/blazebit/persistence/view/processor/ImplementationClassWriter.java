@@ -1211,7 +1211,7 @@ public final class ImplementationClassWriter {
                 for (MetaAttribute equalityMember : equalityMembers) {
                     Set<Modifier> modifiers = equalityMember.getElement().getModifiers();
                     boolean containsProtected = modifiers.contains(Modifier.PROTECTED);
-                    if (!modifiers.contains(Modifier.PUBLIC) && !containsProtected || containsProtected && !TypeUtils.getPackageName(entity.getTypeElement()).equals(TypeUtils.getPackageName(equalityMember.getElement()))) {
+                    if (!modifiers.contains(Modifier.PUBLIC) && !containsProtected || containsProtected && !TypeUtils.getPackageName(context, entity.getTypeElement()).equals(TypeUtils.getPackageName(context, equalityMember.getElement()))) {
                         needsForeignPackageClass = true;
                     }
                 }

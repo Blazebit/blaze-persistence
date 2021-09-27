@@ -81,6 +81,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final boolean versionMember;
     private final boolean self;
     private final boolean supportsDirtyTracking;
+    private final String derivedTypeName;
     private int attributeIndex = -1;
     private int dirtyStateIndex = -1;
 
@@ -91,6 +92,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         this.declaredJavaType = declaredJavaType;
         this.implementationTypeString = getHostingEntity().importTypeExceptMetamodel(declaredJavaType);
         this.convertedModelType = convertedModelType;
+        this.derivedTypeName = TypeUtils.getDerivedTypeName(parent.getTypeElement());
 
         String mapping = null;
         MappingKind kind = null;
@@ -283,6 +285,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 parent.getContext().logMessage(Diagnostic.Kind.WARNING, "Invalid method name for attribute:" + element);
             }
 
+            // TODO: Try to move setter matching to AnnotationMetaEntityView as pre-step
             Element setter = null;
             for (Element otherElement : element.getEnclosingElement().getEnclosedElements()) {
                 if (setterName.equals(otherElement.getSimpleName().toString())) {
@@ -422,6 +425,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
     public boolean isVersion() {
         return versionMember;
+    }
+
+    protected String getDerivedTypeName() {
+        return derivedTypeName;
     }
 
     @Override
@@ -603,7 +610,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                 } else {
                     if (subviewElement != null) {
                         sb.append("        ").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?> m = (").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?>) ")
-                                .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
+                                .append(parent.implementationImportType(derivedTypeName + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
                         needsMethodAttribute = false;
                         sb.append("        if (").append(getPropertyName()).append(" != null) {").append(NEW_LINE);
                         sb.append("            Class<?> c;").append(NEW_LINE);
@@ -643,7 +650,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                     } else if (subviewElement != null) {
                         if (needsMethodAttribute) {
                             sb.append("        ").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?> m = (").append(parent.implementationImportType(Constants.METHOD_ATTRIBUTE)).append("<?, ?>) ")
-                                    .append(parent.implementationImportType(TypeUtils.getDerivedTypeName(parent.getTypeElement()) + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
+                                    .append(parent.implementationImportType(derivedTypeName + MetamodelClassWriter.META_MODEL_CLASS_NAME_SUFFIX)).append(".").append(getPropertyName()).append(".attr();").append(NEW_LINE);
                         }
                         if (kind != MappingKind.CORRELATED) {
                             sb.append("        if (!m.isPersistCascaded() && !m.isUpdateCascaded() && this.").append(getPropertyName()).append(" != ").append(getPropertyName()).append(" && this.").append(getPropertyName()).append(" instanceof ").append(parent.implementationImportType(Constants.MUTABLE_STATE_TRACKABLE)).append(") {").append(NEW_LINE);

@@ -142,7 +142,7 @@ public final class EntityViewTypeUtils {
     public static SubviewInfo getSubviewInfo(TypeElement typeElement, Context context) {
         Element subviewIdElement = null;
         boolean hasEmptyConstructor = typeElement.getKind() == ElementKind.INTERFACE;
-        for (Element enclosedElement : TypeUtils.getAllMembers(typeElement, context)) {
+        for (Element enclosedElement : context.getAllMembers(typeElement)) {
             if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
                 if (((ExecutableElement) enclosedElement).getParameters().isEmpty()) {
                     hasEmptyConstructor = true;

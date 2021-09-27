@@ -4,6 +4,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.StaticMetamodel;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodListAttribute;
 import com.blazebit.persistence.view.metamodel.MethodMultiListAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
@@ -24,6 +25,8 @@ public abstract class AView_ {
     public static volatile MethodListAttribute<AView, String> names;
     public static volatile BViewRelation<AView, MethodSingularAttribute<AView, BView>> optionalValue;
     public static volatile MethodListAttribute<AView, Serializable> test;
+    public static volatile AttributeFilterMapping<AView, Integer> id_filter;
+    public static volatile AttributeFilterMapping<AView, String> name_filter;
 
     public static final String AGE = "age";
     public static final String BYTES = "bytes";

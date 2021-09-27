@@ -57,11 +57,10 @@ public final class ClassWriterUtils {
         try {
             FileObject fo;
             OutputStream os;
+            String fullyQualifiedClassName = getFullyQualifiedClassName(basePackage, simpleName);
+            context.getTypeElement(fullyQualifiedClassName);
             synchronized (context) {
-                fo = filer.createSourceFile(
-                        getFullyQualifiedClassName(basePackage, simpleName),
-                        elements
-                );
+                fo = filer.createSourceFile(fullyQualifiedClassName, elements);
                 os = fo.openOutputStream();
             }
             PrintWriter pw = new PrintWriter(os);

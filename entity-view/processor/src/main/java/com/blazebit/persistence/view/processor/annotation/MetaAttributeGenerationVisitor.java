@@ -67,7 +67,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 
     @Override
     public AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
-        TypeMirror mirror = context.getTypeUtils().asMemberOf((DeclaredType) entity.getTypeElement().asType(), element);
+        TypeMirror mirror = TypeUtils.asMemberOf(context, (DeclaredType) entity.getTypeElement().asType(), element);
         TypeVariable old = processingTypeVariable;
         processingTypeVariable = t;
         try {
@@ -110,9 +110,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
                 TypeMirror keyTypeMirror = typeArguments.get(0);
                 String keyType = TypeUtils.extractClosestRealTypeAsString(keyTypeMirror, context);
                 String realKeyType = TypeUtils.toTypeString(entityDeclaredType, keyTypeMirror, context);
-                return new AnnotationMetaMap(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementCollectionType, keyType, realKeyType, elementType, realElementType, context);
+                return new AnnotationMetaMap(entity, element, collection, returnedElement.toString(), elementCollectionType, keyType, realKeyType, elementType, realElementType, context);
             } else {
-                return new AnnotationMetaCollection(entity, element, collection, context.getTypeUtils().asElement(declaredType).toString(), elementCollectionType, elementType, realElementType, context);
+                return new AnnotationMetaCollection(entity, element, collection, returnedElement.toString(), elementCollectionType, elementType, realElementType, context);
             }
         } else if (!Constants.SPECIAL.contains(fqNameOfReturnType)) {
             String modelType = returnedElement.getQualifiedName().toString();
