@@ -29,6 +29,7 @@ Not yet released
 * Fix literal parsing issues with a single backslash to match the requirements of the JPA spec
 * Fix rendering of literals in JPA Criteria and introduce configuration option to control value rendering
 * Fix base URI determination in Spring HATEOAS integration to be compatible with Spring HATEOAS 1.3.4
+* Make sure `LIMIT`/`OFFSET` is respected when generating a count query
 
 ### Backwards-incompatible changes
 
