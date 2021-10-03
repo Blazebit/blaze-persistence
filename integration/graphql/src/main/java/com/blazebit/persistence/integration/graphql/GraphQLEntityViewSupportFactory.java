@@ -1157,7 +1157,7 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
-        if (attribute instanceof MappingAttribute<?, ?>) {
+        if (attribute instanceof MappingAttribute<?, ?> && !attribute.isQueryParameter()) {
             AbstractAttribute<?, ?> attr = (AbstractAttribute<?, ?>) attribute;
             Map<String, javax.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
             if (rootTypes.isEmpty()) {
