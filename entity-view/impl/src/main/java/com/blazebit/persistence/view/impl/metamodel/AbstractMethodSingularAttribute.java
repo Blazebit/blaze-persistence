@@ -28,12 +28,9 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -241,18 +238,15 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
             return false;
         }
 
-        Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
-        boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
-
         // For a singular attribute being considered updatable, there must be a setter
         // If the type is a flat view, it must be updatable or creatable and have a setter
         if (elementType instanceof FlatViewType<?>) {
             FlatViewType<?> t = (FlatViewType<?>) elementType;
-            return hasSetter || t.isUpdatable() || t.isCreatable();
+            return getSetterMethod() != null || t.isUpdatable() || t.isCreatable();
         }
 
         // We exclude entity types from this since there is no clear intent
-        return hasSetter;
+        return getSetterMethod() != null;
     }
 
     @Override

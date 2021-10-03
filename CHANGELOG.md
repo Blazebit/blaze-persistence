@@ -31,6 +31,7 @@ Not yet released
 * Fix base URI determination in Spring HATEOAS integration to be compatible with Spring HATEOAS 1.3.4
 * Make sure `LIMIT`/`OFFSET` is respected when generating a count query
 * Fix concurrency issue in entity view annotation processor leading to strange errors
+* Fix setter determination in entity views
 
 ### Backwards-incompatible changes
 

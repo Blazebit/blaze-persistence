@@ -149,6 +149,7 @@ import javax.persistence.metamodel.Metamodel;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
@@ -174,6 +175,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private static final String MULTI_RELATION_CLASS_NAME_SUFFIX = "MultiRelation";
     private static final String BUILDER_CLASS_NAME_SUFFIX = "Builder";
     private static final Set<ViewTransition> VIEW_TRANSITIONS = EnumSet.allOf(ViewTransition.class);
+    private static final Method SYNTHETIC_VERSION_GETTER;
+
+    static {
+        try {
+            SYNTHETIC_VERSION_GETTER = EntityViewProxy.class.getMethod("$$_getVersion");
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private final CriteriaBuilderFactory cbf;
     private final JpaProvider jpaProvider;
@@ -562,7 +572,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
                         }
                         metamodelClass.getDeclaredField(attribute.getName()).set(null, relationConstructor.newInstance(path));
                     }
-                } else if (attribute.getJavaMethod() != null) {
+                } else if (!SYNTHETIC_VERSION_GETTER.equals(attribute.getJavaMethod())) {
+                    // There is no field in the static metamodel for the synthetic version getter
                     metamodelClass.getDeclaredField(attribute.getName()).set(null, attribute);
                 }
                 for (AttributeFilterMapping<?, ?> filter : attribute.getFilters()) {

@@ -230,18 +230,6 @@
                             </sources>
                         </configuration>
                     </execution>
-                    <execution>
-                        <id>add-test-source-hibernate</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/test/hibernate</source>
-                            </sources>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -324,14 +312,14 @@
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>add-test-source-hibernate</id>
+                                <id>add-test-source</id>
                                 <phase>generate-test-sources</phase>
                                 <goals>
                                     <goal>add-test-source</goal>
                                 </goals>
                                 <configuration>
                                     <sources>
-                                        <source>src/test/hibernate</source>
+                                        <source>${project.build.directory}/generated-sources/test-metamodel</source>
                                     </sources>
                                 </configuration>
                             </execution>
@@ -350,6 +338,21 @@
                                 <configuration>
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
+                                    <processors>
+                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                                    </processors>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>process-test</id>
+                                <goals>
+                                    <goal>process-test</goal>
+                                </goals>
+                                <phase>generate-test-sources</phase>
+                                <configuration>
+                                    <!-- source output directory -->
+                                    <outputDirectory>${project.build.directory}/generated-sources/test-metamodel</outputDirectory>
                                     <processors>
                                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                         <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
