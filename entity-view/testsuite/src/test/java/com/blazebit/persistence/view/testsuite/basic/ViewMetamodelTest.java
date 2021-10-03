@@ -495,6 +495,25 @@ public class ViewMetamodelTest extends AbstractEntityViewTest {
     }
 
     @Test
+    public void testMultipleSetterLikeMethods() {
+        ViewMetamodel metamodel = build(MultipleSetterLikeMethodsDocument.class).getMetamodel();
+        MethodAttribute<? super MultipleSetterLikeMethodsDocument, ?> idAttribute = metamodel.view(MultipleSetterLikeMethodsDocument.class).getAttribute("id");
+        assertFalse(idAttribute.isMutable());
+        assertFalse(idAttribute.isUpdatable());
+    }
+
+    @EntityView(Document.class)
+    public static interface MultipleSetterLikeMethodsDocument extends IdHolderView<Long> {
+        default void setId(String id) {
+            setId(Long.valueOf(id));
+        }
+        public void setId(Long id);
+        default void setId(Number id) {
+            setId(id.longValue());
+        }
+    }
+
+    @Test
     public void testImplicitAbstractClassMethodPreferredOverInterfaceMethod() {
         ViewMetamodel metamodel = build(ImplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getMetamodel();
         MethodAttribute<?, ?> methodAttribute = metamodel.view(ImplicitAbstractClassMethodPreferredOverInterfaceMethod.class).getAttribute("name");

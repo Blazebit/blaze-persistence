@@ -53,13 +53,36 @@ public class QuarkusTest {
 
     @RegisterExtension
     final static QuarkusUnitTest RUNNER = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
-                    .addClasses(Document.class, Person.class, DocumentCreateView.class, DocumentView.class)
-                    .addClasses(DocumentPostPersistEntityListener.class)
-                    .addClasses(DocumentResource.class)
-                    .addAsResource("application.properties")
-                    .addAsResource("META-INF/persistence.xml")
+            .setArchiveProducer(() -> {
+                        Class<?>[] views = {DocumentView.class, DocumentCreateView.class};
+                        JavaArchive javaArchive = ShrinkWrap.create(JavaArchive.class)
+                                .addClasses(Document.class, Person.class)
+                                .addClasses(views)
+                                .addClasses(DocumentPostPersistEntityListener.class)
+                                .addClasses(DocumentResource.class)
+                                .addAsResource("application.properties")
+                                .addAsResource("META-INF/persistence.xml");
+                        for (Class<?> view : views) {
+                            addStaticGeneratedClasses(javaArchive, view);
+                        }
+
+                        return javaArchive;
+                    }
             );
+
+    private static void addStaticGeneratedClasses(JavaArchive javaArchive, Class<?> view) {
+        try {
+            javaArchive.addClasses(
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "_"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Relation"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "MultiRelation"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Impl"),
+                    view.getClassLoader().loadClass(view.getPackage().getName() + "." + view.getSimpleName().replace("$", "") + "Builder")
+            );
+        } catch (ClassNotFoundException e) {
+            // Ignore
+        }
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

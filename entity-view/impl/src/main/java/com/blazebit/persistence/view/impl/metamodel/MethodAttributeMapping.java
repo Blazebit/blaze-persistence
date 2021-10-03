@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.MappingCorrelatedSimple;
 import com.blazebit.persistence.view.MappingIndex;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.ReflectionUtils;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodCollectionAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodListAttribute;
 import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMapAttribute;
@@ -43,7 +44,6 @@ import com.blazebit.persistence.view.impl.metamodel.attribute.MappingMethodSingu
 import com.blazebit.persistence.view.impl.metamodel.attribute.SubqueryMethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.spi.EntityViewMethodAttributeMapping;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -52,6 +52,7 @@ import javax.persistence.metamodel.Type;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,6 +78,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
     private final String attributeName;
     private final Method method;
+    private final Method setterMethod;
     private final int attributeIndex;
 
     private Map<String, Class<? extends AttributeFilterProvider<?>>> attributeFilterProviders;
@@ -112,6 +114,30 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         this.attributeName = attributeName;
         this.method = method;
         this.attributeIndex = attributeIndex;
+        Method setter = null;
+        List<Method> setters = ReflectionUtils.getSetters(viewMapping.getEntityViewClass(), attributeName);
+        List<Method> illegalSetters = null;
+        for (Method m : setters) {
+            if ((m.getModifiers() & Modifier.ABSTRACT) != 0) {
+                if (com.blazebit.reflection.ReflectionUtils.getResolvedMethodParameterTypes(viewMapping.getEntityViewClass(), m)[0].equals(com.blazebit.reflection.ReflectionUtils.getResolvedMethodReturnType(viewMapping.getEntityViewClass(), method))) {
+                    setter = m;
+                    break;
+                } else {
+                    if (illegalSetters == null) {
+                        illegalSetters = new ArrayList<>();
+                    }
+                    illegalSetters.add(m);
+                }
+            }
+        }
+        if (setter == null && illegalSetters != null) {
+            for (Method m : illegalSetters) {
+                context.addError("The getter '" + method.getName() + "' of the class '" + viewMapping.getEntityViewClass().getName()
+                        + "' must have the same return type as it's corresponding setter accepts, but found " + m.getParameterTypes()[0].getName());
+            }
+
+        }
+        this.setterMethod = setter;
     }
 
     @Override
@@ -127,6 +153,10 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
     @Override
     public Method getMethod() {
         return method;
+    }
+
+    public Method getSetterMethod() {
+        return setterMethod;
     }
 
     public int getAttributeIndex() {
@@ -358,10 +388,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
 
         if (isEmpty(cascadeSubtypeClasses) && isEmpty(cascadePersistSubtypeClasses) && isEmpty(cascadeUpdateSubtypeClasses)) {
             // If no classes are given, we try to find all subtype classes
-            Method setter = ReflectionUtils.getSetter(getDeclaringView().getEntityViewClass(), getName());
-            boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
             boolean isCollection = false;
-
             ViewMapping attributeViewMapping;
             if (elementViewMapping == null) {
                 attributeViewMapping = typeMapping;
@@ -379,25 +406,25 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                 ManagedType<?> managedType = attributeViewMapping.getManagedType(context);
                 boolean allowMultiParent = managedType != null && managedType.getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
                 // We also allow creatable/updatable instances if cascade uses AUTO, there is a setter and multiple-parents are allowed
-                boolean allowCreatable = attributeViewMapping.isCreatable(context) || cascadeTypes.contains(CascadeType.PERSIST) || cascadeTypes.contains(CascadeType.AUTO) && hasSetter && allowMultiParent;
+                boolean allowCreatable = attributeViewMapping.isCreatable(context) || cascadeTypes.contains(CascadeType.PERSIST) || cascadeTypes.contains(CascadeType.AUTO) && setterMethod != null && allowMultiParent;
                 if (isUpdatable != Boolean.FALSE && getDeclaringView().isUpdatable()) {
-                    boolean allowUpdatable = attributeViewMapping.isUpdatable() || cascadeTypes.contains(CascadeType.UPDATE) || cascadeTypes.contains(CascadeType.AUTO) && hasSetter && allowMultiParent;
+                    boolean allowUpdatable = attributeViewMapping.isUpdatable() || cascadeTypes.contains(CascadeType.UPDATE) || cascadeTypes.contains(CascadeType.AUTO) && setterMethod != null && allowMultiParent;
 
-                    if (hasSetter || isCollection) {
+                    if (setterMethod != null || isCollection) {
                         // When the attribute is updatable, we don't allow updatable or creatable types as read only types
                         this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, !allowUpdatable, !allowCreatable, false);
                     }
-                    if (hasSetter || isCollection && allowCreatable) {
+                    if (setterMethod != null || isCollection && allowCreatable) {
                         // But only if the attribute is explicitly or implicitly updatable
                         this.cascadeSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, allowUpdatable, allowCreatable, true);
                     }
                 } else {
                     // Allow all read-only subtypes and also creatable subtypes for creatable-only views
                     if (getDeclaringView().isCreatable(context)) {
-                        if (hasSetter || isCollection) {
+                        if (setterMethod != null || isCollection) {
                             this.readOnlySubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), true, true, !allowCreatable, false);
                         }
-                        if (hasSetter || isCollection && allowCreatable) {
+                        if (setterMethod != null || isCollection && allowCreatable) {
                             this.cascadePersistSubtypeMappings = initializeDependentSubtypeMappingsAuto(context, attributeViewMapping.getEntityViewClass(), false, false, allowCreatable, true);
                         }
                     }

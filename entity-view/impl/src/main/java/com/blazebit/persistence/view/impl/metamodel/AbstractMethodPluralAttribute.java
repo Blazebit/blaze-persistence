@@ -24,11 +24,9 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -208,7 +206,7 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         }
 
         if (context.isStrictCascadingCheck() && elementType.getMappingType() != Type.MappingType.BASIC && (updateCascaded || persistCascaded) && (declaringType.isUpdatable() || declaringType.isCreatable())) {
-            Method setter = ReflectionUtils.getSetter(declaringType.getJavaType(), getName());
+            Method setter = getSetterMethod();
             if (setter != null) {
                 String message = "The setter '" + setter.getName() + "' for the type " + declaringType.getJavaType().getName() + " will always produce an exception due to enabled strict cascading checks and should be removed! " +
                         "Use @UpdatableMapping on the getter instead to make this attribute updatable!";
@@ -232,18 +230,15 @@ public abstract class AbstractMethodPluralAttribute<X, C, Y> extends AbstractMet
         if (getMappingType() != MappingType.BASIC && getMappingType() != MappingType.CORRELATED) {
             return false;
         }
-        Method setter = ReflectionUtils.getSetter(getDeclaringType().getJavaType(), getName());
-        boolean hasSetter = setter != null && (setter.getModifiers() & Modifier.ABSTRACT) != 0;
-
         // Note that the same logic is implemented for subtype discovery in MethodAttributeMapping.initializeViewMappings()
         // For a plural attribute being considered updatable, there must be a setter or the view type must be creatable
         if (elementType instanceof ManagedViewType<?>) {
             ManagedViewType<?> t = (ManagedViewType<?>) elementType;
-            return hasSetter || t.isCreatable();
+            return getSetterMethod() != null || t.isCreatable();
         }
 
         // We exclude entity types from this since there is no clear intent
-        return hasSetter;
+        return getSetterMethod() != null;
     }
 
     @Override

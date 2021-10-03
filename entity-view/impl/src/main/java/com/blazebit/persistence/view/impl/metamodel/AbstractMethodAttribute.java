@@ -59,6 +59,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final int attributeIndex;
     private final String name;
     private final Method javaMethod;
+    private final Method setterMethod;
     private final Map<String, AttributeFilterMapping<X, ?>> filterMappings;
 
     protected AbstractMethodAttribute(ManagedViewTypeImplementor<X> viewType, MethodAttributeMapping mapping, int attributeIndex, MetamodelBuildingContext context, EmbeddableOwner embeddableMapping) {
@@ -66,6 +67,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         this.attributeIndex = attributeIndex;
         this.name = mapping.getName();
         this.javaMethod = mapping.getMethod();
+        this.setterMethod = mapping.getSetterMethod();
 
         if (mapping.getAttributeFilterProviders() == null) {
             this.filterMappings = Collections.emptyMap();
@@ -362,6 +364,10 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return getDirtyStateIndex() != -1;
     }
 
+    public Method getSetterMethod() {
+        return setterMethod;
+    }
+
     public int getAttributeIndex() {
         return attributeIndex;
     }
@@ -487,13 +493,6 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             return null;
         } else {
             attributeName = getAttributeName(m);
-            Method setter = ReflectionUtils.getSetter(viewType, attributeName);
-
-            if (setter != null && ReflectionUtils.getResolvedMethodParameterTypes(viewType, setter)[0] != ReflectionUtils.getResolvedMethodReturnType(viewType, m)) {
-                context.addError("The getter '" + m.getName() + "' of the class '" + viewType.getName()
-                    + "' must have the same return type as it's corresponding setter accepts!");
-                return null;
-            }
         }
 
         if (m.getExceptionTypes().length > 0) {
