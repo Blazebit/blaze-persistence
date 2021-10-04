@@ -32,6 +32,7 @@ Not yet released
 * Make sure `LIMIT`/`OFFSET` is respected when generating a count query
 * Fix concurrency issue in entity view annotation processor leading to strange errors
 * Fix setter determination in entity views
+* Fix issues with non-PK single valued association id access optimization leading to joins
 
 ### Backwards-incompatible changes
 

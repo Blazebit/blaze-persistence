@@ -529,7 +529,7 @@ public class HibernateJpaProvider implements JpaProvider {
             // ManyToOnes can have JoinTables, which can be treated as non-foreign
             // if table group joins are supported.
             if (supportsTableGroupJoins || propertyType instanceof OneToOneType) {
-                return (entityType).getRHSUniqueKeyPropertyName() != null;
+                return entityType.getRHSUniqueKeyPropertyName() != null && !supportsSingleValuedAssociationNaturalIdExpressions;
             }
         }
 
