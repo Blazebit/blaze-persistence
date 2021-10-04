@@ -56,7 +56,6 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -189,7 +188,8 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         }
 
         ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, baseNode.getManagedType());
-        Attribute attr = managedType.getAttribute(pathReference.getField()).getAttribute();
+        ExtendedAttribute<?, ?> extendedAttribute = managedType.getAttribute(pathReference.getField());
+        Attribute attr = extendedAttribute.getAttribute();
 
         // We constantify collection as a whole to a single element when reaching this point
         if (attr instanceof PluralAttribute<?, ?, ?>) {
@@ -201,29 +201,21 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             return;
         }
 
-        boolean isEmbeddedIdPart = false;
-        boolean isEmbeddedPart = false;
-        int dotIndex = -1;
+        int dotIndex = expr.getField().lastIndexOf('.');
         SingularAttribute<?, ?> singularAttr = (SingularAttribute<?, ?>) attr;
+        String associationName = getSingleValuedIdAccessAssociationName(pathReference.getField(), extendedAttribute);
         Object baseNodeKey;
-        String associationName = null;
-        if (singularAttr.isId() || (isEmbeddedIdPart = isEmbeddedIdPart(baseNode, pathReference.getField(), singularAttr))) {
-            // Check if we have a single valued id access
-            dotIndex = expr.getField().lastIndexOf('.');
-            if (dotIndex == -1) {
-                baseNodeKey = baseNode;
-            } else if (isEmbeddedIdPart) {
-                baseNodeKey = baseNode;
-            } else {
-                // We have to correct the base node for single valued id paths
-                associationName = expr.getField().substring(0, dotIndex);
-                baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
-            }
-        } else if (isEmbeddedPart = attr.getDeclaringType() instanceof EmbeddableType<?>) {
-            dotIndex = expr.getField().lastIndexOf('.');
+        String prefix;
+        if (associationName == null) {
             baseNodeKey = baseNode;
+            prefix = attr.getDeclaringType() instanceof EmbeddableType<?> ? pathReference.getField().substring(0, dotIndex + 1) : "";
         } else {
-            baseNodeKey = baseNode;
+            baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
+            if (attr.getDeclaringType() instanceof EmbeddableType<?>) {
+                prefix = pathReference.getField().substring(associationName.length() + 1, dotIndex + 1);
+            } else {
+                prefix = "";
+            }
         }
 
         Map<String, Boolean> attributes = constantifiedJoinNodeAttributes.get(baseNodeKey);
@@ -231,7 +223,6 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
             attributes = new HashMap<>();
             constantifiedJoinNodeAttributes.put(baseNodeKey, attributes);
         }
-        String prefix = isEmbeddedIdPart || isEmbeddedPart ? pathReference.getField().substring(0, dotIndex + 1) : "";
         addAttribute(prefix, singularAttr, attributes);
         StringBuilder attributeNameBuilder = null;
         Map<String, Boolean> baseNodeAttributes = null;
@@ -279,6 +270,22 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         attributes.putAll(newAttributes);
     }
 
+    private String getSingleValuedIdAccessAssociationName(String field, ExtendedAttribute<?, ?> attr) {
+        List<Attribute<?, ?>> attributePath = attr.getAttributePath();
+        if (!attr.getAttribute().isAssociation() && attributePath.size() > 1) {
+            int endIndex = -1;
+            for (Attribute<?, ?> attribute : attributePath) {
+                endIndex += attribute.getName().length() + 1;
+                if (attribute.isCollection()) {
+                    return null;
+                } else if (attribute.isAssociation()) {
+                    return field.substring(0, endIndex);
+                }
+            }
+        }
+        return null;
+    }
+
     private void addAttribute(String prefix, SingularAttribute<?, ?> singularAttribute, Map<String, Boolean> orderedAttributes) {
         String attributeName;
         if (prefix.isEmpty()) {
@@ -295,19 +302,6 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         } else {
             orderedAttributes.put(attributeName, innerJoin);
         }
-    }
-
-    private boolean isEmbeddedIdPart(JoinNode baseNode, String field, SingularAttribute<?, ?> attr) {
-        if (attr.getDeclaringType() instanceof EmbeddableType<?>) {
-            ManagedType<?> managedType = baseNode.getManagedType();
-            if (managedType instanceof EntityType<?>) {
-                int dotIndex = field.indexOf('.');
-                EntityType<?> entityType = (EntityType<?>) managedType;
-                SingularAttribute<?, ?> potentialIdAttribute = entityType.getSingularAttribute(field.substring(0, dotIndex));
-                return potentialIdAttribute.isId();
-            }
-        }
-        return false;
     }
 
     @Override
