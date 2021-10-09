@@ -283,8 +283,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
                 }
             }
         }
-        
-        currentPosition = null;
+
+        if (newPositions.isEmpty()) {
+            currentPosition.setAttribute(null);
+            currentPosition.setCurrentType(null);
+        } else {
+            currentPosition = newPositions.get(0);
+        }
         pathPositions = newPositions;
     }
 
@@ -361,7 +366,13 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
         } else {
             PathPosition left = resolve(expression.getLeft());
             PathPosition right = resolve(expression.getRight());
-            if (left.getCurrentType() == null || left.getCurrentType() == right.getCurrentType()) {
+            if (left == null) {
+                if (right == null) {
+                    currentPosition.setCurrentType(null);
+                } else {
+                    currentPosition.setCurrentType(right.getCurrentType());
+                }
+            } else if (left.getCurrentType() == null || left.getCurrentType() == right.getCurrentType()) {
                 currentPosition.setCurrentType(right.getCurrentType());
             } else {
                 currentPosition.setCurrentType(left.getCurrentType());
@@ -500,6 +511,7 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
 
         int positionsSize = currentPositions.size();
         int expressionsSize = expressions.size();
+        PathPosition resolvedPosition = null;
         POSITION_LOOP: for (int j = 0; j < positionsSize; j++) {
             for (int i = 0; i < expressionsSize; i++) {
                 PathPosition position = currentPositions.get(j).copy();
@@ -521,6 +533,9 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
                 // We just use the type of the first path position that we find
                 for (PathPosition newPosition : pathPositions) {
                     if (newPosition.getCurrentClass() != null) {
+                        if (resolvedPosition == null) {
+                            resolvedPosition = newPosition;
+                        }
                         newPositions.add(newPosition);
                         continue POSITION_LOOP;
                     }
@@ -529,7 +544,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
             newPositions.add(new PathPosition(null, null));
         }
 
-        currentPosition = null;
+        if (resolvedPosition == null) {
+            currentPosition.setAttribute(null);
+            currentPosition.setCurrentType(null);
+        } else {
+            currentPosition = resolvedPosition;
+        }
         pathPositions = newPositions;
     }
 
@@ -565,7 +585,12 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
             newPositions.add(new PathPosition(null, null));
         }
 
-        currentPosition = null;
+        if (newPositions.isEmpty()) {
+            currentPosition.setAttribute(null);
+            currentPosition.setCurrentType(null);
+        } else {
+            currentPosition = newPositions.get(0);
+        }
         pathPositions = newPositions;
     }
 
