@@ -115,6 +115,7 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
         this.method = method;
         this.attributeIndex = attributeIndex;
         Method setter = null;
+        Method covariantGetter = null;
         List<Method> setters = ReflectionUtils.getSetters(viewMapping.getEntityViewClass(), attributeName);
         List<Method> illegalSetters = null;
         for (Method m : setters) {
@@ -123,6 +124,14 @@ public class MethodAttributeMapping extends AttributeMapping implements EntityVi
                     setter = m;
                     break;
                 } else {
+                    // Before considering this illegal, let's consider that the getter could be covariant overridden
+                    if (covariantGetter == null) {
+                        covariantGetter = com.blazebit.reflection.ReflectionUtils.getMethod(viewMapping.getEntityViewClass(), method.getName());
+                    }
+                    if (com.blazebit.reflection.ReflectionUtils.getResolvedMethodParameterTypes(viewMapping.getEntityViewClass(), m)[0].equals(com.blazebit.reflection.ReflectionUtils.getResolvedMethodReturnType(viewMapping.getEntityViewClass(), covariantGetter))) {
+                        setter = m;
+                        break;
+                    }
                     if (illegalSetters == null) {
                         illegalSetters = new ArrayList<>();
                     }
