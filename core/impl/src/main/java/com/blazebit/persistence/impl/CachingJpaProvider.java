@@ -375,6 +375,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsLikePatternEscape() {
+        return jpaProvider.supportsLikePatternEscape();
+    }
+
+    @Override
     public void setCacheable(Query query) {
         jpaProvider.setCacheable(query);
     }

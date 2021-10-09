@@ -625,6 +625,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsLikePatternEscape() {
+        return true;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         query.setHint("eclipselink.query-results-cache", true);
     }
