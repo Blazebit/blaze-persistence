@@ -423,6 +423,14 @@ public interface DbmsDialect {
     public String cast(String expression, String sqlType);
 
     /**
+     * Returns default escape character of the like predicate.
+     *
+     * @return The default escape character of the like predicate
+     * @since 1.6.3
+     */
+    public Character getDefaultEscapeCharacter();
+
+    /**
      * Returns whether sql types for the returning columns need to be provided.
      *
      * @return True if sql types are required, otherwise false

@@ -54,6 +54,12 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public Character getDefaultEscapeCharacter() {
+        // PostgreSQL is non SQL-standard compliant in this regard
+        return '\\';
+    }
+
+    @Override
     public boolean supportsModificationQueryInWithClause() {
         return true;
     }

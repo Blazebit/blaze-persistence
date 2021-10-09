@@ -273,6 +273,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public Character getDefaultEscapeCharacter() {
+        return delegate.getDefaultEscapeCharacter();
+    }
+
+    @Override
     public boolean needsReturningSqlTypes() {
         return delegate.needsReturningSqlTypes();
     }

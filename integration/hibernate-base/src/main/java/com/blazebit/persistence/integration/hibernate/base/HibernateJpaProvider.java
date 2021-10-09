@@ -278,6 +278,12 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsLikePatternEscape() {
+        // Not yet supported
+        return false;
+    }
+
+    @Override
     public boolean supportsJpa21() {
         return false;
     }

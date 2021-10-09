@@ -574,6 +574,14 @@ public interface JpaProvider {
     public boolean needsCaseWhenElseBranch();
 
     /**
+     * Indicates whether the provider supports automatic like pattern escaping according to the database requirements.
+     *
+     * @return true if supported, else false
+     * @since 1.6.3
+     */
+    public boolean supportsLikePatternEscape();
+
+    /**
      * Enables query result caching for the given query.
      *
      * @param query Enables query result caching for the query

@@ -541,6 +541,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public Character getDefaultEscapeCharacter() {
+        return null;
+    }
+
+    @Override
     public boolean needsReturningSqlTypes() {
         return false;
     }

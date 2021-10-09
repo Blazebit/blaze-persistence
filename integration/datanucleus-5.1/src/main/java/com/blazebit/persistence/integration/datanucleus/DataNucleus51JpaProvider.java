@@ -521,6 +521,11 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsLikePatternEscape() {
+        return true;
+    }
+
+    @Override
     public void setCacheable(Query query) {
         query.setHint("datanucleus.query.results.cached", true);
     }

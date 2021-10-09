@@ -139,6 +139,20 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return jpaProvider.escapeCharacter(character);
     }
 
+    protected String likePattern(String expression) {
+        Character defaultEscapeCharacter = dbmsDialect.getDefaultEscapeCharacter();
+        if (jpaProvider.supportsLikePatternEscape() || defaultEscapeCharacter == null) {
+            return expression;
+        }
+        if (expression.charAt(0) == '\'') {
+            return expression.replace(defaultEscapeCharacter.toString(), defaultEscapeCharacter.toString() + defaultEscapeCharacter);
+        } else {
+            return jpaProvider.getCustomFunctionInvocation("REPLACE", 1)
+                    + expression + ", '" + defaultEscapeCharacter + defaultEscapeCharacter + "', '"
+                    + defaultEscapeCharacter + defaultEscapeCharacter + defaultEscapeCharacter + defaultEscapeCharacter + "')";
+        }
+    }
+
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
         StringBuilder sb = new StringBuilder();
         jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
