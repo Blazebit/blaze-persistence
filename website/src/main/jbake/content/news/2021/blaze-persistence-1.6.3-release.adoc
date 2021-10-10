@@ -1,0 +1,50 @@
+= Blaze-Persistence 1.6.3 Release
+Christian Beikov
+2021-10-10 0
+:description: Blaze-Persistence version 1.6.3 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the third bug fix release of the 1.6 series. This release again contains not only bug fixes, but also some new features that I would like to highlight.
+
+Yet again, thanks to the extensive testing of https://github.com/EugenMayer[Eugen Mayer] from https://kontextwork.de/[KontextWork] we polished the GraphQL integration even further.
+The integration now supports inferring nullability of entity view attributes for the generated GraphQL schema based on the mapping expression.
+On top of that, he also helped us fix an issue with the "single valued association id access optimization" for non primary key based foreign keys, which now also avoids producing a join.
+
+We fixed a few bugs and lifted certain limitations for entity views:
+
+* Fix pagination issues when `JOIN` fetching for a collection and `SUBSELECT` fetching was used
+* Support `SUBSELECT` fetching when main query builder uses `LIMIT`/`OFFSET` and/or `ORDER BY` clauses
+* Validate more uses of `MULTISET` fetching for proper type support to avoid runtime errors
+* Validate mapping index expressions properly regarding their typing
+* Fix issues with setter determination in entity views when same named methods with different arguments exist
+* Fix concurrency issue in entity view annotation processor leading to strange errors
+
+Thanks to our awesome community we fixed:
+
+* JPA Criteria bug regarding joins over embeddables and parameter handling issues
+* Fix compatibility with Quarkus 2.1+ by registering `ValuesEntity` in deployment integration
+* Fix base URI determination in Spring HATEOAS integration to be compatible with Spring HATEOAS 1.3.4
+* Fix parsing of `LIKE` predicate with parameter in `ESCAPE`
+* Fix literal parsing issues with a single backslash to match the requirements of the JPA spec
+* Fix rendering of literals in JPA Criteria and introduce configuration option to control value rendering
+* Make sure `LIMIT`/`OFFSET` is respected when generating a count query
+
+The changes we had to do to in the string literal parsing and rendering to match the expectation of the JPA spec unvealed a non-standard compliant behavior of PostgreSQL,
+which uses a backslash as default escape character in a `LIKE` predicate when no escape character is given.
+We automatically escape the `LIKE` pattern now to guarantee the same behavior across databases, but this escaping might lead to double escaping if you already did escaping for PostgreSQL.
+
+Make sure to remove your escaping i.e. `replace("\\", "\\\\")` from your code when updating to Blaze-Persistence 1.6.3.
+
+Another thing to watch out in this release is the stricter type validation in entity views. Previously we didn't properly type validate all mapping expressions,
+which could have lead to some runtime exceptions. Now that we do type validation, you might see startup failures though due to unsafe expressions.
+A prime example of a possible issue is the comparison of an enum attribute with a string or integer i.e. the SQL representation.
+A expression like `case when type = 'KEY' then ...` should be replaced with `case when type = package.MyEnum.KEY then ...` so that the comparison has matching types.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#163[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

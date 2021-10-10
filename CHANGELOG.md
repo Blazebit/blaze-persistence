@@ -2,9 +2,25 @@
 
 Changes that happened in releases
 
-## 1.6.3-SNAPSHOT
+## 1.6.4-SNAPSHOT
 
 Not yet released
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.3
+
+10/10/2021 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.3+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -36,7 +52,7 @@ Not yet released
 
 ### Backwards-incompatible changes
 
-None yet
+* Automatically escape the LIKE pattern on PostgreSQL if no escape character is given, because it uses a backslash as default escape character
 
 ## 1.6.2
 
