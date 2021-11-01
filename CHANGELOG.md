@@ -13,6 +13,7 @@ None yet
 ### Bug fixes
 
 * Return proper totalSize on PagedList also if the requested page is empty
+* Get rid of a startup warning with Quarkus 2.4.0+
 
 ### Backwards-incompatible changes
 

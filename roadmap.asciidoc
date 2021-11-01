@@ -13,13 +13,15 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 
 = 2.1 Black Panther
 
-** JPA static metamodel
-** Custom static metamodel
-** Dedicated Java 8 API
+** Debezium integration
+** Collection DML and select API improvements
+** Flush ordering according to data dependencies
 
 = 2.0 Drax
 
-** Debezium integration
+** JPA static metamodel
+** Custom static metamodel
+** Dedicated Java 8 API
 ** API refactorings
 
 = 1.7 Enchantress
@@ -28,13 +30,18 @@ As a side note, we are naming releases after http://marvel.com/comics/characters
 ** Merge operation support
 ** Interval arithmetics support
 ** Entity view collection attribute filters
+** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
+** DataNucleus 5.1/5.2/6.0 integration
+** EclipseLink 2.7/3.0/3.1 integration
+** Returning clause emulation
 
 = 1.6 Lockjaw *[RELEASED]*
 
-** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
-** CDI/Spring integration for listeners and services
-** DataNucleus 5.1 integration
-** Returning clause emulation
+** Jakarta Persistence support
+** Annotator SPI for supporting JAXB deserialization of Entity Views
+** Hibernate 6.0 integration
+** `GROUPING SETS` and other summarization support
+** Entity View secondary root support
 ** Chunk-Processing support
 
 = 1.5 Zemo *[RELEASED]*
