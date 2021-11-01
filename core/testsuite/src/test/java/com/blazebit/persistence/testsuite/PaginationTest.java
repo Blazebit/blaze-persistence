@@ -45,8 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -1309,5 +1308,16 @@ public class PaginationTest extends AbstractCoreTest {
                 .end();
         List<Document> resultList = newCb.getResultList();
         assertEquals(secondPage.get(0).get(0), resultList.get(0).getName());
+    }
+
+    @Test
+    public void testTotalCountCorrectOnEmptyPage() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("id")
+                .orderByAsc("id")
+                .page(7, 1);
+        PagedList<Tuple> resultList = cb.getResultList();
+        assertTrue(resultList.isEmpty());
+        assertEquals(7L, resultList.getTotalSize());
     }
 }

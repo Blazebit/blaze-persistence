@@ -410,7 +410,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 }
 
                 if (totalSize == -1) {
-                    if (inlinedCountQuery) {
+                    if (inlinedCountQuery && firstRow == 0) {
                         totalSize = 0L;
                     } else if (withCount) {
                         totalSize = getTotalCount();
