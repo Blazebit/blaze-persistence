@@ -71,23 +71,13 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
-            <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-bootstrap-maven-plugin</artifactId>
-                <version>${version.quarkus}</version>
-                <!-- Executions configuration can be inherited from quarkus-build-parent -->
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extension-descriptor</goal>
-                        </goals>
-                        <configuration>
-                            <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
