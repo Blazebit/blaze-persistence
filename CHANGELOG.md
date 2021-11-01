@@ -12,7 +12,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Return proper totalSize on PagedList also if the requested page is empty
 
 ### Backwards-incompatible changes
 
