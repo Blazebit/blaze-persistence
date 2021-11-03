@@ -55,7 +55,19 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-parser</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-parser-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -67,7 +79,19 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-api</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>
@@ -79,7 +103,19 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -91,7 +127,19 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -109,7 +157,19 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-base-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -151,6 +211,12 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.4-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
@@ -183,6 +249,12 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-entity-view-cdi-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -295,14 +367,32 @@
                 <scope>runtime</scope>
             </dependency>
             <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-jackson</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>
@@ -321,6 +411,12 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>

@@ -39,5 +39,8 @@
         <module>api-jar</module>
         <module>impl-jar</module>
         <module>jpa-2-compatibility-jar</module>
+
+        <module>api-jakarta</module>
+        <module>impl-jakarta</module>
     </modules>
 </project>

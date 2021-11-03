@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Create artifacts for Jakarta Persistence
 
 ### Bug fixes
 
