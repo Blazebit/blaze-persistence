@@ -81,7 +81,7 @@ class BlazePersistenceProcessor {
         String version = Version.getVersion();
         int dotIndex = version.indexOf('.');
         // As of version Quarkus 2, the capabilities are read from the extension descriptor
-        if (dotIndex != -1 && Integer.parseInt(version.substring(0, dotIndex)) >= 2) {
+        if (dotIndex == -1 || Integer.parseInt(version.substring(0, dotIndex)) >= 2) {
             return null;
         }
         return new CapabilityBuildItem(CAPABILITY);
