@@ -53,10 +53,18 @@
         <module>jackson</module>
         <module>graphql</module>
         <module>querydsl</module>
+        <module>quarkus</module>
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>
         <module>entity-view-cdi-jar</module>
-        <module>quarkus</module>
+
+        <module>jpa-base-jakarta</module>
+        <module>hibernate-base-jakarta</module>
+        <module>hibernate-5.4-jakarta</module>
+        <module>entity-view-cdi-jakarta</module>
+        <module>jaxrs-jakarta</module>
+        <module>jackson-jakarta</module>
+        <module>graphql-jakarta</module>
     </modules>
 </project>

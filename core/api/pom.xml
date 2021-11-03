@@ -93,10 +93,10 @@
                                 <id>compile-java9</id>
                                 <phase>compile</phase>
                                 <configuration>
-                                    <tasks>
+                                    <target>
                                         <mkdir dir="${project.build.outputDirectory}/META-INF/versions/9" />
                                         <javac srcdir="${project.basedir}/src/main/java9" destdir="${project.build.outputDirectory}/META-INF/versions/9" classpath="${project.build.outputDirectory}" includeantruntime="false" source="9" target="9" />
-                                    </tasks>
+                                    </target>
                                 </configuration>
                                 <goals>
                                     <goal>run</goal>

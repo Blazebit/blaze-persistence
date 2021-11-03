@@ -38,5 +38,9 @@
 
         <module>api-jar</module>
         <module>impl-jar</module>
+
+        <module>api-jakarta</module>
+        <module>impl-jakarta</module>
+        <module>processor-jakarta</module>
     </modules>
 </project>

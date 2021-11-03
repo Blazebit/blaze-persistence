@@ -13,5 +13,6 @@
     <modules>
         <module>expressions</module>
         <module>testsuite</module>
+        <module>expressions-jakarta</module>
     </modules>
 </project>
