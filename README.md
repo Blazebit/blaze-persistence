@@ -133,37 +133,46 @@ This will also work when running on Java 8. We suggest you add the following dep
 <dependency>
     <groupId>jakarta.xml.bind</groupId>
     <artifactId>jakarta.xml.bind-api</artifactId>
+    <!-- Use version 3.0.1 if you want to use Jakarta EE 9 -->
     <version>2.3.3</version>
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
     <artifactId>jaxb-impl</artifactId>
+    <!-- Use version 3.0.2 if you want to use Jakarta EE 9 -->
     <version>2.3.3</version>
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.transaction</groupId>
     <artifactId>jakarta.transaction-api</artifactId>
+    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
     <version>1.3.3</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.activation</groupId>
     <artifactId>jakarta.activation-api</artifactId>
+    <!-- Use version 2.0.1 if you want to use Jakarta EE 9 -->
     <version>1.2.2</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.annotation</groupId>
     <artifactId>jakarta.annotation-api</artifactId>
+    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
     <version>1.3.5</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 ```
 
-The `javax.transaction` and `javax.activation` dependencies are especially relevant for the JPA metamodel generation.
+The `jakarta.transaction` and `jakarta.activation` dependencies are especially relevant for the JPA metamodel generation.
 
 ## Supported environments/libraries
 
@@ -174,7 +183,7 @@ See the following table for an overview of supported versions.
 
 Module                           | Minimum version                      | Supported versions
 ---------------------------------|--------------------------------------|--------------------
-Hibernate integration            | Hibernate 4.2                        | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4 (not all features are available in older versions)
+Hibernate integration            | Hibernate 4.2                        | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 (not all features are available in older versions)
 EclipseLink integration          | EclipseLink 2.6                      | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
 DataNucleus integration          | DataNucleus 4.1                      | 4.1, 5.0
 OpenJPA integration              | N/A                                  | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
@@ -432,6 +441,8 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+  * `hibernate-5.6`
+  * `hibernate-5.5`
   * `hibernate-5.4`
   * `hibernate-5.3`
   * `hibernate-5.2`
@@ -455,6 +466,8 @@ To test a specific combination, you need to activate at least 4 profiles
   * `firebird`
   * `sqllite`
 * A Spring data profile
+  * `spring-data-2.5.x`
+  * `spring-data-2.4.x`
   * `spring-data-2.3.x`
   * `spring-data-2.2.x`
   * `spring-data-2.1.x`

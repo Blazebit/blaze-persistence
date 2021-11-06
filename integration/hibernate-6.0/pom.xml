@@ -33,14 +33,6 @@
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate</module.name>
     </properties>
-    
-    <repositories>
-        <repository>
-            <id>JBoss Snapshots</id>
-            <name>JBoss Snapshots</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
 
     <dependencies>
         <dependency>

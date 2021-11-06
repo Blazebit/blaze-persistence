@@ -1121,19 +1121,9 @@
         <profile>
             <id>hibernate-5.4</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
-            <repositories>
-                <repository>
-                    <id>JBoss Snapshots</id>
-                    <name>JBoss Snapshots</name>
-                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
@@ -1230,18 +1220,213 @@
             </build>
         </profile>
         <profile>
+            <id>hibernate-5.5</id>
+            <properties>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-5.5}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- IntelliJ apparently needs the annotation processor here -->
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-jpamodelgen</artifactId>
+                    <version>${version.hibernate-5.5}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.bsc.maven</groupId>
+                        <artifactId>maven-processor-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>process</id>
+                                <goals>
+                                    <goal>process</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <!-- source output directory -->
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
+                                    <processors>
+                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                    </processors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <!-- Metamodel -->
+                            <dependency>
+                                <groupId>org.hibernate</groupId>
+                                <artifactId>hibernate-jpamodelgen</artifactId>
+                                <version>${version.hibernate-5.5}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.xml.bind</groupId>
+                                <artifactId>jakarta.xml.bind-api</artifactId>
+                                <version>${version.jaxb-api}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.sun.xml.bind</groupId>
+                                <artifactId>jaxb-impl</artifactId>
+                                <version>${version.jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.transaction</groupId>
+                                <artifactId>jakarta.transaction-api</artifactId>
+                                <version>${version.jta}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.activation</groupId>
+                                <artifactId>jakarta.activation-api</artifactId>
+                                <version>${version.activation}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>hibernate-5.6</id>
+            <properties>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>${version.hibernate-5.6}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- IntelliJ apparently needs the annotation processor here -->
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-jpamodelgen</artifactId>
+                    <version>${version.hibernate-5.6}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.bsc.maven</groupId>
+                        <artifactId>maven-processor-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>process</id>
+                                <goals>
+                                    <goal>process</goal>
+                                </goals>
+                                <phase>generate-sources</phase>
+                                <configuration>
+                                    <!-- source output directory -->
+                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
+                                    <processors>
+                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                    </processors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <!-- Metamodel -->
+                            <dependency>
+                                <groupId>org.hibernate</groupId>
+                                <artifactId>hibernate-jpamodelgen</artifactId>
+                                <version>${version.hibernate-5.6}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.xml.bind</groupId>
+                                <artifactId>jakarta.xml.bind-api</artifactId>
+                                <version>${version.jaxb-api}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.sun.xml.bind</groupId>
+                                <artifactId>jaxb-impl</artifactId>
+                                <version>${version.jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.transaction</groupId>
+                                <artifactId>jakarta.transaction-api</artifactId>
+                                <version>${version.jta}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.activation</groupId>
+                                <artifactId>jakarta.activation-api</artifactId>
+                                <version>${version.activation}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/generated-sources/metamodel</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>hibernate-6.0</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
-            <repositories>
-                <repository>
-                    <id>JBoss Snapshots</id>
-                    <name>JBoss Snapshots</name>
-                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
@@ -2040,19 +2225,9 @@
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
-            <repositories>
-                <repository>
-                    <id>JBoss Snapshots</id>
-                    <name>JBoss Snapshots</name>
-                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
