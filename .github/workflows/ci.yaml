@@ -222,6 +222,72 @@ jobs:
 #            jdk: 8
 
 ################################################
+# hibernate-5.5
+################################################
+          - rdbms: h2
+            provider: hibernate-5.5
+            jdk: 8
+            native: true
+          - rdbms: mysql8
+            provider: hibernate-5.5
+            jdk: 8
+            native: true
+          - rdbms: postgresql
+            provider: hibernate-5.5
+            jdk: 8
+            native: true
+#          - rdbms: oracle
+#            provider: hibernate-5.5
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate-5.5
+#            jdk: 8
+#            native: true
+#          - rdbms: mssql
+#            provider: hibernate-5.5
+#            jdk: 8
+#            native: true
+#          - rdbms: sqlite
+#            provider: hibernate-5.5
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.5
+#            jdk: 8
+
+################################################
+# hibernate-5.4
+################################################
+          - rdbms: h2
+            provider: hibernate-5.6
+            jdk: 8
+            native: true
+          - rdbms: mysql8
+            provider: hibernate-5.6
+            jdk: 8
+            native: true
+          - rdbms: postgresql
+            provider: hibernate-5.6
+            jdk: 8
+            native: true
+#          - rdbms: oracle
+#            provider: hibernate-5.6
+#            jdk: 8
+#          - rdbms: db2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            native: true
+#          - rdbms: mssql
+#            provider: hibernate-5.6
+#            jdk: 8
+#            native: true
+#          - rdbms: sqlite
+#            provider: hibernate-5.6
+#            jdk: 8
+#          - rdbms: firebird
+#            provider: hibernate-5.6
+#            jdk: 8
+
+################################################
 # datanucleus-5.1
 ################################################
 #          - rdbms: h2

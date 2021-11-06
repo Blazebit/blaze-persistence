@@ -157,13 +157,6 @@
                 <maven.processor.source>1.9</maven.processor.source>
                 <maven.processor.target>1.9</maven.processor.target>
             </properties>
-            <repositories>
-                <repository>
-                    <id>JBoss Snapshots</id>
-                    <name>JBoss Snapshots</name>
-                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-                </repository>
-            </repositories>
             <build>
                 <pluginManagement>
                     <plugins>

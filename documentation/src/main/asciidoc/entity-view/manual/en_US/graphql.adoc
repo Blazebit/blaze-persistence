@@ -22,6 +22,18 @@ To use the GraphQL integration you need the following Maven dependencies:
 </dependency>
 ----
 
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
 Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`.
 
 === Usage
