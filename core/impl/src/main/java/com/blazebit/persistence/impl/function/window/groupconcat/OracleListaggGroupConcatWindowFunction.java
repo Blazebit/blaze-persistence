@@ -35,22 +35,20 @@ public class OracleListaggGroupConcatWindowFunction extends AbstractGroupConcatW
 
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         GroupConcat groupConcat = (GroupConcat) windowFunction;
-        if ((groupConcat).isDistinct()) {
+        if (groupConcat.isDistinct()) {
             context.addChunk("distinct ");
         }
         super.renderArguments(context, windowFunction);
         context.addChunk(", ");
         context.addChunk(quoted(groupConcat.getSeparator()));
-        List<Order> orderBys = windowFunction.getOrderBys();
-        context.addChunk(") within group (");
-        if (orderBys.size() == 0) {
-            context.addChunk("1");
-        } else {
-            super.renderOrderBy(context, orderBys);
-        }
     }
 
-    protected void renderOrderBy(FunctionRenderContext context, List<Order> orderBys) {
-        // Don't render the ORDER BY clause in the OVER clause
+    @Override
+    protected void renderWithinGroup(FunctionRenderContext context, List<Order> orderBys) {
+        if (orderBys.size() == 0) {
+            context.addChunk(" within group (1)");
+        } else {
+            super.renderWithinGroup(context, orderBys);
+        }
     }
 }

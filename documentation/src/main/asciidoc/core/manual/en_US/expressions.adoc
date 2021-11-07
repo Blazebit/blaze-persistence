@@ -488,6 +488,8 @@ For more information go to the <<size-function,SIZE function>> chapter.
 {projectname} supports all aggregates as defined by JPQL and some non-standard aggregates. On top of that, it also has support for defining custom aggregate functions.
 For further information on custom aggregates take a look at the <<custom-jpql-function,Custom JPQL functions>> chapter.
 
+Also note that every aggregate function can also be used as <<window-functions,window function>>.
+
 `COUNT ( DISTINCT? arg )`::
 Returns the number of elements that are not null as `Long`.
 
@@ -595,7 +597,9 @@ FROM Cat cat
 `GROUP_CONCAT ( ('DISTINCT' )? , string (, 'SEPARATOR', separatorString)? (, 'ORDER BY', ( orderByExpr, ( 'ASC' | 'DESC' ) )+ ) )`::
 Concatenates elements to a single string connected with the `separatorString` in the requested order.
 
-WARN: This is a non-standard function that might not be supported on all DBMS. See <<group_concat-function,JPQL functions>> for further information.
+WARNING: This is a non-standard function that might not be supported on all DBMS. See <<group_concat-function,JPQL functions>> for further information.
+
+NOTE: The use of this function is discouraged and should be replaced with the SQL standard compliant version, the ordered set-aggregate `LISTAGG`.
 
 [source,java]
 ----
@@ -607,6 +611,31 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
 [source,sql]
 ----
 SELECT GROUP_CONCAT(cat.name, 'SEPARATOR', ' - ', 'ORDER BY', cat.name, 'ASC')
+FROM Cat cat
+----
+
+==== Ordered set-aggregate functions
+
+{projectname} also supports ordered set aggregate functions through the `WITHIN GROUP` clause, much like in SQL.
+For further information on custom ordered set-aggregates take a look at the <<custom-jpql-function,Custom JPQL functions>> chapter.
+
+Also note that every aggregate function can also be used as <<window-functions,window function>>.
+
+`LISTAGG ( DISTINCT? string (, separatorString)? ) (WITHIN GROUP (orderByClause))?`::
+Concatenates elements to a single string connected with the `separatorString` in the requested order.
+
+WARN: This is a non-standard function that might not be supported on all DBMS. See <<listagg-function,JPQL functions>> for further information.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class, "cat")
+    .select("LISTAGG(cat.name, ' - ') WITHIN GROUP (ORDER BY cat.name ASC)");
+----
+
+[source,sql]
+----
+SELECT LISTAGG(cat.name, ' - ') WITHIN GROUP (ORDER BY cat.name ASC)
 FROM Cat cat
 ----
 

@@ -113,7 +113,7 @@ public final class JpqlFunctionGroup {
      * @return True if this is an aggregate function, false otherwise
      */
     public boolean isAggregate() {
-        return kind == JpqlFunctionKind.AGGREGATE;
+        return kind == JpqlFunctionKind.AGGREGATE || kind == JpqlFunctionKind.ORDERED_SET_AGGREGATE;
     }
 
     /**

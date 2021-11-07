@@ -8,7 +8,7 @@ WARNING: This function might not be supported by all DBMS, so make sure your tar
 
 === Aggregate window functions
 
-Any built-in aggregate function can be used as a window function. These are:
+Any built-in aggregate function and ordered set-aggregate functions can be used as a window function. These are:
 
 * `SUM` - Returns the sum across the rows in the window
 * `AVG` - Returns the average value across the rows in the window

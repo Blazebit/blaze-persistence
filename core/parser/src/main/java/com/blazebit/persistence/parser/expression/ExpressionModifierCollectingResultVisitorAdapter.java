@@ -171,6 +171,15 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
                 onModifier(new ExpressionListModifier(expressions, i));
             }
         }
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup != null) {
+            size = withinGroup.size();
+            for (int i = 0; i < size; i++) {
+                if (Boolean.TRUE == withinGroup.get(i).getExpression().accept(this)) {
+                    onModifier(new OrderByItemModifier(withinGroup.get(i)));
+                }
+            }
+        }
         WindowDefinition windowDefinition = expression.getWindowDefinition();
         if (windowDefinition != null) {
             Predicate filterPredicate = windowDefinition.getFilterPredicate();
