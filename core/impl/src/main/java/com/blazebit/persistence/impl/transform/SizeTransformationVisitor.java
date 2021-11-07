@@ -29,7 +29,6 @@ import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.parser.FunctionKind;
 import com.blazebit.persistence.parser.expression.AggregateExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
@@ -164,14 +163,13 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
         if (clause != ClauseType.WHERE && ExpressionUtils.isSizeFunction(expression)) {
             return true;
         }
-        if (!aggregateFunctionContext && FunctionKind.AGGREGATE == mainQuery.getCbf().getFunctions().get(expression.getFunctionName().toLowerCase())) {
+        if (!aggregateFunctionContext && expression instanceof AggregateExpression) {
             aggregateFunctionContext = true;
             Boolean result = super.visit(expression);
             aggregateFunctionContext = false;
             return result;
-        } else {
-            return super.visit(expression);
         }
+        return super.visit(expression);
     }
 
     @Override

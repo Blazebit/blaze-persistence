@@ -85,6 +85,9 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             String argument = context.getArgument(parameterIndex);
 
             switch (argument.toUpperCase()) {
+                case "'WITHIN GROUP'":
+                    mode = Mode.WITHIN_GROUP;
+                    break;
                 case "'FILTER'":
                     if (!allowsFilterClause) {
                         throw new IllegalArgumentException("FILTER clause is disallowed for function: " + functionName);
@@ -113,9 +116,30 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                     startFrame = true;
                     break;
                 default:
+                    Order order;
                     switch (mode) {
                         case ARGUMENTS:
-                            argumentMode = processArgument(argumentMode, windowFunction, argument);
+                            if ("'DISTINCT'".equals(argument)) {
+                                windowFunction.distinct = true;
+                            } else {
+                                argumentMode = processArgument(argumentMode, windowFunction, argument);
+                            }
+                            break;
+                        case WITHIN_GROUP:
+                            order = null;
+                            if (context.getArgumentsSize() > parameterIndex + 1) {
+                                String sortOrder = context.getArgument(parameterIndex + 1);
+                                order = getOrder(sortOrder, argument);
+                                if (order != null) {
+                                    parameterIndex++;
+                                }
+                            }
+
+                            if (order == null) {
+                                order = new Order(argument, null, null);
+                            }
+
+                            windowFunction.withinGroup.add(order);
                             break;
                         case FILTER:
                             windowFunction.filterExpressions.add(argument.substring("case when ".length(), argument.length() - " then 1 else 0 end".length()));
@@ -124,8 +148,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
                             windowFunction.partitionExpressions.add(argument);
                             break;
                         case ORDER_BY:
-                            Order order = null;
-
+                            order = null;
                             if (context.getArgumentsSize() > parameterIndex + 1) {
                                 String sortOrder = context.getArgument(parameterIndex + 1);
                                 order = getOrder(sortOrder, argument);
@@ -236,6 +259,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
     
     protected void render(FunctionRenderContext context, WindowFunction windowFunction) {
         renderFunction(context, windowFunction);
+        renderWithinGroup(context, windowFunction.getWithinGroup());
         renderFilterExpressions(context, windowFunction.getFilterExpressions());
 
         if (requiresOver() || !windowFunction.getPartitionExpressions().isEmpty() || !windowFunction.getOrderBys().isEmpty() || windowFunction.getFrameMode() != null) {
@@ -311,6 +335,19 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             context.addChunk(caseWhenPre);
             context.addChunk(argument);
             context.addChunk(caseWhenPost);
+        }
+    }
+
+    protected void renderWithinGroup(FunctionRenderContext context, List<Order> withinGroup) {
+        int size = withinGroup.size();
+        if (size != 0) {
+            context.addChunk(" WITHIN GROUP (ORDER BY ");
+            renderOrder(context, withinGroup.get(0));
+            for (int i = 1; i < size; i++) {
+                context.addChunk(" AND ");
+                renderOrder(context, withinGroup.get(i));
+            }
+            context.addChunk(")");
         }
     }
 
@@ -454,6 +491,7 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
      */
     private enum Mode {
         ARGUMENTS,
+        WITHIN_GROUP,
         FILTER,
         PARTITION_BY,
         ORDER_BY,
@@ -470,9 +508,11 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
 
         private final String functionName;
         private final List<String> arguments = new ArrayList<>();
+        private final List<Order> withinGroup = new ArrayList<>();
         private final List<String> filterExpressions = new ArrayList<>();
         private final List<String> partitionExpressions = new ArrayList<>();
-        private final List<Order> orderBys  = new ArrayList<>();
+        private final List<Order> orderBys = new ArrayList<>();
+        private boolean distinct;
         private WindowFrameMode frameMode;
         // The default frame start is UNBOUNDED_PRECEDING
         private WindowFramePositionType frameStartType;
@@ -490,8 +530,16 @@ public abstract class AbstractWindowFunction implements JpqlFunction {
             return functionName;
         }
 
+        public boolean isDistinct() {
+            return distinct;
+        }
+
         public List<String> getArguments() {
             return arguments;
+        }
+
+        public List<Order> getWithinGroup() {
+            return withinGroup;
         }
 
         public List<String> getFilterExpressions() {

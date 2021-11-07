@@ -533,7 +533,10 @@ function
     : TRIM LP trimSpecification? trimCharacter? FROM? expression RP                                                                                                 # TrimFunction
     | name=(CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_INSTANT) (LP RP)?                                                                             # TemporalFunction
     | COUNT LP ((DISTINCT? expression) | ASTERISK) RP (FILTER LP whereClause RP)? (OVER (windowName=identifier | (LP windowDefinition RP)))?                        # CountFunction
-    | name=identifier LP DISTINCT? (expression (COMMA expression)*)? RP (FILTER LP whereClause RP)? (OVER (windowName=identifier | (LP windowDefinition RP)))?      # GenericFunctionInvocation
+    | name=identifier LP DISTINCT? (expression (COMMA expression)*)? RP
+        (WITHIN GROUP LP orderByClause RP)?
+        (FILTER LP whereClause RP)?
+        (OVER (windowName=identifier | (LP windowDefinition RP)))?                                                                                                  # GenericFunctionInvocation
     ;
 
 trimSpecification

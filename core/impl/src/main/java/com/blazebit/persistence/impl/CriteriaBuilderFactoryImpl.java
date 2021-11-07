@@ -163,6 +163,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
                 return FunctionKind.VOLATILE;
             case AGGREGATE:
                 return FunctionKind.AGGREGATE;
+            case ORDERED_SET_AGGREGATE:
+                return FunctionKind.ORDERED_SET_AGGREGATE;
             case DETERMINISTIC:
                 return FunctionKind.DETERMINISTIC;
             default:

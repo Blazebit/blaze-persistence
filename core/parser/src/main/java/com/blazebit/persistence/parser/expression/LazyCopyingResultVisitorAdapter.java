@@ -153,6 +153,12 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
         } else {
             copy = true;
         }
+        List<OrderByItem> newWithinGroup = visitOrderByList(expression.getWithinGroup());
+        if (newWithinGroup == null) {
+            newWithinGroup = expression.getWithinGroup();
+        } else {
+            copy = true;
+        }
         WindowDefinition newWindowDefinition = expression.getWindowDefinition();
         if (newWindowDefinition != null) {
             Predicate newFilterPredicate = newWindowDefinition.getFilterPredicate() == null ? null : (Predicate) newWindowDefinition.getFilterPredicate().accept(this);
@@ -200,7 +206,7 @@ public abstract class LazyCopyingResultVisitorAdapter implements Expression.Resu
             }
         }
         if (copy) {
-            return new FunctionExpression(expression.getFunctionName(), newExpressions, newWindowDefinition);
+            return new FunctionExpression(expression.getFunctionName(), newExpressions, newWithinGroup, newWindowDefinition);
         }
         return expression;
     }

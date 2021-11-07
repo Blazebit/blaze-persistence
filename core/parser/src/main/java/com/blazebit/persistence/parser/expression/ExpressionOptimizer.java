@@ -159,6 +159,13 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
         for (int i = 0; i < size; i++) {
             expressions.set(i, expressions.get(i).accept(this));
         }
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup != null) {
+            size = withinGroup.size();
+            for (int i = 0; i < size; i++) {
+                withinGroup.get(i).setExpression(withinGroup.get(i).getExpression().accept(this));
+            }
+        }
         WindowDefinition windowDefinition = expression.getWindowDefinition();
         if (windowDefinition != null) {
             Predicate filterPredicate = windowDefinition.getFilterPredicate();

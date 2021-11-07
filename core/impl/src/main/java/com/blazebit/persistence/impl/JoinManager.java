@@ -51,6 +51,7 @@ import com.blazebit.persistence.parser.expression.MapEntryExpression;
 import com.blazebit.persistence.parser.expression.MapKeyExpression;
 import com.blazebit.persistence.parser.expression.MapValueExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.OrderByItem;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
 import com.blazebit.persistence.parser.expression.PathElementExpression;
 import com.blazebit.persistence.parser.expression.PathExpression;
@@ -2977,10 +2978,18 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 pathExpression.setPathReference(new SimplePathReference(result.baseNode, result.joinFields(), result.type));
             }
         } else if (expression instanceof FunctionExpression) {
-            List<Expression> expressions = ((FunctionExpression) expression).getExpressions();
+            FunctionExpression functionExpression = (FunctionExpression) expression;
+            List<Expression> expressions = functionExpression.getExpressions();
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
                 implicitJoin(expressions.get(i), joinAllowed, singularJoinAllowed, objectLeafAllowed, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, false);
+            }
+            List<OrderByItem> withinGroup = functionExpression.getWithinGroup();
+            if (withinGroup != null) {
+                size = withinGroup.size();
+                for (int i = 0; i < size; i++) {
+                    implicitJoin(withinGroup.get(i).getExpression(), joinAllowed, singularJoinAllowed, objectLeafAllowed, null, fromClause, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, false);
+                }
             }
         } else if (expression instanceof MapKeyExpression) {
             MapKeyExpression mapKeyExpression = (MapKeyExpression) expression;

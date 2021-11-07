@@ -231,6 +231,24 @@ public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean
                 return Boolean.TRUE;
             }
         }
+        List<OrderByItem> referenceWithinGroup = reference.getWithinGroup();
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup == null && referenceWithinGroup != null || withinGroup != null && referenceWithinGroup == null) {
+            return Boolean.TRUE;
+        } else if (withinGroup != null) {
+            size = withinGroup.size();
+            if (size != referenceWithinGroup.size()) {
+                return Boolean.TRUE;
+            }
+            for (int i = 0; i < size; i++) {
+                OrderByItem orderByItem = withinGroup.get(i);
+                OrderByItem referenceOrderByItem = referenceWithinGroup.get(i);
+                referenceExpression = referenceOrderByItem.getExpression();
+                if (orderByItem.isAscending() != referenceOrderByItem.isAscending() || orderByItem.isNullFirst() != referenceOrderByItem.isNullFirst() || orderByItem.getExpression().accept(this)) {
+                    return Boolean.TRUE;
+                }
+            }
+        }
         WindowDefinition referenceWindowDefinition = reference.getWindowDefinition();
         WindowDefinition windowDefinition = expression.getWindowDefinition();
         if (windowDefinition == null) {

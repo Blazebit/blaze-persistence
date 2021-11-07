@@ -603,6 +603,17 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             }
             sb.append(')');
 
+            List<OrderByItem> withinGroup = expression.getWithinGroup();
+            if (withinGroup != null && !withinGroup.isEmpty()) {
+                sb.append(" WITHIN GROUP (");
+                for (int i = 0; i < withinGroup.size(); i++) {
+                    visit(withinGroup.get(i));
+                    sb.append(", ");
+                }
+                sb.setLength(sb.length() - 1);
+                sb.setCharAt(sb.length() - 1, ')');
+            }
+
             visitWindowDefinition(windowDefinition);
         }
 

@@ -178,6 +178,7 @@ WHEN                : [wW] [hH] [eE] [nN];
 WHERE               : [wW] [hH] [eE] [rR] [eE];
 WINDOW              : [wW] [iI] [nN] [dD] [oO] [wW];
 WITH                : [wW] [iI] [tT] [hH];
+WITHIN              : [wW] [iI] [tT] [hH] [iI] [nN];
 
 TIMESTAMP_ESCAPE_START  : '{ts';
 DATE_ESCAPE_START       : '{d';

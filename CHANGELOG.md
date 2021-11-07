@@ -9,6 +9,9 @@ Not yet released
 ### New features
 
 * Create artifacts for Jakarta Persistence
+* Add `WITHIN GROUP` syntax support for ordered set-aggregate functions
+* Add SQL standard compliant `LISTAGG` ordered set-aggregate function as alternative to `GROUP_CONCAT`
+* Add `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions
 
 ### Bug fixes
 

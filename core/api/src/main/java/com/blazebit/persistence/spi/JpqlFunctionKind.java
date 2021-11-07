@@ -28,6 +28,10 @@ public enum JpqlFunctionKind {
      */
     AGGREGATE,
     /**
+     * An ordered set aggregate function.
+     */
+    ORDERED_SET_AGGREGATE,
+    /**
      * A window function.
      */
     WINDOW,

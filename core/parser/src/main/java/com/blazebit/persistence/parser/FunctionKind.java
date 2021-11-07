@@ -23,6 +23,7 @@ package com.blazebit.persistence.parser;
  */
 public enum FunctionKind {
     AGGREGATE,
+    ORDERED_SET_AGGREGATE,
     WINDOW,
     VOLATILE,
     DETERMINISTIC;

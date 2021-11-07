@@ -54,39 +54,24 @@ public abstract class AbstractGroupConcatWindowFunction extends AbstractWindowFu
             throw new RuntimeException("The group concat function needs at least one argument! args=" + context);
         }
 
-        boolean distinct = false;
-        int startIndex = 0;
-        int argsSize = context.getArgumentsSize();
-        String maybeDistinct = context.getArgument(0);
-
-        if ("'DISTINCT'".equalsIgnoreCase(maybeDistinct)) {
-            distinct = true;
-            startIndex++;
-        }
-
-        if (startIndex >= argsSize) {
-            throw new RuntimeException("The group concat function needs at least one expression to concatenate! args=" + context);
-        }
-
-        return getWindowFunction(context, new GroupConcat(distinct), startIndex);
+        return getWindowFunction(context, new GroupConcat(functionName), 0);
     }
 
     @Override
     protected Enum<?> processArgument(Enum<?> mode, WindowFunction windowFunction, String argument) {
         if (mode == Mode.SEPARATOR) {
-            GroupConcat groupConcat = (GroupConcat) windowFunction;
-            if (groupConcat.separator != null) {
-                throw new IllegalArgumentException("Illegal multiple separators for group concat '" + argument + "'. Expected 'ORDER BY'!");
-            }
+            if (!"'SEPARATOR'".equalsIgnoreCase(argument)) {
+                GroupConcat groupConcat = (GroupConcat) windowFunction;
+                if (groupConcat.separator != null) {
+                    throw new IllegalArgumentException("Illegal multiple separators for group concat '" + argument + "'. Expected 'ORDER BY'!");
+                }
 
-            groupConcat.separator = argument.substring(argument.indexOf('\'') + 1, argument.lastIndexOf('\''));
+                groupConcat.separator = argument.substring(argument.indexOf('\'') + 1, argument.lastIndexOf('\''));
+            }
             return null;
         } else {
-            if ("'SEPARATOR'".equalsIgnoreCase(argument)) {
-                return Mode.SEPARATOR;
-            } else {
-                return super.processArgument(mode, windowFunction, argument);
-            }
+            super.processArgument(mode, windowFunction, argument);
+            return Mode.SEPARATOR;
         }
     }
 
@@ -127,20 +112,14 @@ public abstract class AbstractGroupConcatWindowFunction extends AbstractWindowFu
      */
     protected static final class GroupConcat extends WindowFunction {
 
-        private final boolean distinct;
-        private String separator = ",";
+        private String separator;
 
-        public GroupConcat(boolean distinct) {
-            super("GROUP_CONCAT");
-            this.distinct = distinct;
-        }
-
-        public boolean isDistinct() {
-            return distinct;
+        public GroupConcat(String functionName) {
+            super(functionName);
         }
 
         public String getSeparator() {
-            return separator;
+            return separator == null ? "," : separator;
         }
     }
 

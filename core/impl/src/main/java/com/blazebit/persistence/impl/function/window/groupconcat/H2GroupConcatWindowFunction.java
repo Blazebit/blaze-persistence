@@ -36,17 +36,19 @@ public class H2GroupConcatWindowFunction extends AbstractGroupConcatWindowFuncti
 
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         GroupConcat groupConcat = (GroupConcat) windowFunction;
-        if ((groupConcat).isDistinct()) {
+        if (groupConcat.isDistinct()) {
             context.addChunk("distinct ");
         }
         super.renderArguments(context, windowFunction);
+        context.addChunk(" ");
+        super.renderOrderBy(context, windowFunction.getWithinGroup());
         context.addChunk(" separator ");
         context.addChunk(quoted(groupConcat.getSeparator()));
-        super.renderOrderBy(context, windowFunction.getOrderBys());
     }
 
-    protected void renderOrderBy(FunctionRenderContext context, List<Order> orderBys) {
-        // Don't render the ORDER BY clause in the OVER clause
+    @Override
+    protected void renderWithinGroup(FunctionRenderContext context, List<Order> orderBys) {
+        // Don't render the WITHIN GROUP clause as it is inlined into the function arguments
     }
 
     @Override

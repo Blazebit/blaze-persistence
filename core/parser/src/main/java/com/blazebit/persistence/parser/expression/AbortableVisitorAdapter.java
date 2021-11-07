@@ -116,6 +116,15 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
                 return true;
             }
         }
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup != null) {
+            size = withinGroup.size();
+            for (int i = 0; i < size; i++) {
+                if (withinGroup.get(i).getExpression().accept(this)) {
+                    return true;
+                }
+            }
+        }
         WindowDefinition windowDefinition = expression.getWindowDefinition();
         if (windowDefinition != null) {
             Predicate filterPredicate = windowDefinition.getFilterPredicate();

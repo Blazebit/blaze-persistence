@@ -218,13 +218,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             } else {
                 argumentsWithoutFunctionName = Collections.emptyList();
             }
-            renderFunctionFunction(resolvedFunctionName, argumentsWithoutFunctionName, expression.getResolvedWindowDefinition());
+            renderFunctionFunction(resolvedFunctionName, false, argumentsWithoutFunctionName, expression.getWithinGroup(), expression.getResolvedWindowDefinition());
         } else if (isCountStarFunction(expression)) {
             renderCountStar(expression.getResolvedWindowDefinition());
         } else if (BUILT_IN_FUNCTIONS.contains(expression.getFunctionName().toLowerCase()) && expression.getResolvedWindowDefinition() == null) {
             super.visit(expression);
         } else {
-            renderFunctionFunction(resolveRenderedFunctionName(expression.getFunctionName()), expression.getExpressions(), expression.getResolvedWindowDefinition());
+            boolean distinct = false;
+            if (expression instanceof AggregateExpression) {
+                distinct = ((AggregateExpression) expression).isDistinct();
+            }
+            renderFunctionFunction(resolveRenderedFunctionName(expression.getFunctionName()), distinct, expression.getExpressions(), expression.getWithinGroup(), expression.getResolvedWindowDefinition());
         }
     }
 
@@ -239,9 +243,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             if (jpaProvider.supportsCountStar() && windowDefinition == null) {
                 sb.append("COUNT(*)");
             } else if (windowDefinition != null) {
-                renderFunctionFunction(resolveRenderedFunctionName("WINDOW_COUNT"), (List<Expression>) (List<?>) Collections.emptyList(), windowDefinition);
+                renderFunctionFunction(resolveRenderedFunctionName("WINDOW_COUNT"), false, (List<Expression>) (List<?>) Collections.emptyList(), null, windowDefinition);
             } else {
-                renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), (List<Expression>) (List<?>) Collections.emptyList(), null);
+                renderFunctionFunction(resolveRenderedFunctionName("COUNT_STAR"), false, (List<Expression>) (List<?>) Collections.emptyList(), null, null);
             }
         } else {
             if (windowDefinition != null) {
@@ -302,18 +306,33 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         return super.isSimpleSubquery(expression);
     }
 
-    protected void renderFunctionFunction(String functionName, List<Expression> arguments, WindowDefinition windowDefinition) {
+    protected void renderFunctionFunction(String functionName, boolean distinct, List<Expression> arguments, List<OrderByItem> withinGroup, WindowDefinition windowDefinition) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         int size = arguments.size();
         if (registeredFunctions.containsKey(functionName)) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null || windowDefinition.isEmpty() ? size : size + 1));
             if (size == 0) {
-                visitWindowDefinition(windowDefinition);
+                if (withinGroup != null && !withinGroup.isEmpty()) {
+                    visitWithinGroup(withinGroup);
+                    if (windowDefinition != null && !windowDefinition.isEmpty()) {
+                        sb.append(",");
+                        visitWindowDefinition(windowDefinition);
+                    }
+                } else {
+                    visitWindowDefinition(windowDefinition);
+                }
             } else {
+                if (distinct) {
+                    sb.append("'DISTINCT',");
+                }
                 arguments.get(0).accept(this);
                 for (int i = 1; i < size; i++) {
                     sb.append(",");
                     arguments.get(i).accept(this);
+                }
+                if (withinGroup != null && !withinGroup.isEmpty()) {
+                    sb.append(",");
+                    visitWithinGroup(withinGroup);
                 }
                 if (windowDefinition != null && !windowDefinition.isEmpty()) {
                     sb.append(",");
@@ -326,10 +345,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append("FUNCTION('");
             sb.append(functionName);
             sb.append('\'');
+            if (distinct) {
+                sb.append(",'DISTINCT'");
+            }
 
             for (int i = 0; i < size; i++) {
                 sb.append(',');
                 arguments.get(i).accept(this);
+            }
+            if (withinGroup != null && !withinGroup.isEmpty()) {
+                sb.append(",");
+                visitWithinGroup(withinGroup);
             }
             if (windowDefinition != null && !windowDefinition.isEmpty()) {
                 sb.append(",");
@@ -341,6 +367,18 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    protected void visitWithinGroup(List<OrderByItem> withinGroup) {
+        int size = withinGroup.size();
+        if (size != 0) {
+            sb.append("'WITHIN GROUP',");
+            visit(withinGroup.get(0));
+            for (int i = 1; i < size; i++) {
+                sb.append(",");
+                visit(withinGroup.get(i));
+            }
+        }
     }
 
     @Override
