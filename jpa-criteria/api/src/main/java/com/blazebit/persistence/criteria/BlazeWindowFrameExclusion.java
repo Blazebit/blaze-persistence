@@ -16,25 +16,17 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
-
 /**
- * An extended version of {@link Expression}.
  *
- * @param <X> The target type
+ * Defines a window frame exclusion for a window.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public interface BlazeExpression<X> extends Expression<X> {
+public enum BlazeWindowFrameExclusion {
+    CURRENT_ROW,
+    GROUP,
+    TIES,
+    NO_OTHERS
 
-    /* Covariant overrides */
-
-    /**
-     * Like {@link Expression#as} but returns the subtype {@link BlazeExpression} instead.
-     *
-     * @param type intended type of the expression
-     * @param <T>  The intended expression type
-     * @return A new expression of the given type
-     */
-    <T> BlazeExpression<T> as(Class<T> type);
 }

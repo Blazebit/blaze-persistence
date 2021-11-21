@@ -16,25 +16,32 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 
 /**
- * An extended version of {@link Expression}.
+ * An {@link javax.persistence.criteria.Expression} for an aggregate function.
  *
  * @param <X> The target type
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public interface BlazeExpression<X> extends Expression<X> {
-
-    /* Covariant overrides */
+public interface BlazeAggregateFunctionExpression<X> extends BlazeWindowFunctionExpression<X> {
 
     /**
-     * Like {@link Expression#as} but returns the subtype {@link BlazeExpression} instead.
+     * Returns the filter for this aggregate function.
      *
-     * @param type intended type of the expression
-     * @param <T>  The intended expression type
-     * @return A new expression of the given type
+     * @return the filter
      */
-    <T> BlazeExpression<T> as(Class<T> type);
+    public Predicate getFilter();
+
+    /**
+     * Sets the filter for this aggregate function.
+     *
+     * @param filter The filter to set
+     * @return <code>this</code> for method chaining
+     */
+    public BlazeAggregateFunctionExpression<X> filter(Predicate filter);
+
+    @Override
+    public BlazeAggregateFunctionExpression<X> window(BlazeWindow window);
 }

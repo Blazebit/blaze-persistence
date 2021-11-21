@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
-import javax.persistence.criteria.Expression;
+package com.blazebit.persistence.criteria;
 
 /**
+ *
+ * Defines the frame mode to use for a window.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public class LengthFunction extends FunctionExpressionImpl<Integer> {
+public enum BlazeWindowFrameMode {
+    ROWS,
+    RANGE,
+    GROUPS
 
-    public static final String NAME = "LENGTH";
-
-    private static final long serialVersionUID = 1L;
-
-    public LengthFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> value) {
-        super(criteriaBuilder, Integer.class, NAME, value);
-    }
 }

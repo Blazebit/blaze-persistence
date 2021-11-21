@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
-import javax.persistence.criteria.Expression;
+package com.blazebit.persistence.criteria;
 
 /**
+ * An {@link javax.persistence.criteria.Expression} for a window enabled function.
+ *
+ * @param <X> The target type
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public class UpperFunction extends FunctionExpressionImpl<String> {
+public interface BlazeWindowFunctionExpression<X> extends BlazeFunctionExpression<X> {
 
-    public static final String NAME = "UPPER";
+    /**
+     * Returns the window for this window function.
+     *
+     * @return the window
+     */
+    public BlazeWindow getWindow();
 
-    private static final long serialVersionUID = 1L;
-
-    public UpperFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
-        super(criteriaBuilder, String.class, NAME, string);
-    }
+    /**
+     * Sets the window for this window function.
+     *
+     * @param window The window to set
+     * @return <code>this</code> for method chaining
+     */
+    public BlazeWindowFunctionExpression<X> window(BlazeWindow window);
 }
