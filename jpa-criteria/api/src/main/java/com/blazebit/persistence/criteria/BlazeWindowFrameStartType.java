@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
-import javax.persistence.criteria.Expression;
+package com.blazebit.persistence.criteria;
 
 /**
+ *
+ * Defines a window frame start for a window.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public class SqrtFunction extends FunctionExpressionImpl<Double> {
+public enum BlazeWindowFrameStartType {
+    UNBOUNDED_PRECEDING,
+    CURRENT_ROW,
 
-    public static final String NAME = "SQRT";
-
-    private static final long serialVersionUID = 1L;
-
-    public SqrtFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {
-        super(criteriaBuilder, Double.class, NAME, expression);
-    }
 }

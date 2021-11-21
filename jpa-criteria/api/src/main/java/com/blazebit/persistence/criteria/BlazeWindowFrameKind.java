@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
-import javax.persistence.criteria.Expression;
+package com.blazebit.persistence.criteria;
 
 /**
+ *
+ * Defines a window frame kind for a window.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public class AbsFunction<N> extends FunctionExpressionImpl<N> {
+public enum BlazeWindowFrameKind {
+    PRECEDING,
+    FOLLOWING
 
-    private static final long serialVersionUID = 1L;
-
-    @SuppressWarnings({"unchecked"})
-    public AbsFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
-        super(criteriaBuilder, (Class<N>) expression.getJavaType(), "ABS", expression);
-    }
 }

@@ -200,7 +200,7 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
 
     private void checkDereferenceAllowed() {
         if (!isDereferencable()) {
-            throw new IllegalArgumentException("Dereferencing attributes in '" + getBasePath().getPathExpression() + "' is not allowed!");
+            throw new IllegalArgumentException("Dereferencing attributes in '" + getPathExpression() + "' is not allowed!");
         }
     }
 

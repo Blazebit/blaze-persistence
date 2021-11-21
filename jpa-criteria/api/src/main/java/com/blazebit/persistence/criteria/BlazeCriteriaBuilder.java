@@ -313,4 +313,329 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @return Path object of the specified type
      */
     public <X, T extends X> BlazeRoot<T> treat(BlazeRoot<X> root, Class<T> type);
+
+    /**
+     * Returns a new window to be used with window functions.
+     *
+     * @return the new window
+     */
+    public BlazeWindow window();
+
+    /**
+     * Creates a function expression for a function with the given name, result type and arguments.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the function expression
+     */
+    @Override
+    public <T> BlazeFunctionExpression<T> function(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates a window function expression for a function with the given name, result type and arguments.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the window function expression
+     */
+    public <T> BlazeWindowFunctionExpression<T> windowFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates a window function expression for a function with the given name, result type and arguments aggregating only distinct elements.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the window function expression
+     */
+    public <T> BlazeWindowFunctionExpression<T> windowDistinctFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates an aggregate function expression for a function with the given name, result type and arguments.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the aggregate function expression
+     */
+    public <T> BlazeAggregateFunctionExpression<T> aggregateFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates an aggregate function expression for a function with the given name, result type and arguments aggregating only distinct elements.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the aggregate function expression
+     */
+    public <T> BlazeAggregateFunctionExpression<T> aggregateDistinctFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates an ordered set-aggregate function expression for a function with the given name, result type and arguments.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the ordered set-aggregate function expression
+     */
+    public <T> BlazeOrderedSetAggregateFunctionExpression<T> orderedSetAggregateFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates an ordered set-aggregate function expression for a function with the given name, result type and arguments aggregating only distinct elements.
+     *
+     * @param name the name of the function
+     * @param type the result type of function
+     * @param args the arguments for the function
+     * @param <T> the result type
+     * @return the ordered set-aggregate function expression
+     */
+    public <T> BlazeOrderedSetAggregateFunctionExpression<T> orderedSetAggregateDistinctFunction(String name, Class<T> type, Expression<?>... args);
+
+    /**
+     * Creates an <code>AVG</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <N> The number type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <N extends Number> BlazeAggregateFunctionExpression<Double> avg(Expression<N> x);
+
+    /**
+     * Creates a <code>SUM</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <N> The number type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <N extends Number> BlazeAggregateFunctionExpression<N> sum(Expression<N> x);
+
+    /**
+     * Creates a <code>SUM</code> aggregate function expression that returns a long value.
+     *
+     * @param x the argument to aggregate
+     * @return the aggregate function expression
+     */
+    @Override
+    public BlazeAggregateFunctionExpression<Long> sumAsLong(Expression<Integer> x);
+
+    /**
+     * Creates a <code>SUM</code> aggregate function expression that returns a double value.
+     *
+     * @param x the argument to aggregate
+     * @return the aggregate function expression
+     */
+    @Override
+    public BlazeAggregateFunctionExpression<Double> sumAsDouble(Expression<Float> x);
+
+    /**
+     * Creates a <code>MAX</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <N> The number type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <N extends Number> BlazeAggregateFunctionExpression<N> max(Expression<N> x);
+
+    /**
+     * Creates a <code>MIN</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <N> The number type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <N extends Number> BlazeAggregateFunctionExpression<N> min(Expression<N> x);
+
+    /**
+     * Creates a <code>MAX</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <X> The argument type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <X extends Comparable<? super X>> BlazeAggregateFunctionExpression<X> greatest(Expression<X> x);
+
+    /**
+     * Creates a <code>MIN</code> aggregate function expression.
+     *
+     * @param x the argument to aggregate
+     * @param <X> The argument type
+     * @return the aggregate function expression
+     */
+    @Override
+    public <X extends Comparable<? super X>> BlazeAggregateFunctionExpression<X> least(Expression<X> x);
+
+    /**
+     * Creates a <code>COUNT</code> aggregate function expression.
+     *
+     * @param x the argument to use for determining whether to count
+     * @return the aggregate function expression
+     */
+    @Override
+    public BlazeAggregateFunctionExpression<Long> count(Expression<?> x);
+
+    /**
+     * Creates a <code>COUNT</code> aggregate function expression which only counts distinct elements.
+     *
+     * @param x the argument to use for determining whether to count
+     * @return the aggregate function expression
+     */
+    @Override
+    public BlazeAggregateFunctionExpression<Long> countDistinct(Expression<?> x);
+
+    /**
+     * Creates a <code>ROW_NUMBER</code> window function expression.
+     *
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Integer> rowNumber();
+
+    /**
+     * Creates a <code>RANK</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Integer> rank(Expression<?> expression);
+
+    /**
+     * Creates a <code>DENSE_RANK</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Integer> denseRank(Expression<?> expression);
+
+    /**
+     * Creates a <code>PERCENT_RANK</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Double> percentRank(Expression<?> expression);
+
+    /**
+     * Creates a <code>CUME_DIST</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Double> cumeDist(Expression<?> expression);
+
+    /**
+     * Creates a <code>NTILE</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @return the window function expression
+     */
+    public BlazeWindowFunctionExpression<Integer> ntile(Expression<?> expression);
+
+    /**
+     * Creates a <code>LEAD</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @param <X> The expression type
+     * @return the window function expression
+     */
+    public <X> BlazeWindowFunctionExpression<X> lead(Expression<X> expression);
+
+    /**
+     * Creates a <code>LAG</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @param <X> The expression type
+     * @return the window function expression
+     */
+    public <X> BlazeWindowFunctionExpression<X> lag(Expression<X> expression);
+
+    /**
+     * Creates a <code>FIRST_VALUE</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @param <X> The expression type
+     * @return the window function expression
+     */
+    public <X> BlazeWindowFunctionExpression<X> firstValue(Expression<X> expression);
+
+    /**
+     * Creates a <code>LAST_VALUE</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @param <X> The expression type
+     * @return the window function expression
+     */
+    public <X> BlazeWindowFunctionExpression<X> lastValue(Expression<X> expression);
+
+    /**
+     * Creates a <code>NTH_VALUE</code> window function expression.
+     *
+     * @param expression the expression for which to apply the window function to
+     * @param index the index of the value relative to the frame start
+     * @param <X> The expression type
+     * @return the window function expression
+     */
+    public <X> BlazeWindowFunctionExpression<X> nthValue(Expression<X> expression, Expression<Integer> index);
+
+    /**
+     * Creates a <code>PERCENTILE_CONT</code> ordered set-aggregate function expression.
+     *
+     * @param fraction the fraction of the ordering for which to return a value for
+     * @param group the group within which to determine the percentile
+     * @param ascending Whether to sort by group ascending or descending
+     * @param nullsFirst Whether to sort nulls of the group first or last
+     * @param <X> The expression type
+     * @return the ordered set-aggregate function expression
+     */
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> percentileContWithinGroup(Expression<Double> fraction, Expression<X> group, boolean ascending, boolean nullsFirst);
+
+    /**
+     * Creates a <code>PERCENTILE_DISC</code> ordered set-aggregate function expression.
+     *
+     * @param fraction the fraction of the ordering for which to return a value for
+     * @param group the group within which to determine the percentile
+     * @param ascending Whether to sort by group ascending or descending
+     * @param nullsFirst Whether to sort nulls of the group first or last
+     * @param <X> The expression type
+     * @return the ordered set-aggregate function expression
+     */
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> percentileDiscWithinGroup(Expression<Double> fraction, Expression<X> group, boolean ascending, boolean nullsFirst);
+
+    /**
+     * Creates a <code>MODE</code> ordered set-aggregate function expression.
+     *
+     * @param group the group within which to find the mode
+     * @param <X> The expression type
+     * @return the ordered set-aggregate function expression
+     */
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> modeWithinGroup(Expression<X> group);
+
+    /**
+     * Creates a <code>LISTAGG</code> ordered set-aggregate function expression.
+     *
+     * @param expression the argument to list aggregate
+     * @param separator the separator to put between elements in the aggregation
+     * @return the ordered set-aggregate function expression
+     */
+    public BlazeOrderedSetAggregateFunctionExpression<String> listagg(Expression<String> expression, Expression<String> separator);
+
+    /**
+     * Creates a <code>LISTAGG</code> ordered set-aggregate function expression which only aggregates distinct elements.
+     *
+     * @param expression the argument to list aggregate
+     * @param separator the separator to put between elements in the aggregation
+     * @return the ordered set-aggregate function expression
+     */
+    public BlazeOrderedSetAggregateFunctionExpression<String> listaggDistinct(Expression<String> expression, Expression<String> separator);
 }

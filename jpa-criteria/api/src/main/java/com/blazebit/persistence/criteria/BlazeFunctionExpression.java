@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.criteria.impl.expression.function;
-
-import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-
-import javax.persistence.criteria.Expression;
+package com.blazebit.persistence.criteria;
 
 /**
+ * An {@link javax.persistence.criteria.Expression} for a function.
+ *
+ * @param <X> The target type
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-public class LowerFunction extends FunctionExpressionImpl<String> {
+public interface BlazeFunctionExpression<X> extends BlazeExpression<X> {
 
-    public static final String NAME = "LOWER";
-
-    private static final long serialVersionUID = 1L;
-
-    public LowerFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
-        super(criteriaBuilder, String.class, NAME, string);
-    }
+    /**
+     * Returns the name of the function.
+     *
+     * @return the name of the function
+     */
+    public String getFunctionName();
 }
