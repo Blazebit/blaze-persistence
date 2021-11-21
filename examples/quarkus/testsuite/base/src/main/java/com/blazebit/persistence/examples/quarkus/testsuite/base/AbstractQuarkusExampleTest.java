@@ -29,6 +29,7 @@ import java.util.UUID;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
@@ -97,6 +98,7 @@ public abstract class AbstractQuarkusExampleTest {
                 .extract().jsonPath().getMap("[0]");
 
         assertFalse(document.containsKey("name"));
+        assertEquals("test", document.get("optionalParameter"));
     }
 
     @Test

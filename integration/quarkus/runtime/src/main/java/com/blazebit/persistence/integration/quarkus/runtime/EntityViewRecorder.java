@@ -84,6 +84,7 @@ public class EntityViewRecorder {
                 cbfQualifiers = new Annotation[] { new BlazePersistenceInstance.BlazePersistenceInstanceLiteral(blazePersistenceInstanceName) };
             }
 
+            Arc.container().beanManager().fireEvent(entityViewConfiguration, cbfQualifiers);
             CriteriaBuilderFactory cbf = Arc.container().instance(CriteriaBuilderFactory.class, cbfQualifiers).get();
             return entityViewConfiguration.createEntityViewManager(cbf);
         };

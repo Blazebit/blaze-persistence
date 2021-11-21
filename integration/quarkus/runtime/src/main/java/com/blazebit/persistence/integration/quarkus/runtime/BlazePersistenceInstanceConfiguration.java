@@ -55,6 +55,14 @@ public class BlazePersistenceInstanceConfiguration {
     public boolean templateEagerLoading;
 
     /**
+     * A boolean flag to make it possible to disable the managed type validation.
+     * By default the managed type validation is enabled, but since the validation is not bullet proof, it can be disabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     */
+    @ConfigItem(defaultValue = "false")
+    public boolean managedTypeValidationDisabled;
+
+    /**
      * An integer value that defines the default batch size for entity view attributes.
      * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
      * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
@@ -158,6 +166,7 @@ public class BlazePersistenceInstanceConfiguration {
 
     public void apply(EntityViewConfiguration entityViewConfiguration) {
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.TEMPLATE_EAGER_LOADING, Boolean.toString(templateEagerLoading));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED, Boolean.toString(managedTypeValidationDisabled));
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.DEFAULT_BATCH_SIZE, Integer.toString(defaultBatchSize));
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.EXPECT_BATCH_MODE, expectBatchMode);
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_EAGER_LOADING, Boolean.toString(updaterEagerLoading));
@@ -177,6 +186,7 @@ public class BlazePersistenceInstanceConfiguration {
                 persistenceUnit.isPresent() ||
                 packages.isPresent() ||
                 templateEagerLoading ||
+                managedTypeValidationDisabled ||
                 !updaterDisallowOwnedUpdatableSubview ||
                 updaterEagerLoading ||
                 updaterErrorOnInvalidPluralSetter ||
