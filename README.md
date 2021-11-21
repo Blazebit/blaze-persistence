@@ -120,11 +120,11 @@ mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=
 ## Supported Java runtimes
 
 All projects are built for Java 7 except for the ones where dependencies already use Java 8 like e.g. Hibernate 5.2, Spring Data 2.0 etc.
-So you are going to need a JDK 8 for building the project.
+So you are going to need a JDK 8 for building the project. The latest Java version we test and support is Java 17.
 
 We also support building the project with JDK 9 and try to keep up with newer versions.
 If you want to run your application on a Java 9 JVM you need to handle the fact that JDK 9+ doesn't export the JAXB and JTA APIs anymore.
-In fact, JDK 11 will even remove the modules so the command line flags to add modules to the classpath won't work.
+In fact, JDK 11 removed the modules, so the command line flags to add modules to the classpath won't work.
 
 Since libraries like Hibernate and others require these APIs you need to make them available. The easiest way to get these APIs back on the classpath is to package them along with your application.
 This will also work when running on Java 8. We suggest you add the following dependencies.
