@@ -184,6 +184,14 @@ The configuration properties listed here allow you to override such defaults, an
 
 [width="100%",cols="2,10",options="header,footer"]
 |====================
+| Key | quarkus.blaze-persistence.managed-type-validation-disabled
+| Type | boolean
+| Default | false
+| Description | A boolean flag to make it possible to disable the managed type validation. By default the managed type validation is enabled, but since the validation is not bullet proof, it can be disabled. Valid values for this property are `true` or `false`.
+|====================
+
+[width="100%",cols="2,10",options="header,footer"]
+|====================
 | Key | quarkus.blaze-persistence.default-batch-size
 | Type | int
 | Default | 1
@@ -264,3 +272,21 @@ The configuration properties listed here allow you to override such defaults, an
 | Default | true
 | Description | If set to true, the query plans are cached and reused. Valid values for this property are `true` and `false`. Default is `true`. This configuration option currently only takes effect when Hibernate is used as JPA provider. The property can be changed for a criteria builder before constructing a query.
 |====================
+
+[[quarkus-customization]]
+=== Customization
+
+As of version 1.6.4, a CDI event of the type `EntityViewConfiguration` is fired with an optional `@BlazePersistenceInstance` qualifier at boot time.
+This allows to further customize the configuration which is often necessary for
+
+Custom type test values::
+Providing this is necessary if you make use of some Hibernate UserType or custom BasicType to allow {projectname} to figure out if `equals`/`hashCode` is properly implemented.
+
+Register custom type converter::
+If you want to automatically convert between a domain type, and a persistence entity model type, a type converter is needed which can be registered on `EntityViewConfiguration`.
+
+Register custom basic user type::
+In order to make proper use of a custom type in entity views, it is necessary to register a `BasicUserType` on `EntityViewConfiguration`.
+
+Configure default values for optional parameters::
+Sometimes it is useful to provide access to services into entity views through optional parameters, for which a global default value can be registered on `EntityViewConfiguration`.

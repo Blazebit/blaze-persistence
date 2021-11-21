@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.examples.quarkus.testsuite.base;
 
-import com.blazebit.persistence.examples.quarkus.testsuite.base.AbstractQuarkusExampleTest;
-import io.quarkus.test.junit.QuarkusTest;
+package com.blazebit.persistence.examples.quarkus.base.config;
 
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
-/**
- * @author Moritz Becker
- * @since 1.5.0
- */
-@QuarkusTest
-public class QuarkusExampleTest extends AbstractQuarkusExampleTest {
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+
+@ApplicationScoped
+public class BlazePersistenceConfigurator {
+
+    public void observe(@Observes EntityViewConfiguration config) {
+        config.setOptionalParameter("optionalParameter", "test");
+    }
 
 }

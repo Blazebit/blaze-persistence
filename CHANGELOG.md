@@ -13,6 +13,7 @@ Not yet released
 * Add SQL standard compliant `LISTAGG` ordered set-aggregate function as alternative to `GROUP_CONCAT`
 * Add `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions
 * Add JPA Criteria support for aggregate `FILTER` clause, window functions and ordered set aggregate functions
+* Fire `EntityViewConfiguration` as event in Quarkus extension boot like in the CDI integration to allow customization
 
 ### Bug fixes
 
