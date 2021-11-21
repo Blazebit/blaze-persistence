@@ -18,6 +18,7 @@ Not yet released
 
 * Return proper totalSize on PagedList also if the requested page is empty
 * Get rid of a startup warning with Quarkus 2.4.0+
+* Fix typo in QueryDSL `GROUP_CONCAT` rendering leading to a syntax error
 
 ### Backwards-incompatible changes
 

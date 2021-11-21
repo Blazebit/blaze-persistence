@@ -1051,7 +1051,7 @@ public class JPQLNextExpressions {
 
         for (int i = 0; i < orderSpecifiers.length; i++) {
             if (i == 0) {
-                template.append(", 'ORDER BY");
+                template.append(", 'ORDER BY'");
             }
             OrderSpecifier<?> orderSpecifier = orderSpecifiers[i];
             int expressionIndex = i * 2 + 2;
