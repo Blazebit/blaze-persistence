@@ -84,6 +84,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
         return Optional.ofNullable((E) findOne(id));
     }
 
+    public E getById(ID id) {
+        return (E) getReference(id);
+    }
+
     private Object convert(Optional<Object> optional, Class<?> targetType) {
         return optional.orElse(null);
     }

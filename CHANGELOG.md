@@ -20,10 +20,11 @@ Not yet released
 * Return proper totalSize on PagedList also if the requested page is empty
 * Get rid of a startup warning with Quarkus 2.4.0+
 * Fix typo in QueryDSL `GROUP_CONCAT` rendering leading to a syntax error
+* Add `getById` implementation as needed by Spring Data 2.5 to the integration
 
 ### Backwards-incompatible changes
 
-None yet
+* Properly implement the `getOne` semantics to return a reference instead of querying an instance
 
 ## 1.6.3
 
