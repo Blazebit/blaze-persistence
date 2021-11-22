@@ -63,12 +63,12 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public KeysetPageableArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject(), objectMapper());
+    public KeysetPageableArgumentResolver blazeWebmvcKeysetPageableResolver() {
+        return new KeysetPageableHandlerMethodArgumentResolver(blazeWebmvcKeysetSortResolver(), conversionService.getObject(), objectMapper());
     }
 
     @Bean
-    public SortHandlerMethodArgumentResolver keysetSortResolver() {
+    public SortHandlerMethodArgumentResolver blazeWebmvcKeysetSortResolver() {
         SortHandlerMethodArgumentResolver sortResolver = new SortHandlerMethodArgumentResolver();
         return sortResolver;
     }
@@ -82,22 +82,22 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
         }
 
         // Add it to the beginning so it has precedence over the builtin
-        argumentResolvers.add(0, keysetPageableResolver());
+        argumentResolvers.add(0, blazeWebmvcKeysetPageableResolver());
     }
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         // Add it to the beginning so it has precedence over the builtin
-        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, idAttributeAccessor()));
+        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, blazeWebmvcIdAttributeAccessor()));
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new EntityViewIdHandlerInterceptor(entityViewManager, (EntityViewIdValueHolder) idAttributeAccessor()));
+        registry.addInterceptor(new EntityViewIdHandlerInterceptor(entityViewManager, (EntityViewIdValueHolder) blazeWebmvcIdAttributeAccessor()));
     }
 
     @Bean
-    public EntityViewIdValueAccessor idAttributeAccessor() {
+    public EntityViewIdValueAccessor blazeWebmvcIdAttributeAccessor() {
         return new EntityViewIdValueHolder(conversionService.getObject());
     }
 }
