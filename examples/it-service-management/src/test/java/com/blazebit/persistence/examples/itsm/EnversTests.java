@@ -80,7 +80,7 @@ public class EnversTests {
         content.put(Locale.GERMAN, "Deutsch");
         Long id = articleRepository.saveAndFlush(a1).getId();
 
-        ArticleView view = repository.getOne(id);
+        ArticleView view = repository.findById(id).get();
 
         EntityRevisionDetail metadata = view.getCreationMetadata();
         assertNotNull(metadata);

@@ -245,7 +245,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     public E getOne(ID id) {
-        return (E) findOne(id);
+        return (E) getReference(id);
     }
 
     public <S extends E> long count(Example<S> example) {
@@ -327,6 +327,16 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
             return findOneQuery.getSingleResult();
         } catch (NoResultException e) {
             return null;
+        }
+    }
+
+    public V getReference(ID id) {
+        Assert.notNull(id, ID_MUST_NOT_BE_NULL);
+        Class<V> entityViewClass = metadata == null || metadata.getEntityViewClass() == null ? this.entityViewClass : (Class<V>) metadata.getEntityViewClass();
+        if (entityViewClass == null) {
+            return (V) entityManager.getReference(getDomainClass(), id);
+        } else {
+            return evm.getReference(entityViewClass, id);
         }
     }
 
