@@ -66,33 +66,33 @@ public class HateoasAwareBlazePersistenceWebConfiguration extends BlazePersisten
         }
         if (!hasPageableResolver) {
             // Add it to the beginning so it has precedence over the builtin
-            argumentResolvers.add(0, keysetPageableResolver());
+            argumentResolvers.add(0, blazeWebmvcKeysetPageableResolver());
         }
         argumentResolvers.add(keysetPagedResourcesAssemblerArgumentResolver());
     }
 
     @Bean
     @Override
-    public HateoasKeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new HateoasKeysetPageableHandlerMethodArgumentResolver(keysetSortResolver(), conversionService.getObject(), objectMapper());
+    public HateoasKeysetPageableHandlerMethodArgumentResolver blazeWebmvcKeysetPageableResolver() {
+        return new HateoasKeysetPageableHandlerMethodArgumentResolver(blazeWebmvcKeysetSortResolver(), conversionService.getObject(), objectMapper());
     }
 
     @Bean
     @Override
-    public HateoasSortHandlerMethodArgumentResolver keysetSortResolver() {
+    public HateoasSortHandlerMethodArgumentResolver blazeWebmvcKeysetSortResolver() {
         return new HateoasSortHandlerMethodArgumentResolver();
     }
 
     @Bean
     public KeysetAwarePagedResourcesAssembler<?> keysetPagedResourcesAssembler() {
-        return new KeysetAwarePagedResourcesAssembler<Object>(keysetPageableResolver(), null, objectMapper());
+        return new KeysetAwarePagedResourcesAssembler<Object>(blazeWebmvcKeysetPageableResolver(), null, objectMapper());
     }
 
     @Bean
     public KeysetAwarePagedResourcesAssemblerArgumentResolver keysetPagedResourcesAssemblerArgumentResolver() {
         WebMvcLinkBuilderFactory linkBuilderFactory = new WebMvcLinkBuilderFactory();
         linkBuilderFactory.setUriComponentsContributors(uriComponentsContributors);
-        return new KeysetAwarePagedResourcesAssemblerArgumentResolver(keysetPageableResolver(), linkBuilderFactory, objectMapper());
+        return new KeysetAwarePagedResourcesAssemblerArgumentResolver(blazeWebmvcKeysetPageableResolver(), linkBuilderFactory, objectMapper());
     }
 
 }
