@@ -69,6 +69,14 @@ public class TupleTransformator {
         return tupleList;
     }
 
+    public Object[] transform(Object[] tuple) {
+        if (transformatorLevels.size() != 1) {
+            throw new IllegalStateException("Can only do single transformations if there is only a single level");
+        }
+        UpdatableViewMap updatableViewMap = new UpdatableViewMap();
+        return transform(0, tuple, updatableViewMap);
+    }
+
     private Object[] transform(int level, Object[] tuple, UpdatableViewMap updatableViewMap) {
         TupleTransformer[] tupleTransformers = transformatorLevels.get(level).tupleTransformers;
         Object[] currentTuple = tuple;

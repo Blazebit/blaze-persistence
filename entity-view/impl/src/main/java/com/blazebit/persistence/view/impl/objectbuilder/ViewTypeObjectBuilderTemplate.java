@@ -1436,7 +1436,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (tupleTransformatorFactory.hasTransformers() && !isSubview) {
-            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration);
+            if (tupleTransformatorFactory.hasListTransformers()) {
+                result = new ChainingCollectionObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration);
+            } else {
+                result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, parameterHolder, optionalParameters, entityViewConfiguration);
+            }
         }
 
         return result;

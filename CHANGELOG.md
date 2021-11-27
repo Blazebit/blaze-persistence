@@ -21,6 +21,7 @@ Not yet released
 * Get rid of a startup warning with Quarkus 2.4.0+
 * Fix typo in QueryDSL `GROUP_CONCAT` rendering leading to a syntax error
 * Add `getById` implementation as needed by Spring Data 2.5 to the integration
+* Ensure stream/iteration processing of results works with entity views containing no collections
 
 ### Backwards-incompatible changes
 

@@ -23,20 +23,21 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.6.4
  */
-public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
+public class ChainingCollectionObjectBuilder<T> implements ObjectBuilder<T> {
 
     private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 
-    public ChainingObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public ChainingCollectionObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         this.transformator = transformatorFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
         this.objectBuilder = objectBuilder;
     }
@@ -47,12 +48,19 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T build(Object[] tuple) {
-        return objectBuilder.build(transformator.transform(tuple));
+        return (T) tuple;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<T> buildList(List<T> list) {
-        return objectBuilder.buildList(list);
+        List<Object[]> currentTuples = transformator.transformAll((List<Object[]>) list);
+        List<T> resultList = new ArrayList<T>(currentTuples.size());
+        for (Object[] tuple : currentTuples) {
+            resultList.add(objectBuilder.build(tuple));
+        }
+        return objectBuilder.buildList(resultList);
     }
 }

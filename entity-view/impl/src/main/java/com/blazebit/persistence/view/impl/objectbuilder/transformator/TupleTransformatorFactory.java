@@ -49,6 +49,11 @@ public class TupleTransformatorFactory {
             || transformatorLevels.get(0).tupleTransformerFactories.size() > 0;
     }
 
+    public boolean hasListTransformers() {
+        return transformatorLevels.get(0).tupleListTransformer != null
+                || transformatorLevels.get(0).tupleListTransformerFactory != null;
+    }
+
     public void add(TupleTransformatorFactory tupleTransformator) {
         if (!tupleTransformator.hasTransformers()) {
             return;
