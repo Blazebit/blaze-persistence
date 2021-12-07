@@ -65,18 +65,18 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMappe
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TypeUtils;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.CollectionMultisetTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.CollectionMultisetTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.NonIndexedTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.SingularMultisetTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SingularMultisetTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.BasicCorrelator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedCollectionBatchTupleListTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedCollectionSubselectTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedCollectionSubselectTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedMapBatchTupleListTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedMapSubselectTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedMapSubselectTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularBatchTupleListTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularSubselectTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.Correlator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
@@ -496,7 +496,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             } else if (listKey) {
                                 indexBasicTypeSupport = IntegerBasicUserType.INSTANCE;
                             }
-                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getContainerAccumulator(), dirtyTracking,
+                            mapperBuilder.addTupleTransformerFactory(new CollectionMultisetTupleTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getContainerAccumulator(), dirtyTracking,
                                     subviewTemplate, indexTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty), indexTransformerFactory, null, indexBasicTypeSupport));
                         } else {
                             applyCorrelatedSubviewMapping(attribute, attributePath, newTupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, features, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, dirtyTracking);
@@ -521,7 +521,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             } else if (listKey) {
                                 indexBasicTypeSupport = IntegerBasicUserType.INSTANCE;
                             }
-                            mapperBuilder.setTupleListTransformerFactory(new CollectionMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getContainerAccumulator(), dirtyTracking,
+                            mapperBuilder.addTupleTransformerFactory(new CollectionMultisetTupleTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), valueConverter, attribute.getContainerAccumulator(), dirtyTracking,
                                     subviewTemplate, indexTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty), indexTransformerFactory, null, indexBasicTypeSupport));
                         } else {
                             // Obviously, we produce null if the object type is identifiable i.e. a ViewType and it is empty = null id
@@ -547,10 +547,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            mapperBuilder.setTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, null, valueConverter));
+                            mapperBuilder.addTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, null, valueConverter));
                         }
                     } else if (mapKey) {
-                        mapperBuilder.setTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, keyConverter, valueConverter));
+                        mapperBuilder.addTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, keyConverter, valueConverter));
                     } else {
                         switch (pluralAttribute.getCollectionType()) {
                             case COLLECTION:
@@ -570,7 +570,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             default:
                                 throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                         }
-                        mapperBuilder.setTupleListTransformer(new NonIndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, attribute.getCollectionInstantiator(), dirtyTracking, valueConverter));
+                        mapperBuilder.addTupleListTransformer(new NonIndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, attribute.getCollectionInstantiator(), dirtyTracking, valueConverter));
                     }
                 }
             } else if (attribute.isQueryParameter()) {
@@ -587,7 +587,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         boolean updatableObjectCache = managedViewType.isUpdatable() || managedViewType.isCreatable();
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, features, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false)[0];
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
-                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                        mapperBuilder.addTupleTransformerFactory(new SingularMultisetTupleTransformerFactory(startIndex, null, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty)));
                     } else {
                         applyCorrelatedSubviewMapping(attribute, attributePath, tupleIdDescriptor, (ManagedViewTypeImplementor<Object[]>) (ManagedViewTypeImplementor<?>) managedViewType, mapperBuilder, features, viewJpqlMacro, embeddingViewJpqlMacro, ef, batchSize, false);
                     }
@@ -600,7 +600,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         String mapping = mapperBuilder.getMapping(mappingAttribute);
                         ViewTypeObjectBuilderTemplate<Object[]> subviewTemplate = applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty)[0];
                         TypeConverter<Object, Object> elementConverter = (TypeConverter<Object, Object>) (TypeConverter<?, ?>) managedViewType.getConverter();
-                        mapperBuilder.setTupleListTransformerFactory(new SingularMultisetTupleListTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty)));
+                        mapperBuilder.addTupleTransformerFactory(new SingularMultisetTupleTransformerFactory(startIndex, mapping, attributePath, getMultisetResultAlias(attributePath), elementConverter, subviewTemplate, managedViewType.hasSelectOrSubselectFetchedAttributes(), new SubviewTupleTransformerFactory(attributePath, subviewTemplate, updatableObjectCache, nullIfEmpty)));
                     } else {
                         applySubviewMapping(mappingAttribute, attributePath, tupleIdDescriptor, managedViewType, mapperBuilder, viewJpqlMacro, embeddingViewJpqlMacro, ef, false, nullIfEmpty);
                     }
@@ -741,7 +741,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         } else {
                             indexCorrelator = new BasicCorrelator();
                         }
-                        mapperBuilder.setTupleListTransformerFactory(new CorrelatedMapBatchTupleListTransformerFactory(
+                        mapperBuilder.addTupleListTransformerFactory(new CorrelatedMapBatchTupleListTransformerFactory(
                                 new BasicCorrelator(),
                                 viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                                 createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -752,7 +752,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     default:
                         throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                 }
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
+                mapperBuilder.addTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
                         new BasicCorrelator(),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -760,7 +760,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         dirtyTracking
                 ));
             } else {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
+                mapperBuilder.addTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new BasicCorrelator(),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute)));
@@ -808,7 +808,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         } else {
                             indexCorrelator = new BasicCorrelator();
                         }
-                        mapperBuilder.setTupleListTransformerFactory(new CorrelatedMapSubselectTupleListTransformerFactory(
+                        mapperBuilder.addTupleTransformerFactory(new CorrelatedMapSubselectTupleTransformerFactory(
                                 new BasicCorrelator(),
                                 evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                                 createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -819,7 +819,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     default:
                         throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                 }
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
+                mapperBuilder.addTupleTransformerFactory(new CorrelatedCollectionSubselectTupleTransformerFactory(
                         new BasicCorrelator(),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -827,7 +827,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         dirtyTracking
                 ));
             } else {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                mapperBuilder.addTupleTransformerFactory(new CorrelatedSingularSubselectTupleTransformerFactory(
                         new BasicCorrelator(),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute)));
@@ -1115,7 +1115,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         } else {
                             indexCorrelator = new BasicCorrelator();
                         }
-                        mapperBuilder.setTupleListTransformerFactory(new CorrelatedMapBatchTupleListTransformerFactory(
+                        mapperBuilder.addTupleListTransformerFactory(new CorrelatedMapBatchTupleListTransformerFactory(
                                 new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                                 viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                                 createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -1126,7 +1126,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     default:
                         throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                 }
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
+                mapperBuilder.addTupleListTransformerFactory(new CorrelatedCollectionBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -1134,7 +1134,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         dirtyTracking
                 ));
             } else {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
+                mapperBuilder.addTupleListTransformerFactory(new CorrelatedSingularBatchTupleListTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         viewRoot, viewType, correlationResult, factory, attributePath, attribute.getFetches(), correlatesThis, viewRootIndex, embeddingViewIndex, startIndex, batchSize, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute)));
@@ -1182,7 +1182,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         } else {
                             indexCorrelator = new BasicCorrelator();
                         }
-                        mapperBuilder.setTupleListTransformerFactory(new CorrelatedMapSubselectTupleListTransformerFactory(
+                        mapperBuilder.addTupleTransformerFactory(new CorrelatedMapSubselectTupleTransformerFactory(
                                 new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                                 evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                                 createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -1194,7 +1194,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                 }
 
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedCollectionSubselectTupleListTransformerFactory(
+                mapperBuilder.addTupleTransformerFactory(new CorrelatedCollectionSubselectTupleTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute),
@@ -1202,7 +1202,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         dirtyTracking
                 ));
             } else {
-                mapperBuilder.setTupleListTransformerFactory(new CorrelatedSingularSubselectTupleListTransformerFactory(
+                mapperBuilder.addTupleTransformerFactory(new CorrelatedSingularSubselectTupleTransformerFactory(
                         new SubviewCorrelator(managedViewType, null, evm, subviewAliasPrefix, attributePath),
                         evm, viewRoot, viewRootAlias, viewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, factory, attributePath, attribute.getFetches(), viewRootIndex, embeddingViewIndex, startIndex, correlationBasisType, correlationBasisEntity,
                         createLimiter(mapperBuilder, correlationAlias, attribute)));

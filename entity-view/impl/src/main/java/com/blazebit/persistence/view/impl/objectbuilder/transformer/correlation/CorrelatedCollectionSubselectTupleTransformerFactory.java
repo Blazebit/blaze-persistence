@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 
 import java.util.Map;
 
@@ -33,7 +33,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedMapSubselectTupleListTransformerFactory extends AbstractCorrelatedSubselectTupleListTransformerFactory {
+public class CorrelatedCollectionSubselectTupleTransformerFactory extends AbstractCorrelatedSubselectTupleTransformerFactory {
 
     private final String[] indexFetches;
     private final Expression indexExpression;
@@ -41,10 +41,9 @@ public class CorrelatedMapSubselectTupleListTransformerFactory extends AbstractC
     private final ContainerAccumulator<?> containerAccumulator;
     private final boolean recording;
 
-    public CorrelatedMapSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
-                                                             Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
-                                                             String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, ContainerAccumulator<?> containerAccumulator,
-                                                             boolean recording) {
+    public CorrelatedCollectionSubselectTupleTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
+                                                                Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                                int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter, String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, ContainerAccumulator<?> containerAccumulator, boolean recording) {
         super(correlator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, viewRootIndex, embeddingViewIndex, tupleIndex, correlationBasisType, correlationBasisEntity, limiter);
         this.indexFetches = indexFetches;
         this.indexExpression = indexExpression;
@@ -54,8 +53,8 @@ public class CorrelatedMapSubselectTupleListTransformerFactory extends AbstractC
     }
 
     @Override
-    public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        return new CorrelatedMapSubselectTupleListTransformer(entityViewConfiguration.getExpressionFactory(), correlator, containerAccumulator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory,
+    public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+        return new CorrelatedCollectionSubselectTupleTransformer(entityViewConfiguration.getExpressionFactory(), correlator, containerAccumulator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory,
                 attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex, correlationBasisIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration, recording);
     }
 

@@ -283,11 +283,11 @@ public class TupleElementMapperBuilder implements ServiceProvider {
         return tupleTransformatorFactory;
     }
 
-    public void setTupleListTransformer(TupleListTransformer tupleListTransformer) {
+    public void addTupleListTransformer(TupleListTransformer tupleListTransformer) {
         tupleTransformatorFactory.add(tupleListTransformer);
     }
 
-    public void setTupleListTransformerFactory(TupleListTransformerFactory tupleListTransformerFactory) {
+    public void addTupleListTransformerFactory(TupleListTransformerFactory tupleListTransformerFactory) {
         tupleTransformatorFactory.add(tupleListTransformerFactory);
     }
 

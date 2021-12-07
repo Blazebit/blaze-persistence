@@ -34,7 +34,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class SingularMultisetTupleListTransformerFactory implements TupleListTransformerFactory {
+public class SingularMultisetTupleTransformerFactory implements TupleTransformerFactory {
 
     private final int startIndex;
     private final String mapping;
@@ -46,7 +46,7 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
     private final TupleTransformerFactory subviewTupleTransformerFactory;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public SingularMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
+    public SingularMultisetTupleTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ViewTypeObjectBuilderTemplate<Object[]> template, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;
@@ -64,12 +64,17 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
     }
 
     @Override
-    public int getConsumableIndex() {
+    public int getConsumeStartIndex() {
         return startIndex;
     }
 
     @Override
-    public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public int getConsumeEndIndex() {
+        return startIndex + 1;
+    }
+
+    @Override
+    public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         if (mapping != null) {
             if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
                 FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
@@ -85,7 +90,7 @@ public class SingularMultisetTupleListTransformerFactory implements TupleListTra
         }
         TupleTransformator tupleTransformator = template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
-        return new SingularMultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, fieldConverters, elementConverter);
+        return new SingularMultisetTupleTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, fieldConverters, elementConverter);
     }
 
 }

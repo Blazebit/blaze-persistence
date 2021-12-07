@@ -35,7 +35,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.5.0
  */
-public class CollectionMultisetTupleListTransformerFactory implements TupleListTransformerFactory {
+public class CollectionMultisetTupleTransformerFactory implements TupleTransformerFactory {
 
     private final int startIndex;
     private final String mapping;
@@ -53,8 +53,8 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     private final BasicUserTypeStringSupport<?> indexBasicTypeSupport;
     private final boolean hasSelectOrSubselectFetchedAttributes;
 
-    public CollectionMultisetTupleListTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ContainerAccumulator<?> containerAccumulator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template,
-                                                         ViewTypeObjectBuilderTemplate<Object[]> indexTemplate, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory, TupleTransformerFactory indexSubviewTupleTransformerFactory, BasicUserTypeStringSupport<?> valueBasicTypeSupport, BasicUserTypeStringSupport<?> indexBasicTypeSupport) {
+    public CollectionMultisetTupleTransformerFactory(int startIndex, String mapping, String attributePath, String multisetResultAlias, TypeConverter<Object, Object> elementConverter, ContainerAccumulator<?> containerAccumulator, boolean dirtyTracking, ViewTypeObjectBuilderTemplate<Object[]> template,
+                                                     ViewTypeObjectBuilderTemplate<Object[]> indexTemplate, boolean hasSelectOrSubselectFetchedAttributes, TupleTransformerFactory subviewTupleTransformerFactory, TupleTransformerFactory indexSubviewTupleTransformerFactory, BasicUserTypeStringSupport<?> valueBasicTypeSupport, BasicUserTypeStringSupport<?> indexBasicTypeSupport) {
         this.startIndex = startIndex;
         this.mapping = mapping;
         this.attributePath = attributePath;
@@ -93,12 +93,17 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
     }
 
     @Override
-    public int getConsumableIndex() {
+    public int getConsumeStartIndex() {
         return startIndex;
     }
 
     @Override
-    public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    public int getConsumeEndIndex() {
+        return startIndex + 1;
+    }
+
+    @Override
+    public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         if (mapping != null) {
             if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
                 FullQueryBuilder<?, ?> queryBuilder = (FullQueryBuilder<?, ?>) parameterHolder;
@@ -115,7 +120,7 @@ public class CollectionMultisetTupleListTransformerFactory implements TupleListT
         TupleTransformator tupleTransformator = template == null ? null : template.getTupleTransformatorFactory().create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer subviewTupleTransformer = subviewTupleTransformerFactory == null ? null : subviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
         TupleTransformer indexSubviewTupleTransformer = indexSubviewTupleTransformerFactory == null ? null : indexSubviewTupleTransformerFactory.create(parameterHolder, optionalParameters, entityViewConfiguration);
-        return new MultisetTupleListTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, indexSubviewTupleTransformer, indexBasicTypeSupport == null ? -1 : fieldConverters.length - 1, fieldConverters, elementConverter, containerAccumulator, dirtyTracking);
+        return new MultisetTupleTransformer(startIndex, hasSelectOrSubselectFetchedAttributes, tupleTransformator, subviewTupleTransformer, indexSubviewTupleTransformer, indexBasicTypeSupport == null ? -1 : fieldConverters.length - 1, fieldConverters, elementConverter, containerAccumulator, dirtyTracking);
     }
 
 }

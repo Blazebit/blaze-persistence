@@ -20,9 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.ConfigurationProperties;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.correlation.model.DocumentCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.model.SimpleDocumentCorrelatedView;
@@ -35,7 +33,6 @@ import org.junit.Before;
 
 import javax.persistence.EntityManager;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -118,9 +115,9 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertEquals(0, results.get(0).getOwnerRelatedDocumentIds().size());
 
         assertEquals(1, results.get(0).getOwnerOnlyRelatedDocumentViews().size());
-        assertRemovedByName(doc1.getName(), results.get(0).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc1.getName(), results.get(0).getOwnerOnlyRelatedDocumentViews());
         assertEquals(1, results.get(0).getOwnerOnlyRelatedDocumentIds().size());
-        assertRemoved(doc1.getId(), results.get(0).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc1.getId(), results.get(0).getOwnerOnlyRelatedDocumentIds());
         assertEquals(0, results.get(0).getThisCorrelatedEmptyIdList().size());
         assertEquals(0, results.get(0).getThisCorrelatedEmptyEntityList().size());
         assertEquals(0, results.get(0).getThisCorrelatedEmptyViewList().size());
@@ -130,20 +127,20 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertThisAndOwnerMappings(doc2, results.get(1));
 
         assertEquals(2, results.get(1).getOwnerRelatedDocumentViews().size());
-        assertRemovedByName(doc3.getName(), results.get(1).getOwnerRelatedDocumentViews());
-        assertRemovedByName(doc4.getName(), results.get(1).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc3.getName(), results.get(1).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc4.getName(), results.get(1).getOwnerRelatedDocumentViews());
         assertEquals(2, results.get(1).getOwnerRelatedDocumentIds().size());
-        assertRemoved(doc3.getId(), results.get(1).getOwnerRelatedDocumentIds());
-        assertRemoved(doc4.getId(), results.get(1).getOwnerRelatedDocumentIds());
+        assertExists(doc3.getId(), results.get(1).getOwnerRelatedDocumentIds());
+        assertExists(doc4.getId(), results.get(1).getOwnerRelatedDocumentIds());
 
         assertEquals(3, results.get(1).getOwnerOnlyRelatedDocumentViews().size());
-        assertRemovedByName(doc2.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc3.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc4.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc2.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc3.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc4.getName(), results.get(1).getOwnerOnlyRelatedDocumentViews());
         assertEquals(3, results.get(1).getOwnerOnlyRelatedDocumentIds().size());
-        assertRemoved(doc2.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc3.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc4.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc2.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc3.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc4.getId(), results.get(1).getOwnerOnlyRelatedDocumentIds());
         assertEquals(0, results.get(1).getThisCorrelatedEmptyIdList().size());
         assertEquals(0, results.get(1).getThisCorrelatedEmptyEntityList().size());
         assertEquals(0, results.get(1).getThisCorrelatedEmptyViewList().size());
@@ -153,20 +150,20 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertThisAndOwnerMappings(doc3, results.get(2));
 
         assertEquals(2, results.get(2).getOwnerRelatedDocumentViews().size());
-        assertRemovedByName(doc2.getName(), results.get(2).getOwnerRelatedDocumentViews());
-        assertRemovedByName(doc4.getName(), results.get(2).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc2.getName(), results.get(2).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc4.getName(), results.get(2).getOwnerRelatedDocumentViews());
         assertEquals(2, results.get(2).getOwnerRelatedDocumentIds().size());
-        assertRemoved(doc2.getId(), results.get(2).getOwnerRelatedDocumentIds());
-        assertRemoved(doc4.getId(), results.get(2).getOwnerRelatedDocumentIds());
+        assertExists(doc2.getId(), results.get(2).getOwnerRelatedDocumentIds());
+        assertExists(doc4.getId(), results.get(2).getOwnerRelatedDocumentIds());
 
         assertEquals(3, results.get(2).getOwnerOnlyRelatedDocumentViews().size());
-        assertRemovedByName(doc2.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc3.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc4.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc2.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc3.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc4.getName(), results.get(2).getOwnerOnlyRelatedDocumentViews());
         assertEquals(3, results.get(2).getOwnerOnlyRelatedDocumentIds().size());
-        assertRemoved(doc2.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc3.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc4.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc2.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc3.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc4.getId(), results.get(2).getOwnerOnlyRelatedDocumentIds());
         assertEquals(0, results.get(2).getThisCorrelatedEmptyIdList().size());
         assertEquals(0, results.get(2).getThisCorrelatedEmptyEntityList().size());
         assertEquals(0, results.get(2).getThisCorrelatedEmptyViewList().size());
@@ -176,31 +173,28 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         assertThisAndOwnerMappings(doc4, results.get(3));
 
         assertEquals(2, results.get(3).getOwnerRelatedDocumentViews().size());
-        assertRemovedByName(doc2.getName(), results.get(3).getOwnerRelatedDocumentViews());
-        assertRemovedByName(doc3.getName(), results.get(3).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc2.getName(), results.get(3).getOwnerRelatedDocumentViews());
+        assertExistsByName(doc3.getName(), results.get(3).getOwnerRelatedDocumentViews());
         assertEquals(2, results.get(3).getOwnerRelatedDocumentIds().size());
-        assertRemoved(doc2.getId(), results.get(3).getOwnerRelatedDocumentIds());
-        assertRemoved(doc3.getId(), results.get(3).getOwnerRelatedDocumentIds());
+        assertExists(doc2.getId(), results.get(3).getOwnerRelatedDocumentIds());
+        assertExists(doc3.getId(), results.get(3).getOwnerRelatedDocumentIds());
 
         assertEquals(3, results.get(3).getOwnerOnlyRelatedDocumentViews().size());
-        assertRemovedByName(doc2.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc3.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
-        assertRemovedByName(doc4.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc2.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc3.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
+        assertExistsByName(doc4.getName(), results.get(3).getOwnerOnlyRelatedDocumentViews());
         assertEquals(3, results.get(3).getOwnerOnlyRelatedDocumentIds().size());
-        assertRemoved(doc2.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc3.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
-        assertRemoved(doc4.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc2.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc3.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
+        assertExists(doc4.getId(), results.get(3).getOwnerOnlyRelatedDocumentIds());
         assertEquals(0, results.get(3).getThisCorrelatedEmptyIdList().size());
         assertEquals(0, results.get(3).getThisCorrelatedEmptyEntityList().size());
         assertEquals(0, results.get(3).getThisCorrelatedEmptyViewList().size());
     }
 
-    private void assertRemovedByName(String expectedName, Collection<SimpleDocumentCorrelatedView> views) {
-        Iterator<SimpleDocumentCorrelatedView> iter = views.iterator();
-        while (iter.hasNext()) {
-            SimpleDocumentCorrelatedView v = iter.next();
+    private void assertExistsByName(String expectedName, Collection<SimpleDocumentCorrelatedView> views) {
+        for (SimpleDocumentCorrelatedView v : views) {
             if (expectedName.equals(v.getName())) {
-                iter.remove();
                 return;
             }
         }
@@ -208,8 +202,8 @@ public abstract class AbstractCorrelationTest extends AbstractEntityViewTest {
         Assert.fail("Could not find '" + expectedName + "' in: " + views);
     }
 
-    private <T> void assertRemoved(T expectedValue, Collection<T> collection) {
-        if (!collection.remove(expectedValue)) {
+    private <T> void assertExists(T expectedValue, Collection<T> collection) {
+        if (!collection.contains(expectedValue)) {
             Assert.fail("Could not find '" + expectedValue + "' in: " + collection);
         }
     }

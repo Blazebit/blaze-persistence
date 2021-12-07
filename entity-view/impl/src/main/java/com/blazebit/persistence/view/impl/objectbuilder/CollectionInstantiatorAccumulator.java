@@ -147,7 +147,7 @@ public class CollectionInstantiatorAccumulator implements ContainerAccumulator<C
                 }
                 for (int i = listEnd; i < other.size(); i++) {
                     Object valueContainer = valueAccumulator.createContainer(false, 1);
-                    valueAccumulator.add(valueContainer, null, other.get(i), false);
+                    valueAccumulator.addAll(valueContainer, other.get(i), false);
                     list.add(i, valueContainer);
                 }
             }
