@@ -21,14 +21,14 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory implements TupleListTransformerFactory {
+public abstract class AbstractCorrelatedSubselectTupleTransformerFactory implements TupleTransformerFactory {
 
     protected final Correlator correlator;
     protected final EntityViewManagerImpl evm;
@@ -49,9 +49,9 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     protected final Class<?> correlationBasisEntity;
     protected final Limiter limiter;
 
-    public AbstractCorrelatedSubselectTupleListTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
-                                                                  Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
-                                                                  String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
+    public AbstractCorrelatedSubselectTupleTransformerFactory(Correlator correlator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
+                                                              Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory,
+                                                              String attributePath, String[] fetches, int viewRootIndex, int embeddingViewIndex, int correlationBasisIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity, Limiter limiter) {
         this.correlator = correlator;
         this.evm = evm;
         this.viewRootType = viewRootType;
@@ -73,8 +73,12 @@ public abstract class AbstractCorrelatedSubselectTupleListTransformerFactory imp
     }
 
     @Override
-    public int getConsumableIndex() {
+    public int getConsumeStartIndex() {
         return -1;
     }
 
+    @Override
+    public int getConsumeEndIndex() {
+        return -1;
+    }
 }

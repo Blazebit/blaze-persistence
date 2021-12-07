@@ -30,14 +30,14 @@ import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedMapSubselectTupleListTransformer extends AbstractCorrelatedSubselectTupleListTransformer {
+public class CorrelatedMapSubselectTupleTransformer extends AbstractCorrelatedSubselectTupleTransformer {
 
     private final boolean recording;
 
-    public CorrelatedMapSubselectTupleListTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
-                                                      Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
-                                                      String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity,
-                                                      Limiter limiter, EntityViewConfiguration entityViewConfiguration, boolean recording) {
+    public CorrelatedMapSubselectTupleTransformer(ExpressionFactory ef, Correlator correlator, ContainerAccumulator<?> containerAccumulator, EntityViewManagerImpl evm, ManagedViewTypeImplementor<?> viewRootType, String viewRootAlias, ManagedViewTypeImplementor<?> embeddingViewType, String embeddingViewPath,
+                                                  Expression correlationResult, String correlationBasisExpression, String correlationKeyExpression, CorrelationProviderFactory correlationProviderFactory, String attributePath, String[] fetches,
+                                                  String[] indexFetches, Expression indexExpression, Correlator indexCorrelator, int viewRootIndex, int embeddingViewIndex, int tupleIndex, Class<?> correlationBasisType, Class<?> correlationBasisEntity,
+                                                  Limiter limiter, EntityViewConfiguration entityViewConfiguration, boolean recording) {
         super(ef, correlator, containerAccumulator, evm, viewRootType, viewRootAlias, embeddingViewType, embeddingViewPath, correlationResult, correlationBasisExpression, correlationKeyExpression, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, viewRootIndex, embeddingViewIndex,
                 tupleIndex, correlationBasisType, correlationBasisEntity, limiter, entityViewConfiguration);
         this.recording = recording;
