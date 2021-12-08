@@ -22,6 +22,7 @@ Not yet released
 * Fix typo in QueryDSL `GROUP_CONCAT` rendering leading to a syntax error
 * Add `getById` implementation as needed by Spring Data 2.5 to the integration
 * Ensure stream/iteration processing of results works with entity views containing no collections
+* Fix support for flushing flat view collections with read-only declared and updatable subview types
 
 ### Backwards-incompatible changes
 
