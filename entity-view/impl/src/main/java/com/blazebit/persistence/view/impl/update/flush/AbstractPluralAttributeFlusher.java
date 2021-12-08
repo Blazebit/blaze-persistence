@@ -565,10 +565,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
      * @since 1.4.0
      */
     protected static enum EntryState {
-        EXISTED {
+        UPDATED {
             @Override
             EntryState onAdd() {
-                return EXISTED;
+                return ADDED;
             }
 
             @Override
@@ -584,13 +584,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
             @Override
             EntryState onRemove() {
-                return EXISTED;
+                return UPDATED;
             }
         },
         REMOVED {
             @Override
             EntryState onAdd() {
-                return EXISTED;
+                return UPDATED;
             }
 
             @Override

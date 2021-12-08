@@ -106,6 +106,43 @@ public class EntityViewUpdateSimpleMutableSubtypeFlatViewCollectionsTest extends
         assertSubviewEquals(doc1.getNames(), docView.getNames());
     }
 
+    @Test
+    public void testAddCollectionElement() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+
+        UpdatableNameObjectView updatableNameObjectView = evm.create(UpdatableNameObjectView.class);
+        updatableNameObjectView.setPrimaryName("newPers");
+        docView.getNames().add(updatableNameObjectView);
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded i.e. a full fetch
+        // Finally the person is added because the primary name changed
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+
+        if (version || isFullMode() && isQueryStrategy()) {
+            builder.update(Document.class);
+        }
+        if (isFullMode() || !isQueryStrategy() && !supportsIndexedInplaceUpdate()) {
+            builder.delete(Document.class, "names")
+                    .insert(Document.class, "names");
+        }
+        builder.insert(Document.class, "names");
+        builder.validate();
+
+        assertNoUpdateAndReload(docView);
+        assertEquals("newPers", doc1.getNames().get(1).getPrimaryName());
+        assertSubviewEquals(doc1.getNames(), docView.getNames());
+    }
+
     public static void assertSubviewEquals(Collection<NameObject> persons, Collection<? extends ReadonlyNameObjectView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
@@ -141,6 +178,9 @@ public class EntityViewUpdateSimpleMutableSubtypeFlatViewCollectionsTest extends
     protected AssertStatementBuilder fullUpdate(AssertStatementBuilder builder) {
         builder.delete(Document.class, "names")
                 .insert(Document.class, "names");
+        if ( doc1.getNames().size() > 1 ) {
+            builder.insert(Document.class, "names");
+        }
         builder.update(Document.class);
         return builder;
     }
