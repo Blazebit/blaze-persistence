@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.view.impl.collection.ListAction;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.spi.type.DirtyTracker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,7 +83,7 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                     appendedObjectMap.add(entry);
                 } else {
                     ReplaceOperation replaceOperation = new ReplaceOperation(index, entry.getKey());
-                    if (!addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation)) {
+                    if (addTranslateOperation(translateOperations, index, Integer.MAX_VALUE, 1, null, replaceOperation)) {
                         replaceOperations.add(replaceOperation);
                     }
                 }
@@ -194,7 +195,8 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                         // A remove followed an insert or the other way round allow to remove the translation operation
                         translateOperations.remove(i);
                         replaceOperation.oldObject = indexTranslateOperation.removeOperations.get(0).removedObject;
-                        return replaceOperation.oldObject == replaceOperation.newObject;
+                        Object value = replaceOperation.newObject;
+                        return replaceOperation.oldObject != value || value instanceof DirtyTracker && ((DirtyTracker) value).$$_isDirty();
                     } else if (indexDiff == 1 && indexTranslateOperation.endIndex == endIndex) {
                         // Neighbouring index translations with the same endIndex are merged
                         List<RemoveOperation> newList;
@@ -206,18 +208,18 @@ public class FusedCollectionIndexActions implements FusedCollectionActions {
                             newList.add(removeOperation);
                         }
                         translateOperations.set(i, new IndexTranslateOperation(Math.min(indexTranslateOperation.startIndex, startIndex), endIndex, indexTranslateOperation.offset + offset, newList));
-                        return false;
+                        return true;
                     } else {
                         translateOperations.set(i, new IndexTranslateOperation(indexTranslateOperation.startIndex, startIndex, indexTranslateOperation.offset, indexTranslateOperation.removeOperations));
                         translateOperations.add(i + 1, new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
-                        return false;
+                        return true;
                     }
                 }
             }
 
             translateOperations.add(new IndexTranslateOperation(startIndex, endIndex, offset, removeOperation == null ? new ArrayList<RemoveOperation>() : new ArrayList<>(Collections.singletonList(removeOperation))));
         }
-        return false;
+        return true;
     }
 
     private static int applyIndexTranslations(List<IndexTranslateOperation> indexTranslateOperations, int index) {

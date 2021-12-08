@@ -20,11 +20,14 @@ import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuil
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.IntIdEntityCreateView;
+import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.IntIdEntityIdView;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.UpdatableDocumentWithCollectionsView;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.UpdatableNameObjectView;
 import org.junit.Assert;
@@ -61,6 +64,8 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(UpdatableNameObjectView.class);
+        cfg.addEntityView(IntIdEntityIdView.class);
+        cfg.addEntityView(IntIdEntityCreateView.class);
     }
 
     @Override
@@ -172,6 +177,43 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
         assertSubviewEquals(doc1.getNames(), docView.getNames());
     }
 
+    @Test
+    public void testAddCollectionElementWithNewObject() {
+        // Given
+        final UpdatableDocumentWithCollectionsView docView = getDoc1View();
+        clearQueries();
+
+        // When
+        IntIdEntityCreateView intIdEntity = evm.create(IntIdEntityCreateView.class);
+        intIdEntity.setName("test");
+        docView.getNames().get(0).setIntIdEntity(intIdEntity);
+        update(docView);
+
+        // Then
+        // Assert that the document and the people are loaded i.e. a full fetch
+        // Finally the person is updated because the intIdEntity changed
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        if (!isQueryStrategy()) {
+            fullFetch(builder);
+        }
+
+        if (version || isFullMode() && isQueryStrategy()) {
+            builder.update(Document.class);
+        }
+        if (isFullMode() || !isQueryStrategy() && !supportsIndexedInplaceUpdate()) {
+            builder.delete(Document.class, "names")
+                    .insert(Document.class, "names");
+        } else {
+            builder.update(Document.class, "names");
+        }
+        builder.insert(IntIdEntity.class);
+        builder.validate();
+
+        assertNoUpdateAndReload(docView);
+        assertEquals(intIdEntity.getId(), doc1.getNames().get(0).getIntIdEntity().getId());
+    }
+
     public static void assertSubviewEquals(Collection<NameObject> persons, Collection<? extends UpdatableNameObjectView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
@@ -197,10 +239,14 @@ public class EntityViewUpdateSimpleMutableFlatViewCollectionsTest extends Abstra
 
     @Override
     protected AssertStatementBuilder fullFetch(AssertStatementBuilder builder) {
-        return builder.assertSelect()
+        builder.assertSelect()
                 .fetching(Document.class)
                 .fetching(Document.class, "names")
                 .and();
+        if (doc1.getNames().get(0).getIntIdEntity() != null) {
+            builder.select(IntIdEntity.class);
+        }
+        return builder;
     }
 
     @Override

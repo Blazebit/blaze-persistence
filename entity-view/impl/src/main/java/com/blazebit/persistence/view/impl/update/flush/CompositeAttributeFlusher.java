@@ -432,7 +432,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             Object[] initialState = ((DirtyStateTrackable) value).$$_getInitialState();
             context.getInitialStateResetter().addState(initialState, initialState.clone());
 
-            if (query == null) {
+            if (query == null && queryFactory != null) {
                 query = queryFactory.createUpdateQuery(context, (MutableStateTrackable) ownerView, ownerFlusher);
             }
             for (int i = 0; i < state.length; i++) {
