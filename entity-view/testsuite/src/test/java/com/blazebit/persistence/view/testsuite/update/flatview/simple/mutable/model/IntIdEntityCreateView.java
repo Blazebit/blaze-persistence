@@ -16,27 +16,21 @@
 
 package com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model;
 
-import com.blazebit.persistence.testsuite.entity.NameObject;
-import com.blazebit.persistence.view.CascadeType;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdatableEntityView;
-import com.blazebit.persistence.view.UpdatableMapping;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.4
  */
-@UpdatableEntityView
-@EntityView(NameObject.class)
-public interface UpdatableNameObjectView {
+@CreatableEntityView
+@EntityView(IntIdEntity.class)
+public interface IntIdEntityCreateView extends IntIdEntityIdView {
 
-    public String getPrimaryName();
+    public String getName();
 
-    public void setPrimaryName(String primaryName);
+    public void setName(String name);
 
-    @UpdatableMapping(cascade = { CascadeType.PERSIST })
-    public IntIdEntityIdView getIntIdEntity();
-
-    public void setIntIdEntity(IntIdEntityIdView intIdEntity);
 }

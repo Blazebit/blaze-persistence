@@ -47,6 +47,10 @@ public class EntityViewAwareObjectMapper {
     private final EntityViewManager entityViewManager;
     private final ObjectMapper objectMapper;
 
+    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper) {
+        this(entityViewManager, objectMapper, null);
+    }
+
     public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, final EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
         SimpleModule module = new SimpleModule();

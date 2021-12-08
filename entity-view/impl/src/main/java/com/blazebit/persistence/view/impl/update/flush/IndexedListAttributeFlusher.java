@@ -348,13 +348,13 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                     // By default, since the view is dirty, we start with the state UPDATED and go through state transitions
                     // based on the containment of the view in the added/removed objects collections of the actions
                     EntryState state = EntryState.UPDATED;
-                    Object replacedObject = null;
+                    Object replacedObject = element;
                     for (CollectionAction<?> action : actions) {
                         Collection<Object> removedObjects = action.getRemovedObjects();
                         if (identityContains(removedObjects, element)) {
                             if (identityContains(action.getAddedObjects(), element)) {
                                 // This is a ListSetAction where the old and new object are the same instances
-                                replacedObject = null;
+                                replacedObject = element;
                                 state = EntryState.UPDATED;
                             } else {
                                 state = state.onRemove();
@@ -373,9 +373,9 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                     // If the element was UPDATED and there is no replacedObject,
                     // this means that this really was just a mutation of the view
                     // and there is no action that would flush the object changes already
-                    if (state == EntryState.UPDATED && replacedObject == null) {
+                    if (state == EntryState.UPDATED && replacedObject == element) {
                         // Using last = false is intentional to actually get a proper update instead of a delete and insert
-                        actions.add(new ListSetAction<>(i, false, element, null));
+                        actions.add(new ListSetAction<>(i, false, element, element));
                     }
                 }
             }
