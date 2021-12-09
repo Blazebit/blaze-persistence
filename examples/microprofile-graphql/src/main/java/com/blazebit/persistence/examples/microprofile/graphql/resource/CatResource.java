@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.examples.microprofile.graphql.model.Cat;
+import com.blazebit.persistence.examples.microprofile.graphql.view.CatCreateView;
 import com.blazebit.persistence.examples.microprofile.graphql.view.CatSimpleView;
 import com.blazebit.persistence.examples.microprofile.graphql.view.CatUpdateView;
 import com.blazebit.persistence.examples.microprofile.graphql.view.CatWithOwnerView;
@@ -32,8 +33,11 @@ import com.blazebit.persistence.view.Sorters;
 import graphql.schema.DataFetchingEnvironment;
 import io.smallrye.graphql.api.Context;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Input;
+import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -96,17 +100,24 @@ public class CatResource {
         return evm.applySetting(graphQLEntityViewSupport.<CatSimpleView>createSetting(context.unwrap(DataFetchingEnvironment.class)), cb).getResultList();
     }
 
-    @Query
-    public GraphQLRelayConnection<CatWithOwnerView> findAll(@Name("first") Integer first, @Name("last") Integer last, @Name("offset") Integer offset, @Name("before") String before, @Name("after") String after) {
-        CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
-        EntityViewSetting<CatWithOwnerView, PaginatedCriteriaBuilder<CatWithOwnerView>> setting = graphQLEntityViewSupport.createPaginatedSetting(
-                context.unwrap(DataFetchingEnvironment.class)
-        );
-        setting.addAttributeSorter("id", Sorters.ascending());
-        if (setting.getMaxResults() == 0) {
-            return new GraphQLRelayConnection<>();
-        }
-        return new GraphQLRelayConnection<>(evm.applySetting(setting, cb).getResultList());
+//    @Query
+//    public GraphQLRelayConnection<CatWithOwnerView> findAll(@Name("first") Integer first, @Name("last") Integer last, @Name("offset") Integer offset, @Name("before") String before, @Name("after") String after) {
+//        CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
+//        EntityViewSetting<CatWithOwnerView, PaginatedCriteriaBuilder<CatWithOwnerView>> setting = graphQLEntityViewSupport.createPaginatedSetting(
+//                context.unwrap(DataFetchingEnvironment.class)
+//        );
+//        setting.addAttributeSorter("id", Sorters.ascending());
+//        if (setting.getMaxResults() == 0) {
+//            return new GraphQLRelayConnection<>();
+//        }
+//        return new GraphQLRelayConnection<>(evm.applySetting(setting, cb).getResultList());
+//    }
+
+    @Mutation
+    @Transactional
+    public Long createCat(@Source(name = "cat") CatCreateView cat) {
+        evm.save(em, cat);
+        return cat.getId();
     }
 
     @DELETE

@@ -46,7 +46,7 @@ public class GraphQLProducer {
 
         // Option 2: Let the integration replace the entity view GraphQL types
         boolean defineNormalTypes = true;
-        boolean defineRelayTypes = true;
+        boolean defineRelayTypes = false;
 
         // Configure how to integrate entity views
         GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(defineNormalTypes, defineRelayTypes);

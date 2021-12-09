@@ -14,6 +14,7 @@ Not yet released
 * Add `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions
 * Add JPA Criteria support for aggregate `FILTER` clause, window functions and ordered set aggregate functions
 * Fire `EntityViewConfiguration` as event in Quarkus extension boot like in the CDI integration to allow customization
+* Add Spring SPQR example application showcasing how GraphQL mutations can be used
 
 ### Bug fixes
 

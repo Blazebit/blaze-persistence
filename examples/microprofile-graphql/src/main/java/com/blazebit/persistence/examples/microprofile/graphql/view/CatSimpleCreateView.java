@@ -20,29 +20,15 @@ import com.blazebit.persistence.examples.microprofile.graphql.model.Cat;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 
-import javax.json.bind.annotation.JsonbTypeDeserializer;
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.bind.serializer.JsonbDeserializer;
-import javax.json.stream.JsonParser;
-import java.lang.reflect.Type;
-import java.util.Set;
-
 /**
  * @author Christian Beikov
  * @since 1.6.2
  */
 @CreatableEntityView
 @EntityView(Cat.class)
-@JsonbTypeDeserializer(CatCreateView.MyDeserializer.class)
-public interface CatCreateView extends CatSimpleCreateView {
+public interface CatSimpleCreateView extends CatUpdateView {
 
-    Set<CatSimpleCreateView> getKittens();
-    void setKittens(Set<CatSimpleCreateView> kittens);
+    PersonIdView getOwner();
 
-    class MyDeserializer implements JsonbDeserializer<CatCreateView> {
-        @Override
-        public CatCreateView deserialize(JsonParser jsonParser, DeserializationContext deserializationContext, Type type) {
-            return null;
-        }
-    }
+    void setOwner(PersonIdView owner);
 }

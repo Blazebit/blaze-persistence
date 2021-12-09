@@ -33,14 +33,20 @@ import graphql.language.Description;
 import graphql.language.EnumTypeDefinition;
 import graphql.language.EnumValueDefinition;
 import graphql.language.FieldDefinition;
+import graphql.language.InputObjectTypeDefinition;
+import graphql.language.InputValueDefinition;
 import graphql.language.InterfaceTypeDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.Type;
+import graphql.language.TypeDefinition;
 import graphql.language.TypeName;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLInputObjectField;
+import graphql.schema.GraphQLInputObjectType;
+import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
@@ -93,6 +99,13 @@ public class GraphQLEntityViewSupportFactory {
     private static final Method OBJECT_TYPE_DEFINITION_BUILDER_IMPLEMENTS;
     private static final Method OBJECT_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS;
     private static final Method OBJECT_TYPE_DEFINITION_BUILDER_BUILD;
+    private static final Constructor<InputObjectTypeDefinition> INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_NEW_BUILDER;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_SET_DESCRIPTION;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_BUILDER_NAME;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_BUILDER_DESCRIPTION;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_BUILDER_VALUE_DEFINITIONS;
+    private static final Method INPUT_OBJECT_TYPE_DEFINITION_BUILDER_BUILD;
     private static final Constructor<InterfaceTypeDefinition> INTERFACE_TYPE_DEFINITION_CONSTRUCTOR;
     private static final Method INTERFACE_TYPE_DEFINITION_NEW_BUILDER;
     private static final Method INTERFACE_TYPE_DEFINITION_SET_DESCRIPTION;
@@ -172,6 +185,7 @@ public class GraphQLEntityViewSupportFactory {
         }
         TYPE_REGISTRY_ADD = typeRegistryAdd;
         OBJECT_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(ObjectTypeDefinition.class, String.class, List.class, List.class, List.class);
+        INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(InputObjectTypeDefinition.class, String.class, List.class, List.class);
         INTERFACE_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(InterfaceTypeDefinition.class, String.class, List.class, List.class);
         ENUM_TYPE_DEFINITION_CONSTRUCTOR = getConstructor(EnumTypeDefinition.class, String.class, List.class, List.class);
         Method objectTypeDefinitionNewBuilder = null;
@@ -181,6 +195,12 @@ public class GraphQLEntityViewSupportFactory {
         Method objectTypeDefinitionBuilderImplements = null;
         Method objectTypeDefinitionBuilderFieldDefinitions = null;
         Method objectTypeDefinitionBuilderBuild = null;
+        Method inputObjectTypeDefinitionNewBuilder = null;
+        Method inputObjectTypeDefinitionSetDescription = null;
+        Method inputObjectTypeDefinitionBuilderName = null;
+        Method inputObjectTypeDefinitionBuilderDescription = null;
+        Method inputObjectTypeDefinitionBuilderValueDefinitions = null;
+        Method inputObjectTypeDefinitionBuilderBuild = null;
         Method interfaceTypeDefinitionNewBuilder = null;
         Method interfaceTypeDefinitionSetDescription = null;
         Method interfaceTypeDefinitionBuilderName = null;
@@ -202,6 +222,12 @@ public class GraphQLEntityViewSupportFactory {
                 objectTypeDefinitionBuilderFieldDefinitions = Class.forName("graphql.language.ObjectTypeDefinition$Builder").getMethod("fieldDefinitions", List.class);
                 objectTypeDefinitionBuilderBuild = Class.forName("graphql.language.ObjectTypeDefinition$Builder").getMethod("build");
 
+                inputObjectTypeDefinitionNewBuilder = InputObjectTypeDefinition.class.getMethod("newInputObjectDefinition");
+                inputObjectTypeDefinitionBuilderName = Class.forName("graphql.language.InputObjectTypeDefinition$Builder").getMethod("name", String.class);
+                inputObjectTypeDefinitionBuilderDescription = Class.forName("graphql.language.InputObjectTypeDefinition$Builder").getMethod("description", Description.class);
+                inputObjectTypeDefinitionBuilderValueDefinitions = Class.forName("graphql.language.InputObjectTypeDefinition$Builder").getMethod("inputValueDefinitions", List.class);
+                inputObjectTypeDefinitionBuilderBuild = Class.forName("graphql.language.InputObjectTypeDefinition$Builder").getMethod("build");
+
                 interfaceTypeDefinitionNewBuilder = InterfaceTypeDefinition.class.getMethod("newInterfaceTypeDefinition");
                 interfaceTypeDefinitionBuilderName = Class.forName("graphql.language.InterfaceTypeDefinition$Builder").getMethod("name", String.class);
                 interfaceTypeDefinitionBuilderDescription = Class.forName("graphql.language.InterfaceTypeDefinition$Builder").getMethod("description", Description.class);
@@ -219,6 +245,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             try {
                 objectTypeDefinitionSetDescription = ObjectTypeDefinition.class.getMethod("setDescription", Description.class);
+                inputObjectTypeDefinitionSetDescription = InputObjectTypeDefinition.class.getMethod("setDescription", Description.class);
                 interfaceTypeDefinitionSetDescription = InterfaceTypeDefinition.class.getMethod("setDescription", Description.class);
                 enumTypeDefinitionSetDescription = EnumTypeDefinition.class.getMethod("setDescription", Description.class);
             } catch (Exception ex) {
@@ -232,6 +259,12 @@ public class GraphQLEntityViewSupportFactory {
         OBJECT_TYPE_DEFINITION_BUILDER_IMPLEMENTS = objectTypeDefinitionBuilderImplements;
         OBJECT_TYPE_DEFINITION_BUILDER_FIELD_DEFINITIONS = objectTypeDefinitionBuilderFieldDefinitions;
         OBJECT_TYPE_DEFINITION_BUILDER_BUILD = objectTypeDefinitionBuilderBuild;
+        INPUT_OBJECT_TYPE_DEFINITION_NEW_BUILDER = inputObjectTypeDefinitionNewBuilder;
+        INPUT_OBJECT_TYPE_DEFINITION_SET_DESCRIPTION = inputObjectTypeDefinitionSetDescription;
+        INPUT_OBJECT_TYPE_DEFINITION_BUILDER_NAME = inputObjectTypeDefinitionBuilderName;
+        INPUT_OBJECT_TYPE_DEFINITION_BUILDER_DESCRIPTION = inputObjectTypeDefinitionBuilderDescription;
+        INPUT_OBJECT_TYPE_DEFINITION_BUILDER_VALUE_DEFINITIONS = inputObjectTypeDefinitionBuilderValueDefinitions;
+        INPUT_OBJECT_TYPE_DEFINITION_BUILDER_BUILD = inputObjectTypeDefinitionBuilderBuild;
         INTERFACE_TYPE_DEFINITION_NEW_BUILDER = interfaceTypeDefinitionNewBuilder;
         INTERFACE_TYPE_DEFINITION_SET_DESCRIPTION = interfaceTypeDefinitionSetDescription;
         INTERFACE_TYPE_DEFINITION_BUILDER_NAME = interfaceTypeDefinitionBuilderName;
@@ -401,33 +434,42 @@ public class GraphQLEntityViewSupportFactory {
                 continue;
             }
             String typeName = getObjectTypeName(managedView);
+            String inputTypeName = typeName + "Input";
             String description = getDescription(managedView.getJavaType());
-            List<FieldDefinition> fieldDefinitions = new ArrayList<>();
+            List<FieldDefinition> fieldDefinitions = new ArrayList<>(managedView.getAttributes().size());
+            List<InputValueDefinition> valueDefinitions = new ArrayList<>(managedView.getAttributes().size());
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
                 if (isIgnored(attribute.getJavaMethod())) {
                     continue;
                 }
                 Type type;
+                Type inputType;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                     if (singularAttribute.isId() && !singularAttribute.isSubview()) {
                         // Usual numeric ID
                         type = getIdType(typeRegistry, singularAttribute);
+                        inputType = getInputIdType(typeRegistry, singularAttribute);
                     } else {
                         type = getElementType(typeRegistry, singularAttribute, entityMetamodel);
+                        inputType = getInputElementType(typeRegistry, singularAttribute, entityMetamodel);
                     }
                 } else if (attribute instanceof MapAttribute<?, ?, ?>) {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
                     type = getEntryType(typeRegistry, attribute, getKeyType(typeRegistry, mapAttribute), getElementType(typeRegistry, mapAttribute));
+                    inputType = getInputEntryType(typeRegistry, attribute, getInputKeyType(typeRegistry, mapAttribute), getInputElementType(typeRegistry, mapAttribute));
                 } else {
                     type = new ListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
+                    inputType = new ListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
                 }
                 String fieldName = getFieldName(attribute);
                 FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
                 fieldDefinitions.add(fieldDefinition);
                 addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
             }
-            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, newObjectTypeDefinition(typeName, fieldDefinitions, description));
+            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, newObjectTypeDefinition(typeName, fieldDefinitions, description), newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -442,6 +484,35 @@ public class GraphQLEntityViewSupportFactory {
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
         return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes);
+    }
+
+    /**
+     * Returns a new {@link GraphQLEntityViewSupport} after initializing entity view types from {@link EntityViewManager}
+     * that are available in the given schema.
+     *
+     * @param schema The existing schema
+     * @param entityViewManager The entity view manager
+     * @return a new {@link GraphQLEntityViewSupport}
+     */
+    public GraphQLEntityViewSupport create(GraphQLSchema schema, EntityViewManager entityViewManager) {
+        boolean defineNormalTypes = this.defineNormalTypes;
+        boolean defineRelayTypes = this.defineRelayTypes;
+        Boolean implementRelayNode = this.implementRelayNode;
+        boolean defineRelayNodeIfNotExist = this.defineRelayNodeIfNotExist;
+        try {
+            // Set all to false so that we don't try to register anything in the null schema builder
+            this.defineNormalTypes = false;
+            this.defineRelayTypes = false;
+            this.implementRelayNode = false;
+            this.defineRelayNodeIfNotExist = false;
+            // For now, we scan all entity view types. Using the schema can be done later as optimization
+            return create((GraphQLSchema.Builder) null, entityViewManager);
+        } finally {
+            this.defineNormalTypes = defineNormalTypes;
+            this.defineRelayTypes = defineRelayTypes;
+            this.implementRelayNode = implementRelayNode;
+            this.defineRelayNodeIfNotExist = defineRelayNodeIfNotExist;
+        }
     }
 
     /**
@@ -464,10 +535,16 @@ public class GraphQLEntityViewSupportFactory {
                 continue;
             }
             String typeName = getObjectTypeName(managedView);
+            String inputTypeName = typeName + "Input";
+            if (managedView.isCreatable() || managedView.isUpdatable()) {
+                inputTypeName = typeName;
+            }
             String description = getDescription(managedView.getJavaType());
             GraphQLObjectType.Builder builder = GraphQLObjectType.newObject().name(typeName);
+            GraphQLInputObjectType.Builder inputBuilder = GraphQLInputObjectType.newInputObject().name(inputTypeName);
             if (description != null) {
                 builder.description(description);
+                inputBuilder.description(description);
             }
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
                 if (isIgnored(attribute.getJavaMethod())) {
@@ -477,24 +554,31 @@ public class GraphQLEntityViewSupportFactory {
                 String fieldName = getFieldName(attribute);
                 fieldBuilder.name(fieldName);
                 GraphQLOutputType type;
+                GraphQLInputType inputType;
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                     if (singularAttribute.isId() && !singularAttribute.isSubview()) {
                         type = getIdType(singularAttribute);
+                        inputType = getInputIdType(singularAttribute);
                     } else {
                         type = getElementType(schemaBuilder, singularAttribute, registeredTypeNames, entityMetamodel);
+                        inputType = getInputElementType(schemaBuilder, singularAttribute, registeredTypeNames, entityMetamodel);
                     }
                 } else if (attribute instanceof MapAttribute<?, ?, ?>) {
                     MapAttribute<?, ?, ?> mapAttribute = (MapAttribute<?, ?, ?>) attribute;
                     type = getEntryType(schemaBuilder, attribute, getKeyType(schemaBuilder, mapAttribute, registeredTypeNames), getElementType(schemaBuilder, mapAttribute, registeredTypeNames));
+                    inputType = getInputEntryType(schemaBuilder, attribute, getInputKeyType(schemaBuilder, mapAttribute, registeredTypeNames), getInputElementType(schemaBuilder, mapAttribute, registeredTypeNames));
                 } else {
                     type = new GraphQLList(getElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
+                    inputType = new GraphQLList(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
                 }
                 fieldBuilder.type(type);
                 builder.field(fieldBuilder);
                 addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
             }
-            addObjectTypeDefinition(schemaBuilder, typeNameToClass, managedView, builder.build());
+            addObjectTypeDefinition(schemaBuilder, typeNameToClass, managedView, builder.build(), inputBuilder.build());
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -601,6 +685,33 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
+    protected InputObjectTypeDefinition newInputObjectTypeDefinition(String typeName, List<InputValueDefinition> valueDefinitions, String description) {
+        try {
+            if (INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR != null) {
+                //                new InputObjectTypeDefinition(typeName, directives, valueDefinitions);
+                InputObjectTypeDefinition typeDefinition = INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR.newInstance(typeName, new ArrayList<>(0), valueDefinitions);
+                if (description != null) {
+                    INPUT_OBJECT_TYPE_DEFINITION_SET_DESCRIPTION.invoke(typeDefinition, new Description(description, null, false));
+                }
+                return typeDefinition;
+            } else {
+                //                InputObjectTypeDefinition.newInputObjectTypeDefinition()
+                //                        .name(typeName)
+                //                        .valueDefinitions(valueDefinitions)
+                //                        .build()
+                Object newInputObjectTypeDefinitionBuilder = INPUT_OBJECT_TYPE_DEFINITION_NEW_BUILDER.invoke(null);
+                INPUT_OBJECT_TYPE_DEFINITION_BUILDER_NAME.invoke(newInputObjectTypeDefinitionBuilder, typeName);
+                if (description != null) {
+                    INPUT_OBJECT_TYPE_DEFINITION_BUILDER_DESCRIPTION.invoke(newInputObjectTypeDefinitionBuilder, new Description(description, null, false));
+                }
+                INPUT_OBJECT_TYPE_DEFINITION_BUILDER_VALUE_DEFINITIONS.invoke(newInputObjectTypeDefinitionBuilder, valueDefinitions);
+                return (InputObjectTypeDefinition) INPUT_OBJECT_TYPE_DEFINITION_BUILDER_BUILD.invoke(newInputObjectTypeDefinitionBuilder);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not build input object type definition", e);
+        }
+    }
+
     protected InterfaceTypeDefinition newInterfaceTypeDefinition(String name, List<FieldDefinition> fieldDefinitions, String description) {
         try {
             if (INTERFACE_TYPE_DEFINITION_CONSTRUCTOR != null) {
@@ -652,132 +763,150 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition) {
+    protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition, InputObjectTypeDefinition inputObjectTypeDefinition) {
+        registerManagedViewType(typeRegistry, typeNameToClass, managedView, objectTypeDefinition);
         if (isDefineNormalTypes()) {
-            registerManagedViewType(typeRegistry, typeNameToClass, managedView, objectTypeDefinition);
+            addDefinition(typeRegistry, objectTypeDefinition);
         }
+        if (inputObjectTypeDefinition != null) {
+            registerManagedViewType(typeRegistry, typeNameToClass, managedView, inputObjectTypeDefinition);
+            if (isDefineNormalTypes()) {
+                addDefinition(typeRegistry, inputObjectTypeDefinition);
+            }
+        }
+        List<Type> implementTypes = new ArrayList<>(objectTypeDefinition.getImplements());
+        if (isImplementRelayNode()) {
+            implementTypes.add(new TypeName("Node"));
+        }
+        ObjectTypeDefinition nodeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Node", implementTypes, objectTypeDefinition.getFieldDefinitions(), null);
+
+        if (!typeRegistry.getType("Node").isPresent() && isImplementRelayNode() && isDefineRelayNodeIfNotExist()) {
+            List<FieldDefinition> nodeFields = new ArrayList<>(4);
+            nodeFields.add(new FieldDefinition("id", new NonNullType(new TypeName("ID"))));
+            addDefinition(typeRegistry, newInterfaceTypeDefinition("Node", nodeFields, null));
+        }
+
+        List<FieldDefinition> edgeFields = new ArrayList<>(2);
+        edgeFields.add(new FieldDefinition("node", new NonNullType(new TypeName(nodeType.getName()))));
+        edgeFields.add(new FieldDefinition("cursor", new NonNullType(new TypeName("String"))));
+        ObjectTypeDefinition edgeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Edge", edgeFields, null);
+
+        List<FieldDefinition> connectionFields = new ArrayList<>(2);
+        connectionFields.add(new FieldDefinition("edges", new ListType(new TypeName(edgeType.getName()))));
+        connectionFields.add(new FieldDefinition("pageInfo", new NonNullType(new TypeName("PageInfo"))));
+        connectionFields.add(new FieldDefinition("totalCount", new NonNullType(new TypeName("Int"))));
+        ObjectTypeDefinition connectionType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Connection", connectionFields, null);
+
+        if (!typeRegistry.getType("PageInfo").isPresent() && isDefineRelayNodeIfNotExist()) {
+            List<FieldDefinition> pageInfoFields = new ArrayList<>(4);
+            pageInfoFields.add(new FieldDefinition("hasNextPage", new NonNullType(new TypeName("Boolean"))));
+            pageInfoFields.add(new FieldDefinition("hasPreviousPage", new NonNullType(new TypeName("Boolean"))));
+            pageInfoFields.add(new FieldDefinition("startCursor", new TypeName("String")));
+            pageInfoFields.add(new FieldDefinition("endCursor", new TypeName("String")));
+            addDefinition(typeRegistry, newObjectTypeDefinition("PageInfo", pageInfoFields, null));
+        }
+
+        registerManagedViewType(typeRegistry, typeNameToClass, managedView, nodeType);
+        registerManagedViewType(typeRegistry, typeNameToClass, managedView, edgeType);
+        registerManagedViewType(typeRegistry, typeNameToClass, managedView, connectionType);
         if (isDefineRelayTypes()) {
-            List<Type> implementTypes = new ArrayList<>(objectTypeDefinition.getImplements());
-            if (isImplementRelayNode()) {
-                implementTypes.add(new TypeName("Node"));
-            }
-            ObjectTypeDefinition nodeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Node", implementTypes, objectTypeDefinition.getFieldDefinitions(), null);
-
-            if (!typeRegistry.getType("Node").isPresent() && isImplementRelayNode() && isDefineRelayNodeIfNotExist()) {
-                List<FieldDefinition> nodeFields = new ArrayList<>(4);
-                nodeFields.add(new FieldDefinition("id", new NonNullType(new TypeName("ID"))));
-                addDefinition(typeRegistry, newInterfaceTypeDefinition("Node", nodeFields, null));
-            }
-
-            List<FieldDefinition> edgeFields = new ArrayList<>(2);
-            edgeFields.add(new FieldDefinition("node", new NonNullType(new TypeName(nodeType.getName()))));
-            edgeFields.add(new FieldDefinition("cursor", new NonNullType(new TypeName("String"))));
-            ObjectTypeDefinition edgeType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Edge", edgeFields, null);
-
-            List<FieldDefinition> connectionFields = new ArrayList<>(2);
-            connectionFields.add(new FieldDefinition("edges", new ListType(new TypeName(edgeType.getName()))));
-            connectionFields.add(new FieldDefinition("pageInfo", new NonNullType(new TypeName("PageInfo"))));
-            connectionFields.add(new FieldDefinition("totalCount", new NonNullType(new TypeName("Int"))));
-            ObjectTypeDefinition connectionType = newObjectTypeDefinition(objectTypeDefinition.getName() + "Connection", connectionFields, null);
-
-            if (!typeRegistry.getType("PageInfo").isPresent() && isDefineRelayNodeIfNotExist()) {
-                List<FieldDefinition> pageInfoFields = new ArrayList<>(4);
-                pageInfoFields.add(new FieldDefinition("hasNextPage", new NonNullType(new TypeName("Boolean"))));
-                pageInfoFields.add(new FieldDefinition("hasPreviousPage", new NonNullType(new TypeName("Boolean"))));
-                pageInfoFields.add(new FieldDefinition("startCursor", new TypeName("String")));
-                pageInfoFields.add(new FieldDefinition("endCursor", new TypeName("String")));
-                addDefinition(typeRegistry, newObjectTypeDefinition("PageInfo", pageInfoFields, null));
-            }
-
-            registerManagedViewType(typeRegistry, typeNameToClass, managedView, nodeType);
-            registerManagedViewType(typeRegistry, typeNameToClass, managedView, edgeType);
-            registerManagedViewType(typeRegistry, typeNameToClass, managedView, connectionType);
+            addDefinition(typeRegistry, nodeType);
+            addDefinition(typeRegistry, edgeType);
+            addDefinition(typeRegistry, connectionType);
         }
     }
 
-    protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, GraphQLObjectType objectType) {
-        typeNameToClass.put(objectType.getName(), managedView.getJavaType());
-        if (isDefineNormalTypes()) {
-            schemaBuilder.additionalType(objectType);
+    protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, GraphQLObjectType objectType, GraphQLInputObjectType inputObjectType) {
+        if (!managedView.isUpdatable() && !managedView.isCreatable()) {
+            typeNameToClass.put(objectType.getName(), managedView.getJavaType());
+            if (isDefineNormalTypes()) {
+                schemaBuilder.additionalType(objectType);
+            }
         }
-        if (isDefineRelayTypes()) {
-            String nodeTypeName;
-            String edgeTypeName;
-            String connectionTypeName;
-            String pageInfoTypeName;
-            if (scalarTypeMap == null) {
-                nodeTypeName = objectType.getName() + "Node";
-                edgeTypeName = objectType.getName() + "Edge";
-                connectionTypeName = objectType.getName() + "Connection";
-                pageInfoTypeName = "PageInfo";
+        typeNameToClass.put(inputObjectType.getName(), managedView.getJavaType());
+        if (isDefineNormalTypes()) {
+            schemaBuilder.additionalType(inputObjectType);
+        }
+        String nodeTypeName;
+        String edgeTypeName;
+        String connectionTypeName;
+        String pageInfoTypeName;
+        if (scalarTypeMap == null) {
+            nodeTypeName = objectType.getName() + "Node";
+            edgeTypeName = objectType.getName() + "Edge";
+            connectionTypeName = objectType.getName() + "Connection";
+            pageInfoTypeName = "PageInfo";
 
-                GraphQLObjectType.Builder nodeType = GraphQLObjectType.newObject().name(nodeTypeName);
-                nodeType.fields(objectType.getFieldDefinitions());
-                if (isImplementRelayNode()) {
-                    nodeType.withInterface(new GraphQLTypeReference("Node"));
-                    if (!typeNameToClass.containsKey("Node") && isDefineRelayNodeIfNotExist()) {
-                        GraphQLInterfaceType.Builder nodeInterfaceType = GraphQLInterfaceType.newInterface().name("Node")
-                                .field(
-                                        GraphQLFieldDefinition.newFieldDefinition().name("id")
-                                                .type(new GraphQLNonNull(getScalarType("ID")))
-                                                .build()
-                                );
-                        schemaBuilder.additionalType(nodeInterfaceType.build());
-                        typeNameToClass.put("Node", Object.class);
-                    }
+            GraphQLObjectType.Builder nodeType = GraphQLObjectType.newObject().name(nodeTypeName);
+            nodeType.fields(objectType.getFieldDefinitions());
+            if (isImplementRelayNode()) {
+                nodeType.withInterface(new GraphQLTypeReference("Node"));
+                if (!typeNameToClass.containsKey("Node") && isDefineRelayNodeIfNotExist()) {
+                    GraphQLInterfaceType.Builder nodeInterfaceType = GraphQLInterfaceType.newInterface().name("Node")
+                            .field(
+                                    GraphQLFieldDefinition.newFieldDefinition().name("id")
+                                            .type(new GraphQLNonNull(getScalarType("ID")))
+                                            .build()
+                            );
+                    schemaBuilder.additionalType(nodeInterfaceType.build());
+                    typeNameToClass.put("Node", Object.class);
                 }
+            }
+            if (isDefineNormalTypes()) {
                 schemaBuilder.additionalType(nodeType.build());
-                typeNameToClass.put(nodeTypeName, managedView.getJavaType());
-            } else {
-                // We use the presence of the scalar map to detect if we are on SmallRye
-                // We have to adapt to their naming convention for generic types
-                nodeTypeName = objectType.getName();
-                edgeTypeName = "GraphQLRelayEdge_" + objectType.getName();
-                connectionTypeName = "GraphQLRelayConnection_" + objectType.getName();
-                pageInfoTypeName = "GraphQLRelayPageInfo";
             }
+            typeNameToClass.put(nodeTypeName, managedView.getJavaType());
+        } else {
+            // We use the presence of the scalar map to detect if we are on SmallRye
+            // We have to adapt to their naming convention for generic types
+            nodeTypeName = objectType.getName();
+            edgeTypeName = "GraphQLRelayEdge_" + objectType.getName();
+            connectionTypeName = "GraphQLRelayConnection_" + objectType.getName();
+            pageInfoTypeName = "GraphQLRelayPageInfo";
+        }
 
-            GraphQLObjectType.Builder edgeType = GraphQLObjectType.newObject().name(edgeTypeName);
-            edgeType.field(GraphQLFieldDefinition.newFieldDefinition().name("node")
-                    .type(new GraphQLNonNull(new GraphQLTypeReference(nodeTypeName)))
-                    .build());
-            edgeType.field(GraphQLFieldDefinition.newFieldDefinition().name("cursor")
-                    .type(new GraphQLNonNull(getScalarType("String")))
-                    .build());
+        GraphQLObjectType.Builder edgeType = GraphQLObjectType.newObject().name(edgeTypeName);
+        edgeType.field(GraphQLFieldDefinition.newFieldDefinition().name("node")
+                .type(new GraphQLNonNull(new GraphQLTypeReference(nodeTypeName)))
+                .build());
+        edgeType.field(GraphQLFieldDefinition.newFieldDefinition().name("cursor")
+                .type(new GraphQLNonNull(getScalarType("String")))
+                .build());
 
-            GraphQLObjectType.Builder connectionType = GraphQLObjectType.newObject().name(connectionTypeName);
-            connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("edges")
-                    .type(new GraphQLList(new GraphQLTypeReference(edgeTypeName)))
-                    .build());
-            connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("pageInfo")
-                    .type(new GraphQLNonNull(new GraphQLTypeReference(pageInfoTypeName)))
-                    .build());
-            connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("totalCount")
-                    .type(new GraphQLNonNull(getScalarType("Int")))
-                    .build());
+        GraphQLObjectType.Builder connectionType = GraphQLObjectType.newObject().name(connectionTypeName);
+        connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("edges")
+                .type(new GraphQLList(new GraphQLTypeReference(edgeTypeName)))
+                .build());
+        connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("pageInfo")
+                .type(new GraphQLNonNull(new GraphQLTypeReference(pageInfoTypeName)))
+                .build());
+        connectionType.field(GraphQLFieldDefinition.newFieldDefinition().name("totalCount")
+                .type(new GraphQLNonNull(getScalarType("Int")))
+                .build());
 
-            if (!typeNameToClass.containsKey(pageInfoTypeName) && isDefineRelayNodeIfNotExist()) {
-                GraphQLObjectType.Builder pageInfoType = GraphQLObjectType.newObject().name(pageInfoTypeName);
-                pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("hasNextPage")
-                        .type(new GraphQLNonNull(getScalarType("Boolean")))
-                        .build());
-                pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("hasPreviousPage")
-                        .type(new GraphQLNonNull(getScalarType("Boolean")))
-                        .build());
-                pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("startCursor")
-                        .type(getScalarType("String"))
-                        .build());
-                pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("endCursor")
-                        .type(getScalarType("String"))
-                        .build());
-                schemaBuilder.additionalType(pageInfoType.build());
-                typeNameToClass.put(pageInfoTypeName, GraphQLRelayPageInfo.class);
-            }
+        if (!typeNameToClass.containsKey(pageInfoTypeName) && isDefineRelayNodeIfNotExist()) {
+            GraphQLObjectType.Builder pageInfoType = GraphQLObjectType.newObject().name(pageInfoTypeName);
+            pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("hasNextPage")
+                    .type(new GraphQLNonNull(getScalarType("Boolean")))
+                    .build());
+            pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("hasPreviousPage")
+                    .type(new GraphQLNonNull(getScalarType("Boolean")))
+                    .build());
+            pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("startCursor")
+                    .type(getScalarType("String"))
+                    .build());
+            pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("endCursor")
+                    .type(getScalarType("String"))
+                    .build());
+            schemaBuilder.additionalType(pageInfoType.build());
+            typeNameToClass.put(pageInfoTypeName, GraphQLRelayPageInfo.class);
+        }
 
+        typeNameToClass.put(edgeTypeName, managedView.getJavaType());
+        typeNameToClass.put(connectionTypeName, managedView.getJavaType());
+        if (isDefineRelayTypes()) {
             schemaBuilder.additionalType(edgeType.build());
-            typeNameToClass.put(edgeTypeName, managedView.getJavaType());
             schemaBuilder.additionalType(connectionType.build());
-            typeNameToClass.put(connectionTypeName, managedView.getJavaType());
         }
     }
 
@@ -789,8 +918,10 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition) {
-        addDefinition(typeRegistry, objectTypeDefinition);
+    protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, TypeDefinition<?> objectTypeDefinition) {
+        if (isDefineNormalTypes()) {
+            addDefinition(typeRegistry, objectTypeDefinition);
+        }
         Class<?> old;
         if ((old = typeNameToClass.put(objectTypeDefinition.getName(), managedView.getJavaType())) != null) {
             throw new IllegalArgumentException("Type with name '" + objectTypeDefinition.getName() + "' is registered multiple times: [" + old.getName() + ", " + managedView.getJavaType().getName() + "]!");
@@ -811,6 +942,18 @@ public class GraphQLEntityViewSupportFactory {
     /**
      * Return the GraphQL id type for the given singular attribute.
      *
+     * @param typeRegistry The type registry
+     * @param singularAttribute The singular attribute
+     * @return The type
+     */
+    protected Type getInputIdType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute) {
+        // Ideally, we would make this only nullable if the value is generated, but that's hard to determine
+        return new TypeName("ID");
+    }
+
+    /**
+     * Return the GraphQL id type for the given singular attribute.
+     *
      * @param singularAttribute The singular attribute
      * @return The type
      */
@@ -819,6 +962,20 @@ public class GraphQLEntityViewSupportFactory {
             return new GraphQLNonNull(scalarTypeMap.get("ID"));
         }
         return new GraphQLNonNull(new GraphQLTypeReference("ID"));
+    }
+
+    /**
+     * Return the GraphQL id type for the given singular attribute.
+     *
+     * @param singularAttribute The singular attribute
+     * @return The type
+     */
+    protected GraphQLInputType getInputIdType(SingularAttribute<?, ?> singularAttribute) {
+        // Ideally, we would make this only nullable if the value is generated, but that's hard to determine
+        if (scalarTypeMap != null) {
+            return scalarTypeMap.get("ID");
+        }
+        return new GraphQLTypeReference("ID");
     }
 
     /**
@@ -835,7 +992,29 @@ public class GraphQLEntityViewSupportFactory {
         List<FieldDefinition> fields = new ArrayList<>();
         fields.add(new FieldDefinition("key", key));
         fields.add(new FieldDefinition("value", value));
-        addDefinition(typeRegistry, newObjectTypeDefinition(entryName, fields, null));
+        if (isDefineNormalTypes()) {
+            addDefinition(typeRegistry, newObjectTypeDefinition(entryName, fields, null));
+        }
+        return new ListType(new TypeName(entryName));
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param typeRegistry The type registry
+     * @param attribute The map attribute
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected Type getInputEntryType(TypeDefinitionRegistry typeRegistry, MethodAttribute<?, ?> attribute, Type key, Type value) {
+        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "EntryInput";
+        List<FieldDefinition> fields = new ArrayList<>();
+        fields.add(new FieldDefinition("key", key));
+        fields.add(new FieldDefinition("value", value));
+        if (isDefineNormalTypes()) {
+            addDefinition(typeRegistry, newObjectTypeDefinition(entryName, fields, null));
+        }
         return new ListType(new TypeName(entryName));
     }
 
@@ -854,7 +1033,30 @@ public class GraphQLEntityViewSupportFactory {
                 .field(GraphQLFieldDefinition.newFieldDefinition().name("key").type(key))
                 .field(GraphQLFieldDefinition.newFieldDefinition().name("value").type(value))
                 .build();
-        schemaBuilder.additionalType(type);
+        if (isDefineNormalTypes()) {
+            schemaBuilder.additionalType(type);
+        }
+        return new GraphQLList(new GraphQLTypeReference(entryName));
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param schemaBuilder The schema builder
+     * @param attribute The map attribute
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected GraphQLInputType getInputEntryType(GraphQLSchema.Builder schemaBuilder, MethodAttribute<?, ?> attribute, GraphQLInputType key, GraphQLInputType value) {
+        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "EntryInput";
+        GraphQLInputObjectType type = GraphQLInputObjectType.newInputObject().name(entryName)
+                .field(GraphQLInputObjectField.newInputObjectField().name("key").type(key))
+                .field(GraphQLInputObjectField.newInputObjectField().name("value").type(value))
+                .build();
+        if (isDefineNormalTypes()) {
+            schemaBuilder.additionalType(type);
+        }
         return new GraphQLList(new GraphQLTypeReference(entryName));
     }
 
@@ -871,6 +1073,10 @@ public class GraphQLEntityViewSupportFactory {
                 case "org.eclipse.microprofile.graphql.Name":
                 case "org.eclipse.microprofile.graphql.Type":
                     return getAnnotationValue(annotation, "value");
+                case "io.leangen.graphql.annotations.types.GraphQLType":
+                case "io.leangen.graphql.annotations.types.GraphQLInterface":
+                case "io.leangen.graphql.annotations.types.GraphQLUnion":
+                    return getAnnotationValue(annotation, "name");
             }
         }
         //CHECKSTYLE:ON: MissingSwitchDefault
@@ -890,6 +1096,10 @@ public class GraphQLEntityViewSupportFactory {
                 case "org.eclipse.microprofile.graphql.Name":
                 case "org.eclipse.microprofile.graphql.Type":
                     return getAnnotationValue(annotation, "value");
+                case "io.leangen.graphql.annotations.types.GraphQLType":
+                case "io.leangen.graphql.annotations.types.GraphQLInterface":
+                case "io.leangen.graphql.annotations.types.GraphQLUnion":
+                    return getAnnotationValue(annotation, "name");
                 case "org.eclipse.microprofile.graphql.Enum":
                     if (type.isEnum()) {
                         return getAnnotationValue(annotation, "value");
@@ -914,6 +1124,8 @@ public class GraphQLEntityViewSupportFactory {
                     return getAnnotationValue(annotation, "value");
                 case "com.netflix.graphql.dgs.DgsData":
                     return getAnnotationValue(annotation, "field");
+                case "io.leangen.graphql.annotations.GraphQLQuery":
+                    return getAnnotationValue(annotation, "name");
             }
         }
         //CHECKSTYLE:ON: MissingSwitchDefault
@@ -932,6 +1144,10 @@ public class GraphQLEntityViewSupportFactory {
             switch (annotation.annotationType().getName()) {
                 case "org.eclipse.microprofile.graphql.Description":
                     return getAnnotationValue(annotation, "value");
+                case "io.leangen.graphql.annotations.types.GraphQLType":
+                case "io.leangen.graphql.annotations.types.GraphQLInterface":
+                case "io.leangen.graphql.annotations.types.GraphQLUnion":
+                    return getAnnotationValue(annotation, "description");
             }
         }
         //CHECKSTYLE:ON: MissingSwitchDefault
@@ -949,6 +1165,7 @@ public class GraphQLEntityViewSupportFactory {
         for (Annotation annotation : javaMethod.getAnnotations()) {
             switch (annotation.annotationType().getName()) {
                 case "org.eclipse.microprofile.graphql.Ignore":
+                case "io.leangen.graphql.annotations.GraphQLIgnore":
                     return true;
             }
         }
@@ -972,8 +1189,31 @@ public class GraphQLEntityViewSupportFactory {
      * @param type The managed view type
      * @return The type
      */
+    protected Type getInputObjectType(ManagedViewType type) {
+        return new TypeName(getObjectTypeName(type) + "Input");
+    }
+
+    /**
+     * Return the GraphQL type for the given managed view type.
+     *
+     * @param type The managed view type
+     * @return The type
+     */
     protected GraphQLOutputType getObjectTypeReference(ManagedViewType<?> type) {
         return new GraphQLTypeReference(getObjectTypeName(type));
+    }
+
+    /**
+     * Return the GraphQL type for the given managed view type.
+     *
+     * @param type The managed view type
+     * @return The type
+     */
+    protected GraphQLInputType getInputObjectTypeReference(ManagedViewType<?> type) {
+        if (type.isCreatable() || type.isUpdatable()) {
+            return new GraphQLTypeReference(getObjectTypeName(type));
+        }
+        return new GraphQLTypeReference(getObjectTypeName(type) + "Input");
     }
 
     /**
@@ -999,6 +1239,28 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Return the GraphQL type for the given singular attribute.
+     *
+     * @param typeRegistry The type registry
+     * @param singularAttribute The singular attribute
+     * @param entityMetamodel The entity metamodel
+     * @return The type
+     */
+    protected Type getInputElementType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute, EntityMetamodel entityMetamodel) {
+        com.blazebit.persistence.view.metamodel.Type elementType = singularAttribute.getType();
+        Type type;
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            type = getScalarType(typeRegistry, elementType.getJavaType());
+        } else {
+            type = getInputObjectType((ManagedViewType<?>) elementType);
+        }
+        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+            type = new NonNullType(type);
+        }
+        return type;
+    }
+
+    /**
      * Return the GraphQL type for the given plural attribute.
      *
      * @param typeRegistry The type registry
@@ -1011,6 +1273,22 @@ public class GraphQLEntityViewSupportFactory {
             return getScalarType(typeRegistry, elementType.getJavaType());
         } else {
             return getObjectType((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param typeRegistry The type registry
+     * @param pluralAttribute The plural attribute
+     * @return The type
+     */
+    protected Type getInputElementType(TypeDefinitionRegistry typeRegistry, PluralAttribute<?, ?, ?> pluralAttribute) {
+        com.blazebit.persistence.view.metamodel.Type elementType = pluralAttribute.getElementType();
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            return getScalarType(typeRegistry, elementType.getJavaType());
+        } else {
+            return getInputObjectType((ManagedViewType<?>) elementType);
         }
     }
 
@@ -1037,6 +1315,28 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Return the GraphQL type for the given singular attribute.
+     *
+     * @param schemaBuilder The schema builder
+     * @param singularAttribute The singular attribute
+     * @param entityMetamodel The entity metamodel
+     * @return The type
+     */
+    protected GraphQLInputType getInputElementType(GraphQLSchema.Builder schemaBuilder, SingularAttribute<?, ?> singularAttribute, Map<Class<?>, String> registeredTypeNames, EntityMetamodel entityMetamodel) {
+        com.blazebit.persistence.view.metamodel.Type<?> elementType = singularAttribute.getType();
+        GraphQLInputType type;
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            type = (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+        } else {
+            type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
+        }
+        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+            type = new GraphQLNonNull(type);
+        }
+        return type;
+    }
+
+    /**
      * Return the GraphQL type for the given plural attribute.
      *
      * @param schemaBuilder The schema builder
@@ -1049,6 +1349,22 @@ public class GraphQLEntityViewSupportFactory {
             return getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
             return getObjectTypeReference((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param schemaBuilder The schema builder
+     * @param pluralAttribute The plural attribute
+     * @return The type
+     */
+    protected GraphQLInputType getInputElementType(GraphQLSchema.Builder schemaBuilder, PluralAttribute<?, ?, ?> pluralAttribute, Map<Class<?>, String> registeredTypeNames) {
+        com.blazebit.persistence.view.metamodel.Type<?> elementType = pluralAttribute.getElementType();
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+        } else {
+            return getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
     }
 
@@ -1071,6 +1387,22 @@ public class GraphQLEntityViewSupportFactory {
     /**
      * Return the GraphQL type for the key of the given map attribute.
      *
+     * @param typeRegistry The type registry
+     * @param mapAttribute The map attribute
+     * @return The type
+     */
+    protected Type getInputKeyType(TypeDefinitionRegistry typeRegistry, MapAttribute<?, ?, ?> mapAttribute) {
+        com.blazebit.persistence.view.metamodel.Type elementType = mapAttribute.getKeyType();
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            return getScalarType(typeRegistry, elementType.getJavaType());
+        } else {
+            return getInputObjectType((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
      * @param schemaBuilder The schema builder
      * @param mapAttribute The map attribute
      * @return The type
@@ -1081,6 +1413,22 @@ public class GraphQLEntityViewSupportFactory {
             return getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
             return getObjectTypeReference((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
+     * @param schemaBuilder The schema builder
+     * @param mapAttribute The map attribute
+     * @return The type
+     */
+    protected GraphQLInputType getInputKeyType(GraphQLSchema.Builder schemaBuilder, MapAttribute<?, ?, ?> mapAttribute, Map<Class<?>, String> registeredTypeNames) {
+        com.blazebit.persistence.view.metamodel.Type<?> elementType = mapAttribute.getKeyType();
+        if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
+            return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+        } else {
+            return getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
     }
 
@@ -1112,7 +1460,9 @@ public class GraphQLEntityViewSupportFactory {
                         enumValueDefinitions.add(new EnumValueDefinition(enumConstant.name(), new ArrayList<>(0)));
                     }
 
-                    addDefinition(typeRegistry, newEnumTypeDefinition(typeName, enumValueDefinitions, getDescription(javaType)));
+                    if (isDefineNormalTypes()) {
+                        addDefinition(typeRegistry, newEnumTypeDefinition(typeName, enumValueDefinitions, getDescription(javaType)));
+                    }
                 }
             } else {
                 typeName = "String";
@@ -1146,7 +1496,9 @@ public class GraphQLEntityViewSupportFactory {
                         enumBuilder.value(enumConstant.name());
                     }
 
-                    schemaBuilder.additionalType(enumBuilder.build());
+                    if (isDefineNormalTypes()) {
+                        schemaBuilder.additionalType(enumBuilder.build());
+                    }
                     registeredTypeNames.put(javaType, typeName);
                 }
             } else {
