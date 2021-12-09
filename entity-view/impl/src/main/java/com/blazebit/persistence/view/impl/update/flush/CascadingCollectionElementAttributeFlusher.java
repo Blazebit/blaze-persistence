@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.dgs.view;
-
-import com.blazebit.persistence.examples.spring.data.dgs.model.Cat;
-import com.blazebit.persistence.view.CreatableEntityView;
-import com.blazebit.persistence.view.EntityView;
-
-import java.util.Set;
+package com.blazebit.persistence.view.impl.update.flush;
 
 /**
+ *
  * @author Christian Beikov
- * @since 1.6.2
+ * @since 1.6.4
  */
-@CreatableEntityView
-@EntityView(Cat.class)
-public interface CatCreateView extends CatSimpleCreateView {
+public class CascadingCollectionElementAttributeFlusher<E, V> extends CollectionElementAttributeFlusher<E, V> {
 
-    Set<CatSimpleCreateView> getKittens();
-    void setKittens(Set<CatSimpleCreateView> kittens);
+    public CascadingCollectionElementAttributeFlusher(DirtyAttributeFlusher<?, E, V> nestedGraphNode, Object element, boolean optimisticLockProtected) {
+        super(nestedGraphNode, element, optimisticLockProtected);
+    }
 }

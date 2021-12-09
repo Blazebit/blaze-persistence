@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.dgs.repository;
+package com.blazebit.persistence.examples.spring.data.spqr.repository;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Christian Beikov
- * @since 1.6.2
+ * @since 1.6.4
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

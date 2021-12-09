@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.dgs.view;
+package com.blazebit.persistence.examples.spring.data.spqr.repository;
 
-import com.blazebit.persistence.examples.spring.data.dgs.model.Cat;
-import com.blazebit.persistence.view.CreatableEntityView;
-import com.blazebit.persistence.view.EntityView;
-
-import java.util.Set;
+import com.blazebit.persistence.examples.spring.data.spqr.model.Cat;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * @author Christian Beikov
- * @since 1.6.2
+ * @since 1.4.0
  */
-@CreatableEntityView
-@EntityView(Cat.class)
-public interface CatCreateView extends CatSimpleCreateView {
+public interface CatJpaRepository extends JpaRepository<Cat, Long> {
 
-    Set<CatSimpleCreateView> getKittens();
-    void setKittens(Set<CatSimpleCreateView> kittens);
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.dgs.repository;
+package com.blazebit.persistence.examples.spring.data.spqr.repository;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.6.2
+ * @since 1.4.0
  */
 @Component
 public class CatViewRepository {

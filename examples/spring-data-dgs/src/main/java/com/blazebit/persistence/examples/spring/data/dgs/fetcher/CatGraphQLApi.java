@@ -17,12 +17,14 @@
 package com.blazebit.persistence.examples.spring.data.dgs.fetcher;
 
 import com.blazebit.persistence.examples.spring.data.dgs.repository.CatViewRepository;
+import com.blazebit.persistence.examples.spring.data.dgs.view.CatCreateView;
 import com.blazebit.persistence.examples.spring.data.dgs.view.CatWithOwnerView;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
 import com.netflix.graphql.dgs.DgsComponent;
+import com.netflix.graphql.dgs.DgsMutation;
 import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
 import graphql.schema.DataFetchingEnvironment;
@@ -35,7 +37,7 @@ import java.util.Collections;
  * @since 1.6.2
  */
 @DgsComponent
-public class CatFetcher {
+public class CatGraphQLApi {
 
     @Autowired
     CatViewRepository repository;
@@ -55,5 +57,11 @@ public class CatFetcher {
             return new GraphQLRelayConnection<>(Collections.emptyList());
         }
         return new GraphQLRelayConnection<>(repository.findAll(setting));
+    }
+
+    @DgsMutation
+    public Long createCat(@InputArgument(name = "cat") CatCreateView cat) {
+        repository.save(cat);
+        return cat.getId();
     }
 }

@@ -24,19 +24,19 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     
-    <artifactId>blaze-persistence-examples-spring-data-dgs</artifactId>
+    <artifactId>blaze-persistence-examples-spring-data-spqr</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Examples Spring Data DGS</name>
+    <name>Blazebit Persistence Examples Spring Data SPQR</name>
 
     <properties>
-        <module.name>com.blazebit.persistence.examples.spring.data.dgs</module.name>
+        <module.name>com.blazebit.persistence.examples.spring.data.spqr</module.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.hibernate>5.0.12.Final</version.hibernate>
-        <start-class>com.blazebit.persistence.examples.spring.data.dgs.Application</start-class>
+        <start-class>com.blazebit.persistence.examples.spring.data.spqr.Application</start-class>
     </properties>
 
     <dependencyManagement>
@@ -48,17 +48,15 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-            <dependency>
-                <groupId>com.netflix.graphql.dgs</groupId>
-                <artifactId>graphql-dgs-platform-dependencies</artifactId>
-                <version>4.1.0</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>io.leangen.graphql</groupId>
+            <artifactId>graphql-spqr-spring-boot-starter</artifactId>
+            <version>0.0.6</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -88,12 +86,18 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jackson</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-graphql</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.netflix.graphql.dgs</groupId>
-            <artifactId>graphql-dgs-spring-boot-starter</artifactId>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java</artifactId>
+            <version>16.2</version>
         </dependency>
 
         <dependency>
@@ -181,6 +185,13 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${version.spring.boot}</version>
@@ -196,60 +207,49 @@
     </build>
 
     <profiles>
-        <!-- Use Spring Boot 2.3 as a minimum for DGS as it requires Kotlin 1.4 which only works on Spring Boot 2.3 AFAIK -->
         <profile>
             <id>spring-data-1.11.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+                <!-- For some strange reason this doesn't work with 4.3.9.RELEASE. Since this is old anyway, let's just use 4.3.3.RELEASE here -->
+                <version.spring>4.3.3.RELEASE</version.spring>
+                <version.spring.boot>${version.spring-data-1.x-spring-boot}</version.spring.boot>
             </properties>
+
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.3}</version>
+                    <version>${version.spring-data-1.x}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>1.8.9</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+                <version.spring>${version.spring-data-2.0-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.3}</version>
+                    <version>${version.spring-data-2.0}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -257,37 +257,26 @@
                     <version>1.9.4</version>
                 </dependency>
                 <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.3}</version>
+                    <version>${version.spring-data-2.1}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -295,37 +284,26 @@
                     <version>1.9.4</version>
                 </dependency>
                 <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
             <id>spring-data-2.2.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+                <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.3}</version>
+                    <version>${version.spring-data-2.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -335,20 +313,15 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                 </dependency>
             </dependencies>
         </profile>
@@ -357,7 +330,6 @@
             <properties>
                 <version.spring>${version.spring-data-2.3-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
@@ -373,12 +345,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -386,7 +353,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
                 </dependency>
             </dependencies>
         </profile>
@@ -411,12 +378,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -449,12 +411,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -487,12 +444,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

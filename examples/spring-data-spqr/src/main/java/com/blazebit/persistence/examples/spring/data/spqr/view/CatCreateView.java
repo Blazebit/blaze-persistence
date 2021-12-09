@@ -14,35 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.microprofile.graphql.view;
+package com.blazebit.persistence.examples.spring.data.spqr.view;
 
-import com.blazebit.persistence.examples.microprofile.graphql.model.Cat;
+import com.blazebit.persistence.examples.spring.data.spqr.model.Cat;
 import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityView;
 
-import javax.json.bind.annotation.JsonbTypeDeserializer;
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.bind.serializer.JsonbDeserializer;
-import javax.json.stream.JsonParser;
-import java.lang.reflect.Type;
 import java.util.Set;
 
 /**
  * @author Christian Beikov
- * @since 1.6.2
+ * @since 1.4.0
  */
 @CreatableEntityView
 @EntityView(Cat.class)
-@JsonbTypeDeserializer(CatCreateView.MyDeserializer.class)
 public interface CatCreateView extends CatSimpleCreateView {
 
     Set<CatSimpleCreateView> getKittens();
     void setKittens(Set<CatSimpleCreateView> kittens);
-
-    class MyDeserializer implements JsonbDeserializer<CatCreateView> {
-        @Override
-        public CatCreateView deserialize(JsonParser jsonParser, DeserializationContext deserializationContext, Type type) {
-            return null;
-        }
-    }
 }
