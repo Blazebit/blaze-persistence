@@ -27,6 +27,7 @@ Not yet released
 * Ensure stream/iteration processing of results works with entity views containing no collections
 * Fix support for flushing flat view collections with read-only declared and updatable subview types
 * Ensure pending inserts for tables targeted by foreign keys by custom insert/update DML are flushed
+* Fix JSON serialization for entity views in Quarkus native image
 
 ### Backwards-incompatible changes
 

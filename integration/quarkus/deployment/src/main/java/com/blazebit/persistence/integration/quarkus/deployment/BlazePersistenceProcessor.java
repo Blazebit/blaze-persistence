@@ -293,14 +293,31 @@ class BlazePersistenceProcessor {
         for (String entityViewClassName : entityViewsBuildItem.getEntityViewClassNames()) {
             // We need entity view methods because we might call them as listeners but we also need them for metadata discovery
             reflectionProducer.produce(new ReflectiveClassBuildItem(true, true, false, entityViewClassName));
-            // For implementations we only need the fields and constructors
-            for (String generatedStaticModelClass : getGeneratedEntityViewModelImplClassName(entityViewClassName)) {
-                reflectionProducer.produce(ReflectiveClassBuildItem.builder(generatedStaticModelClass)
-                        .constructors(true)
-                        .fields(true)
-                        .finalFieldsWritable(true)
-                        .build()
-                );
+            String baseName = entityViewClassName.replace("$", "");
+            // For entity view implementations we need full reflection because instances of these classes are usually serialized
+            reflectionProducer.produce(ReflectiveClassBuildItem.builder(baseName + "Impl")
+                    .constructors(true)
+                    .fields(true)
+                    .methods(true)
+                    .finalFieldsWritable(true)
+                    .build()
+            );
+            // For static metamodel classes, we only need the fields
+            reflectionProducer.produce(new ReflectiveClassBuildItem(false, false, true, baseName + "_"));
+            // For Relation classes, we only need the constructor
+            for (String generatedStaticModelClass : Arrays.asList(baseName + "Relation", baseName + "MultiRelation")) {
+                reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, generatedStaticModelClass));
+            }
+            // For builder classes, we only need constructors
+            try {
+                Class<?> builderClass = Thread.currentThread().getContextClassLoader().loadClass(baseName + "Builder");
+                reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, builderClass.getName()));
+                for (Class<?> builderSubClass : builderClass.getDeclaredClasses()) {
+                    reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, builderSubClass.getName()));
+                }
+
+            } catch (ClassNotFoundException ex) {
+                // Ignore
             }
         }
 
@@ -324,12 +341,11 @@ class BlazePersistenceProcessor {
         }
     }
 
-    private List<String> getGeneratedEntityViewModelImplClassName(String entityViewClassName) {
+    private List<String> getGeneratedEntityViewModelClassNames(String entityViewClassName) {
         return Arrays.asList(
                 entityViewClassName.replace("$", "") + "_",
                 entityViewClassName.replace("$", "") + "Relation",
                 entityViewClassName.replace("$", "") + "MultiRelation",
-                entityViewClassName.replace("$", "") + "Impl",
                 entityViewClassName.replace("$", "") + "Builder",
                 entityViewClassName.replace("$", "") + "Builder$Init"
         );
