@@ -116,12 +116,9 @@
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
                 <include>com.blazebit:blaze-persistence-integration-spring-*</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
-                <include>com.blazebit:blaze-persistence-integration-jaxrs</include>
-                <include>com.blazebit:blaze-persistence-integration-jaxrs-jakarta</include>
-                <include>com.blazebit:blaze-persistence-integration-jackson</include>
-                <include>com.blazebit:blaze-persistence-integration-jackson-jakarta</include>
-                <include>com.blazebit:blaze-persistence-integration-graphql</include>
-                <include>com.blazebit:blaze-persistence-integration-graphql-jakarta</include>
+                <include>com.blazebit:blaze-persistence-integration-jaxrs*</include>
+                <include>com.blazebit:blaze-persistence-integration-jackson*</include>
+                <include>com.blazebit:blaze-persistence-integration-graphql*</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/integration/entity-view</outputDirectory>

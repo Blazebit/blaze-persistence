@@ -155,6 +155,18 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <artifactId>blaze-persistence-integration-jaxrs</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
+<!-- Use this if you want to use Jackson for JSON serialization/deserialization -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+<!-- Use this if you want to use JSONB for JSON serialization/deserialization -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
 
 <!-- GraphQL integration module -->
 <dependency>
@@ -167,6 +179,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-jackson</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- JSONB integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jsonb</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

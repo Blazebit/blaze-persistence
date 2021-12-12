@@ -33,7 +33,6 @@ import com.blazebit.persistence.view.Sorters;
 import graphql.schema.DataFetchingEnvironment;
 import io.smallrye.graphql.api.Context;
 import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Input;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
@@ -100,18 +99,28 @@ public class CatResource {
         return evm.applySetting(graphQLEntityViewSupport.<CatSimpleView>createSetting(context.unwrap(DataFetchingEnvironment.class)), cb).getResultList();
     }
 
-//    @Query
-//    public GraphQLRelayConnection<CatWithOwnerView> findAll(@Name("first") Integer first, @Name("last") Integer last, @Name("offset") Integer offset, @Name("before") String before, @Name("after") String after) {
-//        CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
-//        EntityViewSetting<CatWithOwnerView, PaginatedCriteriaBuilder<CatWithOwnerView>> setting = graphQLEntityViewSupport.createPaginatedSetting(
-//                context.unwrap(DataFetchingEnvironment.class)
-//        );
-//        setting.addAttributeSorter("id", Sorters.ascending());
-//        if (setting.getMaxResults() == 0) {
-//            return new GraphQLRelayConnection<>();
-//        }
-//        return new GraphQLRelayConnection<>(evm.applySetting(setting, cb).getResultList());
-//    }
+    @Query
+    public CatWithOwnerView catById(@Name("id") Long id) {
+        return evm.find(em, graphQLEntityViewSupport.createSetting(context.unwrap(DataFetchingEnvironment.class)), id);
+    }
+
+    @Query
+    public GraphQLRelayConnection<CatWithOwnerView> findAll(
+            @Name("first") Integer first,
+            @Name("last") Integer last,
+            @Name("offset") Integer offset,
+            @Name("before") String before,
+            @Name("after") String after) {
+        CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
+        EntityViewSetting<CatWithOwnerView, PaginatedCriteriaBuilder<CatWithOwnerView>> setting = graphQLEntityViewSupport.createPaginatedSetting(
+                context.unwrap(DataFetchingEnvironment.class)
+        );
+        setting.addAttributeSorter("id", Sorters.ascending());
+        if (setting.getMaxResults() == 0) {
+            return new GraphQLRelayConnection<>();
+        }
+        return new GraphQLRelayConnection<>(evm.applySetting(setting, cb).getResultList());
+    }
 
     @Mutation
     @Transactional

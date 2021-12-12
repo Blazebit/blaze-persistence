@@ -50,8 +50,12 @@
         <module>spring-hateoas</module>
         <module>deltaspike-data</module>
         <module>jaxrs</module>
+        <module>jaxrs-jackson</module>
+        <module>jaxrs-jsonb</module>
         <module>jackson</module>
+        <module>jsonb</module>
         <module>graphql</module>
+        <module>graphql-spqr</module>
         <module>querydsl</module>
         <module>quarkus</module>
 
@@ -63,8 +67,11 @@
         <module>hibernate-base-jakarta</module>
         <module>hibernate-5.4-jakarta</module>
         <module>entity-view-cdi-jakarta</module>
-        <module>jaxrs-jakarta</module>
+        <module>jaxrs-jackson-jakarta</module>
+        <module>jaxrs-jsonb-jakarta</module>
         <module>jackson-jakarta</module>
+        <module>jsonb-jakarta</module>
         <module>graphql-jakarta</module>
+        <module>graphql-spqr-jakarta</module>
     </modules>
 </project>

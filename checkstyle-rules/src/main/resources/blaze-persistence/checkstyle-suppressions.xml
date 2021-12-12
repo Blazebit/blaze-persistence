@@ -44,6 +44,8 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortHandlerMethodArgumentResolver\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortArgumentResolver\.java$"/>
 
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]integration[\\/]jsonb[\\/]jsonstructure[\\/].*\.java$"/>
+
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->
     <suppress checks="JavadocPackage" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>
     <suppress checks="JavadocMethod" files="[\\/](parser|impl|integration|testsuite|processor|examples|org.springframework)[\\/].*\.java$"/>

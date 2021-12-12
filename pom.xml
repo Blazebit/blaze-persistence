@@ -324,6 +324,7 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortHandlerMethodArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/FixedJpaQueryCreator.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/integration/jsonb/jsonstructure/**</exclude>
 
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryDefinitionException.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponents.java</exclude>

@@ -6,6 +6,29 @@ and entity views naturally define their state through getters.
 
 The deserialization support is a different thing though for which special integrations are required.
 
+By default, the deserialization will invoke `EntityViewManager.getReference(viewType, id)` to construct objects.
+If the view type that should be deserialized is creatable i.e. annotated with `@CreatableEntityView` and no value for the `@IdMapping` attribute is provided in the payload,
+it will be created via `EntityViewManager.create()`.
+The rest of the payload values are then deserialized onto the constructed object via the setters the entity view types provide.
+
+Read-only types only support deserialization when a value for the `@IdMapping` attribute is given and obviously need setters for the deserialization to work properly.
+Adding setters makes the models mutable which might not be desirable, so consider this when wanting to deserialize payload to entity views.
+A possible solution is to create an entity view subtype that has the sole purpose of providing setters so that it can be deserialized.
+
+Since entity view objects are created via `EntityViewManager.getReference()` or `EntityViewManager.create()`, the objects can then be directly saved via `EntityViewManager.save()`.
+For updatable entity views it is important to understand that `EntityViewManager.save()` will only flush non-null attributes i.e. do a partial flush.
+This is due to dirty tracking thinking that the initial state is all null attributes. Through deserialization, some attributes are set to values which are then considered dirty.
+That behavior is exactly what you would expect from an HTTP endpoint using the `PATCH` method.
+
+If you need to flush the full state regardless of the dirty tracking information, you can use `EntityViewManager.saveFull()`,
+but be aware that orphan removals will currently not work when using the `QUERY` flush strategy because the initial state is unknown.
+If you need orphan removal in such a case, you are advised to switch to the `ENTITY` flush strategy for now.
+You could also make use of the `EntityViewManager.saveTo()` and `EntityViewManager.saveFullTo()` variants to flush data to an entity that was loaded via e.g. `EntityManager.find()`.
+
+An alternative to this would be to deserialize the state onto an existing updatable entity view that was loaded via e.g. `EntityViewManager.find()`.
+With the initial state being known due to loading from the database, orphan removal will work correctly,
+but be aware that providing `null` values for attributes in the JSON payload will obviously cause `null` to be set on the entity view attributes.
+
 [[jackson-integration]]
 === Jackson integration
 
@@ -52,25 +75,47 @@ EntityViewAwareObjectMapper mapper = new EntityViewAwareObjectMapper(evm, existi
 The `EntityViewAwareObjectMapper` class provides utility methods for integrating with JAX-RS, Spring WebMvc and Spring WebFlux,
 but you can use your `ObjectMapper` directly as before as the module and visibility checker is registered in the existing mapper.
 
-By default, the deserialization will invoke `EntityViewManager.getReference(viewType, id)` to construct objects.
-If the view type that should be deserialized is creatable i.e. annotated with `@CreatableEntityView` and no value for the `@IdMapping` attribute is provided in the JSON,
-it will be created via `EntityViewManager.create()`.
-The rest of the JSON values are then deserialized onto the constructed object via the setters the entity view types provide.
+[[jsonb-integration]]
+=== JSONB integration
 
-Read-only types only support deserialization when a value for the `@IdMapping` attribute is given and obviously need setters for the deserialization to work properly.
-Adding setters makes the models mutable which might not be desirable, so consider this when wanting to deserialize JSON to entity views.
-A possible solution is to create an entity view subtype that has the sole purpose of providing setters so that it can be deserialized.
+[[jsonb-setup]]
+==== Setup
 
-Since entity view objects are created via `EntityViewManager.getReference()` or `EntityViewManager.create()`, the objects can then be directly saved via `EntityViewManager.save()`.
-For updatable entity views it is important to understand that `EntityViewManager.save()` will only flush non-null attributes i.e. do a partial flush.
-This is due to dirty tracking thinking that the initial state is all null attributes. Through deserialization, some attributes are set to values which are then considered dirty.
-That behavior is exactly what you would expect from a HTTP endpoint using the `PATCH` method.
+To use the JSONB integration directly you need the following Maven dependencies:
 
-If you need to flush the full state regardless of the dirty tracking information, you can use `EntityViewManager.saveFull()`,
-but be aware that orphan removals will currently not work when using the `QUERY` flush strategy because the initial state is unknown.
-If you need orphan removal in such a case, you are advised to switch to the `ENTITY` flush strategy for now.
-You could also make use of the `EntityViewManager.saveTo()` and `EntityViewManager.saveFullTo()` variants to flush data to an entity that was loaded via e.g. `EntityManager.find()`.
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jsonb</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
 
-An alternative to this would be to deserialize the state onto an existing updatable entity view that was loaded via e.g. `EntityViewManager.find()`.
-With the initial state being known due to loading from the database, orphan removal will work correctly,
-but be aware that providing `null` values for attributes in the JSON payload will obviously cause `null` to be set on the entity view attributes.
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jsonb-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+If you are using JAX-RS, Spring WebMvc or Spring WebFlux, consider using the already existing integrations instead to avoid unnecessary work.
+
+==== Usage
+
+The integration happens by adding custom `JsonDeserializer` instances per entity view and a `PropertyVisibilityStrategy` to a `JsonbConfig`.
+
+[source,java]
+----
+JsonbConfig jsonbConfig = new JsonbConfig();
+EntityViewJsonbDeserializer.integrate(jsonbConfig, evm, idValueAccessor);
+Jsonb jsonb = JsonbBuilder.create(jsonbConfig);
+----
+
+The resulting `Jsonb` instance will make use of the special deserializers for entity views and you can simply use it as usual e.g. `jsonb.fromString("...", MyEntityView.class)`.
