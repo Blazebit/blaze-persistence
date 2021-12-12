@@ -40,15 +40,17 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
     private final Query insertExampleQuery;
     private final String insertSql;
     private final int cutoffColumns;
+    private final Collection<Query> foreignKeyParticipatingQueries;
 
     public CollectionInsertModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames,
                                                           List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
-                                                          boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, Query insertExampleQuery, String insertSql, int cutoffColumns,
-                                                          boolean queryPlanCacheEnabled) {
+                                                          boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap,
+                                                          Query insertExampleQuery, String insertSql, int cutoffColumns, Collection<Query> foreignKeyParticipatingQueries, boolean queryPlanCacheEnabled) {
         super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.insertExampleQuery = insertExampleQuery;
         this.insertSql = insertSql;
         this.cutoffColumns = cutoffColumns;
+        this.foreignKeyParticipatingQueries = foreignKeyParticipatingQueries;
     }
 
     @Override
@@ -123,6 +125,7 @@ public class CollectionInsertModificationQuerySpecification<T> extends Modificat
         participatingQueries.add(baseQuery);
         participatingQueries.add(exampleQuery);
         participatingQueries.add(insertExampleQuery);
+        participatingQueries.addAll(foreignKeyParticipatingQueries);
 
         // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
