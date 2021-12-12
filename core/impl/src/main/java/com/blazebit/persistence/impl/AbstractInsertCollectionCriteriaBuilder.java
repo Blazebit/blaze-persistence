@@ -34,12 +34,17 @@ import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
+import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -265,6 +270,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
                 getInsertExecutorQuery(),
                 insertSqlSb.toString(),
                 cutoffColumns,
+                getForeignKeyParticipatingQueries(),
                 mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled()
         );
     }
@@ -305,6 +311,33 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         // it wasn't clear if problems might arise when the entity type were polymorphic
         String exampleQueryString = "UPDATE " + ValuesEntity.class.getSimpleName() + " SET value = NULL";
         return em.createQuery(exampleQueryString);
+    }
+
+    protected Collection<Query> getForeignKeyParticipatingQueries() {
+        Map<String, Query> map = null;
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        for (String attributeName : bindingMap.keySet()) {
+            ExtendedAttribute<?, ?> attribute = collectionAttributeEntries.get(attributeName);
+            if (attribute == null) {
+                continue;
+            }
+            for (Attribute<?, ?> attributePart : attribute.getAttributePath()) {
+                if (attributePart instanceof SingularAttribute<?, ?>) {
+                    SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attributePart;
+                    if (map == null) {
+                        map = new HashMap<>();
+                    }
+                    if (singularAttribute.getType() instanceof EntityType<?>) {
+                        String entityName = ((EntityType<?>) singularAttribute.getType()).getName();
+                        if (!map.containsKey(entityName)) {
+                            map.put(entityName, em.createQuery("select e from " + entityName + " e"));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return map == null ? Collections.<Query>emptyList() : map.values();
     }
 
 }

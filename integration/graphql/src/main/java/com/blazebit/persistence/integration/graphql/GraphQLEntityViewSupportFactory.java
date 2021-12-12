@@ -300,7 +300,7 @@ public class GraphQLEntityViewSupportFactory {
 
     private static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
         try {
-            return clazz.getConstructor(String.class, List.class, List.class, List.class);
+            return clazz.getConstructor(parameterTypes);
         } catch (NoSuchMethodException e) {
             return null;
         }

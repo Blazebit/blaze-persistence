@@ -42,17 +42,19 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
     private final String tableAlias;
     private final String[] idColumns;
     private final List<String> setColumns;
+    private final Collection<Query> foreignKeyParticipatingQueries;
     private final Map<String, String> aliasMapping;
     private final Query updateExampleQuery;
 
     public UpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                 boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled,
-                                                String tableToUpdate, String tableAlias, String[] idColumns, List<String> setColumns, Map<String, String> aliasMapping, Query updateExampleQuery) {
+                                                String tableToUpdate, String tableAlias, String[] idColumns, List<String> setColumns, Collection<Query> foreignKeyParticipatingQueries, Map<String, String> aliasMapping, Query updateExampleQuery) {
         super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.tableToUpdate = tableToUpdate;
         this.tableAlias = tableAlias;
         this.idColumns = idColumns;
         this.setColumns = setColumns;
+        this.foreignKeyParticipatingQueries = foreignKeyParticipatingQueries;
         this.aliasMapping = aliasMapping;
         this.updateExampleQuery = updateExampleQuery;
     }
@@ -151,6 +153,7 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
         participatingQueries.add(baseQuery);
         participatingQueries.add(exampleQuery);
         participatingQueries.add(updateExampleQuery);
+        participatingQueries.addAll(foreignKeyParticipatingQueries);
 
         boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
         if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {

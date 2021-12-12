@@ -37,6 +37,7 @@ import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
+import com.blazebit.persistence.spi.AttributePath;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedManagedType;
@@ -46,10 +47,15 @@ import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -419,6 +425,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 tableAlias,
                 idColumns,
                 setColumns,
+                getForeignKeyParticipatingQueries(),
                 aliasMapping,
                 getUpdateExampleQuery()
         );
@@ -459,6 +466,30 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 return sb.substring(sb.indexOf(".") + 1, sb.indexOf(" ")).trim();
             }
         }));
+    }
+
+    protected Collection<Query> getForeignKeyParticipatingQueries() {
+        Map<String, Query> map = null;
+        JpaMetamodelAccessor jpaMetamodelAccessor = mainQuery.jpaProvider.getJpaMetamodelAccessor();
+        for (String attributeName : setAttributeBindingMap.keySet()) {
+            AttributePath path = jpaMetamodelAccessor.getBasicAttributePath(getMetamodel(), entityType, attributeName);
+            for (Attribute<?, ?> attributePart : path.getAttributes()) {
+                if (attributePart instanceof SingularAttribute<?, ?>) {
+                    SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attributePart;
+                    if (map == null) {
+                        map = new HashMap<>();
+                    }
+                    if (singularAttribute.getType() instanceof EntityType<?>) {
+                        String entityName = ((EntityType<?>) singularAttribute.getType()).getName();
+                        if (!map.containsKey(entityName)) {
+                            map.put(entityName, em.createQuery("select e from " + entityName + " e"));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return map == null ? Collections.<Query>emptyList() : map.values();
     }
 
     protected void appendSetClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {

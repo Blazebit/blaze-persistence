@@ -225,6 +225,11 @@
                     <version>1.8.9</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                 </dependency>
@@ -252,6 +257,11 @@
                     <version>1.9.4</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                 </dependency>
@@ -277,6 +287,11 @@
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
                     <version>1.9.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -308,7 +323,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -340,7 +355,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -373,7 +388,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -406,7 +421,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -439,7 +454,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

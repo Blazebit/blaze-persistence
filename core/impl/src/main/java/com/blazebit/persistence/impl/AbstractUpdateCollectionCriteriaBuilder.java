@@ -39,6 +39,7 @@ import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
@@ -47,6 +48,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -476,6 +478,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                 collectionAlias,
                 joinTableIdColumns.toArray(new String[0]),
                 setColumns,
+                getForeignKeyParticipatingQueries(),
                 aliasMapping,
                 getUpdateExampleQuery(),
                 columnExpressionRemappings
@@ -494,6 +497,32 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         }
 
         return setColumns;
+    }
+
+    protected Collection<Query> getForeignKeyParticipatingQueries() {
+        Map<String, Query> map = null;
+        for (String attributeName : setAttributeBindingMap.keySet()) {
+            ExtendedAttribute<?, ?> attribute = collectionAttributeEntries.get(attributeName);
+            if (attribute == null) {
+                continue;
+            }
+            for (Attribute<?, ?> attributePart : attribute.getAttributePath()) {
+                if (attributePart instanceof SingularAttribute<?, ?>) {
+                    SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attributePart;
+                    if (map == null) {
+                        map = new HashMap<>();
+                    }
+                    if (singularAttribute.getType() instanceof EntityType<?>) {
+                        String entityName = ((EntityType<?>) singularAttribute.getType()).getName();
+                        if (!map.containsKey(entityName)) {
+                            map.put(entityName, em.createQuery("select e from " + entityName + " e"));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return map == null ? Collections.<Query>emptyList() : map.values();
     }
 
 }
