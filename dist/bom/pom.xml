@@ -364,11 +364,29 @@
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-jaxrs</artifactId>
                 <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
+                <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
-                <artifactId>blaze-persistence-integration-jaxrs-jakarta</artifactId>
+                <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jsonb-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -386,6 +404,18 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jsonb</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jsonb-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
@@ -393,6 +423,18 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-spqr</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>

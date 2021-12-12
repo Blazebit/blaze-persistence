@@ -63,6 +63,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -535,10 +536,7 @@ public class GraphQLEntityViewSupportFactory {
                 continue;
             }
             String typeName = getObjectTypeName(managedView);
-            String inputTypeName = typeName + "Input";
-            if (managedView.isCreatable() || managedView.isUpdatable()) {
-                inputTypeName = typeName;
-            }
+            String inputTypeName = getInputObjectTypeName(managedView);
             String description = getDescription(managedView.getJavaType());
             GraphQLObjectType.Builder builder = GraphQLObjectType.newObject().name(typeName);
             GraphQLInputObjectType.Builder inputBuilder = GraphQLInputObjectType.newInputObject().name(inputTypeName);
@@ -817,15 +815,13 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, GraphQLObjectType objectType, GraphQLInputObjectType inputObjectType) {
-        if (!managedView.isUpdatable() && !managedView.isCreatable()) {
-            typeNameToClass.put(objectType.getName(), managedView.getJavaType());
-            if (isDefineNormalTypes()) {
-                schemaBuilder.additionalType(objectType);
-            }
-        }
         typeNameToClass.put(inputObjectType.getName(), managedView.getJavaType());
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(inputObjectType);
+        }
+        if (managedView.isUpdatable() || managedView.isCreatable()) {
+            // No need to define relay types for creatable/updatable views
+            return;
         }
         String nodeTypeName;
         String edgeTypeName;
@@ -901,9 +897,13 @@ public class GraphQLEntityViewSupportFactory {
             schemaBuilder.additionalType(pageInfoType.build());
             typeNameToClass.put(pageInfoTypeName, GraphQLRelayPageInfo.class);
         }
-
         typeNameToClass.put(edgeTypeName, managedView.getJavaType());
         typeNameToClass.put(connectionTypeName, managedView.getJavaType());
+        typeNameToClass.put(objectType.getName(), managedView.getJavaType());
+        if (isDefineNormalTypes()) {
+            schemaBuilder.additionalType(objectType);
+        }
+
         if (isDefineRelayTypes()) {
             schemaBuilder.additionalType(edgeType.build());
             schemaBuilder.additionalType(connectionType.build());
@@ -1084,6 +1084,24 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Returns the GraphQL input type name for the given managed view type.
+     *
+     * @param managedView The managed view type
+     * @return The GraphQL type name
+     */
+    protected String getInputObjectTypeName(ManagedViewType managedView) {
+        String typeName = getObjectTypeName(managedView);
+        // So far, we only use this for MicroProfile GraphQL where we can't register custom types
+        // and instead have to simply use the name the MP GraphQL implementations choose for such types.
+        // In case of input object types, implementations don't suffix the name with "Input" since the type is abstract
+        if (Modifier.isAbstract(managedView.getJavaType().getModifiers()) && (managedView.isCreatable() || managedView.isUpdatable())) {
+            return typeName;
+        } else {
+            return typeName + "Input";
+        }
+    }
+
+    /**
      * Returns the GraphQL type name for the given java type.
      *
      * @param type The java type
@@ -1210,10 +1228,7 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected GraphQLInputType getInputObjectTypeReference(ManagedViewType<?> type) {
-        if (type.isCreatable() || type.isUpdatable()) {
-            return new GraphQLTypeReference(getObjectTypeName(type));
-        }
-        return new GraphQLTypeReference(getObjectTypeName(type) + "Input");
+        return new GraphQLTypeReference(getInputObjectTypeName(type));
     }
 
     /**

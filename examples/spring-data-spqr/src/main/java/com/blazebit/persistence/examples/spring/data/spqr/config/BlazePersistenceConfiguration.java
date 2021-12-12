@@ -35,7 +35,7 @@ import javax.persistence.PersistenceUnit;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @Configuration
 @EnableEntityViews(basePackages = {"com.blazebit.persistence.examples.spring.data.spqr.view"})

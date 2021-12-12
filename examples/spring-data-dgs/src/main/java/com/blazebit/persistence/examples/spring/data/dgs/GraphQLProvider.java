@@ -25,7 +25,6 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsFederationResolver;
 import com.netflix.graphql.dgs.DgsTypeDefinitionRegistry;
 import com.netflix.graphql.dgs.autoconfig.DgsConfigurationProperties;
-import com.netflix.graphql.dgs.internal.BaseDgsQueryExecutor;
 import com.netflix.graphql.dgs.internal.DgsSchemaProvider;
 import com.netflix.graphql.mocking.MockProvider;
 import graphql.execution.DataFetcherExceptionHandler;

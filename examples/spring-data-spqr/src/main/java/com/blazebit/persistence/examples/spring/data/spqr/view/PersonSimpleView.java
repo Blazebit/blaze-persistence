@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.EntityView;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @EntityView(Person.class)
 public interface PersonSimpleView extends PersonIdView {

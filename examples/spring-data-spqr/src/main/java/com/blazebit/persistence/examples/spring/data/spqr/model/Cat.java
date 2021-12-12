@@ -30,7 +30,7 @@ import java.util.Set;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @Entity
 public class Cat {

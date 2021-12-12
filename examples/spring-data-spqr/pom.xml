@@ -86,12 +86,7 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jackson</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-graphql</artifactId>
+            <artifactId>blaze-persistence-integration-graphql-spqr</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -213,25 +208,23 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <!-- For some strange reason this doesn't work with 4.3.9.RELEASE. Since this is old anyway, let's just use 4.3.3.RELEASE here -->
-                <version.spring>4.3.3.RELEASE</version.spring>
-                <version.spring.boot>${version.spring-data-1.x-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
-
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-1.x}</version>
+                    <version>${version.spring-data-2.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
-                    <version>1.8.9</version>
+                    <version>1.9.4</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -242,14 +235,14 @@
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.0}</version>
+                    <version>${version.spring-data-2.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -258,7 +251,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -269,14 +262,14 @@
         <profile>
             <id>spring-data-2.1.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.1-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.2-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.1}</version>
+                    <version>${version.spring-data-2.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -285,7 +278,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

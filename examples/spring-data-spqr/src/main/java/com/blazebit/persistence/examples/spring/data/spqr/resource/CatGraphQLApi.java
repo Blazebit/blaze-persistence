@@ -31,7 +31,6 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.execution.ResolutionEnvironment;
 import io.leangen.graphql.execution.relay.Page;
 import io.leangen.graphql.execution.relay.generic.GenericPage;
-import io.leangen.graphql.execution.relay.generic.PageFactory;
 import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -39,7 +38,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @Component
 @GraphQLApi

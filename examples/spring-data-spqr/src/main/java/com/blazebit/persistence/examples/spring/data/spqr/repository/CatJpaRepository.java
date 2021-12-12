@@ -21,7 +21,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 public interface CatJpaRepository extends JpaRepository<Cat, Long> {
 

@@ -33,7 +33,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @SpringBootApplication
 @EnableSpringDataWebSupport

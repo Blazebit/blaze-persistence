@@ -67,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

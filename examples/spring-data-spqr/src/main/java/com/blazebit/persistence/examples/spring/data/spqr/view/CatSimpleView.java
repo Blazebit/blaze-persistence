@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.IdMapping;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @since 1.6.4
  */
 @EntityView(Cat.class)
 public interface CatSimpleView {

@@ -14,7 +14,9 @@ Not yet released
 * Add `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions
 * Add JPA Criteria support for aggregate `FILTER` clause, window functions and ordered set aggregate functions
 * Fire `EntityViewConfiguration` as event in Quarkus extension boot like in the CDI integration to allow customization
-* Add Spring SPQR example application showcasing how GraphQL mutations can be used
+* Add JSONB integration for deserializing entity views
+* Add Spring SPQR integration and example application
+* Add examples for SPQR, DGS and MicroProfile GraphQL showcasing how GraphQL mutations can be used
 
 ### Bug fixes
 
@@ -24,10 +26,12 @@ Not yet released
 * Add `getById` implementation as needed by Spring Data 2.5 to the integration
 * Ensure stream/iteration processing of results works with entity views containing no collections
 * Fix support for flushing flat view collections with read-only declared and updatable subview types
+* Ensure pending inserts for tables targeted by foreign keys by custom insert/update DML are flushed
 
 ### Backwards-incompatible changes
 
 * Properly implement the `getOne` semantics to return a reference instead of querying an instance
+* Split JAX-RS integration into JAX-RS for Jackson and JAX-RS for JSONB integrations
 
 ## 1.6.3
 

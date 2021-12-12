@@ -1,9 +1,11 @@
 [[jaxrs-integration]]
 == JAX-RS integration
 
-The JAX-RS integration provides `MessageBodyReader` and `ParamConverter` implementations to integrate the following serialization integrations with JAX-RS
+The JAX-RS integration module serves as the API which contains the `@EntityViewId` annotation.
+The `MessageBodyReader` and `ParamConverter` implementations to integrate serialization frameworks with JAX-RS are available for
 
 * <<jackson-integration,Jackson integration>>
+* <<jsonb-integration,JSONB integration>>
 * _At some point there will also be support for JAXB_
 
 The integration is discovered automatically through the `javax.ws.rs.ext.Providers` ServiceLoader contract. Simply putting the artifact on the classpath is enough for the integration.
@@ -17,7 +19,7 @@ To use the Jackson integration directly you need the following Maven dependencie
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+    <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -29,7 +31,31 @@ or if you are using Jakarta JPA
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-jaxrs-jakarta</artifactId>
+    <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+To use the JSONB integration directly you need the following Maven dependencies:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jsonb-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

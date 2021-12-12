@@ -28,6 +28,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
