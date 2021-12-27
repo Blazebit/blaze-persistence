@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-jpa-criteria</artifactId>
-        <version>1.6.4-SNAPSHOT</version>
+        <version>1.6.4</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -66,18 +66,18 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
-                                    <arg value="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}"/>
-                                    <arg value="${project.build.directory}/${project.build.finalName}.jar"/>
-                                    <arg value="-q"/>
-                                    <arg value="-o"/>
-                                    <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}" />
+                                    <arg value="${project.build.directory}/${project.build.finalName}.jar" />
+                                    <arg value="-q" />
+                                    <arg value="-o" />
+                                    <arg value="-tr" />
+                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
-                                        <pathelement path="${plugin_classpath}"/>
+                                        <pathelement path="${plugin_classpath}" />
                                     </classpath>
                                 </java>
                             </target>
@@ -91,24 +91,20 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
-                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source"
-                                                  input="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}"
-                                                  regexp="\.jar$"
-                                                  replace="-sources.jar"
-                                                  global="true" />
+                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}" regexp="\.jar$" replace="-sources.jar" global="true" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
-                                    <arg value="${source}"/>
-                                    <arg value="${project.build.directory}/${project.build.finalName}-sources.jar"/>
-                                    <arg value="-q"/>
-                                    <arg value="-o"/>
-                                    <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${source}" />
+                                    <arg value="${project.build.directory}/${project.build.finalName}-sources.jar" />
+                                    <arg value="-q" />
+                                    <arg value="-o" />
+                                    <arg value="-tr" />
+                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
-                                        <pathelement path="${plugin_classpath}"/>
+                                        <pathelement path="${plugin_classpath}" />
                                     </classpath>
                                 </java>
                             </target>
@@ -122,24 +118,20 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="plugin_classpath" refid="maven.plugin.classpath"/>
+                                <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
-                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source"
-                                                  input="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}"
-                                                  regexp="\.jar$"
-                                                  replace="-javadoc.jar"
-                                                  global="true" />
+                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-jpa-criteria-impl:jar}" regexp="\.jar$" replace="-javadoc.jar" global="true" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
-                                    <arg value="${source}"/>
-                                    <arg value="${project.build.directory}/${project.build.finalName}-javadoc.jar"/>
-                                    <arg value="-q"/>
-                                    <arg value="-o"/>
-                                    <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${source}" />
+                                    <arg value="${project.build.directory}/${project.build.finalName}-javadoc.jar" />
+                                    <arg value="-q" />
+                                    <arg value="-o" />
+                                    <arg value="-tr" />
+                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
-                                        <pathelement path="${plugin_classpath}"/>
+                                        <pathelement path="${plugin_classpath}" />
                                     </classpath>
                                 </java>
                             </target>
