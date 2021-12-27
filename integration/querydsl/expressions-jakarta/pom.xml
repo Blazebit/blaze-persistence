@@ -82,7 +82,7 @@
                                     <arg value="-q"/>
                                     <arg value="-o"/>
                                     <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${project.basedir}/../../../rules/jakarta-renames.properties"/>
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}"/>
@@ -113,7 +113,7 @@
                                     <arg value="-q"/>
                                     <arg value="-o"/>
                                     <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${project.basedir}/../../../rules/jakarta-renames.properties"/>
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}"/>
@@ -144,7 +144,7 @@
                                     <arg value="-q"/>
                                     <arg value="-o"/>
                                     <arg value="-tr"/>
-                                    <arg value="${project.basedir}/../../rules/jakarta-renames.properties"/>
+                                    <arg value="${project.basedir}/../../../rules/jakarta-renames.properties"/>
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}"/>
@@ -173,7 +173,66 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.build.finalName}-sources.jar</file>
+                                    <classifier>sources</classifier>
+                                    <type>jar</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>blazebit-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-artifacts</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-artifact</goal>
+                                </goals>
+                                <configuration>
+                                    <artifacts>
+                                        <artifact>
+                                            <file>${project.build.directory}/${project.build.finalName}-sources.jar</file>
+                                            <classifier>sources</classifier>
+                                            <type>jar</type>
+                                        </artifact>
+                                        <artifact>
+                                            <file>${project.build.directory}/${project.build.finalName}-javadoc.jar</file>
+                                            <classifier>javadoc</classifier>
+                                            <type>jar</type>
+                                        </artifact>
+                                    </artifacts>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
