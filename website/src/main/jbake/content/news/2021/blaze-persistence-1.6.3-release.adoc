@@ -11,7 +11,7 @@ Christian Beikov
 
 We are happy to announce the third bug fix release of the 1.6 series. This release again contains not only bug fixes, but also some new features that I would like to highlight.
 
-Yet again, thanks to the extensive testing of https://github.com/EugenMayer[Eugen Mayer] from https://kontextwork.de/[KontextWork] we polished the GraphQL integration even further.
+Yet again, thanks to the extensive testing of https://github.com/EugenMayer[Eugen Mayer, window="_blank"] from https://kontextwork.de/[KontextWork, window="_blank"] we polished the GraphQL integration even further.
 The integration now supports inferring nullability of entity view attributes for the generated GraphQL schema based on the mapping expression.
 On top of that, he also helped us fix an issue with the "single valued association id access optimization" for non primary key based foreign keys, which now also avoids producing a join.
 
