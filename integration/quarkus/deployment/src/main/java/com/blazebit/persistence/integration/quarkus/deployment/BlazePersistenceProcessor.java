@@ -26,12 +26,10 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
-import io.quarkus.builder.Version;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.AdditionalApplicationArchiveMarkerBuildItem;
 import io.quarkus.deployment.builditem.AdditionalIndexedClassesBuildItem;
-import io.quarkus.deployment.builditem.CapabilityBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -67,7 +65,6 @@ import java.util.stream.Collectors;
  */
 class BlazePersistenceProcessor {
 
-    static final String CAPABILITY = "com.blazebit.persistence.integration.quarkus";
     static final String FEATURE = "blaze-persistence";
 
     private static final Logger LOG = Logger.getLogger(BlazePersistenceProcessor.class);
@@ -75,17 +72,6 @@ class BlazePersistenceProcessor {
     private static final DotName BLAZE_PERSISTENCE_INSTANCE = DotName.createSimple(BlazePersistenceInstance.class.getName());
     private static final DotName BLAZE_PERSISTENCE_INSTANCE_REPEATABLE_CONTAINER = DotName
             .createSimple(BlazePersistenceInstance.List.class.getName());
-
-    @BuildStep
-    CapabilityBuildItem capability() {
-        String version = Version.getVersion();
-        int dotIndex = version.indexOf('.');
-        // As of version Quarkus 2, the capabilities are read from the extension descriptor
-        if (dotIndex == -1 || Integer.parseInt(version.substring(0, dotIndex)) >= 2) {
-            return null;
-        }
-        return new CapabilityBuildItem(CAPABILITY);
-    }
 
     @BuildStep
     FeatureBuildItem feature() {
