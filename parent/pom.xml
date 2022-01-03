@@ -122,7 +122,7 @@
         <version.jakarta-jpa-api>3.0.0</version.jakarta-jpa-api>
 
         <version.weld>3.1.5.Final</version.weld>
-        <version.quarkus>1.11.0.Final</version.quarkus>
+        <version.quarkus>2.6.1.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
