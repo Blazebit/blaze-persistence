@@ -1,3 +1,4 @@
+---
 name: "Blaze-Persistence"
 metadata:
   short-name: "BP"
@@ -13,3 +14,21 @@ metadata:
   categories:
   - "data"
   status: "stable"
+  built-with-quarkus-core: "1.11.7.Final"
+  capabilities:
+    provides:
+    - "com.blazebit.persistence.integration.quarkus"
+  extension-dependencies:
+  - "io.quarkus:quarkus-core"
+  - "io.quarkus:quarkus-hibernate-orm"
+  - "io.quarkus:quarkus-agroal"
+  - "io.quarkus:quarkus-arc"
+  - "io.quarkus:quarkus-datasource"
+  - "io.quarkus:quarkus-narayana-jta"
+  - "io.quarkus:quarkus-mutiny"
+  - "io.quarkus:quarkus-smallrye-context-propagation"
+  - "io.quarkus:quarkus-caffeine"
+artifact: "${project.groupId}:${project.artifactId}::jar:${project.version}"
+group-id: "${project.groupId}"
+artifact-id: "${project.artifactId}"
+description: "Advanced SQL support for JPA and Entity-Views as efficient DTOs"
