@@ -20,6 +20,6 @@ We improved a few validations to make you aware of configuration issues early an
 The `PaginatedCriteriaBuilder` API is now capable of doing a bounded count i.e. count up to a given value to improve performance.
 In entity views it is now also supported to limit the number of elements to fetch from collections or from correlations through the `@Limit` annotation.
 
-If you want to know more about the new features, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
+If you want to know more about the new features, take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#150-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
 
 The next release will be the final one for the 1.5 series. Until then, have fun with 1.5.0-Alpha2!

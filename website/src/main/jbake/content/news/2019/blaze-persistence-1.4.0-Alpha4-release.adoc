@@ -14,7 +14,7 @@ Enjoy Entity View lifecycle listeners, an integration for Jackson deserializatio
 that is built into the Spring WebMvc and JAX-RS integrations automatically.
 This release also comes with a Spring WebFlux integration and the biggest newcomer is the GraphQL+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ integration!
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha4[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#140-alpha4[changelog, window="_blank"] for a full list of changes and improvements.
 
 I would like to thank the whole community for bug reports, providing test cases and generally giving guidance for some of the new features.
 

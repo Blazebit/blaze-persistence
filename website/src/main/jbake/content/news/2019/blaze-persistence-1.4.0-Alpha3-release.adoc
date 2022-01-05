@@ -14,7 +14,7 @@ We support the newest Spring Boot and Spring Data version 2.2 and now also have 
 Entity Views equality is now based on the entity inheritance top type and we now also provide a default implementation for `toString()`.
 We made a few Entity View annotations +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++repeatable.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha3[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#140-alpha3[changelog, window="_blank"] for a full list of changes and improvements.
 
 A big thank you goes out to Jan-Willem Gmelig Meyling for supporting users and helping with Spring and Hibernate integration issues!
 I would also like to thank Eugen Mayer and his colleague Sebastian Ulrich for reporting documentation issues and questioning a few naming and design choices.

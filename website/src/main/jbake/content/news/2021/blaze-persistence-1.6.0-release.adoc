@@ -14,6 +14,6 @@ We are happy to announce the final release of the 1.6 series. This release mainl
 Some users were still using the 1.5 series although the 1.6 Alpha releases were already considered stable.
 To avoid confusion about the stability of releases, we will try to avoid using the Alpha label in the future.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#160[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#160[changelog, window="_blank"] for a full list of changes and improvements.
 
 Enjoy the release and stay tuned for the next one!

@@ -159,7 +159,7 @@ SchemaGenerator schemaGenerator = new SchemaGenerator();
 return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== Netflix DGS setup
 
@@ -236,7 +236,7 @@ public class CatFetcher {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== SPQR setup
 
@@ -316,7 +316,7 @@ public class CatFetcher {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== MicroProfile GraphQL - SmallRye
 
@@ -394,7 +394,7 @@ public class CatFetcher {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/microprofile-graphql/[example project].
 
 ==== Sample query
 
@@ -653,7 +653,7 @@ query: {
 
 For a full example see one of the following example projects:
 
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[Plain graphql-java]
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-dgs/[Netflix DGS]
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[MicroProfile GraphQL]
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-spqr/[SPQR]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[Plain graphql-java]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-dgs/[Netflix DGS]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/microprofile-graphql/[MicroProfile GraphQL]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-spqr/[SPQR]

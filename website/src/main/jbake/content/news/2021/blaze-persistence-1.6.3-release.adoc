@@ -45,6 +45,6 @@ which could have lead to some runtime exceptions. Now that we do type validation
 A prime example of a possible issue is the comparison of an enum attribute with a string or integer i.e. the SQL representation.
 A expression like `case when type = 'KEY' then ...` should be replaced with `case when type = package.MyEnum.KEY then ...` so that the comparison has matching types.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#163[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#163[changelog, window="_blank"] for a full list of changes and improvements.
 
 Enjoy the release and stay tuned for the next one!
