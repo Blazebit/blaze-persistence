@@ -2,7 +2,7 @@ name: "Blaze-Persistence Publish Snapshot"
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 env:
   MAVEN_SKIP_RC: true
 jobs:

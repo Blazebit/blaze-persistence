@@ -14,6 +14,6 @@ This release fixes that, so that you can run Blaze-Persistence again with all Ja
 We also fixed a query plan caching bug for DML queries that are using the `RETURNING` clause along with
 +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++other advanced features like CTEs.
 
-If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150-alpha5[changelog, window="_blank"] for a full list of changes and improvements.
+If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#150-alpha5[changelog, window="_blank"] for a full list of changes and improvements.
 
 We cut down the plan for the final 1.5 release down to the bare minimum. We will deliver further improvements through bug-fix releases.

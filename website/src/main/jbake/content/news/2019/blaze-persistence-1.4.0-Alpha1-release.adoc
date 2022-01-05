@@ -24,7 +24,7 @@ The most notable bug fixes are:
 * https://github.com/Blazebit/blaze-persistence/issues/792[*#792*, window="_blank"] Init non-mutable attributes in create constructor
 * https://github.com/Blazebit/blaze-persistence/issues/788[*#733*, window="_blank"] HibernateJpqlFunctionAdapter broken for Hibernate 5.3
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#140-alpha1[changelog, window="_blank"] for a full list of changes and improvements.
 
 Thanks to all contributors for reporting issues and helping us understand the root causes.
 

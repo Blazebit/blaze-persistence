@@ -14,6 +14,6 @@ Due to build system updates, the `META-INF/versions/9` directory in the entity v
 The directory in the JAR is vital for running on Java 11+ as it contains an alternative implementation for defining classes that was introduced in Java 9.
 The highlight of the release is the support for subqueries in the `FROM` clause and the+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ inlining of count and id queries in the paginated queries to reduce the amount of queries even further.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#141[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#141[changelog, window="_blank"] for a full list of changes and improvements.
 
 We are switching the master branch to 1.5.0-SNAPSHOT now and will focus on Hibernate 6 support. We are looking forward to hear your feedback!

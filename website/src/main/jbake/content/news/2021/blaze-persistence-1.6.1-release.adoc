@@ -19,6 +19,6 @@ Now we can all enjoy improved generation and compilation times :)
 As for the bug fixes, we improved the SQL we render for VALUES clauses and subqueries in the FROM clause to make it easier for certain database optimizers to efficient generate plans.
 We also improved the support for running on the module path. While migrating a client application we noticed some issues, but with 1.6.1 they should be gone!
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#161[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#161[changelog, window="_blank"] for a full list of changes and improvements.
 
 Enjoy the release and stay tuned for the next one!

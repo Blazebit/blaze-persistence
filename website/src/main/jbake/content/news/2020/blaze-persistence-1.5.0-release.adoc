@@ -16,7 +16,7 @@ This release is pretty big, containing many bug fixes and quite a few great feat
 The most notable features are JSON functions to access/manipulate fields of JSON columns, the support for joins in DML statements
 and the support for +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++custom index/key mapping expressions for `List` and `Map` entity view attributes via the new `@MappingIndex` annotation.
 
-If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#150[changelog, window="_blank"] for a full list of changes and improvements.
+If you want to know more about the new features or bug fixes, take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#150[changelog, window="_blank"] for a full list of changes and improvements.
 
 This release concludes the planned community releases for the 1.5 series. We will publish community bug fix releases only for critical bug fixes.
 If you need long term support please consider the https://persistence.blazebit.com/support.html#_blaze_persistence_support[commercial support options].

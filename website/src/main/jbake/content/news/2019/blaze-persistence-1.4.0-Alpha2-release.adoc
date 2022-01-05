@@ -30,7 +30,7 @@ Other new notable features are:
 * https://github.com/Blazebit/blaze-persistence/issues/795[*#795*, window="_blank"] Move available configuration properties to API artifacts
 * https://github.com/Blazebit/blaze-persistence/issues/793[*#793*, window="_blank"] Shade ANTLR into parser
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#140-alpha2[changelog, window="_blank"] for a full list of changes and improvements.
 
 A big thank you goes out to Jan-Willem Gmelig Meyling and his colleague Sayra Ranjha for implementing the initial window functions as well as the temporal functions!
 

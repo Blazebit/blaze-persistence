@@ -26,7 +26,7 @@ The most notable features and bug fixes are:
 * https://github.com/Blazebit/blaze-persistence/issues/568[*#568*, window="_blank"], https://github.com/Blazebit/blaze-persistence/issues/194[*#194*, window="_blank"] Add support for `GROUP BY` with `PaginatedCriteriaBuilder`
 * https://github.com/Blazebit/blaze-persistence/issues/444[*#444*, window="_blank"] Support `@EmbeddedId` and `@IdClass` attributes when using keyset pagination
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#130-Alpha3[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#130-Alpha3[changelog, window="_blank"] for a full list of changes and improvements.
 
 A big thank you is going out to https://github.com/heruan[Giovanni Lovato, window="_blank"] for pushing forward the Spring Data integration, testing edge cases with embeddables and improving the Eclipse development experience.
 Thanks to https://github.com/JWGmeligMeyling[Jan-Willem Gmelig Meyling, window="_blank"] we now also have an integration for the upcoming Hibernate 5.4 release!

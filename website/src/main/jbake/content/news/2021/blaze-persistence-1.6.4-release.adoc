@@ -60,7 +60,7 @@ It was very interesting to get into this and we are pretty happy with the way th
 TLDR, GraphQL mutations are now supported for all GraphQL integration modules except for Netflix DGS, which can only be supported until version 4.6,
 as the 4.6 release removed support for customizing the deserialization. Please help us convince the maintainers of DGS to consider adding an SPI by commenting and voting on the https://github.com/Netflix/dgs-framework/discussions/775[GitHub discussion, window="_blank"]
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/tree/master/examples[example applications, window="_blank"] to get a sense for how this can work out with your favorite framework!
+Take a look into the https://github.com/Blazebit/blaze-persistence/tree/main/examples[example applications, window="_blank"] to get a sense for how this can work out with your favorite framework!
 
 === Entity-View deserialization through JSONB
 
@@ -91,6 +91,6 @@ We were informed that JSON serialization for entity views didn't work for native
 
 We hope you enjoy this late Christmas present and wish you all a happy new year!
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#164[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#164[changelog, window="_blank"] for a full list of changes and improvements.
 
 Enjoy the release and stay tuned for the next one!

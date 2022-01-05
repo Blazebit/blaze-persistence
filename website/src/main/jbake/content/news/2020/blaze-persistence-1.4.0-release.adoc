@@ -14,7 +14,7 @@ The development for 1.4 started in early 2019 and since we received comments, th
 we wanted to make it clear that 1.4 is stable enough. We will most likely deliver a few smaller features in 1.4.x releases,
 but at some point+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ we are going move issues and switch the master branch to 1.5.0-SNAPSHOT.
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#140[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#140[changelog, window="_blank"] for a full list of changes and improvements.
 
 A big thanks goes out to the community for bug reports, providing test cases and being great users!
 
