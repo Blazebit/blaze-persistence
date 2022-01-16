@@ -48,6 +48,8 @@ import static org.junit.Assert.assertNull;
  */
 public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
 
+    private static Person o4;
+
     @Override
     public void setUpOnce() {
         cleanDatabase();
@@ -64,7 +66,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                 Person o1 = new Person("Karl1");
                 Person o2 = new Person("Karl2");
                 Person o3 = new Person("Karl3");
-                Person o4 = new Person("Karl4");
+                o4 = new Person("Karl4");
 
                 doc1.setOwner(o1);
                 doc2.setOwner(o2);
@@ -72,6 +74,12 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
                 doc4.setOwner(o4);
                 doc5.setOwner(o4);
                 doc6.setOwner(o4);
+                doc1.setFriend(o1);
+                doc2.setFriend(o2);
+                doc3.setFriend(o3);
+                doc4.setFriend(o4);
+                doc5.setFriend(o4);
+                doc6.setFriend(o4);
 
                 em.persist(o1);
                 em.persist(o2);
@@ -381,5 +389,29 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         result = crit.getResultList();
         assertEquals(1, result.size());
         assertEquals("doc2 - Karl2", result.get(0));
+    }
+
+    @Test
+    public void optimizedKeysetPaginationWithConstantifiedSingleValuedPath() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(DocumentWithNullableName.class, "d")
+                .select("d.name")
+                // Constantifying a many-to-one through a single valued id path leads to assuming the `d.friend.id` path is unique
+                .where("d.owner.id").eqLiteral(o4.getId());
+        crit.orderByDesc("d.friend.id")
+                // We need a nullable column in the order by clause to force the emulation rendering
+                .orderByAsc("d.name")
+                .orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 0, 1);
+        PagedList<Tuple> result = pcb.getResultList();
+
+        assertEquals(1, result.getSize());
+        assertEquals("doc4", result.get(0).get(0));
+
+        result = crit.page(result.getKeysetPage(), 1, 2).getResultList();
+
+        assertEquals(2, result.getSize());
+        assertEquals("doc5", result.get(0).get(0));
+        assertEquals("doc6", result.get(1).get(0));
     }
 }
