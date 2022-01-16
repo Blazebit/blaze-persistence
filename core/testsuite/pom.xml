@@ -1669,7 +1669,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -1801,7 +1801,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -2694,26 +2694,26 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-envers</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.vladmihalcea</groupId>
-                    <artifactId>hibernate-types-52</artifactId>
+                    <artifactId>hibernate-types-55</artifactId>
                     <version>${version.hibernate-types}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -2725,7 +2725,7 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -2789,7 +2789,7 @@
                             <dependency>
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate-5.4}</version>
+                                <version>${version.hibernate-5.6}</version>
                             </dependency>
                             <dependency>
                                 <groupId>jakarta.xml.bind</groupId>

@@ -99,6 +99,7 @@ public abstract class AbstractQuarkusExampleTest {
 
         assertFalse(document.containsKey("name"));
         assertEquals("test", document.get("optionalParameter"));
+        assertEquals("Doc1", document.get("macroName"));
     }
 
     @Test

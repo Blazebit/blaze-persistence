@@ -25,13 +25,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blaze-persistence-integration-hibernate-5.4-jakarta</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -66,7 +66,7 @@
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
-                                    <arg value="${com.blazebit:blaze-persistence-integration-hibernate-5.4:jar}" />
+                                    <arg value="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" />
                                     <arg value="${project.build.directory}/${project.build.finalName}.jar" />
                                     <arg value="-q" />
                                     <arg value="-o" />
@@ -90,7 +90,7 @@
                             <target>
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
-                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.4:jar}" regexp="\.jar$" replace="-sources.jar" global="true" />
+                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" regexp="\.jar$" replace="-sources.jar" global="true" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
                                     <arg value="${source}" />
@@ -117,7 +117,7 @@
                             <target>
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
-                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.4:jar}" regexp="\.jar$" replace="-javadoc.jar" global="true" />
+                                <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" regexp="\.jar$" replace="-javadoc.jar" global="true" />
                                 <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
                                     <!--suppress UnresolvedMavenProperty -->
                                     <arg value="${source}" />

@@ -31,7 +31,7 @@ As outlined in the <<maven-querydsl-setup,setup section>> you need the following
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -49,7 +49,7 @@ or if you are using Jakarta JPA
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4-jakarta</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
