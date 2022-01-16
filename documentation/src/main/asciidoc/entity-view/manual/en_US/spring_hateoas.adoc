@@ -20,7 +20,7 @@ In short, the following Maven dependencies are required
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

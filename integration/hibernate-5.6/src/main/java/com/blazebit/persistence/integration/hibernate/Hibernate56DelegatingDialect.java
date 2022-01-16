@@ -67,11 +67,11 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class Hibernate53DelegatingDialect extends Dialect {
+public class Hibernate56DelegatingDialect extends Dialect {
 
     private final Dialect delegate;
 
-    public Hibernate53DelegatingDialect(Dialect delegate) {
+    public Hibernate56DelegatingDialect(Dialect delegate) {
         this.delegate = delegate;
     }
 
@@ -904,6 +904,11 @@ public class Hibernate53DelegatingDialect extends Dialect {
     }
 
     @Override
+    public boolean equivalentTypes(int typeCode1, int typeCode2) {
+        return delegate.equivalentTypes(typeCode1, typeCode2);
+    }
+
+    @Override
     public String getNativeIdentifierGeneratorStrategy() {
         return delegate.getNativeIdentifierGeneratorStrategy();
     }
@@ -924,6 +929,11 @@ public class Hibernate53DelegatingDialect extends Dialect {
     }
 
     @Override
+    public boolean supportsNoColumnsInsert() {
+        return delegate.supportsNoColumnsInsert();
+    }
+
+    @Override
     public String getAddForeignKeyConstraintString(String constraintName, String foreignKeyDefinition) {
         return delegate.getAddForeignKeyConstraintString(constraintName, foreignKeyDefinition);
     }
@@ -931,6 +941,11 @@ public class Hibernate53DelegatingDialect extends Dialect {
     @Override
     public boolean supportsIfExistsAfterAlterTable() {
         return delegate.supportsIfExistsAfterAlterTable();
+    }
+
+    @Override
+    public boolean supportsRowValueConstructorSyntaxInSet() {
+        return delegate.supportsRowValueConstructorSyntaxInSet();
     }
 
     @Override
@@ -984,8 +999,23 @@ public class Hibernate53DelegatingDialect extends Dialect {
     }
 
     @Override
+    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+        return delegate.supportsJdbcConnectionLobCreation(databaseMetaData);
+    }
+
+    @Override
     public String addSqlHintOrComment(String sql, QueryParameters parameters, boolean commentsEnabled) {
         return delegate.addSqlHintOrComment(sql, parameters, commentsEnabled);
+    }
+
+    @Override
+    public boolean supportsSelectAliasInGroupByClause() {
+        return delegate.supportsSelectAliasInGroupByClause();
+    }
+
+    @Override
+    public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+        return delegate.getCreateTemporaryTableColumnAnnotation(sqlTypeCode);
     }
 
     @Override

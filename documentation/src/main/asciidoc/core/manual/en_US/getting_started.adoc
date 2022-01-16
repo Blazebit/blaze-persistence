@@ -76,25 +76,60 @@ or if you are using Jakarta JPA
 
 Depending on the JPA provider that should be used, one of the following integrations is required
 
-[[maven-setup-hibernate54-jakarta]]
-===== Hibernate 5.4+ Jakarta
-
-This integration works for Hibernate 5.4, 5.5 and 5.6
+[[maven-setup-hibernate56-jakarta]]
+===== Hibernate 5.6+ Jakarta
 
 [source,xml]
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4-jakarta</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[[maven-setup-hibernate56]]
+===== Hibernate 5.6
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[[maven-setup-hibernate55-jakarta]]
+===== Hibernate 5.5 Jakarta
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+[[maven-setup-hibernate55]]
+===== Hibernate 5.5
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
 ----
 
 [[maven-setup-hibernate54]]
-===== Hibernate 5.4+
-
-This integration works for Hibernate 5.4, 5.5 and 5.6
+===== Hibernate 5.4
 
 [source,xml]
 ----

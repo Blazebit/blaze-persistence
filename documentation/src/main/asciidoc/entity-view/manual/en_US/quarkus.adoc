@@ -290,3 +290,21 @@ In order to make proper use of a custom type in entity views, it is necessary to
 
 Configure default values for optional parameters::
 Sometimes it is useful to provide access to services into entity views through optional parameters, for which a global default value can be registered on `EntityViewConfiguration`.
+
+As of version 1.6.5, also a CDI event of the type `CriteriaBuilderConfiguration` is fired with an optional `@BlazePersistenceInstance` qualifier at boot time.
+This allows to further customize the configuration which is often necessary if the context-less variant `CriteriaBuilderConfigurationContributor` isn't enough
+
+Register named type for VALUES::
+If you want to use a type that isn't supported out of the box, it needs to be registered under a name.
+
+Register custom JpqlFunctionGroup::
+If you want to register a CDI context aware `JpqlFunctionGroup`.
+
+Register JpqlMacro::
+If you want to register a CDI context aware `JpqlMacro`.
+
+Register custom dialect::
+When a dialect has a bug, needs a customization, or a new kind of dialect should be registered.
+
+Configure properties::
+Sometimes it is simply necessary to override a configuration property through `setProperty`

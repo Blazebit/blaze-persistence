@@ -124,7 +124,7 @@ class BlazePersistenceCdiProcessor {
                     .produce(createSyntheticBean(blazePersistenceInstanceName,
                             true,
                             CriteriaBuilderFactory.class,
-                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, persistenceUnitName),
+                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, blazePersistenceInstanceName, persistenceUnitName),
                             true));
 
             syntheticBeanBuildItemBuildProducer
@@ -152,7 +152,7 @@ class BlazePersistenceCdiProcessor {
                     .produce(createSyntheticBean(blazePersistenceInstanceName,
                             defaultBlazePersistenceInstance,
                             CriteriaBuilderFactory.class,
-                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, persistenceUnitName),
+                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, blazePersistenceInstanceName, persistenceUnitName),
                             true));
 
             syntheticBeanBuildItemBuildProducer

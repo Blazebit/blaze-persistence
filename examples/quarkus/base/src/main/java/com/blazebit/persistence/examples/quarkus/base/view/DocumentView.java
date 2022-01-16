@@ -41,4 +41,7 @@ public interface DocumentView {
 
     @MappingParameter("optionalParameter")
     String getOptionalParameter();
+
+    @Mapping("my_macro(name)")
+    String getMacroName();
 }

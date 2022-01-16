@@ -8,7 +8,8 @@ Not yet released
 
 ### New features
 
-* None yet
+* Fire CDI event for `CriteriaBuilderConfiguration` on boot also in Quarkus integration
+* Create custom integrations for Hibernate 5.5 and 5.6 to avoid confusion
 
 ### Bug fixes
 
@@ -18,6 +19,7 @@ Not yet released
 ### Backwards-incompatible changes
 
 * Throw exception if non-streaming capable object builder is used for streaming
+* Replace `blaze-persistence-integration-hibernate-5.4-jakarta` with `blaze-persistence-integration-hibernate-5.5-jakarta`
 
 ## 1.6.4
 

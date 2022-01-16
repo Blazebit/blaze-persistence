@@ -40,10 +40,18 @@ import java.util.function.Supplier;
 @Recorder
 public class EntityViewRecorder {
 
-    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String persistenceUnitName) {
+    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String blazePersistenceInstanceName, String persistenceUnitName) {
         return () -> {
             CriteriaBuilderConfiguration criteriaBuilderConfiguration = Criteria.getDefault();
             blazePersistenceConfig.apply(criteriaBuilderConfiguration);
+            Annotation[] cbfQualifiers;
+            if (BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(blazePersistenceInstanceName)) {
+                cbfQualifiers = new Annotation[] { new Default.Literal() };
+            } else {
+                cbfQualifiers = new Annotation[] { new BlazePersistenceInstance.BlazePersistenceInstanceLiteral(blazePersistenceInstanceName) };
+            }
+
+            Arc.container().beanManager().fireEvent(criteriaBuilderConfiguration, cbfQualifiers);
             EntityManagerFactory emf = Arc.container().instance(JPAConfig.class, new Annotation[0]).get().getEntityManagerFactory(persistenceUnitName);
             return criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
         };

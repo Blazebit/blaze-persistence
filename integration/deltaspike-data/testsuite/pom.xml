@@ -1227,7 +1227,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -1327,7 +1327,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -2163,11 +2163,11 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -2179,7 +2179,7 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>${version.hibernate-5.4}</version>
+                    <version>${version.hibernate-5.6}</version>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
@@ -2229,7 +2229,7 @@
                             <dependency>
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate-5.4}</version>
+                                <version>${version.hibernate-5.6}</version>
                             </dependency>
                             <dependency>
                                 <groupId>${project.groupId}</groupId>
