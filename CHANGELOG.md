@@ -12,11 +12,11 @@ Not yet released
 
 ### Bug fixes
 
-* None yet
+* Fix dev UI support for Quarkus 2
 
 ### Backwards-incompatible changes
 
-* None yet
+* Throw exception if non-streaming capable object builder is used for streaming
 
 ## 1.6.4
 
