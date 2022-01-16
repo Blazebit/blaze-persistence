@@ -258,7 +258,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
             if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
                 boolean nonConstantParent = true;
-                Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
                 if (constantifiedAttributes != null) {
                     Map<String, Boolean> orderedAttributes = new HashMap<>();
                     addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attribute, orderedAttributes);

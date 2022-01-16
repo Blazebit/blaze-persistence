@@ -15,6 +15,7 @@ Not yet released
 
 * Fix dev UI support for Quarkus 2
 * Fix support for non-public `@PostLoad` methods in entity view annotation processor
+* Fix lookup of constantified attributes in functional dependency analysis
 
 ### Backwards-incompatible changes
 
