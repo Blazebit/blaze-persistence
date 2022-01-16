@@ -13,6 +13,7 @@ Not yet released
 ### Bug fixes
 
 * Fix dev UI support for Quarkus 2
+* Fix support for non-public `@PostLoad` methods in entity view annotation processor
 
 ### Backwards-incompatible changes
 
