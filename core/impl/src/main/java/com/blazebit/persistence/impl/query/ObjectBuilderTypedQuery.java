@@ -82,11 +82,17 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
         return resultStream.map(new Function<X, X>() {
             @Override
             public X apply(X tuple) {
+                Object[] array;
                 if (tuple instanceof Object[]) {
-                    return builder.build((Object[]) tuple);
+                    array = (Object[]) tuple;
                 } else {
-                    return builder.build(new Object[]{tuple});
+                    array = new Object[]{tuple};
                 }
+                X result = builder.build(array);
+                if (result == array) {
+                    throw new UnsupportedOperationException("Object builder is not streaming capable: " + builder);
+                }
+                return result;
             }
         }).onClose(new Runnable() {
             @Override
