@@ -17,6 +17,7 @@
 package com.blazebit.persistence.integration.hibernate;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -67,6 +68,13 @@ public class CustomMultiTableBulkIdStrategy implements MultiTableBulkIdStrategy 
     @Override
     public DeleteHandler buildDeleteHandler(SessionFactoryImplementor factory, HqlSqlWalker walker) {
         return delegate.buildDeleteHandler(factory, walker);
+    }
+
+    public void prepare(JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess, MetadataImplementor metadata, SessionFactoryOptions sessionFactoryOptions) {
+        final SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromExplicit(
+                jdbcServices.getJdbcEnvironment(), metadata.getDatabase(),
+                sessionFactoryOptions.getDefaultCatalog(), sessionFactoryOptions.getDefaultSchema());
+        delegate.prepare(jdbcServices, connectionAccess, metadata, sessionFactoryOptions, sqlStringGenerationContext);
     }
 
     @Override
