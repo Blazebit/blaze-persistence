@@ -18,6 +18,7 @@ package com.blazebit.persistence.integration.quarkus.deployment;
 
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceConfiguration;
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceHibernateOrmIntegrationStaticInitListener;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceConfiguration;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceUtil;
@@ -38,6 +39,7 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.hibernate.orm.deployment.AdditionalJpaModelBuildItem;
 import io.quarkus.hibernate.orm.deployment.PersistenceUnitDescriptorBuildItem;
+import io.quarkus.hibernate.orm.deployment.integration.HibernateOrmIntegrationStaticConfiguredBuildItem;
 import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import org.jboss.jandex.AnnotationInstance;
@@ -95,6 +97,13 @@ class BlazePersistenceProcessor {
     @BuildStep
     AdditionalIndexedClassesBuildItem addBlazePersistenceInstanceAnnotationToIndex() {
         return new AdditionalIndexedClassesBuildItem(BlazePersistenceInstance.class.getName());
+    }
+
+    @BuildStep
+    void addBlazePersistenceIntegrationDescriptor(List<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors, BuildProducer<HibernateOrmIntegrationStaticConfiguredBuildItem> staticConfiguredBuildItemBuildProducer) {
+        for (PersistenceUnitDescriptorBuildItem persistenceUnitDescriptor : persistenceUnitDescriptors) {
+            staticConfiguredBuildItemBuildProducer.produce(new HibernateOrmIntegrationStaticConfiguredBuildItem(FEATURE, persistenceUnitDescriptor.getPersistenceUnitName()).setInitListener(new BlazePersistenceHibernateOrmIntegrationStaticInitListener()));
+        }
     }
 
     @BuildStep
