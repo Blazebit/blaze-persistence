@@ -50,6 +50,7 @@ public class ProcessorTest {
         Assert.assertEquals(1, obj.getId());
         Assert.assertEquals("Test", obj.getName());
         Assert.assertEquals("Test", obj.getCapturedName());
+        Assert.assertEquals("Test", obj.getPostLoadName());
     }
 
     private Compilation test(Class<?>... views) {

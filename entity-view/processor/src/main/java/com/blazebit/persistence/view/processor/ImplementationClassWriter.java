@@ -1874,7 +1874,7 @@ public final class ImplementationClassWriter {
                 sb.append("    private static final ").append(entity.implementationImportType(Method.class.getName())).append(" $$_post_load;").append(NEW_LINE);
                 sb.append("    static {").append(NEW_LINE);
                 sb.append("        try {").append(NEW_LINE);
-                sb.append("            Method m = ").append(entity.implementationImportType(declaringType.getQualifiedName().toString())).append(".class.getDeclaredMethod(\"").append(entity.getPostCreate().getSimpleName()).append("\"");
+                sb.append("            Method m = ").append(entity.implementationImportType(declaringType.getQualifiedName().toString())).append(".class.getDeclaredMethod(\"").append(entity.getPostLoad().getSimpleName()).append("\"");
                 if (!entity.getPostLoad().getParameters().isEmpty()) {
                     for (VariableElement parameter : entity.getPostLoad().getParameters()) {
                         sb.append(", ").append(entity.implementationImportType(parameter.asType().toString())).append(".class");
@@ -1882,7 +1882,7 @@ public final class ImplementationClassWriter {
                 }
                 sb.append(");").append(NEW_LINE);
                 sb.append("            m.setAccessible(true);").append(NEW_LINE);
-                sb.append("            $$_post_create = m;").append(NEW_LINE);
+                sb.append("            $$_post_load = m;").append(NEW_LINE);
                 sb.append("        } catch (Exception ex) {").append(NEW_LINE);
                 sb.append("            throw new RuntimeException(\"Could not initialize post construct accessor!\", ex);").append(NEW_LINE);
                 sb.append("        }").append(NEW_LINE);
