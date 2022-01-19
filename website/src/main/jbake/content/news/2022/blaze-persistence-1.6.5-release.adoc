@@ -16,9 +16,9 @@ We are happy to announce the fifth bug fix release of the 1.6 series.
 Hibernate ORM 5.6.2.Final unfortunately changed SPIs in a backwards incompatible way which was only fixed with the recently released version 5.6.4.Final.
 To leverage the new SPI methods we had to create a new integration module specific for Hibernate 5.6 though.
 
-So with this version, Blaze-Persistence now also comes with explicit integration modules for 5.5 and 5.6:
+So with this version, Blaze-Persistence now also comes with explicit integration modules for 5.5 and 5.6:+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
 
-[source,java]
+[source,xml]
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
@@ -34,7 +34,7 @@ So with this version, Blaze-Persistence now also comes with explicit integration
 
 or if you are still working with Java EE APIs:
 
-[source,java]
+[source,xml]
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
