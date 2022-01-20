@@ -370,28 +370,30 @@ class BlazePersistenceProcessor {
     ServiceProviderBuildItem hibernateMetadataContributor() {
         return new ServiceProviderBuildItem("org.hibernate.boot.spi.MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate5MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate52MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate53MetadataContributor",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateTypeContributor() {
         return new ServiceProviderBuildItem("org.hibernate.metamodel.spi.TypeContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate4Integrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate43Integrator");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53Integrator",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56Integrator");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateAccess() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.integration.hibernate.base.HibernateAccess",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53Access");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53Access",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56Access");
     }
 
     @BuildStep
     ServiceProviderBuildItem entityManagerFactoryIntegrator() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.spi.EntityManagerFactoryIntegrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53EntityManagerFactoryIntegrator");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53EntityManagerFactoryIntegrator",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56EntityManagerFactoryIntegrator");
     }
 
     @BuildStep
