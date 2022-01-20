@@ -2,4 +2,4 @@
 set -e
 
 PROJECT_LIST=integration/quarkus/deployment,examples/quarkus/testsuite/base,examples/quarkus/testsuite/native/h2
-mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus=${QUARKUS_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"spring-data-1.11.x" -P"deltaspike-1.7" --projects $PROJECT_LIST -am
+mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus=${QUARKUS_VERSION} -Dquarkus.native.container-build=true -Dquarkus.hibernate.version=5.6 -Pnative -Ph2 -P"spring-data-1.11.x" -P"deltaspike-1.7" --projects $PROJECT_LIST -am
