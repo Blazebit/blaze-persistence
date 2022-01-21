@@ -137,7 +137,7 @@
         <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
         <asmVersion>9.1</asmVersion>
 
-        <version.h2>1.4.200</version.h2>
+        <version.h2>2.1.210</version.h2>
         <mssql.version>7.2.2.jre8</mssql.version>
 
         <!-- JVM values for surefire plugin -->
