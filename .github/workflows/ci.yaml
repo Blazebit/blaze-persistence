@@ -486,10 +486,10 @@ jobs:
             deltaspike: deltaspike-1.9
             spring-data: spring-data-2.5.x
           - rdbms: h2
-            provider: hibernate-5.2
+            provider: hibernate-5.6
             jdk: 17
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.5.x
+            spring-data: spring-data-2.6.x
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 11
