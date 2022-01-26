@@ -8,11 +8,12 @@ Not yet released
 
 ### New features
 
-None yet
+* Support Spring Boot/Data 2.6
 
 ### Bug fixes
 
-None yet
+* Fix issues in Quarkus integration preventing the use of the Hibernate 5.6 integration in native mode
+* Fix boot issue when model contains an association to an entity type that has an id class
 
 ### Backwards-incompatible changes
 
