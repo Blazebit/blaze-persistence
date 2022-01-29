@@ -31,7 +31,7 @@
     
     <properties>
         <version.asciidoctor>1.6.0-alpha.7</version.asciidoctor>
-        <stable.version>1.6.5</stable.version>
+        <stable.version>1.6.6</stable.version>
         <series.version>1.6</series.version>
     </properties>
 

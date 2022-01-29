@@ -1,0 +1,35 @@
+= Blaze-Persistence 1.6.6 Release
+Christian Beikov
+2022-01-19 0
+:description: Blaze-Persistence version 1.6.6 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the sixth bug fix release of the 1.6 series.
+
+=== Quarkus integration with Hibernate 5.6 native image fixes
+
+In the last release we introduced a dedicated integration module for Hibernate 5.6 because version 5.6.2.Final changed some SPIs that we relied on in a way that required a new integration module.
+Due to earlier test failures because of the Hibernate version update in Quarkus latest, we didn't immediately realize that there was an issue with the reflection registration in native mode with the new integration.
+
+This release fixes the missing reflection registrations in the Quarkus integration.+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+
+=== Spring Boot/Data 2.6 and HATEOAS
+
+Thanks to https://github.com/ask4gilles[Gilles Robert, window="_blank"] for making us aware of the fact that Spring Boot 2.6 updated the Spring HATEOAS version, which came with some changes that needed adaptions in the integration.
+While fixing the issue for the Spring HATEOAS integration, we also made sure to add a test profile for Spring Boot/Data 2.6 and can now say with confidence, that version 2.6 is supported.
+
+=== Blaze-Persistence coming to Apiman
+
+https://github.com/msavy[Marc Savy, window="_blank"] announced within a bug report that the next version of the Apiman project will switch from the JPA Criteria API to Blaze-Persistence for some queries.
+From what I understand, the great support for keyset pagination and the fluent API which makes queries understandable for a wider audience are the major driving factors for this decision.
+
+With this release, the blocker issue Marc ran into was fixed and so we welcome the Apiman team to the Blaze-Persistence community!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#166[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
