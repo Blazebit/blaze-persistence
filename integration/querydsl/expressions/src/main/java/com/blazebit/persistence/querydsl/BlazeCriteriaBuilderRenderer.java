@@ -124,7 +124,9 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
     public Queryable<T, ?> render(Expression<?> expression) {
         this.criteriaBuilder = (CriteriaBuilder) criteriaBuilderFactory.create(entityManager, Object.class);
-        return (Queryable<T, ?>) serializeSubQuery(this.criteriaBuilder, expression);
+        Object output = serializeSubQuery(this.criteriaBuilder, expression);
+        renderConstants((ParameterHolder<?>) output);
+        return (Queryable<T, ?>) output;
     }
 
     private Object serializeSubQuery(Object criteriaBuilder, Expression<?> expression) {
@@ -324,7 +326,6 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
                 renderOrderBy(subQueryMetadata, (OrderByBuilder<?>) criteriaBuilder);
                 renderParameters(subQueryMetadata, (ParameterHolder<?>) criteriaBuilder);
-                renderConstants((ParameterHolder<?>) criteriaBuilder);
 
                 // Limit / offset on full query is set outside of the renderer, based on whether we're rendering a full count query or not
                 if (!(criteriaBuilder instanceof Queryable)) {

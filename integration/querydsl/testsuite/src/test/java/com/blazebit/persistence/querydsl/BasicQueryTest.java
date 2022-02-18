@@ -119,6 +119,20 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSubqueryInCase() {
+        doInJPA(em -> {
+
+            BlazeJPAQuery<Boolean> select = new BlazeJPAQuery<>(em, cbf)
+                    .from(document)
+                    .select(Expressions.cases().when(
+                            selectFrom(person).where(person.id.eq(1L)).exists()
+                    ).then(true).otherwise(false));
+
+            assertNotNull(select.getQueryString());
+        });
+    }
+
+    @Test
     public void testFetchResults() {
         doInJPA(em -> {
             QueryResults<Person> personQueryResults = new BlazeJPAQuery<>(em, cbf)
