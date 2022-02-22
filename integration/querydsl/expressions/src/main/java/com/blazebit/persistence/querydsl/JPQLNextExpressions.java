@@ -32,6 +32,7 @@ import com.querydsl.core.types.dsl.DateExpression;
 import com.querydsl.core.types.dsl.DateTimeExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.SimpleOperation;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLOps;
@@ -1122,7 +1123,7 @@ public class JPQLNextExpressions {
      * @param <T> Expression type
      * @return The treated expression
      */
-    public static <T> Expression<T> treat(Class<T> result, Expression<?> expression) {
+    public static <T> SimpleOperation<T> treat(Class<T> result, Expression<?> expression) {
         if (Boolean.class.equals(result) || boolean.class.equals(result)) {
             return Expressions.simpleOperation(result, JPQLNextOps.TREAT_BOOLEAN, expression);
         } else if (Byte.class.equals(result) || byte.class.equals(result)) {
