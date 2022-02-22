@@ -43,7 +43,9 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.group.GroupBy;
 import com.querydsl.core.types.SubQueryExpression;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.Param;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPQLQuery;
@@ -215,6 +217,23 @@ public class BasicQueryTest extends AbstractCoreTest {
 
             assertEquals(1L, totalCount);
         });
+    }
+
+    @Test
+    public void testModuloLongOperation() {
+        doInJPA(em -> {
+            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person, person)
+                    .where(bitwiseAndLong(person.id, 1L));
+
+            assertNotNull(query.fetchResults());
+        });
+    }
+
+    public static BooleanExpression bitwiseAndLong(NumberExpression<Long> expression, long bit) {
+        NumberExpression<Long> mod = expression.divide(1L << bit).floor().mod(2L);
+        return mod.eq(1L);
     }
 
     @Test

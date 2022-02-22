@@ -20,6 +20,7 @@ import com.querydsl.core.QueryMetadata;
 import com.querydsl.core.support.SerializerBase;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Operator;
+import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.SubQueryExpression;
 import com.querydsl.jpa.JPQLOps;
 import com.querydsl.jpa.JPQLSerializer;
@@ -90,18 +91,32 @@ public class JPQLNextSerializer extends JPQLSerializer {
 
     @Override
     protected void visitOperation(Class<?> type, Operator operator, List<? extends Expression<?>> args) {
-        // JPQLSerializer replaces NUMCAST with CAST, which JPQL.Next actually doesn't support
-        // JPQL.Next has its own CAST functions however, so use these if they can be found instead.
+        boolean wrapInParens = false;
+
         if (operator == JPQLOps.CAST) {
+            // JPQLSerializer replaces NUMCAST with CAST, which JPQL.Next actually doesn't support
+            // JPQL.Next has its own CAST functions however, so use these if they can be found instead.
             try {
                 operator = JPQLNextOps.valueOf("CAST_" + type.getSimpleName().toUpperCase());
                 args = args.subList(0, 1);
             } catch (IllegalArgumentException e) {
                 // no-op
             }
+        } else if (operator == Ops.MOD && type != Integer.class) {
+            // JPA enforces Integer as result for MOD, but Querydsl may expect any integer type.
+            append("TREAT_" + type.getSimpleName().toUpperCase());
+            wrapInParens = true;
+        }
+
+        if (wrapInParens) {
+            append("(");
         }
 
         super.visitOperation(type, operator, args);
+
+        if (wrapInParens) {
+            append(")");
+        }
     }
 
     /**
