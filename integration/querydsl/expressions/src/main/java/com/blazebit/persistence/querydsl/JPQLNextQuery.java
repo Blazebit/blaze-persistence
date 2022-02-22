@@ -396,6 +396,13 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      */
     Q lateral();
 
+    /**
+     * Mark the last join as a default join.
+     *
+     * @return this query
+     */
+    Q defaultJoin();
+
     // Covariant Overrides
 
     @Override

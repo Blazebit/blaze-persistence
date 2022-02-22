@@ -150,6 +150,53 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
+    @Test
+    public void testExplicitJoinFollowedByImplicitJoin() {
+        doInJPA(em -> {
+            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person.name, person.friend.name, person.friend.partnerDocument.name)
+                    .leftJoin(person.friend.partnerDocument);
+
+            String queryString = query.getQueryString();
+            // Note the implicit join and the generated join alias
+            assertEquals("SELECT person.name, friend_1.name, partnerDocument_1.name FROM Person person LEFT JOIN person.friend friend_1 LEFT JOIN friend_1.partnerDocument partnerDocument_1", queryString);
+        });
+    }
+
+    @Test
+    public void testExplicitJoinFollowedByImplicitJoin2() {
+        doInJPA(em -> {
+            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person.name, person.friend.name, person.friend.partnerDocument.name, person.friend.friend.name)
+                    .leftJoin(person.friend)
+                    .leftJoin(person.friend.partnerDocument)
+                    .leftJoin(person.friend.friend);
+
+            String queryString = query.getQueryString();
+            // Note the implicit join and the generated join alias
+            assertEquals("SELECT person.name, friend_1.name, partnerDocument_1.name, friend_4.name FROM Person person LEFT JOIN person.friend friend_1 LEFT JOIN friend_1.partnerDocument partnerDocument_1 LEFT JOIN friend_1.friend friend_4", queryString);
+        });
+    }
+
+    @Test
+    public void testExplicitJoinFollowedByImplicitJoin3() {
+        doInJPA(em -> {
+            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .select(person.name, person.friend.name, person.friend.partnerDocument.name, person.friend.friend.name)
+                    .leftJoin(person.friend)
+                    .leftJoin(person.friend.partnerDocument).on(Expressions.TRUE.eq(Expressions.TRUE))
+                    .leftJoin(person.friend.friend);
+
+            expectedException.expectMessage("This association join requires an alias, like so: .join(person.friend.partnerDocument, QDocument.partnerDocument)");
+
+            query.getQueryString();
+        });
+    }
+
+
     // NOTE: This requires advanced SQL support
     @Test
     @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
