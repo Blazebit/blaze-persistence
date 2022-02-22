@@ -1079,19 +1079,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     @SuppressWarnings("unchecked")
     private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
         prepareForModification(ClauseType.JOIN);
-        if (path == null) {
-            throw new NullPointerException("path");
-        }
-        if (alias == null) {
-            throw new NullPointerException("alias");
-        }
-        if (type == null) {
-            throw new NullPointerException("type");
-        }
-        if (alias.isEmpty()) {
-            throw new IllegalArgumentException("Empty alias");
-        }
-
+        checkJoinPreconditions(path, alias, type, defaultJoin);
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch, defaultJoin, null);
         return (X) this;

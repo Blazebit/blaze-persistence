@@ -475,10 +475,13 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 }
             } else if (target instanceof Path<?>) {
                 Path<?> entityPath = (Path<?>) target;
-                if (alias == null) {
-                    alias = entityPath.getMetadata().getName();
-                }
                 boolean entityJoin = entityPath.getMetadata().isRoot();
+                String renderedExpression = renderExpression(entityPath);
+
+                // While this looks suspicious, this is actually in line with Querydsl's default behaviour in JPQLSerializer.handleJoinTarget
+                if (alias == null && entityJoin) {
+                    alias = renderedExpression;
+                }
 
                 switch (joinExpression.getType()) {
                     case DEFAULT:
@@ -499,13 +502,12 @@ public class BlazeCriteriaBuilderRenderer<T> {
                         if (entityJoin) {
                             criteriaBuilder = fromBuilder.from(entityPath.getType(), alias);
                         } else {
-                            String collectionExpression = renderExpression(entityPath);
                             if (fromBuilder instanceof BaseSubqueryBuilder) {
-                                criteriaBuilder = (X) ((BaseSubqueryBuilder<?>) fromBuilder).from(collectionExpression, alias);
+                                criteriaBuilder = (X) ((BaseSubqueryBuilder<?>) fromBuilder).from(renderedExpression, alias);
                             } else if (fromBuilder instanceof SubqueryInitiator<?>) {
-                                criteriaBuilder = (X) ((SubqueryInitiator<?>) fromBuilder).from(collectionExpression, alias);
+                                criteriaBuilder = (X) ((SubqueryInitiator<?>) fromBuilder).from(renderedExpression, alias);
                             } else {
-                                throw new IllegalArgumentException(collectionExpression + "  join not supported here");
+                                throw new IllegalArgumentException(renderedExpression + "  join not supported here");
                             }
                         }
 
@@ -524,13 +526,27 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(entityPath.getType(), alias, joinType);
                             setExpressionSubqueries(joinExpression.getCondition(), null, xJoinOnBuilder, JoinOnBuilderExpressionSetter.INSTANCE);
                         } else if (!hasCondition) {
+                            // If there is no alias, assume a default join
+                            boolean defaultJoin = alias == null || joinExpression.hasFlag(AbstractBlazeJPAQuery.DEFAULT);
+
                             if (fetch) {
-                                ((FullQueryBuilder<?, ?>) criteriaBuilder).joinDefault(renderExpression(entityPath), alias, joinType, fetch);
+                                if (defaultJoin) {
+                                    ((FullQueryBuilder<?, ?>) criteriaBuilder).joinDefault(renderedExpression, alias, joinType, fetch);
+                                } else {
+                                    ((FullQueryBuilder<?, ?>) criteriaBuilder).join(renderedExpression, alias, joinType, fetch);
+                                }
                             } else {
-                                criteriaBuilder.joinDefault(renderExpression(entityPath), alias, joinType);
+                                if (defaultJoin) {
+                                    criteriaBuilder.joinDefault(renderedExpression, alias, joinType);
+                                } else {
+                                    criteriaBuilder.join(renderedExpression, alias, joinType);
+                                }
                             }
                         } else {
-                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(renderExpression(entityPath), alias, joinType);
+                            if (alias == null) {
+                                throw new IllegalArgumentException("This association join requires an alias, like so: .join(" + renderedExpression + ", " + entityPath.getClass().getSimpleName() + "." + entityPath.getMetadata().getName() + ")");
+                            }
+                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(renderedExpression, alias, joinType);
                             setExpressionSubqueries(joinExpression.getCondition(), null, xJoinOnBuilder, JoinOnBuilderExpressionSetter.INSTANCE);
                         }
 

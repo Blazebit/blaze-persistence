@@ -3645,7 +3645,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             throw new ImplicitJoinNotAllowedException(baseNode, joinRelationAttributes, treatType);
         }
 
-        if (implicit) {
+        if (implicit || (defaultJoin && alias == null)) {
             String aliasToUse = alias == null ? attr.getName() : alias;
             alias = baseNode.getAliasInfo().getAliasOwner().generateJoinAlias(aliasToUse);
         }

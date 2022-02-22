@@ -74,6 +74,12 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
      */
     public static final JoinFlag LATERAL = new JoinFlag("LATERAL", JoinFlag.Position.BEFORE_TARGET);
 
+    /**
+     * Default join flag.
+     * Can be added using {@link QueryMetadata#addJoinFlag(JoinFlag)}.
+     */
+    public static final JoinFlag DEFAULT = new JoinFlag("DEFAULT");
+
     private static final Logger LOG = Logger.getLogger(AbstractBlazeJPAQuery.class.getName());
 
     private static final long serialVersionUID = 992291611132051622L;
@@ -85,23 +91,19 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     protected final Binds<T> binds = new Binds<>();
 
     public AbstractBlazeJPAQuery(CriteriaBuilderFactory criteriaBuilderFactory) {
-        super(null, JPQLNextTemplates.DEFAULT, new DefaultQueryMetadata());
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
+        this(null, JPQLNextTemplates.DEFAULT, new DefaultQueryMetadata(), criteriaBuilderFactory);
     }
 
     public AbstractBlazeJPAQuery(EntityManager em, CriteriaBuilderFactory criteriaBuilderFactory) {
-        super(em, JPQLNextTemplates.DEFAULT, new DefaultQueryMetadata());
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
+        this(em, JPQLNextTemplates.DEFAULT, new DefaultQueryMetadata(), criteriaBuilderFactory);
     }
 
     public AbstractBlazeJPAQuery(EntityManager em, QueryMetadata metadata, CriteriaBuilderFactory criteriaBuilderFactory) {
-        super(em, JPQLNextTemplates.DEFAULT, metadata);
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
+        this(em, JPQLNextTemplates.DEFAULT, metadata, criteriaBuilderFactory);
     }
 
     public AbstractBlazeJPAQuery(EntityManager em, JPQLTemplates templates, CriteriaBuilderFactory criteriaBuilderFactory) {
-        super(em, templates, new DefaultQueryMetadata());
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
+        this(em, templates, new DefaultQueryMetadata(), criteriaBuilderFactory);
     }
 
     public AbstractBlazeJPAQuery(EntityManager em, JPQLTemplates templates, QueryMetadata metadata, CriteriaBuilderFactory criteriaBuilderFactory) {
@@ -394,6 +396,11 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     @Override
     public Q lateral() {
         return queryMixin.addJoinFlag(LATERAL);
+    }
+
+    @Override
+    public Q defaultJoin() {
+        return queryMixin.addJoinFlag(DEFAULT);
     }
 
     @Override
