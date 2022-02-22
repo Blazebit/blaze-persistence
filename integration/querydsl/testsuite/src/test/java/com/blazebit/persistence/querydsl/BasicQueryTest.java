@@ -543,6 +543,21 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testCTEClone() {
+        doInJPA(entityManager -> {
+            BlazeJPAQuery<Long> from = new BlazeJPAQuery<Document>(entityManager, cbf)
+                    .with(idHolderCTE, new BlazeJPAQuery<>().bind(idHolderCTE.id, document.id).from(document))
+                    .select(idHolderCTE.id).from(idHolderCTE);
+            BlazeJPAQuery<Long> clone = from
+                    .clone();
+
+            assertNotNull(clone);
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})

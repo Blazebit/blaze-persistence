@@ -34,6 +34,7 @@ import com.querydsl.core.types.CollectionExpression;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.FactoryExpression;
 import com.querydsl.core.types.MapExpression;
 import com.querydsl.core.types.Operation;
 import com.querydsl.core.types.Path;
@@ -248,7 +249,7 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
     protected void clone(Q query) {
         super.clone(query);
         this.cacheable = query.cacheable;
-        this.binds.addBinds(((Operation) query.binds.accept(new ReplaceVisitor<Void>(), null)).getArgs());
+        this.binds.addBinds(((FactoryExpression) query.binds.accept(new ReplaceVisitor<Void>(), null)).getArgs());
     }
 
     // Work around private access to query(...)
