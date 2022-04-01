@@ -332,7 +332,9 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 sbSelectFrom.append(" FROM ");
             } else {
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(CountWrapperFunction.FUNCTION_NAME, 1));
-                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+                if (!mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                    sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+                }
 
                 for (int i = 0; i < entityFunctionNodes.size(); i++) {
                     sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(EntityFunction.FUNCTION_NAME, 1));
@@ -386,10 +388,13 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             if (externalRepresentation) {
                 sbSelectFrom.append(" LIMIT ").append(maximumCount).append(')');
             } else {
-                if (!mainQuery.dbmsDialect.supportsLimitWithoutOrderBy()) {
+                if (!mainQuery.dbmsDialect.supportsLimitWithoutOrderBy() || mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
                     sbSelectFrom.append(" ORDER BY ");
                     sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(NullSubqueryFunction.FUNCTION_NAME, 0));
                     sbSelectFrom.append(')');
+                }
+                if (mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                    sbSelectFrom.append(" LIMIT ").append(maximumCount);
                 }
                 // Close subquery
                 sbSelectFrom.append(')');
@@ -397,7 +402,9 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 finishEntityFunctionNodes(sbSelectFrom, entityFunctionNodes);
 
                 // Limit
-                sbSelectFrom.append(", ").append(maximumCount).append(")");
+                if (!mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                    sbSelectFrom.append(", ").append(maximumCount).append(")");
+                }
                 // Count wrapper
                 sbSelectFrom.append(")");
 
@@ -694,11 +701,11 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             limit = Integer.toString(maxResults);
         }
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, COUNT_QUERY_CLAUSE_EXCLUSIONS);
-        List<EntityFunctionNode> entityFunctionNodes;
+        List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
         if (dualNode == null) {
-            entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions);
+            collectEntityFunctionNodes(entityFunctionNodes, baseQuery, entityFunctions);
         } else {
-            entityFunctionNodes = getEntityFunctionNodes(baseQuery, entityFunctions, Collections.<JoinNode>emptyList(), false);
+            collectEntityFunctionNodes(entityFunctionNodes, baseQuery, entityFunctions, Collections.<JoinNode>emptyList(), false, 0);
         }
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;

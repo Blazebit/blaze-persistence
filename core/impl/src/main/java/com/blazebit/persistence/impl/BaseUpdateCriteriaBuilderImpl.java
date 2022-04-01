@@ -397,7 +397,7 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 int tableStartIndex = fromIndex + SqlUtils.FROM.length();
                 int tableEndIndex = sql.indexOf(" ", tableStartIndex);
                 tableToUpdate = sql.substring(tableStartIndex, tableEndIndex);
-                tableAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
+                tableAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias, 0);
 
                 for (String idColumn : idColumns) {
                     aliasMapping.put(tableAlias + "." + idColumn, "tmp.c" + aliasMapping.size());
@@ -463,7 +463,9 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
         return Arrays.asList(SqlUtils.getSelectItems(sql, 0, new SqlUtils.SelectItemExtractor() {
             @Override
             public String extract(StringBuilder sb, int index, int currentPosition) {
-                return sb.substring(sb.indexOf(".") + 1, sb.indexOf(" ")).trim();
+                int whiteSpaceIndex = sb.indexOf(" ");
+                int endIndex = whiteSpaceIndex == -1 ? sb.length() : whiteSpaceIndex;
+                return sb.substring(sb.indexOf(".") + 1, endIndex).trim();
             }
         }));
     }

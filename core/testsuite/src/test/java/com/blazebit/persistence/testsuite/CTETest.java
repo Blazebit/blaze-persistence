@@ -472,7 +472,7 @@ public class CTETest extends AbstractCoreTest {
                 + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t JOIN RecursiveEntity e" + onClause("t.id = e.parent.id")
                 + "\n)\n"
                 + "SELECT r.name, children_1.name, (" + expectedSimpleCountQuery + ") FROM RecursiveEntity r LEFT JOIN r.children children_1" +
-                " WHERE r.id IN (" + function("limit", "(" + expectedSimpleIdQuery + ")", "2") + ")" +
+                " WHERE r.id IN (" + expectedSimpleIdQuery + " LIMIT 2)" +
                 " ORDER BY r.id ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
@@ -569,7 +569,7 @@ public class CTETest extends AbstractCoreTest {
                 + "\nUNION ALL\n"
                 + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t JOIN RecursiveEntity e" + onClause("t.id = e.parent.id")
                 + "\n)\n"
-                + "SELECT r.name, children_1.name, (" + expectedSimpleCountQuery + ") FROM RecursiveEntity r LEFT JOIN r.children children_1 JOIN TestCTE t" + onClause("r.id = t.id AND t.level < 2") + " WHERE r.id IN (" + function("limit", "(" + expectedSimpleIdQuery + ")", "2") + ")"
+                + "SELECT r.name, children_1.name, (" + expectedSimpleCountQuery + ") FROM RecursiveEntity r LEFT JOIN r.children children_1 JOIN TestCTE t" + onClause("r.id = t.id AND t.level < 2") + " WHERE r.id IN (" + expectedSimpleIdQuery + " LIMIT 2)"
                 + " ORDER BY r.id ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());

@@ -31,6 +31,7 @@ import javax.persistence.Table;
 import javax.persistence.metamodel.EntityType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -56,7 +57,9 @@ public class EnversTest extends AbstractCoreTest {
         EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
         EntityType<?> auditedEntity = getAuditedEntity(metamodel, A.class);
 
-        assertNull(auditedEntity.getJavaType());
+        if (auditedEntity.getJavaType() != Map.class) {
+            assertNull(auditedEntity.getJavaType());
+        }
         assertNotNull(auditedEntity.getAttribute("originalId"));
         List<String> resultList = cbf.create(em, String.class)
                 .from(auditedEntity, "ent")

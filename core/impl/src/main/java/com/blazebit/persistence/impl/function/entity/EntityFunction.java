@@ -31,7 +31,8 @@ public class EntityFunction implements JpqlFunction {
     public static final String FUNCTION_NAME = "entity_function";
     public static final String MARKER_PREDICATE = "999=999";
     private static final String AND_MARKER = " and " + MARKER_PREDICATE;
-    private static final String NULL_IS_NULL = "(null is null)";
+    private static final String NULL_IS_NULL = "null is null";
+    private static final String NULL_IS_NULL_IN_PARENTHESIS = "(null is null)";
     private static final String AND_TOKEN = " and ";
     private static final String AND_PARENTHESIS_TOKEN = " and (";
     private static final String WHERE_TOKEN = " where ";
@@ -67,6 +68,8 @@ public class EntityFunction implements JpqlFunction {
         int subqueryEndIndex = subquery.lastIndexOf(AND_MARKER);
         if (subquery.regionMatches(subqueryEndIndex - NULL_IS_NULL.length(), NULL_IS_NULL, 0, NULL_IS_NULL.length())) {
             subqueryEndIndex -= NULL_IS_NULL.length();
+        } else if (subquery.regionMatches(subqueryEndIndex - NULL_IS_NULL_IN_PARENTHESIS.length(), NULL_IS_NULL_IN_PARENTHESIS, 0, NULL_IS_NULL_IN_PARENTHESIS.length())) {
+            subqueryEndIndex -= NULL_IS_NULL_IN_PARENTHESIS.length();
         }
         int aliasEndIndex = subquery.indexOf('.', subqueryEndIndex) ;
         int aliasStartIndex = aliasEndIndex - 1;
@@ -182,6 +185,8 @@ public class EntityFunction implements JpqlFunction {
             int subqueryEndIndex = sqlQuery.lastIndexOf(NULL_IS_NULL, markerIndex);
             if (subqueryEndIndex == -1) {
                 subqueryEndIndex = markerIndex;
+            } else if (sqlQuery.charAt(subqueryEndIndex - 1) == '(' && sqlQuery.charAt(subqueryEndIndex + NULL_IS_NULL.length()) == ')') {
+                subqueryEndIndex--;
             }
             int[] range = removeSyntheticPredicate(sqlQuery, markerIndex, sqlQuery.length());
             // Remove a possible leftover connector predicate
@@ -221,6 +226,8 @@ public class EntityFunction implements JpqlFunction {
         int subqueryEndIndex = sb.lastIndexOf(NULL_IS_NULL, markerIndex);
         if (subqueryEndIndex == -1) {
             subqueryEndIndex = markerIndex;
+        } else if (sb.charAt(subqueryEndIndex - 1) == '(' && sb.charAt(subqueryEndIndex + NULL_IS_NULL.length()) == ')') {
+            subqueryEndIndex--;
         }
         int[] range = removeSyntheticPredicate(sb, subqueryEndIndex, end);
         sb.replace(subqueryEndIndex, range[0], "");

@@ -121,7 +121,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                 for (int i = 0; i < orderByExpressions.size(); i++) {
                     OrderByExpression orderByExpression = orderByExpressions.get(i);
 
-                    sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
+                    sb.append(",CASE WHEN 1=NULLIF(1,1) AND ");
                     if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
                         // Placeholder is needed as we need to render the parameter at the end to retain JDBC parameter order
                         sb.append("1=NULLIF(1,1)");
@@ -130,18 +130,18 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
                         sb.append('=');
                         queryGenerator.generate(orderByExpression.getExpression());
                     }
-                    sb.append(") THEN 1 ELSE 0 END");
+                    sb.append(" THEN 1 ELSE 0 END");
                 }
                 // We have to render right hand side parameters at the end to retain the correct order
                 for (int i = 0; i < orderByExpressions.size(); i++) {
                     OrderByExpression orderByExpression = orderByExpressions.get(i);
 
                     if (orderByExpression.isDescending() && keysetMode != KeysetMode.PREVIOUS || orderByExpression.isAscending() && keysetMode == KeysetMode.PREVIOUS) {
-                        sb.append(",CASE WHEN (1=NULLIF(1,1) AND ");
+                        sb.append(",CASE WHEN 1=NULLIF(1,1) AND ");
                         queryGenerator.generate(orderByExpression.getExpression());
                         sb.append('=');
                         applyKeysetParameter(sb, i, key[i], positionalOffset);
-                        sb.append(") THEN 1 ELSE 0 END");
+                        sb.append(" THEN 1 ELSE 0 END");
                     }
                 }
 

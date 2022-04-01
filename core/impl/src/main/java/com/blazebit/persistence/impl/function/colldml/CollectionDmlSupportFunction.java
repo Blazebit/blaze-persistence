@@ -44,7 +44,7 @@ public class CollectionDmlSupportFunction implements JpqlFunction {
     @Override
     public void render(FunctionRenderContext context) {
         if (context.getArgumentsSize() != 1) {
-            throw new RuntimeException("The chr function needs one argument <bytes>! args=" + context);
+            throw new RuntimeException("The collection_dml_support function needs one argument <arg>! args=" + context);
         }
         context.addChunk("collection_dml_support(");
         context.addArgument(0);

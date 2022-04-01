@@ -397,6 +397,15 @@ public interface DbmsDialect {
     public ValuesStrategy getValuesStrategy();
 
     /**
+     * Returns whether select items need to have unique names even though table column aliasing is used
+     * i.e. `from (select ...) t(c1,c2)`.
+     *
+     * @return True if aliasing is required, otherwise false
+     * @since 1.6.7
+     */
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing();
+
+    /**
      * Returns whether parameters need to be casted if occurring in an untyped context like e.g. VALUES clause.
      *
      * @return True if casting is required, otherwise false

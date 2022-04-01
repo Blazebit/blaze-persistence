@@ -68,12 +68,16 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
         this.endSetResult = endSetResult;
         this.setOperationManager = new SetOperationManager(operator, nested);
         this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
+        this.nodesToFetch = Collections.emptySet();
+        this.needsCheck = false;
     }
 
     public BaseFinalSetOperationBuilderImpl(BaseFinalSetOperationBuilderImpl<T, X, Y> builder, MainQuery mainQuery, QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         super(builder, mainQuery, queryContext, joinManagerMapping, copyContext);
         this.setOperationManager = new SetOperationManager(builder.setOperationManager, queryContext, joinManagerMapping, copyContext);
         this.orderByElements = new ArrayList<>(builder.orderByElements);
+        this.nodesToFetch = Collections.emptySet();
+        this.needsCheck = false;
     }
 
     @Override
@@ -183,8 +187,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected void prepareAndCheck() {
-        // nothing to do here, except setting this to non-null to avoid exceptions
-        this.nodesToFetch = Collections.emptySet();
+        // nothing to do here
     }
 
     public void verifyBuilderEnded(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> currentBuilder) {
@@ -266,7 +269,11 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation, JoinNode lateralJoinNode, boolean countWrapped) {
+        boolean hasOrderByOrLimit = !orderByElements.isEmpty() || hasLimit();
         boolean nested = isNestedAndComplex(setOperationManager.getStartQueryBuilder());
+        if (hasOrderByOrLimit) {
+            sbSelectFrom.append('(');
+        }
         if (nested) {
             sbSelectFrom.append('(');
         }
@@ -295,9 +302,14 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
                     sbSelectFrom.append(')');
                 }
             }
-            
-            applySetOrderBy(sbSelectFrom);
-            applyJpaLimit(sbSelectFrom);
+
+            if (hasOrderByOrLimit) {
+                sbSelectFrom.append(')');
+                applySetOrderBy(sbSelectFrom);
+                if (!isMainQuery) {
+                    applyJpaLimit(sbSelectFrom);
+                }
+            }
         }
     }
     
@@ -337,6 +349,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     protected TypedQuery<T> getTypedQuery(StringBuilder lateralSb, JoinNode lateralJoinNode) {
         if (lateralSb != null) {
             throw new IllegalStateException("Lateral join with set operations is not yet supported!");
+        }
+        if (mainQuery.jpaProvider.supportsSetOperations()) {
+            return super.getTypedQuery(lateralSb, lateralJoinNode);
         }
         Set<String> parameterListNames = new HashSet<String>();
         Query leftMostQuery = setOperationManager.getStartQueryBuilder().getTypedQueryForFinalOperationBuilder();
@@ -379,7 +394,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
         // Since this builder has no query of it's own, there can be no joins
         List<String> keyRestrictedLeftJoinAliases = Collections.emptyList();
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new SetOperationQuerySpecification(
@@ -427,7 +442,30 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
         return applyObjectBuilder(query);
     }
-    
+
+    @Override
+    protected boolean needsSqlReplacement(Set<JoinNode> keyRestrictedLeftJoins) {
+        if (setOperationManager.getStartQueryBuilder().needsSqlReplacement(setOperationManager.getStartQueryBuilder().getKeyRestrictedLeftJoins())) {
+            return true;
+        }
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperation : setOperationManager.getSetOperations()) {
+            if (setOperation.needsSqlReplacement(setOperation.getKeyRestrictedLeftJoins())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, int queryPartNumber) {
+        List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperations = setOperationManager.getSetOperations();
+        int offset = setOperationManager.getStartQueryBuilder().collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber);
+        for (int i = 0; i < setOperations.size(); i++) {
+            offset += setOperations.get(i).collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber + offset + i);
+        }
+        return offset;
+    }
+
     protected String getOperator(SetOperationType type) {
         switch (type) {
             case UNION: return "UNION";

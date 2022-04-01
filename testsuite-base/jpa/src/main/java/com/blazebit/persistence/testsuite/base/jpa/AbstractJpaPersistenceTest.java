@@ -528,6 +528,16 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected abstract boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined();
 
+    // Hibernate before 6 did not properly fetch elements of a natural id mapped collection
+    protected boolean supportsSingleStatementNaturalIdCollectionFetching() {
+        return false;
+    }
+
+    // As of Hibernate 6, we don't always need to join the element table
+    protected boolean supportsLazyCollectionElementJoin() {
+        return false;
+    }
+
     protected boolean supportsIndexedInplaceUpdate() {
         return false;
     }
@@ -749,7 +759,7 @@ public abstract class AbstractJpaPersistenceTest {
             if (enabled) {
                 for (QueryInfo q : list) {
                     String query = q.getQuery();
-                    if (collectSequences || (!query.contains("next_val") && !query.contains("nextval"))) {
+                    if (collectSequences || (!query.contains("next_val") && !query.contains("nextval") && !query.contains("next value for"))) {
                         EXECUTED_QUERIES.add(query);
                     }
                 }

@@ -175,7 +175,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         String expectedInlineObjectQuery = "SELECT e, e.id.key, e.id.value, (" + expectedCountQuery + ") FROM EmbeddableTestEntity e"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "e.id.key", "e.id.value", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
+                + " WHERE (e.id.key, e.id.value) IN (" + expectedIdQuery + " LIMIT 1)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
 
         PaginatedCriteriaBuilder<EmbeddableTestEntity> pcb = crit.page(null, 0, 1);
@@ -196,7 +196,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
         expectedIdQuery = "SELECT e.id.key, e.id.value FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_1"
-                + " WHERE " + function("compare_row_value", "'<'", "CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_0=e.id.key) THEN 1 ELSE 0 END,CASE WHEN (1=NULLIF(1,1) AND :_keysetParameter_1=e.id.value) THEN 1 ELSE 0 END") + " = 0"
+                + " WHERE " + function("compare_row_value", "'<'", "CASE WHEN 1=NULLIF(1,1) AND :_keysetParameter_0=e.id.key THEN 1 ELSE 0 END,CASE WHEN 1=NULLIF(1,1) AND :_keysetParameter_1=e.id.value THEN 1 ELSE 0 END") + " = 0"
                 + " AND " + joinAliasValue("elementCollection_1", "primaryName") + " = :param_0"
                 + " GROUP BY " + groupBy("e.id.key", "e.id.value")
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
@@ -205,7 +205,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         expectedInlineObjectQuery = "SELECT e, e.id.key, e.id.value, (" + expectedCountQuery + ") FROM EmbeddableTestEntity e"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "e.id.key", "e.id.value", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
+                + " WHERE (e.id.key, e.id.value) IN (" + expectedIdQuery + " LIMIT 1)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
@@ -240,7 +240,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         String expectedInlineObjectQuery = "SELECT e, (" + expectedCountQuery + ") FROM EmbeddableTestEntity e"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "e.id.key", "e.id.value", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
+                + " WHERE (e.id.key, e.id.value) IN (" + expectedIdQuery + " LIMIT 1)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         PaginatedCriteriaBuilder<EmbeddableTestEntity> pcb = crit.page(0, 1);
         assertEquals(expectedObjectQuery, pcb.withInlineIdQuery(false).withInlineCountQuery(false).getQueryString());
@@ -267,7 +267,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
                 + " WHERE (e.id.key = :ids_0_0 AND e.id.value = :ids_1_0)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         String expectedInlineObjectQuery = "SELECT e.id, elementCollection_1.primaryName, (" + expectedCountQuery + ") FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.elementCollection elementCollection_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "e.id.key", "e.id.value", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0"
+                + " WHERE (e.id.key, e.id.value) IN (" + expectedIdQuery + " LIMIT 1)"
                 + " ORDER BY e.id.key ASC, e.id.value ASC";
         assertEquals(expectedObjectQuery, pcb.withInlineIdQuery(false).withInlineCountQuery(false).getQueryString());
         if (dbmsDialect.supportsRowValueConstructor()) {

@@ -441,8 +441,8 @@ matrix:
 ################################################
 # hibernate-6.0
 ################################################
-#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
-#      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+      jdk: oraclejdk8
 
 # Add new certificates for JDK10
 # https://www.deps.co/guides/travis-ci-latest-java/

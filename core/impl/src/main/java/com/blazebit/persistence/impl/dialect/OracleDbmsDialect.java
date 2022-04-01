@@ -247,6 +247,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return false;
+    }
+
+    @Override
     public String getDummyTable() {
         return "dual";
     }

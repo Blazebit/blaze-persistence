@@ -114,6 +114,21 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
+    public boolean needsExampleQueryForAdvancedDml() {
+        return false;
+    }
+
+    @Override
+    public boolean applyFirstResultMaxResults(Query query, int firstResult, int maxResults) {
+//        boolean changed = firstResult == 0 && query.getFirstResult() != 0 || firstResult != 0 && query.getFirstResult() == 0
+//                || maxResults == Integer.MAX_VALUE && query.getMaxResults() != Integer.MAX_VALUE || maxResults != Integer.MAX_VALUE && query.getMaxResults() == Integer.MAX_VALUE;
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+        // Since getSqlContainsLimit returns false, we don't consider any limit/offset change as "dirty"
+        return false;
+    }
+
+    @Override
     public String getSql(EntityManager em, Query query) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
@@ -141,6 +156,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean getSqlContainsLimit() {
+        return false;
     }
 
     @Override
@@ -174,7 +194,17 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public String getSqlAlias(EntityManager em, Query query, String alias) {
+    public String getSqlAlias(EntityManager em, Query query, String alias, int queryPartNumber) {
+        FromElement fromElement = getSqlFromElement(em, query, alias, queryPartNumber);
+
+        if (fromElement == null) {
+            throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
+        }
+
+        return fromElement.getTableAlias();
+    }
+
+    private FromElement getSqlFromElement(EntityManager em, Query query, String alias, int queryPartNumber) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan plan = getOriginalQueryPlan(session, query);
         if (plan.getTranslators().length > 1) {
@@ -192,13 +222,36 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } else {
             queryNode = (QueryNode) statement.getNextSibling();
         }
-        FromElement fromElement = queryNode.getFromClause().getFromElement(alias);
+        return queryNode.getFromClause().getFromElement(alias);
+    }
+
+    @Override
+    public SqlFromInfo getSqlFromInfo(EntityManager em, Query query, String alias, int queryPartNumber) {
+        FromElement fromElement = getSqlFromElement(em, query, alias, queryPartNumber);
 
         if (fromElement == null) {
             throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
         }
-        
-        return fromElement.getTableAlias();
+        String sql = getSql(em, query);
+        final String text = fromElement.getText();
+        final String tableAlias = fromElement.getTableAlias();
+        final int startIndex = sql.indexOf(text);
+        return new SqlFromInfo() {
+            @Override
+            public String getAlias() {
+                return tableAlias;
+            }
+
+            @Override
+            public int getFromStartIndex() {
+                return startIndex;
+            }
+
+            @Override
+            public int getFromEndIndex() {
+                return startIndex + text.length();
+            }
+        };
     }
 
     @Override

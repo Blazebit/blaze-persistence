@@ -456,8 +456,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        assertEquals(0, (int) actual.get(0)); // Date is truncated anyway
-        assertEquals(c2.get(Calendar.SECOND), (int) actual.get(1));
+        assertEquals(0, actual.get(0, Number.class).intValue()); // Date is truncated anyway
+        assertEquals(c2.get(Calendar.SECOND), actual.get(1, Number.class).intValue());
     }
 
     @Test

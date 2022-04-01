@@ -108,7 +108,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Query query;
         
-        if (hasLimit() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty()) {
+        if (hasLimit() && !isMainQuery && !mainQuery.jpaProvider.supportsSubqueryLimitOffset() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty()) {
             // We need to change the underlying sql when doing a limit
             query = em.createQuery(baseQueryString);
 
@@ -118,18 +118,20 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
             // The main query will handle that separately
             if (!isMainQuery) {
-                if (firstResult != 0) {
-                    query.setFirstResult(firstResult);
-                    offset = Integer.toString(firstResult);
-                }
-                if (maxResults != Integer.MAX_VALUE) {
-                    query.setMaxResults(maxResults);
-                    limit = Integer.toString(maxResults);
+                if (!mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                    if (firstResult != 0) {
+                        query.setFirstResult(firstResult);
+                        offset = Integer.toString(firstResult);
+                    }
+                    if (maxResults != Integer.MAX_VALUE) {
+                        query.setMaxResults(maxResults);
+                        limit = Integer.toString(maxResults);
+                    }
                 }
             }
 
             List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
-            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query);
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, 0);
 
             QuerySpecification querySpecification = new CTEQuerySpecification(
                     this,

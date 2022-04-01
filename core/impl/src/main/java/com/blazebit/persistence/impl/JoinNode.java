@@ -941,7 +941,7 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             disallowedDeReferenceUsed = true;
         }
         // If we have a valuesTypeName, the property can only be "value" which is already handled in appendAlias
-        if (property != null && valuesTypeName == null) {
+        if (property != null && valuesTypeName == null && !property.equals(valuesLikeAttribute)) {
             if (requiresElementCollectionIdCutoff && parentTreeNode != null && parentTreeNode.getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION
                     && property.endsWith(".id")) {
                 // See https://hibernate.atlassian.net/browse/HHH-13045 for details

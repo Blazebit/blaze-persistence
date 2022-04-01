@@ -44,4 +44,25 @@
         <module>parser-jakarta</module>
         <module>impl-jakarta</module>
     </modules>
+    <profiles>
+        <profile>
+            <id>hibernate-6.0</id>
+            <modules>
+                <module>api</module>
+                <module>parser</module>
+                <module>impl</module>
+                <module>testsuite</module>
+
+                <module>api-jar</module>
+                <module>impl-jar</module>
+                <module>parser-jar</module>
+
+                <module>api-jakarta</module>
+                <module>parser-jakarta</module>
+                <module>impl-jakarta</module>
+                <module>testsuite-jakarta</module>
+                <module>testsuite-jakarta-runner</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

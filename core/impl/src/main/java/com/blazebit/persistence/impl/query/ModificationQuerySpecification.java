@@ -73,9 +73,10 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
 
     @Override
     public ModificationQueryPlan createModificationPlan(int firstResult, int maxResults) {
+        dirty = dirty | extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
         final String sql = getSql();
         final String finalSql;
-        if (firstResult != 0 || maxResults != Integer.MAX_VALUE) {
+        if (!extendedQuerySupport.getSqlContainsLimit() && (firstResult != 0 || maxResults != Integer.MAX_VALUE)) {
             DbmsLimitHandler limitHandler = dbmsDialect.createLimitHandler();
             finalSql = limitHandler.applySqlInlined(sql, false, maxResults, firstResult);
         } else {
@@ -94,6 +95,8 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
             throw new UnsupportedOperationException();
         }
 
+        dirty = dirty | extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(exampleQuery, firstResult, maxResults);
         final String sql = getSql();
         return new CustomReturningModificationQueryPlan(extendedQuerySupport, serviceProvider, baseQuery, exampleQuery, objectBuilder, participatingQueries, sql, firstResult, maxResults, returningColumns.length == 1 && objectBuilder != null, queryPlanCacheEnabled);
     }

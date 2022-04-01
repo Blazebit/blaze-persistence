@@ -16,21 +16,21 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
 public class Hibernate60SessionInvocationHandler implements InvocationHandler {
     
-    private final SessionImplementor delegate;
+    private final SharedSessionContractImplementor delegate;
     private final Object jdbcCoordinatorProxy;
 
-    public Hibernate60SessionInvocationHandler(SessionImplementor delegate, Object jdbcCoordinatorProxy) {
+    public Hibernate60SessionInvocationHandler(SharedSessionContractImplementor delegate, Object jdbcCoordinatorProxy) {
         this.delegate = delegate;
         this.jdbcCoordinatorProxy = jdbcCoordinatorProxy;
     }

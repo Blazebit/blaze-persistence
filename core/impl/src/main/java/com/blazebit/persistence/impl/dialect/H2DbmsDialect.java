@@ -107,6 +107,11 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return true;
+    }
+
+    @Override
     public boolean supportsBooleanAggregation() {
         return true;
     }

@@ -155,25 +155,25 @@ public class SetOperationTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUnionAll() {
-        FinalSetOperationCriteriaBuilder<Document> cb = cbf
-                .create(em, Document.class, "d1")
-                .select("d1")
+        FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
+                .from(Document.class, "d1")
+                .select("d1.name")
                 .where("d1.name").eq("D1")
             .unionAll()
                 .from(Document.class, "d2")
-                .select("d2")
+                .select("d2.name")
                 .where("d2.name").eq("D1")
             .endSet();
         String expected = ""
-                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "SELECT d1.name FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION ALL\n"
-                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1";
+                + "SELECT d2.name FROM Document d2 WHERE d2.name = :param_1";
         
         assertEquals(expected, cb.getQueryString());
-        List<Document> resultList = cb.getResultList();
+        List<String> resultList = cb.getResultList();
         assertEquals(2, resultList.size());
-        assertEquals("D1", resultList.get(0).getName());
-        assertEquals("D1", resultList.get(1).getName());
+        assertEquals("D1", resultList.get(0));
+        assertEquals("D1", resultList.get(1));
     }
 
     @Test
@@ -190,9 +190,9 @@ public class SetOperationTest extends AbstractCoreTest {
             .endSet()
             .orderByAsc("name");
         String expected = ""
-                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "(SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION ALL\n"
-                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1\n"
+                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1)\n"
                 + "ORDER BY name ASC";
 
         assertEquals(expected, cb.getQueryString());
@@ -223,11 +223,11 @@ public class SetOperationTest extends AbstractCoreTest {
                     .setMaxResults(1)
                 .end();
         String expected = ""
-                + "SELECT d FROM Document d WHERE d.id IN ("
+                + "SELECT d FROM Document d WHERE d.id IN (("
                 + setOperation(SetOperationType.UNION_ALL,
                     "SELECT d1.id FROM Document d1 WHERE d1.name = :param_0",
                     "SELECT d2.id FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1"
-                ) + "\nORDER BY id DESC LIMIT 1"
+                ) + ")\nORDER BY id DESC LIMIT 1"
                 + ")";
 
         assertEquals(expected, cb.getQueryString());
@@ -254,10 +254,10 @@ public class SetOperationTest extends AbstractCoreTest {
             .orderByDesc("name")
             .setMaxResults(1);
         String expected = ""
-                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "(SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION ALL\n"
-                + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1\n"
-                + "ORDER BY name DESC LIMIT 1";
+                + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1 ORDER BY d2.name ASC LIMIT 1)\n"
+                + "ORDER BY name DESC";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -408,11 +408,11 @@ public class SetOperationTest extends AbstractCoreTest {
             .orderByAsc("name");
 
         String expected = ""
-                + "(SELECT d1 FROM Document d1 WHERE d1.name <> :param_0\n"
+                + "((SELECT d1 FROM Document d1 WHERE d1.name <> :param_0\n"
                 + "INTERSECT\n"
                 + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1)\n"
                 + "UNION\n"
-                + "SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
+                + "SELECT d3 FROM Document d3 WHERE d3.name = :param_2)\n"
                 + "ORDER BY name ASC";
         
         assertEquals(expected, cb.getQueryString());
@@ -634,17 +634,17 @@ public class SetOperationTest extends AbstractCoreTest {
             .orderByDesc("name")
             .setMaxResults(1);
         String expected = ""
-                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "(SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION\n"
                 + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1\n"
                 + "EXCEPT\n"
-                + "(SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
+                + "((SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
                 + "UNION\n"
-                + "SELECT d4 FROM Document d4 WHERE d4.name = :param_3\n"
+                + "SELECT d4 FROM Document d4 WHERE d4.name = :param_3)\n"
                 + "ORDER BY name DESC"
-                + " LIMIT 1)\n"
+                + " LIMIT 1))\n"
                 + "ORDER BY name DESC"
-                + " LIMIT 1";
+                + "";
 
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -679,17 +679,17 @@ public class SetOperationTest extends AbstractCoreTest {
             .orderByDesc("docName")
             .setMaxResults(1);
         String expected = ""
-                + "SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0\n"
+                + "(SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0\n"
                 + "UNION\n"
                 + "SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1\n"
                 + "EXCEPT\n"
-                + "(SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2\n"
+                + "((SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2\n"
                 + "UNION\n"
-                + "SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3\n"
+                + "SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3)\n"
                 + "ORDER BY docName DESC"
-                + " LIMIT 1)\n"
+                + " LIMIT 1))\n"
                 + "ORDER BY docName DESC"
-                + " LIMIT 1";
+                + "";
         
         assertEquals(expected, cb.getQueryString());
         List<String> resultList = cb.getResultList();
@@ -1038,17 +1038,17 @@ public class SetOperationTest extends AbstractCoreTest {
                     .setMaxResults(1)
                 .end();
         String expected = ""
-                + "SELECT doc.name FROM Document doc WHERE doc.name IN ("
+                + "SELECT doc.name FROM Document doc WHERE doc.name IN (("
                 + setOperation(SetOperationType.EXCEPT,
                     setOperation(SetOperationType.UNION,
                             "SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0",
                             "SELECT d2.name AS docName FROM Document d2 WHERE d2.name = :param_1"
                     ),
-                    "(" + setOperation(SetOperationType.UNION,
+                    "((" + setOperation(SetOperationType.UNION,
                             "SELECT d3.name AS docName FROM Document d3 WHERE d3.name = :param_2",
                             "SELECT d4.name AS docName FROM Document d4 WHERE d4.name = :param_3"
-                    ) + "\nORDER BY docName DESC LIMIT 1)"
-                ) + "\nORDER BY docName DESC LIMIT 1"
+                    ) + ")\nORDER BY docName DESC LIMIT 1)"
+                ) + ")\nORDER BY docName DESC LIMIT 1"
                 + ")";
         
         assertEquals(expected, cb.getQueryString());

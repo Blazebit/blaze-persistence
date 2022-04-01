@@ -243,10 +243,12 @@ public class EntityViewUpdateSimpleImmutableSubviewCollectionsTest extends Abstr
                 .fetching(NaturalIdJoinTableEntity.class, "oneToManyBook")
                 .fetching(BookEntity.class)
                 .and();
-        builder.select(BookEntity.class);
-        builder.select(BookEntity.class);
-        if (e1.getOneToManyBook().size() > 2) {
+        if (!supportsSingleStatementNaturalIdCollectionFetching()) {
             builder.select(BookEntity.class);
+            builder.select(BookEntity.class);
+            if (e1.getOneToManyBook().size() > 2) {
+                builder.select(BookEntity.class);
+            }
         }
         return builder;
     }

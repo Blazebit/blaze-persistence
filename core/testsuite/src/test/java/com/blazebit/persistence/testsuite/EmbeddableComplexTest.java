@@ -26,6 +26,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -186,6 +187,8 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
 
     @Test
     // Test for #598
+    // NOTE: Hibernate 6.0 supports this now
+    @Category(NoHibernate60.class)
     public void testSelectEmbeddableFetchElementCollectionJpaOnly() {
         try {
             em.createQuery("SELECT e.embeddable FROM EmbeddableTestEntity e JOIN FETCH e.embeddable.elementCollection2").getResultList();
@@ -220,7 +223,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
                 .select("SIZE(e.embeddable.oneToMany)");
         
-        assertEquals("SELECT (SELECT " + countStar() + " FROM " + correlationPath("e.embeddableTestEntities", EmbeddableTestEntity.class, "embeddable_oneToMany", "embeddable.manyToOne.id = e.id") + ") FROM EmbeddableTestEntity e", crit.getQueryString());
+        assertEquals("SELECT (SELECT " + countStar() + " FROM " + correlationPath("e.embeddable.oneToMany", EmbeddableTestEntity.class, "embeddable_oneToMany", "embeddable.manyToOne.id = e.id") + ") FROM EmbeddableTestEntity e", crit.getQueryString());
         crit.getResultList();
     }
     

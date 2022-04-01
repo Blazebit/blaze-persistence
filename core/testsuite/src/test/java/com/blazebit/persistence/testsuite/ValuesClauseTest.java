@@ -698,7 +698,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
         cb.with(PersonCTE.class, false)
             .fromIdentifiableValues(Person.class, "persons", Arrays.asList(p1))
             .from(Person.class, "p")
-            .where("p.id").eqExpression("persons")
+            .where("p.id").eqExpression("persons.id")
             .bind("id").select("p.id")
             .bind("name").select("p.name")
             .bind("age").select("p.age")

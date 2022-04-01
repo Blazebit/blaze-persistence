@@ -48,6 +48,14 @@ public interface JpaProvider {
     public boolean supportsEntityJoin();
 
     /**
+     * Whether cross joins are supported.
+     *
+     * @return True if cross joins are supported, false otherwise
+     * @since 1.6.7
+     */
+    public boolean supportsCrossJoin();
+
+    /**
      * Whether Insert statements are supported.
      *
      * @return True if Insert statements are supported, false otherwise
@@ -115,6 +123,30 @@ public interface JpaProvider {
      * @return True if dereferencing is supported, false otherwise
      */
     public boolean supportsCollectionValueDereference();
+
+    /**
+     * Whether the LIMIT and OFFSET clause in subqueries are supported by the JPA provider.
+     *
+     * @return True if LIMIT/OFFSET in subqueries are supported, false otherwise
+     * @since 1.6.7
+     */
+    public boolean supportsSubqueryLimitOffset();
+
+    /**
+     * Whether set operations are supported by the JPA provider.
+     *
+     * @return True if set operations are supported, false otherwise
+     * @since 1.6.7
+     */
+    public boolean supportsSetOperations();
+
+    /**
+     * Whether listagg syntax is supported.
+     *
+     * @return True if listagg syntax is supported, false otherwise
+     * @since 1.6.7
+     */
+    public boolean supportsListagg();
 
     /**
      * The default result type of a scalar query.

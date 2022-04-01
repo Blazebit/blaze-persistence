@@ -20,14 +20,14 @@ import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.TransactionSupport;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
 
 /**
  * @author Moritz Becker
- * @since 1.4.0
+ * @since 1.6.7
  */
 public class Hibernate6JtaPlatformTransactionSynchronizationStrategy implements TransactionAccess, TransactionSupport {
 

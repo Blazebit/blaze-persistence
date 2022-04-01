@@ -17,28 +17,23 @@
 package com.blazebit.persistence.integration.hibernate;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.integration.hibernate.base.HibernateJpa21Provider;
+import com.blazebit.persistence.integration.hibernate.base.HibernateJpaProvider;
 import com.blazebit.persistence.integration.hibernate.base.function.AbstractHibernateEntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnitUtil;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnitUtil;
-import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernateEntityManagerFactoryIntegrator {
@@ -49,7 +44,7 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
             return null;
         }
 
-        return getDbmsName(entityManagerFactory, null, entityManagerFactory.unwrap(SessionFactoryImplementor.class).getDialect());
+        return getDbmsName(entityManagerFactory.unwrap(SessionFactoryImplementor.class).getJdbcServices().getDialect());
     }
 
     private String getDbms(EntityManager entityManager) {
@@ -58,23 +53,7 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
         }
         Session s = entityManager.unwrap(Session.class);
         Dialect dialect = getDialect(s);
-        return getDbmsName(entityManager.getEntityManagerFactory(), entityManager, dialect);
-    }
-
-    private Map<String, CollectionPersister> getCollectionPersisters(EntityManager em) {
-        if (em == null) {
-            return null;
-        }
-
-        return em.unwrap(SessionImplementor.class).getFactory().getCollectionPersisters();
-    }
-
-    private Map<String, EntityPersister> getEntityPersisters(EntityManager em) {
-        if (em == null) {
-            return null;
-        }
-
-        return em.unwrap(SessionImplementor.class).getFactory().getEntityPersisters();
+        return getDbmsName(dialect);
     }
 
     @Override
@@ -90,17 +69,15 @@ public class Hibernate60EntityManagerFactoryIntegrator extends AbstractHibernate
                 if (em == null) {
                     if (entityManagerFactory instanceof SessionFactoryImplementor) {
                         factory = (SessionFactoryImplementor) entityManagerFactory;
-                    } else if (entityManagerFactory instanceof HibernateEntityManagerFactory) {
-                        factory = (SessionFactoryImplementor) ((HibernateEntityManagerFactory) entityManagerFactory).getSessionFactory();
                     }
                     if (factory == null && entityManagerFactory != null) {
                         factory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
                     }
                     if (factory != null) {
-                        return new HibernateJpa21Provider(persistenceUnitUtil, getDbmsName(entityManagerFactory, em, factory.getDialect()), factory.getEntityPersisters(), factory.getCollectionPersisters(), MAJOR, MINOR, FIX, TYPE);
+                        return new HibernateJpaProvider(persistenceUnitUtil, getDbmsName(factory.getJdbcServices().getDialect()), factory.getMappingMetamodel());
                     }
                 }
-                return new HibernateJpa21Provider(persistenceUnitUtil, getDbms(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX, TYPE);
+                return new HibernateJpaProvider(persistenceUnitUtil, getDbms(em), em == null ? null : em.unwrap(SessionImplementor.class).getFactory().getMappingMetamodel());
             }
         };
     }

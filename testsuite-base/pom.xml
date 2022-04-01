@@ -35,5 +35,29 @@
         <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>
+
+        <module>jpa-jakarta</module>
+        <module>hibernate-jakarta</module>
     </modules>
+
+    <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
+    <profiles>
+        <profile>
+            <id>jdk11+</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <modules>
+                <module>jpa</module>
+                <module>hibernate</module>
+                <module>datanucleus</module>
+                <module>eclipselink</module>
+                <module>openjpa</module>
+
+                <module>jpa-jakarta</module>
+                <module>hibernate-jakarta</module>
+                <module>hibernate6</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

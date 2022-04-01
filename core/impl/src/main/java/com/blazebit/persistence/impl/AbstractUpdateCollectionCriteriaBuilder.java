@@ -372,8 +372,8 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
 
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
         String sql = extendedQuerySupport.getSql(em, baseQuery);
-        String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+        String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias, 0);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, 0);
         JoinTable joinTable = collectionAttribute.getJoinTable();
         int joinTableIndex = SqlUtils.indexOfTableName(sql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(sql, joinTableIndex + joinTable.getTableName().length());
@@ -426,6 +426,11 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                 columnExpressionRemappings.put(sourceExpression, targetAlias + "." + entry.getValue());
             } else {
                 columnExpressionRemappings.put(sourceExpression, tablePrefix + "." + entry.getKey());
+            }
+            if (tablePrefix == null) {
+                columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getValue() + ")", targetAlias + "." + entry.getValue());
+            } else {
+                columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getKey() + ")", tablePrefix + "." + entry.getKey());
             }
         }
         // If the id attribute is an embedded type, there is the possibility that row value expressions are used which we need to handle as well

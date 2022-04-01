@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
 @ServiceProvider(ServiceContributor.class)
 public class Hibernate60ServiceContributor implements ServiceContributor {

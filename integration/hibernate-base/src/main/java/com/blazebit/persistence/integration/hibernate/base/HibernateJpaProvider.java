@@ -220,6 +220,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCrossJoin() {
+        return false;
+    }
+
+    @Override
     public boolean needsJoinSubqueryRewrite() {
         return needsJoinSubqueryRewrite;
     }
@@ -399,6 +404,21 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsSubqueryLimitOffset() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSetOperations() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsListagg() {
+        return false;
+    }
+
+    @Override
     public Class<?> getDefaultQueryResultType() {
         return Object.class;
     }
@@ -470,15 +490,17 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     protected final String getTypeName(ManagedType<?> ownerType) {
-        return ownerType.getJavaType() == null ? ((EntityType) ownerType).getName() : ownerType.getJavaType().getName();
+        Class<?> javaType = ownerType.getJavaType();
+        return javaType == null || javaType == Map.class ? ((EntityType<?>) ownerType).getName() : javaType.getName();
     }
 
     protected final AbstractEntityPersister getEntityPersister(ManagedType<?> ownerType) {
+        Class<?> javaType = ownerType.getJavaType();
         EntityPersister entityPersister;
-        if (ownerType.getJavaType() == null) {
-            entityPersister = entityPersisters.get(((EntityType) ownerType).getName());
+        if (ownerType instanceof EntityType<?> && (javaType == null || javaType == Map.class) ) {
+            entityPersister = entityPersisters.get(((EntityType<?>) ownerType).getName());
         } else {
-            entityPersister = entityPersisters.get(ownerType.getJavaType().getName());
+            entityPersister = entityPersisters.get(javaType.getName());
         }
         if (entityPersister == null) {
             try {

@@ -69,20 +69,20 @@ public class ListaggTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: DB2 crashes when executing this test
-    @Test
-    @Category({ NoDB2.class })
-    public void testSimpleWithDefault() {
-        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
-            .from(Document.class, "doc")
-            .select("LISTAGG(doc.name) WITHIN GROUP (ORDER BY doc.name)")
-            .groupBy("owner")
-            ;
-
-        Tuple actual = criteria.getResultList().get(0);
-
-        assertEquals("Doc1,Doc1,Doc2", actual.get(0));
-    }
+//    // NOTE: DB2 crashes when executing this test
+//    @Test
+//    @Category({ NoDB2.class })
+//    public void testSimpleWithDefault() {
+//        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+//            .from(Document.class, "doc")
+//            .select("LISTAGG(doc.name) WITHIN GROUP (ORDER BY doc.name)")
+//            .groupBy("owner")
+//            ;
+//
+//        Tuple actual = criteria.getResultList().get(0);
+//
+//        assertEquals("Doc1,Doc1,Doc2", actual.get(0));
+//    }
 
     // NOTE: DB2 crashes when executing this test
     @Test
