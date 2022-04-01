@@ -51,12 +51,29 @@ public class DataNucleus51ExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
+    public boolean needsExampleQueryForAdvancedDml() {
+        return false;
+    }
+
+    @Override
+    public boolean applyFirstResultMaxResults(Query query, int firstResult, int maxResults) {
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+        return true;
+    }
+
+    @Override
     public String getSql(EntityManager em, Query query) {
         org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
         dnQuery.compile();
         return (String) dnQuery.getNativeQuery();
     }
-    
+
+    @Override
+    public boolean getSqlContainsLimit() {
+        return true;
+    }
+
     public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
@@ -69,7 +86,13 @@ public class DataNucleus51ExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public String getSqlAlias(EntityManager em, Query query, String alias) {
+    public String getSqlAlias(EntityManager em, Query query, String alias, int queryPartNumber) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+    }
+
+    @Override
+    public SqlFromInfo getSqlFromInfo(EntityManager em, Query query, String alias, int queryPartNumber) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }

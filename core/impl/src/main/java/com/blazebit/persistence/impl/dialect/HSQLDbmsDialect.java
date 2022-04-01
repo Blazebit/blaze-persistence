@@ -55,6 +55,11 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return false;
+    }
+
+    @Override
     public boolean isNullSmallest() {
         // Actually, HSQLDB always shows NULL first, regardless of the ordering, but we don't care because it supports null precedence handling
         return true;

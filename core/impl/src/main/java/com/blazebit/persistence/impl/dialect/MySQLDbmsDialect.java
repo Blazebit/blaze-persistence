@@ -170,6 +170,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return false;
+    }
+
+    @Override
     public boolean needsCastParameters() {
         return false;
     }

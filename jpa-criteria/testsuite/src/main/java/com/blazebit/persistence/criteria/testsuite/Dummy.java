@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.integration.hibernate;
-
-import com.blazebit.persistence.spi.DbmsDialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.pagination.LimitHandler;
+package com.blazebit.persistence.criteria.testsuite;
 
 /**
+ * Newer Javadoc versions don't package empty javadocs anymore.
+ *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
-public class Hibernate60LimitHandlingDialect extends Hibernate60DelegatingDialect {
-
-    private final DbmsDialect dbmsDialect;
-
-    public Hibernate60LimitHandlingDialect(Dialect delegate, DbmsDialect dbmsDialect) {
-        super(delegate);
-        this.dbmsDialect = dbmsDialect;
-    }
-
-    @Override
-    public LimitHandler getLimitHandler() {
-        return new Hibernate60LimitHandler(this, dbmsDialect);
-    }
+public class Dummy {
 
 }

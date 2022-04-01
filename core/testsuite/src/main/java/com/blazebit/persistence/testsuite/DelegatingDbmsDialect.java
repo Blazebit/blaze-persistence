@@ -258,6 +258,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return delegate.needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing();
+    }
+
+    @Override
     public boolean needsCastParameters() {
         return delegate.needsCastParameters();
     }

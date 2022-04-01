@@ -8,7 +8,7 @@ Not yet released
 
 ### New features
 
-None yet
+* Add integration for Hibernate 6 supporting versions starting with 6.1.1.Final
 
 ### Bug fixes
 
@@ -16,7 +16,7 @@ None yet
 
 ### Backwards-incompatible changes
 
-None yet
+* Drop the default `','` as second argument (`separator_expression`) for `listagg`
 
 ## 1.6.6
 

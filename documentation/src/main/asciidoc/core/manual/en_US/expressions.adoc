@@ -621,7 +621,7 @@ For further information on custom ordered set-aggregates take a look at the <<cu
 
 Also note that every aggregate function can also be used as <<window-functions,window function>>.
 
-`LISTAGG ( DISTINCT? string (, separatorString)? ) (WITHIN GROUP (orderByClause))?`::
+`LISTAGG ( DISTINCT? string , separatorString ) (WITHIN GROUP (orderByClause))?`::
 Concatenates elements to a single string connected with the `separatorString` in the requested order.
 
 WARN: This is a non-standard function that might not be supported on all DBMS. See <<listagg-function,JPQL functions>> for further information.

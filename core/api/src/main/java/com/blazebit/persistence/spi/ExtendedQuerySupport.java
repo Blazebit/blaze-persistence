@@ -40,6 +40,25 @@ public interface ExtendedQuerySupport {
     public boolean supportsAdvancedSql();
 
     /**
+     * Returns whether the JPA provider needs an example query for advanced sql DML queries.
+     *
+     * @return Whether advanced sql DML queries need an example query
+     * @since 1.5.0
+     */
+    public boolean needsExampleQueryForAdvancedDml();
+
+    /**
+     * Applies the first and max results to the query.
+     *
+     * @param query The query to apply the first and max results
+     * @param firstResult The first result to apply
+     * @param maxResults The max results to apply
+     * @return Whether firstResult or maxResult was set or unset whereas before it wasn't
+     * @since 1.6.7
+     */
+    public boolean applyFirstResultMaxResults(Query query, int firstResult, int maxResults);
+
+    /**
      * Returns the SQL query for the given query object.
      *
      * @param em The entity manager the query is associated to
@@ -47,6 +66,14 @@ public interface ExtendedQuerySupport {
      * @return The SQL query
      */
     public String getSql(EntityManager em, Query query);
+
+    /**
+     * Returns whether the return of {@link #getSql(EntityManager, Query)} will also contain the limit/offset in the SQL.
+     *
+     * @return Whether {@link #getSql(EntityManager, Query)} contains the limit/offset
+     * @since 1.6.7
+     */
+    public boolean getSqlContainsLimit();
 
     /**
      * Returns the cascading SQL delete queries for the given query object.
@@ -63,9 +90,22 @@ public interface ExtendedQuerySupport {
      * @param em The entity manager the query is associated to
      * @param query The JPA query
      * @param alias The from node alias
+     * @param queryPartNumber The 0-based query part number
      * @return The SQL table alias
      */
-    public String getSqlAlias(EntityManager em, Query query, String alias);
+    public String getSqlAlias(EntityManager em, Query query, String alias, int queryPartNumber);
+
+    /**
+     * Returns the SQL table alias of the JPQL from node alias in the given query.
+     *
+     * @param em The entity manager the query is associated to
+     * @param query The JPA query
+     * @param alias The from node alias
+     * @param queryPartNumber The 0-based query part number
+     * @return The SQL table alias position in the SQL string
+     * @since 1.6.7
+     */
+    public SqlFromInfo getSqlFromInfo(EntityManager em, Query query, String alias, int queryPartNumber);
 
     // TODO: adapt to return (position, alias, expression) instead
     /**
@@ -151,4 +191,31 @@ public interface ExtendedQuerySupport {
      * @return The returning result of the query
      */
     public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query baseQuery, Query exampleQuery, String sqlOverride, boolean queryPlanCacheEnabled);
+
+    /**
+     * Provides SQL information about a FROM element.
+     *
+     * @author Christian Beikov
+     * @since 1.6.7
+     */
+    public static interface SqlFromInfo {
+        /**
+         * Returns the table alias.
+         *
+         * @return the table alias
+         */
+        String getAlias();
+        /**
+         * Returns the from element start index in the SQL.
+         *
+         * @return the from element start index
+         */
+        int getFromStartIndex();
+        /**
+         * Returns the from element end index in the SQL.
+         *
+         * @return the from element end index
+         */
+        int getFromEndIndex();
+    }
 }

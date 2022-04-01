@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.util;
 import com.blazebit.persistence.parser.SQLParser;
 import com.blazebit.persistence.parser.SQLParserBaseVisitor;
 import com.blazebit.persistence.parser.SqlParserUtils;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -97,6 +98,82 @@ public class SqlUtils {
     };
 
     private SqlUtils() {
+    }
+
+    public static void applyTableNameRemapping(StringBuilder sb, ExtendedQuerySupport.SqlFromInfo sqlFromInfo, String newCteName, String aliasExtension, String newSqlAlias, boolean useApply) {
+        String sqlAlias = sqlFromInfo.getAlias();
+        final String searchAs = " as";
+        final String searchAlias = " " + sqlAlias;
+        int searchIndex = 0;
+        while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
+            int idx = searchIndex + searchAlias.length();
+            if (idx < sb.length() && sb.charAt(idx) == '.') {
+                // This is a dereference of the alias, skip this
+            } else if (isInMainQuery(sb, searchIndex)) {
+                int[] tableNameIndexRange;
+                if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
+                    // Uses aliasing with the AS keyword
+                    tableNameIndexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                } else {
+                    // Uses aliasing without the AS keyword
+                    tableNameIndexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                }
+
+                // If the table name is a subquery, we have to respect that and scan back to the start parenthesis
+                if (sb.charAt(tableNameIndexRange[0]) == ')') {
+                    int parenthesis = 1;
+                    QuoteMode mode = QuoteMode.NONE;
+                    for (int i = tableNameIndexRange[0] - 1; i >= 0; i--) {
+                        char c = sb.charAt(i);
+                        mode = mode.onCharBackwards(c);
+
+                        if (mode == QuoteMode.NONE) {
+                            if (c == '(') {
+                                parenthesis--;
+                                if (parenthesis == 0) {
+                                    tableNameIndexRange[0] = i;
+                                    break;
+                                }
+                            } else if (c == ')') {
+                                parenthesis++;
+                            }
+                        }
+                    }
+                }
+
+                if (newSqlAlias != null) {
+                    sb.replace(tableNameIndexRange[1] + 1, tableNameIndexRange[1] + 1 + sqlAlias.length(), newSqlAlias);
+                    searchIndex += newSqlAlias.length() - sqlAlias.length();
+                    sqlAlias = newSqlAlias;
+                }
+
+                int oldTableNameLength = tableNameIndexRange[1] - tableNameIndexRange[0];
+                // Replace table name with cte name
+                if (useApply) {
+                    int whereIndex = SqlUtils.indexOfWhere(sb, tableNameIndexRange[1]);
+                    if (whereIndex == -1) {
+                        whereIndex = sb.length();
+                    }
+                    int[] indexRange = SqlUtils.indexOfFullJoin(sb, sqlAlias, tableNameIndexRange[1] + 1, whereIndex);
+                    // Since we are moving the sql alias due to the use of apply, we have to adapt the search index
+                    oldTableNameLength += tableNameIndexRange[0] - indexRange[0];
+                    // NOTE: This will remove the ON clause as the APPLY clause doesn't support conditions. The query builder must ensure predicates are put into the query
+                    sb.replace(indexRange[0], indexRange[1], newCteName + sb.substring(tableNameIndexRange[1], tableNameIndexRange[1] + searchAlias.length()));
+                } else {
+                    sb.replace(tableNameIndexRange[0], tableNameIndexRange[1], newCteName);
+                }
+
+                if (aliasExtension != null) {
+                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldTableNameLength), aliasExtension);
+                    searchIndex += aliasExtension.length();
+                }
+
+                // Adjust index after replacing
+                searchIndex += newCteName.length() - oldTableNameLength;
+            }
+
+            searchIndex = searchIndex + 1;
+        }
     }
 
     public static void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension, String newSqlAlias, boolean useApply) {
@@ -610,13 +687,18 @@ public class SqlUtils {
         PatternFinder finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(" " + tableName + " "));
         int index = finder.indexIn(sql, startIndex, whereIndex);
         if (index == -1) {
-            return -1;
+            // In newer Hibernate versions, a table might be listed in a nested table join
+            finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder("(" + tableName + " "));
+            index = finder.indexIn(sql, startIndex, whereIndex);
+            if (index == -1) {
+                return -1;
+            }
         }
 
         return index + 1;
     }
 
-    public static int indexOfJoinTableAlias(CharSequence sql, String tableName) {
+    public static int indexOfJoinTableAlias(CharSequence sql, String tableAlias) {
         int startIndex = FROM_FINDER.indexIn(sql, 0);
         if (startIndex == -1) {
             return -1;
@@ -627,13 +709,15 @@ public class SqlUtils {
             whereIndex = sql.length();
         }
 
-        PatternFinder finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(" " + tableName + " on "));
+        PatternFinder finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(tableAlias + " on "));
         int index = finder.indexIn(sql, startIndex, whereIndex);
         if (index == -1) {
-            return -1;
+            // In newer Hibernate versions, a table might be listed in a nested table join
+            finder = new QuotedIdentifierAwarePatternFinder(new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(tableAlias + " join "));
+            index = finder.indexIn(sql, startIndex, whereIndex);
         }
 
-        return index + 1;
+        return index;
     }
 
     public static int[] indexOfFullJoin(CharSequence sql, String tableAlias) {
@@ -672,10 +756,15 @@ public class SqlUtils {
         int[] tokenRange;
         do {
             tokenRange = SqlUtils.rtrimBackwardsToFirstWhitespace(sqlSb, tokenEnd);
-            tokenEnd = tokenRange[0] - 1;
-            JoinToken token = JoinToken.of(sqlSb.subSequence(tokenRange[0], tokenRange[1]).toString().trim().toUpperCase());
-            if (allowedTokens.contains(token)) {
-                allowedTokens = token.previous();
+            String token = sqlSb.subSequence(tokenRange[0], tokenRange[1]).toString().trim().toUpperCase();
+            JoinToken joinToken = JoinToken.of(token);
+            if (joinToken == null) {
+                // This is the case for the new Hibernate version where we don't render the "inner" anymore
+                return tokenEnd;
+            }
+            if (allowedTokens.contains(joinToken)) {
+                allowedTokens = joinToken.previous();
+                tokenEnd = tokenRange[0] - 1;
             } else {
                 return tokenRange[1];
             }
@@ -707,6 +796,16 @@ public class SqlUtils {
             }
         };
 
+        private static final Map<String, JoinToken> TOKEN_MAP;
+
+        static {
+            Map<String, JoinToken> tokenMap = new HashMap<>();
+            for (JoinToken value : values()) {
+                tokenMap.put(value.name(), value);
+            }
+            TOKEN_MAP = tokenMap;
+        }
+
         Set<JoinToken> previous() {
             return EnumSet.noneOf(JoinToken.class);
         }
@@ -716,7 +815,7 @@ public class SqlUtils {
                 case ",":
                     return COMMA;
                 default:
-                    return valueOf(text);
+                    return TOKEN_MAP.get(text);
             }
         }
     }

@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -264,7 +265,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     private static List<EntityType<?>> subtypes(EntityType<?> t, Metamodel metamodel) {
         List<EntityType<?>> list = new ArrayList<>();
-        if (t.getJavaType() == null) {
+        if (t.getJavaType() == null || t.getJavaType() == Map.class) {
             list.add(t);
         } else {
             for (EntityType<?> entity : metamodel.getEntities()) {

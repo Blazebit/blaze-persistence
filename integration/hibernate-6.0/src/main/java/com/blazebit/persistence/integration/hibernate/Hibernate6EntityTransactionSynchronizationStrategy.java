@@ -22,26 +22,22 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.transaction.Synchronization;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Synchronization;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
 public class Hibernate6EntityTransactionSynchronizationStrategy implements TransactionAccess, TransactionSupport {
     
     private final EntityTransaction tx;
     private final SynchronizationRegistry synchronizationRegistry;
 
-    public Hibernate6EntityTransactionSynchronizationStrategy(EntityManager em) {
-        try {
-            this.tx = em.getTransaction();
-        } catch (IllegalStateException e) {
-            throw new IllegalStateException("Could not access entity transaction!", e);
-        }
+    public Hibernate6EntityTransactionSynchronizationStrategy(EntityTransaction tx, EntityManager em) {
+        this.tx = tx;
         Session s = em.unwrap(Session.class);
         this.synchronizationRegistry = ((SessionImplementor) s).getTransactionCoordinator().getLocalSynchronizations();
     }

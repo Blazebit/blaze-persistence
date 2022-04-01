@@ -657,10 +657,11 @@ public class EntityMetamodelImpl implements EntityMetamodel {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getManagedType(Class<T> cls, ManagedType<?> managedType) {
-        if (managedType.getJavaType() == null) {
+        Class<?> javaType = managedType.getJavaType();
+        if (javaType == null || javaType == Map.class) {
             return getManagedType(cls, JpaMetamodelUtils.getTypeName(managedType));
         } else {
-            return getManagedType(cls, managedType.getJavaType());
+            return getManagedType(cls, javaType);
         }
     }
 

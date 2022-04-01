@@ -200,7 +200,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
 
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
@@ -210,8 +210,8 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
 
         Query insertExampleQuery = getInsertExampleQuery();
         String insertExampleSql = extendedQuerySupport.getSql(em, insertExampleQuery);
-        String ownerAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+        String ownerAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, entityAlias, 0);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, insertExampleQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, 0);
         JoinTable joinTable = mainQuery.jpaProvider.getJoinTable(entityType, collectionName);
         int joinTableIndex = SqlUtils.indexOfTableName(insertExampleSql, joinTable.getTableName());
         String collectionAlias = SqlUtils.extractAlias(insertExampleSql, joinTableIndex + joinTable.getTableName().length());
@@ -235,6 +235,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         }
         for (Map.Entry<String, String> entry : joinTable.getTargetColumnMappings().entrySet()) {
             columnExpressionRemappings.put(targetAlias + "." + entry.getValue(), entry.getKey());
+            columnExpressionRemappings.put(targetAlias + "." + entry.getKey(), entry.getKey());
         }
 
         int cutoffColumns = 0;

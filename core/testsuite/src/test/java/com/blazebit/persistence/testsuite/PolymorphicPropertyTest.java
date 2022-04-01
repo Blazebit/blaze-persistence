@@ -17,6 +17,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
@@ -26,6 +27,7 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertTrue;
 
@@ -35,6 +37,8 @@ import static org.junit.Assert.assertTrue;
  * @author Christian Beikov
  * @since 1.0.0
  */
+// NOTE: Hibernate 6.0 supports this when only a single subtype contains the attribute
+@Category(NoHibernate60.class)
 public class PolymorphicPropertyTest extends AbstractCoreTest {
     
     @Override

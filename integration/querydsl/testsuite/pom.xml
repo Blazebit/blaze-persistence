@@ -1300,14 +1300,15 @@
         </profile>
         <profile>
             <id>hibernate-6.0</id>
+            <!-- Note that we compile the test suite against Hibernate 5.6 because this testsuite will be jakarta-transformed -->
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-entitymanager</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate-5.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -1323,12 +1324,28 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <version>${version.hibernate-5.6}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>test-jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.bsc.maven</groupId>
                         <artifactId>maven-processor-plugin</artifactId>
@@ -1353,7 +1370,7 @@
                             <dependency>
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate-6.0}</version>
+                                <version>${version.hibernate-5.6}</version>
                             </dependency>
                             <dependency>
                                 <groupId>jakarta.xml.bind</groupId>

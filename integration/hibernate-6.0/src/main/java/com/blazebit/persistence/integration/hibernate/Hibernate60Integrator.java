@@ -38,7 +38,7 @@ import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.7
  */
 @ServiceProvider(Integrator.class)
 public class Hibernate60Integrator implements Integrator {
@@ -86,7 +86,7 @@ public class Hibernate60Integrator implements Integrator {
 
         serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
         TableNameFormatter formatter = new NativeTableNameFormatter(sessionFactory.getJdbcServices().getJdbcEnvironment().getQualifiedObjectNameFormatter());
-        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), sessionFactory.getJdbcServices().getDialect(), formatter, metadata));
+        serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), metadata.getDatabase().getTypeConfiguration(), sessionFactory.getJdbcServices().getDialect(), formatter, metadata));
     }
 
     private Iterator<Table> getTableIterator(Iterable<Namespace> namespaces) {

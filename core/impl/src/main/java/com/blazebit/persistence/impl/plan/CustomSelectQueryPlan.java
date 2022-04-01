@@ -54,22 +54,19 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
 
     @Override
     public List<T> getResultList() {
-        baseQuery.setFirstResult(firstResult);
-        baseQuery.setMaxResults(maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
         return extendedQuerySupport.getResultList(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 
     @Override
     public T getSingleResult() {
-        baseQuery.setFirstResult(firstResult);
-        baseQuery.setMaxResults(maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
         return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 
     @Override
     public Stream<T> getResultStream() {
-        baseQuery.setFirstResult(firstResult);
-        baseQuery.setMaxResults(maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
         return (Stream<T>) extendedQuerySupport.getResultStream(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
     }
 }

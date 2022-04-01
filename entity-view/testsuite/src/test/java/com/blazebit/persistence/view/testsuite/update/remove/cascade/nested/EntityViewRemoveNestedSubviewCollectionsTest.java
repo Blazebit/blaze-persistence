@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.remove.cascade.nested;
 
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertSelectStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
@@ -146,11 +147,14 @@ public class EntityViewRemoveNestedSubviewCollectionsTest extends AbstractEntity
                 builder.assertDelete().forRelation(Document.class, "people").and();
             } else {
                 // The JPQL that joins people unfortunately joins all tables, though the collection table alone would suffice
-                builder.assertSelect()
-                        .forEntity(Document.class)
-                        .forRelation(Document.class, "people")
-                        .fetching(Person.class)
-                        .and();
+                AssertSelectStatementBuilder statementBuilder = builder.assertSelect()
+                    .forEntity(Document.class)
+                    .forRelation(Document.class, "people");
+                if (!supportsLazyCollectionElementJoin()) {
+                    // As of Hibernate 6, we don't always need to join the element table
+                    statementBuilder.fetching(Person.class);
+                }
+                statementBuilder.and();
             }
         } else {
             builder.assertSelect()

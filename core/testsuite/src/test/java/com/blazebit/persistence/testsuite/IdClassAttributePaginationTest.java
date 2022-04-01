@@ -78,7 +78,7 @@ public class IdClassAttributePaginationTest extends AbstractCoreTest {
                 + " WHERE (d.key1 = :ids_0_0 AND d.key2 = :ids_1_0) ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
         String expectedInlineObjectQuery = "SELECT d.value, children_1.value, (" + expectedCountQuery + ") FROM IdClassEntity d " +
                 "LEFT JOIN d.children children_1"
-                + " WHERE " + function("compare_row_value_subquery", "'IN'", "d.key1", "d.key2", function("LIMIT", "(" + expectedIdQuery + ")", "1")) + " = 0" +
+                + " WHERE (d.key1, d.key2) IN (" + expectedIdQuery + " LIMIT 1)" +
                 " ORDER BY d.value ASC, d.key1 ASC, d.key2 ASC";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(IdClassEntity.class, "d")

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.query;
 
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+
 /**
  *
  * @author Christian Beikov
@@ -26,14 +28,14 @@ public class EntityFunctionNode {
     private final String subquery;
     private final String aliases;
     private final String entityName;
-    private final String tableAlias;
-    private final String pluralCollectionTableAlias;
-    private final String pluralTableAlias;
+    private final ExtendedQuerySupport.SqlFromInfo tableAlias;
+    private final ExtendedQuerySupport.SqlFromInfo pluralCollectionTableAlias;
+    private final ExtendedQuerySupport.SqlFromInfo pluralTableAlias;
     private final String pluralTableJoin;
     private final String syntheticPredicate;
     private final boolean lateral;
 
-    public EntityFunctionNode(String subquery, String aliases, String entityName, String tableAlias, String pluralCollectionTableAlias, String pluralTableAlias, String pluralTableJoin, String syntheticPredicate, boolean lateral) {
+    public EntityFunctionNode(String subquery, String aliases, String entityName, ExtendedQuerySupport.SqlFromInfo tableAlias, ExtendedQuerySupport.SqlFromInfo pluralCollectionTableAlias, ExtendedQuerySupport.SqlFromInfo pluralTableAlias, String pluralTableJoin, String syntheticPredicate, boolean lateral) {
         this.subquery = subquery;
         this.aliases = aliases;
         this.entityName = entityName;
@@ -57,15 +59,15 @@ public class EntityFunctionNode {
         return entityName;
     }
 
-    public String getTableAlias() {
+    public ExtendedQuerySupport.SqlFromInfo getTableAlias() {
         return tableAlias;
     }
 
-    public String getPluralCollectionTableAlias() {
+    public ExtendedQuerySupport.SqlFromInfo getPluralCollectionTableAlias() {
         return pluralCollectionTableAlias;
     }
 
-    public String getPluralTableAlias() {
+    public ExtendedQuerySupport.SqlFromInfo getPluralTableAlias() {
         return pluralTableAlias;
     }
 

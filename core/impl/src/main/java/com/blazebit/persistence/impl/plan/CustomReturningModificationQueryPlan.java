@@ -66,8 +66,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
 
     @Override
     public int executeUpdate() {
-        modificationBaseQuery.setFirstResult(firstResult);
-        modificationBaseQuery.setMaxResults(maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(modificationBaseQuery, firstResult, maxResults);
         ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql, queryPlanCacheEnabled);
         return result.getUpdateCount();
     }
@@ -79,8 +78,7 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
 
     @Override
     public ReturningResult<T> getSingleResult() {
-        modificationBaseQuery.setFirstResult(firstResult);
-        modificationBaseQuery.setMaxResults(maxResults);
+        extendedQuerySupport.applyFirstResultMaxResults(modificationBaseQuery, firstResult, maxResults);
 
         ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(serviceProvider, participatingQueries, modificationBaseQuery, delegate, sql, queryPlanCacheEnabled);
         List<Object[]> resultList = result.getResultList();

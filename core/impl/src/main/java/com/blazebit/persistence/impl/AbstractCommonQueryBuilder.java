@@ -44,6 +44,7 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.WindowBuilder;
+import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.function.groupingsets.CubeFunction;
 import com.blazebit.persistence.impl.function.groupingsets.GroupingSetFunction;
@@ -103,6 +104,7 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
@@ -773,7 +775,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             parentFinalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
             parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
             this.finalSetOperationBuilder = parentFinalSetOperationBuilder;
-            this.needsCheck = true;
         } else {
             SetOperationManager oldParentOperationManager = finalSetOperationBuilder.setOperationManager;
 
@@ -2828,7 +2829,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         String baseQueryString = getBaseQueryStringWithCheck(lateralSb, lateralJoinNode);
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
-        final boolean needsSqlReplacement = isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty() || !isMainQuery && hasLimit();
+        final boolean needsSqlReplacement = needsSqlReplacement(keyRestrictedLeftJoins);
         if (!needsSqlReplacement) {
             TypedQuery<QueryResultType> query = (TypedQuery<QueryResultType>) em.createQuery(baseQueryString, selectManager.getExpectedQueryResultType());
             if (firstResult != 0) {
@@ -2863,7 +2864,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
         boolean shouldRenderCteNodes = lateralSb == null && renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.<CTENode>emptyList();
         QuerySpecification querySpecification = new CustomQuerySpecification(
@@ -2894,6 +2895,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return applyObjectBuilder(query);
     }
 
+    protected boolean needsSqlReplacement(Set<JoinNode> keyRestrictedLeftJoins) {
+        return isMainQuery && mainQuery.cteManager.hasCtes() || joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty() || !isMainQuery && hasLimit();
+    }
+
     protected List<String> getKeyRestrictedLeftJoinAliases(Query baseQuery, Set<JoinNode> keyRestrictedLeftJoins, Set<ClauseType> clauseExclusions) {
         List<String> keyRestrictedLeftJoinAliases = new ArrayList<String>();
         if (!keyRestrictedLeftJoins.isEmpty()) {
@@ -2902,18 +2907,30 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     continue;
                 }
                 // The alias of the target entity table
-                String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAliasInfo().getAlias());
+                String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAliasInfo().getAlias(), 0);
                 keyRestrictedLeftJoinAliases.add(sqlAlias);
             }
         }
         return keyRestrictedLeftJoinAliases;
     }
 
-    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery) {
-        return getEntityFunctionNodes(baseQuery, joinManager.getEntityFunctionNodes(), joinManager.getLateInlineNodes());
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, int queryPartNumber) {
+        List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
+        collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber);
+        return entityFunctionNodes;
     }
 
     protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> entityFunctions) {
+        List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
+        collectEntityFunctionNodes(entityFunctionNodes, baseQuery, entityFunctions);
+        return entityFunctionNodes;
+    }
+
+    protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, int queryPartNumber) {
+        return collectEntityFunctionNodes(entityFunctionNodes, baseQuery, joinManager.getEntityFunctionNodes(), joinManager.getLateInlineNodes(), queryPartNumber);
+    }
+
+    protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, List<JoinNode> entityFunctions) {
         List<JoinNode> valuesNodes = new ArrayList<>(entityFunctions.size());
         List<JoinNode> lateInlineNodes = new ArrayList<>(entityFunctions.size());
         for (JoinNode entityFunction : entityFunctions) {
@@ -2923,16 +2940,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 valuesNodes.add(entityFunction);
             }
         }
-        return getEntityFunctionNodes(baseQuery, valuesNodes, lateInlineNodes);
+        return collectEntityFunctionNodes(entityFunctionNodes, baseQuery, valuesNodes, lateInlineNodes, 0);
     }
 
-    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes) {
-        return getEntityFunctionNodes(baseQuery, valuesNodes, lateInlineNodes, mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled());
+    protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes, int queryPartNumber) {
+        return collectEntityFunctionNodes(entityFunctionNodes, baseQuery, valuesNodes, lateInlineNodes, mainQuery.getQueryConfiguration().isValuesClauseFilterNullsEnabled(), queryPartNumber);
     }
 
-    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes, boolean filterNulls) {
-        List<EntityFunctionNode> entityFunctionNodes = new ArrayList<>();
-
+    protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, List<JoinNode> valuesNodes, List<JoinNode> lateInlineNodes, boolean filterNulls, int queryPartNumber) {
         DbmsDialect dbmsDialect = mainQuery.dbmsDialect;
         ValuesStrategy strategy = dbmsDialect.getValuesStrategy();
         String dummyTable = dbmsDialect.getDummyTable();
@@ -2952,10 +2967,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             Query valuesExampleQuery = getValuesExampleQuery(clazz, valueCount, identifiableReference, valueClazzAttributeName, rootAlias, castedParameter, attributes, valuesSb, strategy, dummyTable, node);
 
             String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
-            String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e");
+            String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e", 0);
             String exampleQueryCollectionSqlAlias = null;
             if (!node.isValueClazzAttributeSingular()) {
-                exampleQueryCollectionSqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, node.getValueClazzAlias("e_"));
+                exampleQueryCollectionSqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, node.getValueClazzAlias("e_"), 0);
             }
             StringBuilder whereClauseSb = new StringBuilder(exampleQuerySql.length());
             String filterNullsTableAlias = "fltr_nulls_tbl_als_";
@@ -3002,20 +3017,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             String valuesClause = valuesSb.toString();
-            String valuesTableSqlAlias = exampleQuerySqlAlias;
+            ExtendedQuerySupport.SqlFromInfo valuesTableSqlAlias = new SimpleSqlFromInfo(exampleQuerySqlAlias, 0, 0);
             String valuesTableJoin = null;
-            String pluralCollectionTableAlias = null;
-            String pluralTableAlias = null;
+            ExtendedQuerySupport.SqlFromInfo pluralCollectionTableAlias = null;
+            ExtendedQuerySupport.SqlFromInfo pluralTableAlias = null;
             String syntheticPredicate = exampleQuerySql.substring(SqlUtils.indexOfWhere(exampleQuerySql) + " where ".length());
             if (baseQuery != null) {
-                valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-                syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias);
+                valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlFromInfo(em, baseQuery, node.getAlias(), queryPartNumber);
+                syntheticPredicate = syntheticPredicate.replace(exampleQuerySqlAlias, valuesTableSqlAlias.getAlias());
                 if (exampleQueryCollectionSqlAlias != null) {
-                    pluralTableAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getValueClazzAlias(node.getAlias() + "_"));
-                    syntheticPredicate = syntheticPredicate.replace(exampleQueryCollectionSqlAlias, pluralTableAlias);
+                    pluralTableAlias = cbf.getExtendedQuerySupport().getSqlFromInfo(em, baseQuery, node.getValueClazzAlias(node.getAlias() + "_"), queryPartNumber);
+                    syntheticPredicate = syntheticPredicate.replace(exampleQueryCollectionSqlAlias, pluralTableAlias.getAlias());
                     String baseQuerySql = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-                    int[] indexRange = SqlUtils.indexOfFullJoin(baseQuerySql, pluralTableAlias);
-                    String baseTableAlias = " " + valuesTableSqlAlias + " ";
+                    int[] indexRange = SqlUtils.indexOfFullJoin(baseQuerySql, pluralTableAlias.getAlias());
+                    String baseTableAlias = " " + valuesTableSqlAlias.getAlias() + " ";
                     int baseTableAliasIndex = baseQuerySql.indexOf(baseTableAlias);
                     int fullJoinStartIndex = baseTableAliasIndex + baseTableAlias.length();
                     if (fullJoinStartIndex != indexRange[0]) {
@@ -3023,7 +3038,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                         String onClause = " on ";
                         int onClauseIndex = baseQuerySql.indexOf(onClause, fullJoinStartIndex);
                         int[] collectionTableIndexRange = SqlUtils.rtrimBackwardsToFirstWhitespace(baseQuerySql, onClauseIndex);
-                        pluralCollectionTableAlias = baseQuerySql.substring(collectionTableIndexRange[0], collectionTableIndexRange[1]);
+                        pluralCollectionTableAlias = new SimpleSqlFromInfo(baseQuerySql.substring(collectionTableIndexRange[0], collectionTableIndexRange[1]), 0, 0);
                     }
                     valuesTableJoin = baseQuerySql.substring(fullJoinStartIndex, indexRange[1]);
                 }
@@ -3034,19 +3049,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         // We assume to have to select via a union to apply aliases correctly when the values strategy requires that
         boolean selectUnion = strategy == ValuesStrategy.SELECT_UNION;
+        boolean needsUniqueSelectItemNames = dbmsDialect.needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing();
         boolean lateralStyle = dbmsDialect.getLateralStyle() == LateralStyle.LATERAL;
         for (JoinNode lateInlineNode : lateInlineNodes) {
             CTEInfo cteInfo = lateInlineNode.getInlineCte();
             String aliases;
             StringBuilder aliasesSb = new StringBuilder();
-            if (selectUnion) {
+            if (selectUnion || needsUniqueSelectItemNames) {
                 aliasesSb.append("select ");
                 for (int i = 0; i < cteInfo.columnNames.size(); i++) {
                     aliasesSb.append("null ");
                     aliasesSb.append(cteInfo.columnNames.get(i)).append(',');
                 }
                 aliasesSb.setCharAt(aliasesSb.length() - 1, ' ');
-                aliasesSb.append(" from ").append(dummyTable).append(" where 1=0 union all ");
+                if (dummyTable != null) {
+                    aliasesSb.append(" from ").append(dummyTable);
+                }
+                aliasesSb.append(" where 1=0 union all ");
                 aliases = null;
             } else {
                 aliasesSb.append('(');
@@ -3092,11 +3111,43 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                     subquery = aliasesSb.toString();
                 }
             }
-            String cteTableSqlAlias = baseQuery == null ? "" : cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, lateInlineNode.getAlias());
+            ExtendedQuerySupport.SqlFromInfo cteTableSqlAlias = baseQuery == null ? new SimpleSqlFromInfo("", 0, 0) : cbf.getExtendedQuerySupport().getSqlFromInfo(em, baseQuery, lateInlineNode.getAlias(), queryPartNumber);
             entityFunctionNodes.add(new EntityFunctionNode(subquery, aliases, cteInfo.cteType.getName(), cteTableSqlAlias, null, null, null, null, lateInlineNode.isLateral()));
         }
 
-        return entityFunctionNodes;
+        return 1;
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.6.7
+     */
+    private static class SimpleSqlFromInfo implements ExtendedQuerySupport.SqlFromInfo {
+
+        private final String alias;
+        private final int fromStartIndex;
+        private final int fromEndIndex;
+
+        public SimpleSqlFromInfo(String alias, int fromStartIndex, int fromEndIndex) {
+            this.alias = alias;
+            this.fromStartIndex = fromStartIndex;
+            this.fromEndIndex = fromEndIndex;
+        }
+
+        @Override
+        public String getAlias() {
+            return alias;
+        }
+
+        @Override
+        public int getFromStartIndex() {
+            return fromStartIndex;
+        }
+
+        @Override
+        public int getFromEndIndex() {
+            return fromEndIndex;
+        }
     }
 
     private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, StringBuilder whereClauseSb, String filterNullsTableAlias, ValuesStrategy strategy, String dummyTable) {
@@ -3658,23 +3709,30 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected String buildLateralBaseQueryString(StringBuilder sbSelectFrom, JoinNode lateralJoinNode) {
         sbSelectFrom.append(" WHERE ");
         if (hasLimit()) {
-            sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+            if (!mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(LimitFunction.FUNCTION_NAME, 1));
+            }
             sbSelectFrom.append('(');
         } else {
             sbSelectFrom.append("EXISTS(");
         }
         buildBaseQueryString(sbSelectFrom, false, lateralJoinNode, false);
         if (hasLimit()) {
-            final boolean hasFirstResult = firstResult != 0;
-            final boolean hasMaxResults = maxResults != Integer.MAX_VALUE;
-            sbSelectFrom.append(')');
-            if (hasMaxResults) {
-                sbSelectFrom.append(',').append(maxResults);
+            if (mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
+                applyJpaLimit(sbSelectFrom);
+                sbSelectFrom.append(')');
+            } else {
+                final boolean hasFirstResult = firstResult != 0;
+                final boolean hasMaxResults = maxResults != Integer.MAX_VALUE;
+                sbSelectFrom.append(')');
+                if (hasMaxResults) {
+                    sbSelectFrom.append(',').append(maxResults);
+                }
+                if (hasFirstResult) {
+                    sbSelectFrom.append(',').append(firstResult);
+                }
+                sbSelectFrom.append(')');
             }
-            if (hasFirstResult) {
-                sbSelectFrom.append(',').append(firstResult);
-            }
-            sbSelectFrom.append(')');
             sbSelectFrom.append(" is not null");
         } else {
             sbSelectFrom.append(')');
@@ -3703,9 +3761,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         if (queryBuilder.joinManager.hasEntityFunctions()) {
-            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null)) {
+            for (EntityFunctionNode node : queryBuilder.getEntityFunctionNodes(null, 0)) {
                 List<Expression> arguments = new ArrayList<>(6);
-                arguments.add(new StringLiteral("ENTITY_FUNCTION"));
+                arguments.add(new StringLiteral(EntityFunction.FUNCTION_NAME));
                 arguments.add(expression);
 
                 String subquery = node.getSubquery();
@@ -3724,7 +3782,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
 
-        if (queryBuilder.hasLimit()) {
+        if (queryBuilder.hasLimit() && !mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
             final boolean hasFirstResult = queryBuilder.getFirstResult() != 0;
             final boolean hasMaxResults = queryBuilder.getMaxResults() != Integer.MAX_VALUE;
             List<Expression> arguments = new ArrayList<>(2);
@@ -3778,7 +3836,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             appendWindowClause(sbSelectFrom, externalRepresentation);
             if (!countWrapped || hasLimit()) {
                 appendOrderByClause(sbSelectFrom);
-                if (externalRepresentation && (!isMainQuery || countWrapped)) {
+                if (externalRepresentation && (!isMainQuery || countWrapped) || !isMainQuery && mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
                     applyJpaLimit(sbSelectFrom);
                 }
             }

@@ -76,6 +76,11 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCrossJoin() {
+        return false;
+    }
+
+    @Override
     public boolean supportsInsertStatement() {
         return false;
     }
@@ -140,6 +145,21 @@ public class DataNucleus51JpaProvider implements JpaProvider {
     @Override
     public boolean supportsCollectionValueDereference() {
         return true;
+    }
+
+    @Override
+    public boolean supportsSubqueryLimitOffset() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSetOperations() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsListagg() {
+        return false;
     }
 
     @Override

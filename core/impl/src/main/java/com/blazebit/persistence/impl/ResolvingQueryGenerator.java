@@ -265,7 +265,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             final boolean hasLimit = hasFirstResult || hasMaxResults;
             final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
             final boolean hasEntityFunctions = subquery.joinManager.hasEntityFunctions();
-            final boolean isSimple = !hasLimit && !hasSetOperations && !hasEntityFunctions;
+            final boolean isSimple = (!hasLimit || jpaProvider.supportsSubqueryLimitOffset())
+                    && (!hasSetOperations || jpaProvider.supportsSetOperations())
+                    && !hasEntityFunctions;
 
             if (isSimple) {
                 sb.append('(');
@@ -309,7 +311,37 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected void renderFunctionFunction(String functionName, boolean distinct, List<Expression> arguments, List<OrderByItem> withinGroup, WindowDefinition windowDefinition) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         int size = arguments.size();
-        if (registeredFunctions.containsKey(functionName)) {
+        if ("listagg".equals(functionName) && jpaProvider.supportsListagg()) {
+            sb.append("listagg(");
+
+            if (distinct) {
+                sb.append("DISTINCT ");
+            }
+
+            arguments.get(0).accept(this);
+            for (int i = 1; i < size; i++) {
+                sb.append(",");
+                arguments.get(i).accept(this);
+            }
+            sb.append(')');
+
+            if (withinGroup != null && !withinGroup.isEmpty()) {
+                sb.append(" WITHIN GROUP (");
+                sb.append("ORDER BY ");
+                for (int i = 0; i < withinGroup.size(); i++) {
+                    OrderByItem orderByItem = withinGroup.get(i);
+                    orderByItem.getExpression().accept(this);
+                    sb.append(" ");
+                    sb.append(orderByItem.isAscending() ? "ASC" : "DESC");
+                    sb.append(orderByItem.isNullFirst() ? " NULLS FIRST" : " NULLS LAST");
+                    sb.append(", ");
+                }
+                sb.setLength(sb.length() - 1);
+                sb.setCharAt(sb.length() - 1, ')');
+            }
+
+            super.visitWindowDefinition(windowDefinition);
+        } else if (registeredFunctions.containsKey(functionName)) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null || windowDefinition.isEmpty() ? size : size + 1));
             if (size == 0) {
                 if (withinGroup != null && !withinGroup.isEmpty()) {

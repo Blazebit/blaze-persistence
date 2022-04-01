@@ -397,9 +397,7 @@ NOTE: The use of this function is discouraged and should be replaced with the SQ
 
 ==== LISTAGG function
 
-Syntax: `LISTAGG ( DISTINCT? expression (, separator_expression)? ) (WITHIN GROUP (order_by_clause))?`
-
-The `separator_expression` is `','` by default.
+Syntax: `LISTAGG ( DISTINCT? expression , separator_expression ) (WITHIN GROUP (order_by_clause))?`
 
 Aggregates/concatenates the values produced by `expression` to a single string separated by `separator_expression` in the order defined by the `ORDER BY` clause.
 
@@ -504,7 +502,7 @@ For further information on DBMS support take a look at the <<anchor-set-dbms-com
 
 ==== COMPARE_ROW_VALUE function
 
-Syntax: `COMPARE_ROW_VALUE ( comparison_operator, CASE WHEN (1=NULLIF(1,1) AND row_value_1_1=row_value_2_1 AND row_value_1_2=nullif(1,1) ... AND row_value_1_n=row_value_2_n AND row_value_1_2=row_value_2_2 THEN 1 ELSE 0 END )`
+Syntax: `COMPARE_ROW_VALUE ( comparison_operator, CASE WHEN 1=NULLIF(1,1) AND row_value_1_1=row_value_2_1 AND row_value_1_2=nullif(1,1) ... AND row_value_1_n=row_value_2_n AND row_value_1_2=row_value_2_2 THEN 1 ELSE 0 END )`
 
 Produces a DBMS native row value comparison expression such as `(row_value_1_1, row_value_1_2, ..., row_value_1_n) < (row_value_2_1, row_value_2_2, ..., row_value_2_n)`.
 

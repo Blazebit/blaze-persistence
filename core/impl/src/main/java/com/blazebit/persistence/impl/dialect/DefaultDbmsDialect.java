@@ -526,6 +526,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean needsUniqueSelectItemNamesAlsoWhenTableColumnAliasing() {
+        return false;
+    }
+
+    @Override
     public boolean needsCastParameters() {
         return true;
     }

@@ -21,24 +21,23 @@ import com.blazebit.persistence.view.spi.TransactionAccessFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Moritz Becker
- * @since 1.5.0
+ * @since 1.6.7
  */
 @ServiceProvider(TransactionAccessFactory.class)
 public class Hibernate6TransactionAccessFactory implements TransactionAccessFactory {
     @Override
     public TransactionAccess createTransactionAccess(EntityManager entityManager) {
-        JtaPlatform jtaPlatform = getHibernate5JtaPlatformPresent(entityManager);
-        if (jtaPlatform == null || NoJtaPlatform.class == jtaPlatform.getClass()) {
-            return new Hibernate6EntityTransactionSynchronizationStrategy(entityManager);
-        } else {
+        try {
+            return new Hibernate6EntityTransactionSynchronizationStrategy(entityManager.getTransaction(), entityManager);
+        } catch (IllegalStateException ex) {
+            JtaPlatform jtaPlatform = getHibernateJtaPlatform(entityManager);
             return new Hibernate6JtaPlatformTransactionSynchronizationStrategy(jtaPlatform);
         }
     }
@@ -48,7 +47,7 @@ public class Hibernate6TransactionAccessFactory implements TransactionAccessFact
         return 100;
     }
 
-    private static JtaPlatform getHibernate5JtaPlatformPresent(EntityManager em) {
+    private static JtaPlatform getHibernateJtaPlatform(EntityManager em) {
         Session hibernateSession = em.unwrap(Session.class);
         SessionFactory hibernateSessionFactory = hibernateSession.getSessionFactory();
         ServiceRegistry hibernateServiceRegistry = ((SessionFactoryImplementor) hibernateSessionFactory).getServiceRegistry();

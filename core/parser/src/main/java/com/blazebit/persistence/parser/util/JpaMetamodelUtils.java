@@ -74,10 +74,8 @@ public class JpaMetamodelUtils {
 
     public static String getSimpleTypeName(Type<?> type) {
         // Envers audited models don't have a java type
-        if (type.getJavaType() == null) {
+        if (type.getJavaType() == null || type instanceof EntityType<?>) {
             return ((EntityType<?>) type).getName();
-        } else if (type instanceof EntityType<?>) {
-            return ((EntityType) type).getName();
         } else {
             return type.getJavaType().getSimpleName();
         }

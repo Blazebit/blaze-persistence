@@ -33,6 +33,7 @@
     <modules>
         <module>jpa-base</module>
         <module>hibernate-base</module>
+<!--        <module>hibernate6-base</module>-->
         <module>hibernate-4.2</module>
         <module>hibernate-4.3</module>
         <module>hibernate-5</module>
@@ -41,7 +42,7 @@
         <module>hibernate-5.4</module>
         <module>hibernate-5.5</module>
         <module>hibernate-5.6</module>
-        <module>hibernate-6.0</module>
+<!--        <module>hibernate-6.0</module>-->
         <module>datanucleus</module>
         <module>datanucleus-5.1</module>
         <module>eclipselink</module>
@@ -77,4 +78,62 @@
         <module>graphql-jakarta</module>
         <module>graphql-spqr-jakarta</module>
     </modules>
+
+    <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
+    <profiles>
+        <profile>
+            <id>jdk11+</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <modules>
+                <module>jpa-base</module>
+                <module>hibernate-base</module>
+                <module>hibernate6-base</module>
+                <module>hibernate-4.2</module>
+                <module>hibernate-4.3</module>
+                <module>hibernate-5</module>
+                <module>hibernate-5.2</module>
+                <module>hibernate-5.3</module>
+                <module>hibernate-5.4</module>
+                <module>hibernate-5.5</module>
+                <module>hibernate-5.6</module>
+                <module>hibernate-6.0</module>
+                <module>datanucleus</module>
+                <module>datanucleus-5.1</module>
+                <module>eclipselink</module>
+                <module>openjpa</module>
+                <module>entity-view-cdi</module>
+                <module>entity-view-spring</module>
+                <module>spring-data</module>
+                <module>spring-hateoas</module>
+                <module>deltaspike-data</module>
+                <module>jaxrs</module>
+                <module>jaxrs-jackson</module>
+                <module>jaxrs-jsonb</module>
+                <module>jackson</module>
+                <module>jsonb</module>
+                <module>graphql</module>
+                <module>graphql-spqr</module>
+                <module>querydsl</module>
+                <module>quarkus</module>
+
+                <module>jpa-base-jar</module>
+                <module>openjpa-jar</module>
+                <module>entity-view-cdi-jar</module>
+
+                <module>jpa-base-jakarta</module>
+                <module>hibernate-base-jakarta</module>
+                <module>hibernate-5.5-jakarta</module>
+                <module>hibernate-5.6-jakarta</module>
+                <module>entity-view-cdi-jakarta</module>
+                <module>jaxrs-jackson-jakarta</module>
+                <module>jaxrs-jsonb-jakarta</module>
+                <module>jackson-jakarta</module>
+                <module>jsonb-jakarta</module>
+                <module>graphql-jakarta</module>
+                <module>graphql-spqr-jakarta</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

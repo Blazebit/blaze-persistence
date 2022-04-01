@@ -76,6 +76,19 @@ or if you are using Jakarta JPA
 
 Depending on the JPA provider that should be used, one of the following integrations is required
 
+[[maven-setup-hibernate60]]
+===== Hibernate 6.0+
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
 [[maven-setup-hibernate56-jakarta]]
 ===== Hibernate 5.6+ Jakarta
 
@@ -497,7 +510,7 @@ The following table outlines the supported library versions for the integrations
 |Hibernate integration
 |com.blazebit.persistence.integration.hibernate
 |Hibernate 4.2
-|4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4 (not all features are available in older versions)
+|4.2, 4.3, 5.0+, 6.1+ (not all features are available in older versions)
 
 |EclipseLink integration
 |com.blazebit.persistence.integration.eclipselink

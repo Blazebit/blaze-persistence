@@ -309,7 +309,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         sb.append(" ");
 
         for (Map.Entry<String, String> tableNameRemappingEntry : tableNameRemapping.entrySet()) {
-            String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
+            String sqlAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey(), 0);
             String newCteName = tableNameRemappingEntry.getValue();
 
             SqlUtils.applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null, null, false);
@@ -405,30 +405,50 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
 
         LateralStyle lateralStyle = dbmsDialect.getLateralStyle();
         for (EntityFunctionNode node : entityFunctionNodes) {
-            String valuesTableSqlAlias = node.getTableAlias();
+            ExtendedQuerySupport.SqlFromInfo valuesTableSqlAlias = node.getTableAlias();
             String valuesClause = node.getSubquery();
             String valuesAliases = node.getAliases();
             String syntheticPredicate = node.getSyntheticPredicate();
             boolean useApply = node.isLateral() && lateralStyle == LateralStyle.APPLY;
 
-            EntityFunction.removeSyntheticPredicate(sb, node.getEntityName(), syntheticPredicate, valuesTableSqlAlias);
+            EntityFunction.removeSyntheticPredicate(sb, node.getEntityName(), syntheticPredicate, valuesTableSqlAlias.getAlias());
 
             String newSqlAlias = null;
             if (node.getPluralTableJoin() != null) {
-                newSqlAlias = node.getPluralTableAlias() + " ";
-                valuesTableSqlAlias += " " + node.getPluralTableJoin();
+                newSqlAlias = node.getPluralTableAlias().getAlias() + " ";
+                final String alias = valuesTableSqlAlias.getAlias() + " " + node.getPluralTableJoin();
+                // TODO: switch to the following when we base the replacement on positions
+//                final String alias = valuesTableSqlAlias.getAlias();
+                final int start = valuesTableSqlAlias.getFromStartIndex();
+                final int end = valuesTableSqlAlias.getFromEndIndex() + node.getPluralTableJoin().length() + 1;
+                valuesTableSqlAlias = new ExtendedQuerySupport.SqlFromInfo() {
+                    @Override
+                    public String getAlias() {
+                        return alias;
+                    }
+
+                    @Override
+                    public int getFromStartIndex() {
+                        return start;
+                    }
+
+                    @Override
+                    public int getFromEndIndex() {
+                        return end;
+                    }
+                };
 
                 // Replace aliases using the collection table alias
                 if (node.getPluralCollectionTableAlias() != null) {
-                    String dereference = node.getPluralCollectionTableAlias() + ".";
+                    String dereference = node.getPluralCollectionTableAlias().getAlias() + ".";
                     int fromIndex = SqlUtils.indexOfFrom(sb);
                     int dereferenceIndex = 0;
                     while ((dereferenceIndex = sb.indexOf(dereference, dereferenceIndex)) != -1) {
                         if (dereferenceIndex > fromIndex) {
                             break;
                         }
-                        sb.replace(dereferenceIndex, dereferenceIndex + node.getPluralCollectionTableAlias().length(), newSqlAlias);
-                        dereferenceIndex += newSqlAlias.length() - node.getPluralCollectionTableAlias().length();
+                        sb.replace(dereferenceIndex, dereferenceIndex + node.getPluralCollectionTableAlias().getAlias().length(), newSqlAlias);
+                        dereferenceIndex += newSqlAlias.length() - node.getPluralCollectionTableAlias().getAlias().length();
                     }
                 }
             }

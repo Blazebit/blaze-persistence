@@ -52,10 +52,14 @@ else
   if [ "$JPAPROVIDER" == "hibernate-6.0" ] &&
     [ "$RDBMS" == "h2" ]; then
     # Just in case we want to run against a specific version
-    #git clone --depth=1 --branch="wip/6.0" https://github.com/sebersole/hibernate-core.git hibernate6
-    #cd hibernate6
-    #./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x :documentation:aggregateJavadocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
-    : # do nothing right now
+#    cd ..
+#    git clone --depth=1 --branch="bp-integration" https://github.com/beikov/hibernate-orm.git hibernate6
+#    cd hibernate6
+#    ./gradlew -Dmaven.repo.local=$HOME/.m2/repository build publishToMavenLocal -x :documentation:buildDocs -x :hibernate-core:javadoc -x :hibernate-jpamodelgen:javadoc -x :documentation:aggregateJavadocs -x test -x javadoc -x checkStyleMain -x checkStyleTest
+#    cd -
+#    cd ../blaze-persistence
+    PROJECT_LIST="$PROJECT_LIST,core/testsuite-jakarta-runner,entity-view/testsuite-jakarta-runner,jpa-criteria/testsuite-jakarta-runner"
+    exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-1.11.x},${DELTASPIKE:-deltaspike-1.7} clean install --projects $PROJECT_LIST -am -V $PROPERTIES
   elif [ "$JPAPROVIDER" == "hibernate-5.4" ]; then
     PROJECT_LIST="$PROJECT_LIST,integration/quarkus/deployment,examples/quarkus/testsuite/base"
     if [ "$NATIVE" == "true" ]; then

@@ -1454,9 +1454,15 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
             }
             if (isRootNode) {
+                boolean crossJoin = false;
                 if (firstRootNode) {
                     firstRootNode = false;
-                } else if (node.isCrossJoin()) {
+                } else if (node.isCrossJoin() || !externalRepresentation && !placeholderRequiringNodes.isEmpty() && mainQuery.jpaProvider.supportsCrossJoin()) {
+                    if (mainQuery.jpaProvider.supportsCrossJoin()) {
+                        sb.append(" CROSS");
+                    } else {
+                        crossJoin = true;
+                    }
                     sb.append(" JOIN ");
                 } else {
                     sb.append(", ");
@@ -1561,7 +1567,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
                 renderedJoins.add(node);
 
-                if (node.isCrossJoin()) {
+                if (crossJoin) {
                     sb.append(" ON 1=1");
                 }
 

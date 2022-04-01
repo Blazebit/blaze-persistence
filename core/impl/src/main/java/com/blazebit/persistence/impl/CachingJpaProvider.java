@@ -160,6 +160,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCrossJoin() {
+        return jpaProvider.supportsCrossJoin();
+    }
+
+    @Override
     public boolean supportsInsertStatement() {
         return jpaProvider.supportsInsertStatement();
     }
@@ -202,6 +207,21 @@ public final class CachingJpaProvider implements JpaProvider {
     @Override
     public boolean supportsCollectionValueDereference() {
         return jpaProvider.supportsCollectionValueDereference();
+    }
+
+    @Override
+    public boolean supportsSubqueryLimitOffset() {
+        return jpaProvider.supportsSubqueryLimitOffset();
+    }
+
+    @Override
+    public boolean supportsSetOperations() {
+        return jpaProvider.supportsSetOperations();
+    }
+
+    @Override
+    public boolean supportsListagg() {
+        return jpaProvider.supportsListagg();
     }
 
     @Override

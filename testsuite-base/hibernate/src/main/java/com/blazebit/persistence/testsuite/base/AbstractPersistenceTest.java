@@ -182,11 +182,15 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
         // Needed for Envers tests in Hibernate >= 5.3.5, 5.4.x (HHH-12871)
         properties.put("hibernate.ejb.metamodel.population", "enabled");
+        properties.put("hibernate.jpa.metamodel.population", "enabled");
 
         if (isHibernate53Or54()) {
             properties.put("hibernate.archive.scanner", "org.hibernate.boot.archive.scan.internal.DisabledScanner");
         }
 
+        // Continue using hibernate_sequence also in Hibernate 6 because InsertTest depends on it
+        // If we were to use optimizable sequences, we would require multi-table statements which are unsupported
+        properties.put("hibernate.id.db_structure_naming_strategy", "legacy");
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");

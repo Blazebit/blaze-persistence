@@ -263,8 +263,8 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         // This is used to replace references to id columns properly in the final sql query
         ExtendedQuerySupport extendedQuerySupport = getService(ExtendedQuerySupport.class);
         String sql = extendedQuerySupport.getSql(em, baseQuery);
-        String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias);
-        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS);
+        String ownerAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, entityAlias, 0);
+        String targetAlias = extendedQuerySupport.getSqlAlias(em, baseQuery, JoinManager.COLLECTION_DML_BASE_QUERY_ALIAS, 0);
         JoinTable joinTable = collectionAttribute.getJoinTable();
         if (joinTable == null) {
             throw new IllegalStateException("Deleting inverse collections is not supported!");
@@ -293,6 +293,7 @@ public abstract class AbstractDeleteCollectionCriteriaBuilder<T, X extends BaseD
         }
         for (Map.Entry<String, String> entry : joinTable.getTargetColumnMappings().entrySet()) {
             columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getValue() + ")", tablePrefix + "." + entry.getKey());
+            columnExpressionRemappings.put(CollectionDmlSupportFunction.FUNCTION_NAME + "(" + targetAlias + "." + entry.getKey() + ")", tablePrefix + "." + entry.getKey());
         }
         // If the id attribute is an embedded type, there is the possibility that row value expressions are used which we need to handle as well
         Set<SingularAttribute<?, ?>> idAttributes = JpaMetamodelUtils.getIdAttributes(entityType);
