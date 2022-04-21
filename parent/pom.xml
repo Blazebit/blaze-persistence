@@ -140,7 +140,7 @@
         <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
         <asmVersion>9.1</asmVersion>
 
-        <version.h2>1.4.200</version.h2>
+        <h2.version>1.4.200</h2.version>
         <mssql.version>7.2.2.jre8</mssql.version>
 
         <!-- JVM values for surefire plugin -->
@@ -693,12 +693,13 @@
             </dependency>
 
             <!-- RDBMS driver versions -->
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${version.h2}</version>
-                <scope>test</scope>
-            </dependency>
+            <!-- We unfortunately can't list the dependency here, because otherwise the Quarkus SNAPSHOT build would fail -->
+<!--            <dependency>-->
+<!--                <groupId>com.h2database</groupId>-->
+<!--                <artifactId>h2</artifactId>-->
+<!--                <version>${h2.version}</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
@@ -893,6 +894,7 @@
                         <configuration>
                             <!-- Travis build workaround -->
                             <argLine>${surefire.jvm.params}</argLine>
+                            <reuseForks>false</reuseForks>
                             <skipTests>${skipTests}</skipTests>
                             <trimStackTrace>false</trimStackTrace>
                         </configuration>
