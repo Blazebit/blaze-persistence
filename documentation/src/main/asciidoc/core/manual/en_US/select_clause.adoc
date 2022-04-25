@@ -173,7 +173,7 @@ SELECT
     (
         SELECT COUNT(*)
         FROM Cat subCat
-        WHERE subCa.age > cat.age
+        WHERE subCat.age > cat.age
     )
 FROM Cat cat
 ----
