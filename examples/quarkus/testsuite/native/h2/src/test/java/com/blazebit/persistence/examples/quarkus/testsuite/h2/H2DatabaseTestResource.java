@@ -34,7 +34,14 @@ public class H2DatabaseTestResource implements QuarkusTestResourceLifecycleManag
     public Map<String, String> start() {
 
         try {
-            tcpServer = Server.createTcpServer();
+            String[] args;
+            try {
+                Class.forName("org.h2.api.Interval");
+                args = new String[]{ "-ifNotExists" };
+            } catch (Exception ex) {
+                args = new String[0];
+            }
+            tcpServer = Server.createTcpServer(args);
             tcpServer.start();
             System.out.println("[INFO] H2 database started in TCP server mode; server status: " + tcpServer.getStatus());
         } catch (SQLException e) {
