@@ -412,14 +412,8 @@ whereClause
 
 expression
     : LP expression RP                                                              # GroupedExpression
-    | lhs=expression ASTERISK rhs=expression                                        # MultiplicationExpression
-    | lhs=expression SLASH rhs=expression                                           # DivisionExpression
-    | lhs=expression PERCENT rhs=expression                                         # ModuloExpression
-    | lhs=expression DOUBLE_PIPE rhs=expression                                     # ConcatenationExpression
-    | lhs=expression PLUS rhs=expression                                            # AdditionExpression
-    | lhs=expression MINUS rhs=expression                                           # SubtractionExpression
-    | MINUS expression                                                              # UnaryMinusExpression
-    | PLUS expression                                                               # UnaryPlusExpression
+// TODO: for now, we don't support subqueries directly
+//    | LP subQuery RP                                                                # SubQueryExpression
     | CASE operand=expression (simpleCaseWhen)+ (ELSE otherwise=expression)? END    # SimpleCaseExpression
     | CASE (searchedCaseWhen)+ (ELSE expression)? END                               # GeneralCaseExpression
     | literal                                                                       # LiteralExpression
@@ -429,10 +423,13 @@ expression
     | name=(CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP | CURRENT_INSTANT)      # TemporalFunctionExpression
     | path                                                                          # PathExpression
     | function                                                                      # FunctionExpression
-// TODO: for now, we don't support subqueries directly
-//    | LP subQuery RP                                                                # SubQueryExpression
+    | MINUS expression                                                              # UnaryMinusExpression
+    | PLUS expression                                                               # UnaryPlusExpression
+    | lhs=expression (ASTERISK|SLASH|PERCENT) rhs=expression                        # MultiplicativeExpression
+    | lhs=expression (PLUS|MINUS) rhs=expression                                    # AdditiveExpression
+    | lhs=expression DOUBLE_PIPE rhs=expression                                     # ConcatenationExpression
     ;
-    
+
 predicate
     : LP predicate RP                                                                           # GroupedPredicate
     | NOT predicate                                                                             # NegatedPredicate

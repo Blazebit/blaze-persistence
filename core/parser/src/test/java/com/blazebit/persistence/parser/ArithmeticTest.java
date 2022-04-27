@@ -59,6 +59,11 @@ public class ArithmeticTest extends AbstractParserTest {
     }
 
     @Test
+    public void testArithmeticParsing() {
+        assertEquals(multiply(divide(_int("1"), _int("1")), _int("1")), parseOptimized("1 / 1 * 1"));
+    }
+
+    @Test
     public void testArithmeticFactorOptimization1() {
         assertEquals(_int("1"), parseOptimized("-(-1)"));
     }
