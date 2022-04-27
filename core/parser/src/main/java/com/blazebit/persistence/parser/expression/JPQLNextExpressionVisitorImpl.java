@@ -137,31 +137,38 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     }
 
     @Override
-    public Expression visitAdditionExpression(JPQLNextParser.AdditionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.ADDITION);
+    public Expression visitMultiplicativeExpression(JPQLNextParser.MultiplicativeExpressionContext ctx) {
+        Expression lhs = ctx.getChild(0).accept(this);
+        Expression rhs = ctx.getChild(2).accept(this);
+        TerminalNode terminalNode = (TerminalNode) ctx.getChild(1);
+        switch (terminalNode.getSymbol().getType()) {
+            case JPQLNextParser.SLASH:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.DIVISION);
+            case JPQLNextParser.ASTERISK:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.MULTIPLICATION);
+            case JPQLNextParser.PERCENT:
+                List<Expression> args = new ArrayList<>(2);
+                args.add(lhs);
+                args.add(rhs);
+                return new FunctionExpression("MOD", args);
+            default:
+                throw new SyntaxErrorException("Invalid multiplicative operator: " + terminalNode.getText());
+        }
     }
 
     @Override
-    public Expression visitSubtractionExpression(JPQLNextParser.SubtractionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.SUBTRACTION);
-    }
-
-    @Override
-    public Expression visitMultiplicationExpression(JPQLNextParser.MultiplicationExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.MULTIPLICATION);
-    }
-
-    @Override
-    public Expression visitDivisionExpression(JPQLNextParser.DivisionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.DIVISION);
-    }
-
-    @Override
-    public Expression visitModuloExpression(JPQLNextParser.ModuloExpressionContext ctx) {
-        List<Expression> args = new ArrayList<>(2);
-        args.add(ctx.lhs.accept(this));
-        args.add(ctx.rhs.accept(this));
-        return new FunctionExpression("MOD", args);
+    public Expression visitAdditiveExpression(JPQLNextParser.AdditiveExpressionContext ctx) {
+        Expression lhs = ctx.getChild(0).accept(this);
+        Expression rhs = ctx.getChild(2).accept(this);
+        TerminalNode terminalNode = (TerminalNode) ctx.getChild(1);
+        switch (terminalNode.getSymbol().getType()) {
+            case JPQLNextParser.PLUS:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.ADDITION);
+            case JPQLNextParser.MINUS:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.SUBTRACTION);
+            default:
+                throw new SyntaxErrorException("Invalid additive operator: " + terminalNode.getText());
+        }
     }
 
     @Override
