@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.function.entity;
 
 import com.blazebit.persistence.CTE;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.io.Serializable;
@@ -34,6 +35,7 @@ public class ValuesEntity implements Serializable {
     private String value;
 
     @Id
+    @Column(name = "val")
     public String getValue() {
         return value;
     }
