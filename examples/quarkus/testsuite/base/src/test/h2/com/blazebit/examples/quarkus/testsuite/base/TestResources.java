@@ -16,6 +16,7 @@
 package com.blazebit.examples.quarkus.testsuite.base;
 
 import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.h2.H2DatabaseTestResource;
 
 /**
  * @author Moritz Becker
