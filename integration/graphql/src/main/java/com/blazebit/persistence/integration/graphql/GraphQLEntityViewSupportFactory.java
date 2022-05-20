@@ -19,7 +19,6 @@ package com.blazebit.persistence.integration.graphql;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
