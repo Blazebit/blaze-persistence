@@ -19,6 +19,7 @@ package com.blazebit.persistence.integration.graphql;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -73,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import javax.validation.constraints.NotNull;
 
 /**
  * A factory for creating a support class for using entity views in a GraphQL environment.
@@ -950,6 +952,8 @@ public class GraphQLEntityViewSupportFactory {
             switch (annotation.annotationType().getName()) {
                 case "org.eclipse.microprofile.graphql.Ignore":
                     return true;
+                case "com.fasterxml.jackson.annotation.JsonIgnore":
+                    return true;
             }
         }
         //CHECKSTYLE:ON: MissingSwitchDefault
@@ -1156,7 +1160,18 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLTypeReference(typeName);
     }
 
+    /**
+     * Either determines the nullability of a field from the annotations present on the entity view or if no overrides
+     * present, derive it from the hibernate entity referenced by the view.
+     */
     protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
+        boolean isEntityView = attribute.getDeclaringType().getJavaType().isAnnotationPresent(EntityView.class);
+        boolean isNotNullPresent = ((MethodAttribute<?, ?>) attribute).getJavaMethod().isAnnotationPresent(NotNull.class);
+
+        if (isEntityView && isNotNullPresent) {
+          return true;
+        }
+
         if (attribute instanceof MappingAttribute<?, ?> && !attribute.isQueryParameter()) {
             AbstractAttribute<?, ?> attr = (AbstractAttribute<?, ?>) attribute;
             Map<String, javax.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
