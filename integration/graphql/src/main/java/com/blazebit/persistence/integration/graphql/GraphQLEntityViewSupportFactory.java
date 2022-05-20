@@ -1165,11 +1165,10 @@ public class GraphQLEntityViewSupportFactory {
      * present, derive it from the hibernate entity referenced by the view.
      */
     protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
-        boolean isEntityView = attribute.getDeclaringType().getJavaType().isAnnotationPresent(EntityView.class);
         boolean isNotNullPresent = ((MethodAttribute<?, ?>) attribute).getJavaMethod().isAnnotationPresent(NotNull.class);
 
-        if (isEntityView && isNotNullPresent) {
-          return true;
+        if (isNotNullPresent) {
+            return true;
         }
 
         if (attribute instanceof MappingAttribute<?, ?> && !attribute.isQueryParameter()) {
