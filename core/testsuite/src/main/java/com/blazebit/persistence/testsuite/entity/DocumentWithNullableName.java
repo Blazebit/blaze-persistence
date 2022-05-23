@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import java.io.Serializable;
@@ -34,6 +37,7 @@ public class DocumentWithNullableName extends Ownable implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
+    private Person friend;
     private List<Person> people = new ArrayList<Person>();
 
     public DocumentWithNullableName() {
@@ -50,6 +54,7 @@ public class DocumentWithNullableName extends Ownable implements Serializable {
     public DocumentWithNullableName(String name, Person owner) {
         this(name);
         this.setOwner(owner);
+        this.setFriend(owner);
     }
 
     public String getName() {
@@ -58,6 +63,16 @@ public class DocumentWithNullableName extends Ownable implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "friend_id")
+    public Person getFriend() {
+        return friend;
+    }
+
+    public void setFriend(Person friend) {
+        this.friend = friend;
     }
 
     @OneToMany

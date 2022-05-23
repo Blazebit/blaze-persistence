@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ public class AggregateExpression extends FunctionExpression {
         this.distinct = distinct;
     }
 
-    public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions, Predicate filterPredicate) {
-        super(functionName, expressions, filterPredicate == null ? null : new WindowDefinition(null, filterPredicate));
+    public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions, List<OrderByItem> withinGroup, Predicate filterPredicate) {
+        super(functionName, expressions, withinGroup, filterPredicate == null ? null : new WindowDefinition(null, filterPredicate));
         this.distinct = distinct;
     }
 
@@ -55,7 +55,18 @@ public class AggregateExpression extends FunctionExpression {
                 newExpressions.add(expressions.get(i).copy(copyContext));
             }
         }
-        return new AggregateExpression(distinct, functionName, newExpressions, windowDefinition == null ? null : windowDefinition.getFilterPredicate().copy(copyContext));
+        List<OrderByItem> newWithinGroup;
+        if (withinGroup == null) {
+            newWithinGroup = null;
+        } else {
+            size = withinGroup.size();
+            newWithinGroup = new ArrayList<>(size);
+
+            for (int i = 0; i < size; i++) {
+                newWithinGroup.add(withinGroup.get(i).copy(copyContext));
+            }
+        }
+        return new AggregateExpression(distinct, functionName, newExpressions, newWithinGroup, windowDefinition == null ? null : windowDefinition.getFilterPredicate().copy(copyContext));
     }
 
     public boolean isDistinct() {

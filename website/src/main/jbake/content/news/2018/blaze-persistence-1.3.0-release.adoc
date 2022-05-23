@@ -25,7 +25,7 @@ The most notable features and bug fixes are:
 * https://github.com/Blazebit/blaze-persistence/issues/517[*#517*, window="_blank"] Validate inverse remove strategy SET_NULL against column nullability
 * https://github.com/Blazebit/blaze-persistence/issues/679[*#679*, window="_blank"] Spring Domain events related bug fixes
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#130[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#130[changelog, window="_blank"] for a full list of changes and improvements.
 
 Once again I would like to thank https://github.com/heruan[Giovanni Lovato, window="_blank"] for all the issues he reported. He was testing out early implementations of the query flush strategy for updatable entity view collections
 and went through many test-debug cycles with me to get the implementation right for even the most complex JPA models. Without his feedback and patience, the release wouldn't be as good as it is. Thanks for your contribution and keep up the good work!

@@ -48,6 +48,24 @@ The required dependencies for the entity view module are
 </dependency>
 ----
 
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
 Depending on the environment, there are some integrations that help you with configuration
 
 [[maven-setup-apt]]
@@ -65,8 +83,32 @@ The annotation processor will generate static entity view metamodels, static ent
 </dependency>
 ----
 
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
 [[maven-setup-cdi-integration]]
 ===== CDI integration
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+or if you are using Jakarta JPA
 
 [source,xml]
 ----
@@ -110,6 +152,9 @@ For Spring-Data version 2.3, 2.2, 2.1, 2.0 or 1.x use the artifact with the resp
 
 NOTE: The Spring Data integration depends on the _jpa-criteria_ module
 
+[[maven-setup-jpa-criteria]]
+===== JPA Criteria
+
 [source,xml]
 ----
 <dependency>
@@ -121,6 +166,24 @@ NOTE: The Spring Data integration depends on the _jpa-criteria_ module
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+----
+
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

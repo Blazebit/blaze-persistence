@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -604,7 +604,11 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
             boolean needsUpdate = update && !viewIdEqual(initial, current);
             // If the reference changed, we don't need to load the old reference
             if (initial != current && needsUpdate) {
-                return new SubviewAttributeFlusher<>(this, false, (V) current, needsUpdate, null);
+                DirtyAttributeFlusher<?, E, V> flusher = null;
+                if (current instanceof MutableStateTrackable) {
+                    flusher = (DirtyAttributeFlusher<?, E, V>) viewToEntityMapper.getNestedDirtyFlusher(context, (MutableStateTrackable) current, this);
+                }
+                return new SubviewAttributeFlusher<>(this, false, (V) current, needsUpdate, flusher);
             }
 
             // If the initial and current reference are null, no need to do anything further

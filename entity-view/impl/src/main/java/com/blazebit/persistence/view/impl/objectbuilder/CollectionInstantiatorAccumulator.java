@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ public class CollectionInstantiatorAccumulator implements ContainerAccumulator<C
                 }
                 for (int i = listEnd; i < other.size(); i++) {
                     Object valueContainer = valueAccumulator.createContainer(false, 1);
-                    valueAccumulator.add(valueContainer, null, other.get(i), false);
+                    valueAccumulator.addAll(valueContainer, other.get(i), false);
                     list.add(i, valueContainer);
                 }
             }

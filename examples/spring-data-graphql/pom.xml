@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright 2014 - 2021 Blazebit.
+  Copyright 2014 - 2022 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-examples</artifactId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     
@@ -150,6 +150,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
             <!-- Need this to run the application directly -->
             <scope>runtime</scope>
         </dependency>
@@ -225,6 +226,11 @@
                     <version>1.8.9</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                 </dependency>
@@ -252,6 +258,11 @@
                     <version>1.9.4</version>
                 </dependency>
                 <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
+                </dependency>
+                <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                 </dependency>
@@ -277,6 +288,11 @@
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
                     <version>1.9.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -308,7 +324,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -340,7 +356,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -373,7 +389,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -406,7 +422,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -415,6 +431,39 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.6.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.6-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.6-spring-boot}</version.spring.boot>
+                <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.6}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.aspectj</groupId>
+                    <artifactId>aspectjweaver</artifactId>
+                    <version>1.9.4</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>2.12.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                 </dependency>
             </dependencies>
         </profile>
@@ -439,7 +488,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.10.1</version>
+                    <version>2.12.1</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

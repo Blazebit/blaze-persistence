@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-quarkus-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -67,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -148,9 +148,7 @@
         <profile>
             <id>hibernate-5.4</id>
             <properties>
-                <jpa.excludedGroups>
-                    com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52
-                </jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <build>
                 <plugins>
@@ -172,20 +170,8 @@
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <jpa.excludedGroups>
-                    com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52
-                </jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
-            <repositories>
-                <repository>
-                    <id>JBoss Snapshots</id>
-                    <name>JBoss Snapshots</name>
-                    <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
             <dependencies>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>

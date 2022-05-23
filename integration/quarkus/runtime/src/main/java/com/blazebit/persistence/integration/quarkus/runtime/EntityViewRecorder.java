@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,18 @@ import java.util.function.Supplier;
 @Recorder
 public class EntityViewRecorder {
 
-    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String persistenceUnitName) {
+    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String blazePersistenceInstanceName, String persistenceUnitName) {
         return () -> {
             CriteriaBuilderConfiguration criteriaBuilderConfiguration = Criteria.getDefault();
             blazePersistenceConfig.apply(criteriaBuilderConfiguration);
+            Annotation[] cbfQualifiers;
+            if (BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(blazePersistenceInstanceName)) {
+                cbfQualifiers = new Annotation[] { new Default.Literal() };
+            } else {
+                cbfQualifiers = new Annotation[] { new BlazePersistenceInstance.BlazePersistenceInstanceLiteral(blazePersistenceInstanceName) };
+            }
+
+            Arc.container().beanManager().fireEvent(criteriaBuilderConfiguration, cbfQualifiers);
             EntityManagerFactory emf = Arc.container().instance(JPAConfig.class, new Annotation[0]).get().getEntityManagerFactory(persistenceUnitName);
             return criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
         };
@@ -84,6 +92,7 @@ public class EntityViewRecorder {
                 cbfQualifiers = new Annotation[] { new BlazePersistenceInstance.BlazePersistenceInstanceLiteral(blazePersistenceInstanceName) };
             }
 
+            Arc.container().beanManager().fireEvent(entityViewConfiguration, cbfQualifiers);
             CriteriaBuilderFactory cbf = Arc.container().instance(CriteriaBuilderFactory.class, cbfQualifiers).get();
             return entityViewConfiguration.createEntityViewManager(cbf);
         };

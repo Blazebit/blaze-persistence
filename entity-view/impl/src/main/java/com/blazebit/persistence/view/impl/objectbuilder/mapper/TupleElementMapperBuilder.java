@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -283,11 +283,11 @@ public class TupleElementMapperBuilder implements ServiceProvider {
         return tupleTransformatorFactory;
     }
 
-    public void setTupleListTransformer(TupleListTransformer tupleListTransformer) {
+    public void addTupleListTransformer(TupleListTransformer tupleListTransformer) {
         tupleTransformatorFactory.add(tupleListTransformer);
     }
 
-    public void setTupleListTransformerFactory(TupleListTransformerFactory tupleListTransformerFactory) {
+    public void addTupleListTransformerFactory(TupleListTransformerFactory tupleListTransformerFactory) {
         tupleTransformatorFactory.add(tupleListTransformerFactory);
     }
 

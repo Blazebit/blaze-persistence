@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +82,10 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
     @WithBridgeMethods(value = Object.class, adapterMethod = "convert")
     public Optional<E> findById(ID id) {
         return Optional.ofNullable((E) findOne(id));
+    }
+
+    public E getById(ID id) {
+        return (E) getReference(id);
     }
 
     private Object convert(Optional<Object> optional, Class<?> targetType) {

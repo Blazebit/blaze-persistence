@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,6 +67,14 @@ public class TupleTransformator {
         }
 
         return tupleList;
+    }
+
+    public Object[] transform(Object[] tuple) {
+        if (transformatorLevels.size() != 1) {
+            throw new IllegalStateException("Can only do single transformations if there is only a single level");
+        }
+        UpdatableViewMap updatableViewMap = new UpdatableViewMap();
+        return transform(0, tuple, updatableViewMap);
     }
 
     private Object[] transform(int level, Object[] tuple, UpdatableViewMap updatableViewMap) {

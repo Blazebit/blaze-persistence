@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1851,7 +1851,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public BuilderType join(String path, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(path, alias, type);
+        checkJoinPreconditions(path, alias, type, false);
         joinManager.join(path, alias, type, false, false, null);
         return (BuilderType) this;
     }
@@ -1859,28 +1859,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public BuilderType joinDefault(String path, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(path, alias, type);
+        checkJoinPreconditions(path, alias, type, true);
         joinManager.join(path, alias, type, false, true, null);
         return (BuilderType) this;
     }
 
     public JoinOnBuilder<BuilderType> joinOn(String path, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(path, alias, type);
+        checkJoinPreconditions(path, alias, type, false);
         return joinManager.joinOn((BuilderType) this, path, alias, type, false);
     }
 
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinOn(Expression expr, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(expr, alias, type);
+        checkJoinPreconditions(expr, alias, type, false);
         return joinManager.joinOn((BuilderType) this, expr, alias, type, false);
     }
 
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinDefaultOn(String path, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(path, alias, type);
+        checkJoinPreconditions(path, alias, type, true);
         return joinManager.joinOn((BuilderType) this, path, alias, type, true);
     }
 
@@ -1892,7 +1892,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinOn(String base, Class<?> entityClass, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -1907,7 +1907,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<BuilderType> joinOn(String base, EntityType<?> entityType, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityType == null) {
             throw new NullPointerException("entityType");
         }
@@ -1922,7 +1922,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnSubquery(String base, Class<?> entityClass, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -1963,7 +1963,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -1978,7 +1978,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<BuilderType>> joinOnSubquery(String base, EntityType<?> entityClass, String alias, JoinType type) {
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -2019,7 +2019,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -2035,7 +2035,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(correlationPath, alias, type);
+        checkJoinPreconditions(correlationPath, alias, type, false);
         return joinManager.joinOn((BuilderType) this, correlationPath, alias, subqueryAlias, type);
     }
 
@@ -2076,7 +2076,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -2111,7 +2111,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(base, alias, type);
+        checkJoinPreconditions(base, alias, type, false);
         if (entityClass == null) {
             throw new NullPointerException("entityClass");
         }
@@ -2127,7 +2127,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("The dbms dialect does not support lateral joins!");
         }
         prepareForModification(ClauseType.JOIN);
-        checkJoinPreconditions(correlationPath, alias, type);
+        checkJoinPreconditions(correlationPath, alias, type, false);
         return joinManager.join((BuilderType) this, correlationPath, alias, subqueryAlias, type);
     }
 
@@ -2582,17 +2582,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return (Z) joinOnEntitySubquery(base, clazz, alias, subqueryAlias, JoinType.RIGHT);
     }
 
-    private void checkJoinPreconditions(Object path, String alias, JoinType type) {
+    protected void checkJoinPreconditions(Object path, String alias, JoinType type, boolean defaultJoin) {
         if (path == null) {
             throw new NullPointerException("path");
         }
-        if (alias == null) {
+        if (alias == null && !defaultJoin) {
             throw new NullPointerException("alias");
         }
         if (type == null) {
             throw new NullPointerException("type");
         }
-        if (alias.isEmpty()) {
+        if ((alias == null || alias.isEmpty()) && !defaultJoin) {
             throw new IllegalArgumentException("Empty alias");
         }
         verifyBuilderEnded();

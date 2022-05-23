@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import javax.persistence.Tuple;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -206,22 +207,53 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 @SuppressWarnings("unchecked")
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                 if (flusher != null) {
-                    // Skip the element flusher if the key was already added before
-                    EntryState state = EntryState.EXISTED;
+                    // At this point, we have to check the collection actions to determine if the element was added through actions somehow
+                    // We will register a special MapPutAction if the element was not added through actions to issue an UPDATE statement
+                    // By default, since the element is dirty, we start with the state UPDATED and go through state transitions
+                    // based on the containment of the element in the added/removed objects collections of the actions
+                    EntryState state = EntryState.UPDATED;
+                    Object replacedObject = element;
                     for (MapAction<?> action : actions) {
-                        if (identityContains(action.getRemovedElements(), element)) {
-                            state = state.onRemove();
-                            if (identityContains(action.getAddedElements(), element)) {
+                        Collection<Object> removedElements = action.getRemovedElements();
+                        Collection<Object> addedElements = action.getAddedElements();
+                        if (removedElements.isEmpty()) {
+                            if (identityContains(addedElements, element)) {
                                 state = state.onAdd();
                             }
-                        } else if (identityContains(action.getAddedElements(), element)) {
-                            state = state.onAdd();
+                        } else if (addedElements.isEmpty()) {
+                            if (identityContains(removedElements, element)) {
+                                state = state.onRemove();
+                            }
+                        } else {
+                            // Here we have a MapPutAction or MapPutAllAction where added/removed have the same cardinality
+                            Iterator<Object> addedIter = addedElements.iterator();
+                            Iterator<Object> removedIter = removedElements.iterator();
+                            while (addedIter.hasNext()) {
+                                Object added = addedIter.next();
+                                Object removed = removedIter.next();
+                                if (removed == element) {
+                                    if (added == element) {
+                                        // This is a MapPutAction or MapPutAllAction where the old and new object are the same instances
+                                        replacedObject = element;
+                                        state = EntryState.UPDATED;
+                                    } else {
+                                        state = state.onRemove();
+                                    }
+                                    break;
+                                } else if (added == element) {
+                                    replacedObject = removed;
+                                    state = EntryState.UPDATED;
+                                    break;
+                                }
+                            }
                         }
                     }
 
-                    // If the element was added, we don't have to introduce a put action for flushing it
-                    if (state != EntryState.ADDED) {
-                        actions.add(new MapPutAction(entry.getKey(), element, current));
+                    // If the element was UPDATED and the replacedObject is the element itself,
+                    // this means that this really was just a mutation of the view
+                    // and there is no action that would flush the object changes already
+                    if (state == EntryState.UPDATED && replacedObject == element) {
+                        actions.add(new MapPutAction<>(entry.getKey(), element, element));
                     }
                 }
             }

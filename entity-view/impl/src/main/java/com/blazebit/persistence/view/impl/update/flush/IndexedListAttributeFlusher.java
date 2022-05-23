@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -336,7 +336,6 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
     @Override
     protected void addFlatViewElementFlushActions(UpdateContext context, TypeDescriptor typeDescriptor, List<CollectionAction<?>> actions, V current) {
         final ViewToEntityMapper mapper = typeDescriptor.getViewToEntityMapper();
-        int initialSize = -1;
         for (int i = 0; i < current.size(); i++) {
             Object o = current.get(i);
             if (o instanceof MutableStateTrackable) {
@@ -344,30 +343,39 @@ public class IndexedListAttributeFlusher<E, V extends List<?>> extends Collectio
                 @SuppressWarnings("unchecked")
                 DirtyAttributeFlusher<?, E, V> flusher = (DirtyAttributeFlusher<?, E, V>) (DirtyAttributeFlusher) mapper.getNestedDirtyFlusher(context, element, (DirtyAttributeFlusher) null);
                 if (flusher != null) {
-                    // If the element is dirty, we have to register a ListSetAction if the element was not added
-                    // If it were added, we would already have an action for that object
-                    EntryState state = EntryState.EXISTED;
+                    // At this point, we have to check the collection actions to determine if the view was added through actions somehow
+                    // We will register a special ListSetAction if the view was not added through actions to issue an UPDATE statement
+                    // By default, since the view is dirty, we start with the state UPDATED and go through state transitions
+                    // based on the containment of the view in the added/removed objects collections of the actions
+                    EntryState state = EntryState.UPDATED;
+                    Object replacedObject = element;
                     for (CollectionAction<?> action : actions) {
                         Collection<Object> removedObjects = action.getRemovedObjects();
                         if (identityContains(removedObjects, element)) {
-                            state = state.onRemove();
                             if (identityContains(action.getAddedObjects(), element)) {
-                                state = state.onAdd();
+                                // This is a ListSetAction where the old and new object are the same instances
+                                replacedObject = element;
+                                state = EntryState.UPDATED;
+                            } else {
+                                state = state.onRemove();
                             }
                         } else if (identityContains(action.getAddedObjects(), element)) {
                             if (removedObjects.isEmpty()) {
                                 state = state.onAdd();
                             } else {
-                                // This is like replacing an existing entry
-                                state = EntryState.ADDED;
+                                // This is a ListSetAction which has only a single element, so this is safe
+                                replacedObject = removedObjects.iterator().next();
+                                state = EntryState.UPDATED;
                             }
                         }
                     }
 
-                    // If the element was added, we don't have to introduce a set action for flushing it
-                    if (state != EntryState.ADDED) {
+                    // If the element was UPDATED and there is no replacedObject,
+                    // this means that this really was just a mutation of the view
+                    // and there is no action that would flush the object changes already
+                    if (state == EntryState.UPDATED && replacedObject == element) {
                         // Using last = false is intentional to actually get a proper update instead of a delete and insert
-                        actions.add(new ListSetAction<>(i, false, element, null));
+                        actions.add(new ListSetAction<>(i, false, element, element));
                     }
                 }
             }

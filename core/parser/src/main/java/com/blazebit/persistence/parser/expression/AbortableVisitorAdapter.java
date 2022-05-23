@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,15 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
         for (int i = 0; i < size; i++) {
             if (expressions.get(i).accept(this)) {
                 return true;
+            }
+        }
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup != null) {
+            size = withinGroup.size();
+            for (int i = 0; i < size; i++) {
+                if (withinGroup.get(i).getExpression().accept(this)) {
+                    return true;
+                }
             }
         }
         WindowDefinition windowDefinition = expression.getWindowDefinition();

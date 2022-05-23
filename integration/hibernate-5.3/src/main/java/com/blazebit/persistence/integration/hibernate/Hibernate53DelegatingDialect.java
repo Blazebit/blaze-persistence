@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
@@ -900,6 +901,91 @@ public class Hibernate53DelegatingDialect extends Dialect {
     @Override
     public void augmentRecognizedTableTypes(List<String> tableTypesList) {
         delegate.augmentRecognizedTableTypes(tableTypesList);
+    }
+
+    @Override
+    public String getNativeIdentifierGeneratorStrategy() {
+        return delegate.getNativeIdentifierGeneratorStrategy();
+    }
+
+    @Override
+    public String getWriteLockString(String aliases, int timeout) {
+        return delegate.getWriteLockString(aliases, timeout);
+    }
+
+    @Override
+    public String getReadLockString(String aliases, int timeout) {
+        return delegate.getReadLockString(aliases, timeout);
+    }
+
+    @Override
+    public String getAlterTableString(String tableName) {
+        return delegate.getAlterTableString(tableName);
+    }
+
+    @Override
+    public String getAddForeignKeyConstraintString(String constraintName, String foreignKeyDefinition) {
+        return delegate.getAddForeignKeyConstraintString(constraintName, foreignKeyDefinition);
+    }
+
+    @Override
+    public boolean supportsIfExistsAfterAlterTable() {
+        return delegate.supportsIfExistsAfterAlterTable();
+    }
+
+    @Override
+    public boolean useFollowOnLocking(QueryParameters parameters) {
+        return delegate.useFollowOnLocking(parameters);
+    }
+
+    @Override
+    public String getQueryHintString(String query, String hints) {
+        return delegate.getQueryHintString(query, hints);
+    }
+
+    @Override
+    public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+        return delegate.supportsNamedParameters(databaseMetaData);
+    }
+
+    @Override
+    public boolean supportsNationalizedTypes() {
+        return delegate.supportsNationalizedTypes();
+    }
+
+    @Override
+    public boolean supportsNonQueryWithCTE() {
+        return delegate.supportsNonQueryWithCTE();
+    }
+
+    @Override
+    public boolean supportsValuesList() {
+        return delegate.supportsValuesList();
+    }
+
+    @Override
+    public boolean supportsSkipLocked() {
+        return delegate.supportsSkipLocked();
+    }
+
+    @Override
+    public boolean supportsNoWait() {
+        return delegate.supportsNoWait();
+    }
+
+    @Override
+    public boolean isLegacyLimitHandlerBehaviorEnabled() {
+        return delegate.isLegacyLimitHandlerBehaviorEnabled();
+    }
+
+    @Override
+    public String inlineLiteral(String literal) {
+        return delegate.inlineLiteral(literal);
+    }
+
+    @Override
+    public String addSqlHintOrComment(String sql, QueryParameters parameters, boolean commentsEnabled) {
+        return delegate.addSqlHintOrComment(sql, parameters, commentsEnabled);
     }
 
     @Override

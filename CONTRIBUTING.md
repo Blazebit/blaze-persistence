@@ -15,7 +15,7 @@ it's probably best to join us on Slack! [![Slack Status](https://blazebit.heroku
 
 When you are confident that you have a unique bug that hasn't been [tracked](https://github.com/Blazebit/blaze-persistence/issues?q=something) yet,
 we very much welcome if you could [create an issue](https://github.com/Blazebit/blaze-persistence/issues/new) with steps to reproduce the bug.
-Ideally, you would create a pull request against the master branch that reproduces the issue within our testsuite,
+Ideally, you would create a pull request against the `main` branch that reproduces the issue within our testsuite,
 but we are also happy if you create a pull request against our https://github.com/Blazebit/blaze-persistence-test-case-template[testcase template project] which is probably easier for beginners.
 
 ### Documentation and Website issues or typos
@@ -26,7 +26,7 @@ Just create a pull request with a simple comment containing what you fixed i.e. 
 
 You have an idea for a feature? Then tell us about it by [creating an issue](https://github.com/Blazebit/blaze-persistence/issues/new).
 As we try to react to new issues as fast as we can, you can expect to very quickly receive information about possible consideration of a feature.
-If it's a small addition, it might very well be considered for one of the next releases, but since we have a rough [roadmap](https://github.com/Blazebit/blaze-persistence/blob/master/roadmap.asciidoc) for big ticket features,
+If it's a small addition, it might very well be considered for one of the next releases, but since we have a rough [roadmap](https://github.com/Blazebit/blaze-persistence/blob/main/roadmap.asciidoc) for big ticket features,
 we generally don't squeeze in bigger features into near future releases.
 It might be a different story if you offer to work on the feature yourself, but since we have to review and integrate your work, it might still take some time.
 
@@ -36,7 +36,7 @@ Everyone can contribute! Please just make sure you let us know that you want to 
 
 #### 1. Prepare environment
 
-Before you start, make sure you create a branch based on the master branch on your [fork](https://help.github.com/articles/fork-a-repo) with a descriptive branch name that starts with the issue number.
+Before you start, make sure you create a branch based on the `main` branch on your [fork](https://help.github.com/articles/fork-a-repo) with a descriptive branch name that starts with the issue number.
 
 ```sh
 git checkout -b 123-cool-feature
@@ -94,20 +94,20 @@ git commit -m "Fix for #123"
 
 #### <a name="pull-request"></a>4. Create a pull request
 
-After all your work is committed, you should rebase your changes on the latest master state.
-In order to do so, you should add the original repository as remote and checkout the latest changes from the master branch first.
+After all your work is committed, you should rebase your changes on the latest `main` state.
+In order to do so, you should add the original repository as remote and checkout the latest changes from the `main` branch first.
 
 ```sh
 git remote add upstream https://github.com/Blazebit/blaze-persistence.git
-git checkout master
-git pull upstream master
+git checkout main
+git pull upstream main
 ```
 
-Then you rebase your branch on top of the latest master, and push it to your fork!
+Then you rebase your branch on top of the latest `main`, and push it to your fork!
 
 ```sh
 git checkout 123-cool-feature
-git rebase master
+git rebase main
 git push --set-upstream origin 123-cool-feature
 ```
 
@@ -120,12 +120,12 @@ The most common requests of maintainers are
 
 ##### Rebase the PR
 
-If the state against which you did your changes and the actual master state diverge, it might be necessary to rebase your changes again to make merging easier.
+If the state against which you did your changes and the actual `main` state diverge, it might be necessary to rebase your changes again to make merging easier.
 Doing a rebase involves the following steps:
 
 ```sh
 git checkout 123-cool-feature
-git pull --rebase upstream master
+git pull --rebase upstream main
 git push --force-with-lease 123-cool-feature
 ```
 
@@ -141,13 +141,13 @@ git push --force-with-lease 123-cool-feature
 
 #### 6. Merge a PR (maintainers only)
 
-A PR can only be merged into master by a maintainer if:
+A PR can only be merged into `main` by a maintainer if:
 
 * It tests are passing CI.
 * It has been approved by at least two maintainers. If it was a maintainer who
   opened the PR, only one extra approval is needed.
 * It has no requested changes.
-* It is up to date with current master.
+* It is up to date with current `main`.
 
 Any maintainer is allowed to merge a PR if all of these conditions are
 met.

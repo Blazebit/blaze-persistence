@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,16 +35,18 @@ public class PostgreSQLGroupConcatWindowFunction extends AbstractGroupConcatWind
 
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         GroupConcat groupConcat = (GroupConcat) windowFunction;
-        if ((groupConcat).isDistinct()) {
+        if (groupConcat.isDistinct()) {
             context.addChunk("distinct ");
         }
         super.renderArguments(context, windowFunction);
         context.addChunk(", ");
         context.addChunk(quoted(groupConcat.getSeparator()));
-        super.renderOrderBy(context, windowFunction.getOrderBys());
+        context.addChunk(" ");
+        super.renderOrderBy(context, windowFunction.getWithinGroup());
     }
 
-    protected void renderOrderBy(FunctionRenderContext context, List<Order> orderBys) {
-        // Don't render the ORDER BY clause in the OVER clause
+    @Override
+    protected void renderWithinGroup(FunctionRenderContext context, List<Order> orderBys) {
+        // Don't render the WITHIN GROUP clause as it is inlined into the function arguments
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -425,9 +425,15 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
         // Except when we use a query strategy here, we'd rather use update queries to do the update
         // We don't fetch if the force entity mode is active because that means, an entity is already given
         if (flushStrategy == FlushStrategy.ENTITY && !context.isForceEntity()) {
-            return partialFlusher(true, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+            if (actions.isEmpty()) {
+                return partialFlusher(true, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+            }
+            return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, elementFlushers);
         } else {
-            return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+            if (actions.isEmpty()) {
+                return partialFlusher(false, PluralFlushOperation.ELEMENT_ONLY, Collections.EMPTY_LIST, elementFlushers);
+            }
+            return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, elementFlushers);
         }
     }
 
@@ -565,10 +571,10 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
      * @since 1.4.0
      */
     protected static enum EntryState {
-        EXISTED {
+        UPDATED {
             @Override
             EntryState onAdd() {
-                return EXISTED;
+                return ADDED;
             }
 
             @Override
@@ -584,13 +590,13 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
             @Override
             EntryState onRemove() {
-                return EXISTED;
+                return UPDATED;
             }
         },
         REMOVED {
             @Override
             EntryState onAdd() {
-                return EXISTED;
+                return UPDATED;
             }
 
             @Override

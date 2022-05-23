@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ class BlazePersistenceCdiProcessor {
                     .produce(createSyntheticBean(blazePersistenceInstanceName,
                             true,
                             CriteriaBuilderFactory.class,
-                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, persistenceUnitName),
+                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, blazePersistenceInstanceName, persistenceUnitName),
                             true));
 
             syntheticBeanBuildItemBuildProducer
@@ -152,7 +152,7 @@ class BlazePersistenceCdiProcessor {
                     .produce(createSyntheticBean(blazePersistenceInstanceName,
                             defaultBlazePersistenceInstance,
                             CriteriaBuilderFactory.class,
-                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, persistenceUnitName),
+                            recorder.criteriaBuilderFactorySupplier(blazePersistenceConfig, blazePersistenceInstanceName, persistenceUnitName),
                             true));
 
             syntheticBeanBuildItemBuildProducer

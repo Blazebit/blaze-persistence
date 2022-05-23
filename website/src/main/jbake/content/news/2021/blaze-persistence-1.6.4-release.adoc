@@ -1,0 +1,96 @@
+= Blaze-Persistence 1.6.4 Release
+Christian Beikov
+2021-12-27 0
+:description: Blaze-Persistence version 1.6.4 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the fourth bug fix release of the 1.6 series. This release again contains not only bug fixes, but also some new features and bug fixes that I would like to highlight.
+
+=== Jakarta artifacts
+
+As of this release, we are publishing artifact variants with an artifact id suffix `-jakarta` which, as the name suggests, are Jakarta EE compatible.
+This means that these artifacts depend on and use the `jakarta.*` namespace. We will most likely continue to ship separate artifacts for Jakarta EE compatibility until version 2.0.
+With version 2.0 we will switch our main artifacts to use the jakarta namespace and instead produce `-javaee` artifacts for some time.
+
+=== Ordered Set-Aggregate functions
+
+Blaze-Persistence now supports ordered set-aggregate functions and the JPQL.Next language was extended to support the `WITHIN GROUP` clause syntax.
+We added support for the `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions and most importantly,
+we also added a function for the SQL standard `LISTAGG` ordered set-aggregate function as alternative to `GROUP_CONCAT`
+which we emulate on all major databases that have a supported vendor specific variant of the string aggregation, just like we did for `GROUP_CONCAT` before.
+
+Have fun with string aggregations like `LISTAGG(e.name, ', ') WITHIN GROUP (ORDER BY e.name)`
+
+=== JPA Criteria extensions
+
+A great addition was made in the JPA Criteria module which now supports defining a `WINDOW`, analogously to the SQL `WINDOW` clause.
+A `WINDOW` can be applied to window functions, as well as aggregate functions which are then used as window functions, and ordered set-aggregate functions.
+Another nice addition is the possibility to specify a `FILTER` clause predicate for aggregate and ordered set-aggregate functions.
+
+Here is a quick example that aggregates cat names that have an age greater than 10 as comma separated list, grouped by owner.
+
+[source,java]
+----
+BlazeCriteriaBuilder cb = BlazeCriteria.get(criteriaBuilderFactory);
+BlazeCriteriaQuery<Tuple> tupleQuery = cb.createTupleQuery();
+BlazeRoot<Cat> cat = tupleQuery.from(Cat.class, "c");
+tupleQuery.multiselect(
+	cb.listagg(cat.get(Cat_.name), cb.literal(", "))
+		.filter(cb.greaterThan(cat.get(Cat_.age), 10L))
+		.withinGroup(cb.asc(cat.get(Cat_.name)))
+);
+tupleQuery.groupBy(cat.get(Cat_.owner));
+
+Tuple actual = tupleQuery.createCriteriaBuilder(em).getResultList().get(0);
+----
+
+=== New GraphQL integrations
+
+While helping a user to get started with SPQR, a GraphQL framework that is popular in the Spring ecosystem, a SPQR example application was developed.
+Since the integration with SPQR was non-trivial, we introduced a new module that serves as integration between Blaze-Persistence and SPQR named `blaze-persistence-integration-graphql-spqr`
+along with a https://persistence.blazebit.com/documentation/1.6/entity-view/manual/en_US/index.html#spqr-setup[new documentation section, window="_blank"] describing the setup.
+The user wanted to go further and make use of updatable entity-views through GraphQL mutations, which we didn't have experience with so far.
+It was very interesting to get into this and we are pretty happy with the way the integration turned out.
+
+TLDR, GraphQL mutations are now supported for all GraphQL integration modules except for Netflix DGS, which can only be supported until version 4.6,
+as the 4.6 release removed support for customizing the deserialization. Please help us convince the maintainers of DGS to consider adding an SPI by commenting and voting on the https://github.com/Netflix/dgs-framework/discussions/775[GitHub discussion, window="_blank"]
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/tree/main/examples[example applications, window="_blank"] to get a sense for how this can work out with your favorite framework!
+
+=== Entity-View deserialization through JSONB
+
+Since SmallRye GraphQL, the most popular implementation of MicroProfile GraphQL, relies on JSONB and we wanted to add support for GraphQL mutations for all GraphQL integration modules,
+we decided to develop an entity-view integration for JSONB as well. Unlike Jackson, JSONB unfortunately doesn't provide support for registering deserializer object per type,
+but instead requires to register a deserializer class per type, which means we have to generate these deserializer classes before registration.
+The unfortunate consequence of this is, that this is currently a JVM only feature. We have plans to https://github.com/Blazebit/blaze-persistence/issues/1044[create an SPI, window="_blank"] that allows influencing code generation, which will solve this problem.
+
+See the documentation for details about the https://persistence.blazebit.com/documentation/1.6/entity-view/manual/en_US/index.html#jsonb-integration[setup of the JSONB integration, window="_blank"].
+
+While working on the JSONB integration, we noticed that our assumption about Jackson being the de-facto standard JSON framework for JAX-RS to be wrong,
+as JSONB the only supported JSON serialization framework on MicroProfile GraphQL. This lead to a small breaking change.
+
+=== JAX-RS integration split
+
+Due to the addition of the JSONB integration, which also required a dedicated JAX-RS integration variant, we decided to split the `blaze-persistence-integration-jaxrs` artifact
+and move out the Jackson framework specific parts into a separate module `blaze-persistence-integration-jaxrs-jackson`.
+
+We are sorry for the inconvenience, but when updating to 1.6.4 you now have to additionally add the Jackson module dependency, as the `blaze-persistence-integration-jaxrs` now only contains the API classes.
+
+=== Quarkus improvements/fixes
+
+Just like in the CDI integration, we now fire a `EntityViewConfiguration` event that allows customization of configuration, registration of custom basic types etc.
+
+We were informed that JSON serialization for entity views didn't work for native images which was now fixed. Thanks for the https://github.com/quarkusio/quarkus/issues/21930[report, window="_blank"]!
+
+=== Merry Christmas and a happy new year
+
+We hope you enjoy this late Christmas present and wish you all a happy new year!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#164[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

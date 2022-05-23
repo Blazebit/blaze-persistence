@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ public class FunctionExpression extends AbstractExpression {
     protected final WindowDefinition windowDefinition;
     protected final Expression realArgument;
     protected List<Expression> expressions;
+    protected List<OrderByItem> withinGroup;
     protected WindowDefinition resolvedWindowDefinition;
 
     @SuppressWarnings("unchecked")
@@ -50,18 +51,20 @@ public class FunctionExpression extends AbstractExpression {
     }
 
     @SuppressWarnings("unchecked")
-    public FunctionExpression(String functionName, List<? extends Expression> expressions, WindowDefinition windowDefinition) {
+    public FunctionExpression(String functionName, List<? extends Expression> expressions, List<OrderByItem> withinGroup, WindowDefinition windowDefinition) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
         this.realArgument = null;
+        this.withinGroup = withinGroup;
         this.windowDefinition = windowDefinition;
     }
 
     @SuppressWarnings("unchecked")
-    private FunctionExpression(String functionName, List<? extends Expression> expressions, Expression realArgument, WindowDefinition windowDefinition) {
+    private FunctionExpression(String functionName, List<? extends Expression> expressions, Expression realArgument, List<OrderByItem> withinGroup, WindowDefinition windowDefinition) {
         this.functionName = functionName;
         this.expressions = (List<Expression>) expressions;
         this.realArgument = realArgument;
+        this.withinGroup = withinGroup;
         this.windowDefinition = windowDefinition;
     }
 
@@ -73,8 +76,19 @@ public class FunctionExpression extends AbstractExpression {
         for (int i = 0; i < size; i++) {
             newExpressions.add(expressions.get(i).copy(copyContext));
         }
+        List<OrderByItem> newWithinGroup;
+        if (withinGroup == null) {
+            newWithinGroup = null;
+        } else {
+            size = withinGroup.size();
+            newWithinGroup = new ArrayList<>(size);
 
-        return new FunctionExpression(functionName, newExpressions, realArgument == null ? null : realArgument.copy(copyContext), windowDefinition == null ? null : windowDefinition.copy(copyContext));
+            for (int i = 0; i < size; i++) {
+                newWithinGroup.add(withinGroup.get(i).copy(copyContext));
+            }
+        }
+
+        return new FunctionExpression(functionName, newExpressions, realArgument == null ? null : realArgument.copy(copyContext), newWithinGroup, windowDefinition == null ? null : windowDefinition.copy(copyContext));
     }
 
     @Override
@@ -101,6 +115,14 @@ public class FunctionExpression extends AbstractExpression {
 
     public void setExpressions(List<Expression> expressions) {
         this.expressions = expressions;
+    }
+
+    public List<OrderByItem> getWithinGroup() {
+        return withinGroup;
+    }
+
+    public void setWithinGroup(List<OrderByItem> withinGroup) {
+        this.withinGroup = withinGroup;
     }
 
     public WindowDefinition getWindowDefinition() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,13 +59,13 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
     }
 
     @Bean
-    public SortHandlerMethodArgumentResolver sortResolver() {
+    public SortHandlerMethodArgumentResolver blazeWebfluxSortResolver() {
         return new SortHandlerMethodArgumentResolver();
     }
 
     @Bean
-    public KeysetPageableHandlerMethodArgumentResolver keysetPageableResolver() {
-        return new KeysetPageableHandlerMethodArgumentResolver(sortResolver(), objectMapper());
+    public KeysetPageableHandlerMethodArgumentResolver blazeWebfluxKeysetPageableResolver() {
+        return new KeysetPageableHandlerMethodArgumentResolver(blazeWebfluxSortResolver(), objectMapper());
     }
 
     @Bean
@@ -75,17 +75,17 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     @Override
     public void configureArgumentResolvers(ArgumentResolverConfigurer configurer) {
-        configurer.addCustomResolver(sortResolver());
-        configurer.addCustomResolver(keysetPageableResolver());
+        configurer.addCustomResolver(blazeWebfluxSortResolver());
+        configurer.addCustomResolver(blazeWebfluxKeysetPageableResolver());
     }
 
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        configurer.customCodecs().reader(new EntityViewTypedDecoderHttpMessageReader<>(new EntityViewAwareJackson2JsonDecoder(entityViewManager, (EntityViewIdValueAccessorImpl) idAttributeAccessor())));
+        configurer.customCodecs().reader(new EntityViewTypedDecoderHttpMessageReader<>(new EntityViewAwareJackson2JsonDecoder(entityViewManager, (EntityViewIdValueAccessorImpl) blazeWebfluxIdAttributeAccessor())));
     }
 
     @Bean
-    public EntityViewIdValueAccessor idAttributeAccessor() {
+    public EntityViewIdValueAccessor blazeWebfluxIdAttributeAccessor() {
         return new EntityViewIdValueAccessorImpl(conversionServiceFactory.getObject());
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  Copyright 2014 - 2021 Blazebit.
+  Copyright 2014 - 2022 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -65,6 +65,7 @@
         <dependencySet>
             <includes>
                 <include>com.blazebit:blaze-persistence-integration-jpa-base</include>
+                <include>com.blazebit:blaze-persistence-integration-jpa-base-jakarta</include>
                 <include>com.blazebit:blaze-persistence-integration-hibernate-*</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
@@ -105,6 +106,7 @@
         <dependencySet>
             <includes>
                 <include>com.blazebit:blaze-persistence-integration-querydsl-expressions</include>
+                <include>com.blazebit:blaze-persistence-integration-querydsl-expressions-jakarta</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/integration/querydsl</outputDirectory>
@@ -114,9 +116,9 @@
                 <include>com.blazebit:blaze-persistence-integration-entity-view-*</include>
                 <include>com.blazebit:blaze-persistence-integration-spring-*</include>
                 <include>com.blazebit:blaze-persistence-integration-deltaspike-data-*</include>
-                <include>com.blazebit:blaze-persistence-integration-jaxrs</include>
-                <include>com.blazebit:blaze-persistence-integration-jackson</include>
-                <include>com.blazebit:blaze-persistence-integration-graphql</include>
+                <include>com.blazebit:blaze-persistence-integration-jaxrs*</include>
+                <include>com.blazebit:blaze-persistence-integration-jackson*</include>
+                <include>com.blazebit:blaze-persistence-integration-graphql*</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}-${project.version}.${artifact.extension}</outputFileNameMapping>
             <outputDirectory>lib/integration/entity-view</outputDirectory>

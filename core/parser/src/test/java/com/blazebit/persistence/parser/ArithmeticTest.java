@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,11 @@ public class ArithmeticTest extends AbstractParserTest {
     @Test
     public void testParenthesisRendering6() {
         assertEquals("1 * 1 - 1", render(parse("1 * 1 - 1")));
+    }
+
+    @Test
+    public void testArithmeticParsing() {
+        assertEquals(multiply(divide(_int("1"), _int("1")), _int("1")), parseOptimized("1 / 1 * 1"));
     }
 
     @Test

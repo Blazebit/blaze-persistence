@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.blazebit.persistence.integration.quarkus.deployment;
 
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceConfiguration;
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceHibernateOrmIntegrationStaticInitListener;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceConfiguration;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceUtil;
@@ -26,6 +27,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
+import io.quarkus.builder.Version;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.AdditionalApplicationArchiveMarkerBuildItem;
@@ -37,6 +39,7 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.hibernate.orm.deployment.AdditionalJpaModelBuildItem;
 import io.quarkus.hibernate.orm.deployment.PersistenceUnitDescriptorBuildItem;
+import io.quarkus.hibernate.orm.deployment.integration.HibernateOrmIntegrationStaticConfiguredBuildItem;
 import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import org.jboss.jandex.AnnotationInstance;
@@ -77,6 +80,12 @@ class BlazePersistenceProcessor {
 
     @BuildStep
     CapabilityBuildItem capability() {
+        String version = Version.getVersion();
+        int dotIndex = version.indexOf('.');
+        // As of version Quarkus 2, the capabilities are read from the extension descriptor
+        if (dotIndex == -1 || Integer.parseInt(version.substring(0, dotIndex)) >= 2) {
+            return null;
+        }
         return new CapabilityBuildItem(CAPABILITY);
     }
 
@@ -88,6 +97,13 @@ class BlazePersistenceProcessor {
     @BuildStep
     AdditionalIndexedClassesBuildItem addBlazePersistenceInstanceAnnotationToIndex() {
         return new AdditionalIndexedClassesBuildItem(BlazePersistenceInstance.class.getName());
+    }
+
+    @BuildStep
+    void addBlazePersistenceIntegrationDescriptor(List<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors, BuildProducer<HibernateOrmIntegrationStaticConfiguredBuildItem> staticConfiguredBuildItemBuildProducer) {
+        for (PersistenceUnitDescriptorBuildItem persistenceUnitDescriptor : persistenceUnitDescriptors) {
+            staticConfiguredBuildItemBuildProducer.produce(new HibernateOrmIntegrationStaticConfiguredBuildItem(FEATURE, persistenceUnitDescriptor.getPersistenceUnitName()).setInitListener(new BlazePersistenceHibernateOrmIntegrationStaticInitListener()));
+        }
     }
 
     @BuildStep
@@ -286,14 +302,31 @@ class BlazePersistenceProcessor {
         for (String entityViewClassName : entityViewsBuildItem.getEntityViewClassNames()) {
             // We need entity view methods because we might call them as listeners but we also need them for metadata discovery
             reflectionProducer.produce(new ReflectiveClassBuildItem(true, true, false, entityViewClassName));
-            // For implementations we only need the fields and constructors
-            for (String generatedStaticModelClass : getGeneratedEntityViewModelImplClassName(entityViewClassName)) {
-                reflectionProducer.produce(ReflectiveClassBuildItem.builder(generatedStaticModelClass)
-                        .constructors(true)
-                        .fields(true)
-                        .finalFieldsWritable(true)
-                        .build()
-                );
+            String baseName = entityViewClassName.replace("$", "");
+            // For entity view implementations we need full reflection because instances of these classes are usually serialized
+            reflectionProducer.produce(ReflectiveClassBuildItem.builder(baseName + "Impl")
+                    .constructors(true)
+                    .fields(true)
+                    .methods(true)
+                    .finalFieldsWritable(true)
+                    .build()
+            );
+            // For static metamodel classes, we only need the fields
+            reflectionProducer.produce(new ReflectiveClassBuildItem(false, false, true, baseName + "_"));
+            // For Relation classes, we only need the constructor
+            for (String generatedStaticModelClass : Arrays.asList(baseName + "Relation", baseName + "MultiRelation")) {
+                reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, generatedStaticModelClass));
+            }
+            // For builder classes, we only need constructors
+            try {
+                Class<?> builderClass = Thread.currentThread().getContextClassLoader().loadClass(baseName + "Builder");
+                reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, builderClass.getName()));
+                for (Class<?> builderSubClass : builderClass.getDeclaredClasses()) {
+                    reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, builderSubClass.getName()));
+                }
+
+            } catch (ClassNotFoundException ex) {
+                // Ignore
             }
         }
 
@@ -317,12 +350,11 @@ class BlazePersistenceProcessor {
         }
     }
 
-    private List<String> getGeneratedEntityViewModelImplClassName(String entityViewClassName) {
+    private List<String> getGeneratedEntityViewModelClassNames(String entityViewClassName) {
         return Arrays.asList(
                 entityViewClassName.replace("$", "") + "_",
                 entityViewClassName.replace("$", "") + "Relation",
                 entityViewClassName.replace("$", "") + "MultiRelation",
-                entityViewClassName.replace("$", "") + "Impl",
                 entityViewClassName.replace("$", "") + "Builder",
                 entityViewClassName.replace("$", "") + "Builder$Init"
         );
@@ -338,28 +370,30 @@ class BlazePersistenceProcessor {
     ServiceProviderBuildItem hibernateMetadataContributor() {
         return new ServiceProviderBuildItem("org.hibernate.boot.spi.MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate5MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate52MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate53MetadataContributor",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56MetadataContributor",
                 "com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateTypeContributor() {
         return new ServiceProviderBuildItem("org.hibernate.metamodel.spi.TypeContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate4Integrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate43Integrator");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53Integrator",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56Integrator");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateAccess() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.integration.hibernate.base.HibernateAccess",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53Access");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53Access",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56Access");
     }
 
     @BuildStep
     ServiceProviderBuildItem entityManagerFactoryIntegrator() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.spi.EntityManagerFactoryIntegrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53EntityManagerFactoryIntegrator");
+                "com.blazebit.persistence.integration.hibernate.Hibernate53EntityManagerFactoryIntegrator",
+                "com.blazebit.persistence.integration.hibernate.Hibernate56EntityManagerFactoryIntegrator");
     }
 
     @BuildStep

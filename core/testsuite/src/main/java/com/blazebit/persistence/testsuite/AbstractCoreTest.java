@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,6 +137,20 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected String escapeCharacter(char character) {
         return jpaProvider.escapeCharacter(character);
+    }
+
+    protected String likePattern(String expression) {
+        Character defaultEscapeCharacter = dbmsDialect.getDefaultEscapeCharacter();
+        if (jpaProvider.supportsLikePatternEscape() || defaultEscapeCharacter == null) {
+            return expression;
+        }
+        if (expression.charAt(0) == '\'') {
+            return expression.replace(defaultEscapeCharacter.toString(), defaultEscapeCharacter.toString() + defaultEscapeCharacter);
+        } else {
+            return jpaProvider.getCustomFunctionInvocation("REPLACE", 1)
+                    + expression + ", '" + defaultEscapeCharacter + defaultEscapeCharacter + "', '"
+                    + defaultEscapeCharacter + defaultEscapeCharacter + defaultEscapeCharacter + defaultEscapeCharacter + "')";
+        }
     }
 
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {

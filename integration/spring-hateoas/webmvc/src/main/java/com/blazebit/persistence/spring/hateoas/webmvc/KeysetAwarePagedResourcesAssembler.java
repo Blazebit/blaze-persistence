@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,10 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +59,42 @@ import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
  * @since 1.5.0
  */
 public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationModelAssembler<Page<T>, PagedModel<EntityModel<T>>> {
+
+    private static final Constructor<EntityModel> ENTITY_MODEL_CONSTRUCTOR;
+    private static final Constructor<PagedModel> PAGED_MODEL_CONSTRUCTOR;
+    private static final Constructor<Link> LINK_CONSTRUCTOR;
+
+    private static final Method ENTITY_MODEL_FACTORY;
+    private static final Method PAGED_MODEL_FACTORY;
+    private static final Method LINK_FACTORY;
+
+    static {
+        Method entityModelFactory = null;
+        Method pagedModelFactory = null;
+        Method linkFactory = null;
+        Constructor<EntityModel> entityModelConstructor = null;
+        Constructor<PagedModel> pagedModelConstructor = null;
+        Constructor<Link> linkConstructor = null;
+        try {
+            entityModelFactory = EntityModel.class.getMethod("of", Object.class);
+            pagedModelFactory = PagedModel.class.getMethod("of", Collection.class, PageMetadata.class);
+            linkFactory = Link.class.getMethod("of", UriTemplate.class, LinkRelation.class);
+        } catch (NoSuchMethodException e) {
+            try {
+                entityModelConstructor = EntityModel.class.getConstructor(Object.class, Link[].class);
+                pagedModelConstructor = PagedModel.class.getConstructor(Collection.class, PageMetadata.class, Link[].class);
+                linkConstructor = Link.class.getConstructor(UriTemplate.class, LinkRelation.class);
+            } catch (NoSuchMethodException noSuchMethodException) {
+                throw new RuntimeException("Could not determine how to construct EntityModel, PagedModel and Link with the given Spring HATEOAS version. Please report this issue!", noSuchMethodException);
+            }
+        }
+        ENTITY_MODEL_CONSTRUCTOR = entityModelConstructor;
+        PAGED_MODEL_CONSTRUCTOR = pagedModelConstructor;
+        LINK_CONSTRUCTOR = linkConstructor;
+        ENTITY_MODEL_FACTORY = entityModelFactory;
+        PAGED_MODEL_FACTORY = pagedModelFactory;
+        LINK_FACTORY = linkFactory;
+    }
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final HateoasKeysetPageableHandlerMethodArgumentResolver pageableResolver;
@@ -77,11 +116,23 @@ public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationMode
 
     @Override
     public PagedModel<EntityModel<T>> toModel(Page<T> entity) {
-        return toModel(entity, it -> new EntityModel<>(it));
+        return toModel(entity, it -> entityModel(it));
     }
 
     public PagedModel<EntityModel<T>> toModel(Page<T> page, Link selfLink) {
-        return toModel(page, it -> new EntityModel<>(it), selfLink);
+        return toModel(page, it -> entityModel(it), selfLink);
+    }
+
+    private EntityModel<T> entityModel(T content) {
+        try {
+            if (ENTITY_MODEL_FACTORY == null) {
+                return ENTITY_MODEL_CONSTRUCTOR.newInstance(content, new Link[0]);
+            } else {
+                return (EntityModel<T>) ENTITY_MODEL_FACTORY.invoke(null, content);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Couldn't instantiate EntityModel", ex);
+        }
     }
 
     public <R extends RepresentationModel<?>> PagedModel<R> toModel(Page<T> page, RepresentationModelAssembler<T, R> assembler) {
@@ -112,7 +163,7 @@ public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationMode
         EmbeddedWrapper wrapper = wrappers.emptyCollectionOf(type);
         List<EmbeddedWrapper> embedded = Collections.singletonList(wrapper);
 
-        return addPaginationLinks(new PagedModel<>(embedded, metadata), page, link);
+        return addPaginationLinks(pagedModel(embedded, metadata), page, link);
     }
 
     protected <R extends RepresentationModel<?>, S> PagedModel<R> createPagedModel(List<R> resources, PageMetadata metadata, Page<S> page) {
@@ -120,7 +171,19 @@ public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationMode
         Assert.notNull(metadata, "PageMetadata must not be null!");
         Assert.notNull(page, "Page must not be null!");
 
-        return new PagedModel<>(resources, metadata);
+        return pagedModel(resources, metadata);
+    }
+
+    private <R> PagedModel<R> pagedModel(Collection<R> resources, PagedModel.PageMetadata metadata) {
+        try {
+            if (PAGED_MODEL_FACTORY == null) {
+                return PAGED_MODEL_CONSTRUCTOR.newInstance(resources, metadata, new Link[0]);
+            } else {
+                return (PagedModel<R>) PAGED_MODEL_FACTORY.invoke(null, resources, metadata);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Couldn't instantiate PagedModel", ex);
+        }
     }
 
     private <S, R extends RepresentationModel<?>> PagedModel<R> createModel(Page<S> page, RepresentationModelAssembler<S, R> assembler, Optional<Link> link) {
@@ -208,7 +271,19 @@ public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationMode
             builder.replaceQueryParam(highestPropertyName);
         }
 
-        return new Link(UriTemplate.of(builder.build().toString()), relation);
+        return link(UriTemplate.of(builder.build().toString()), relation);
+    }
+
+    private Link link(UriTemplate template, LinkRelation rel) {
+        try {
+            if (LINK_FACTORY == null) {
+                return LINK_CONSTRUCTOR.newInstance(template, rel);
+            } else {
+                return (Link) LINK_FACTORY.invoke(null, template, rel);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Couldn't instantiate Link", ex);
+        }
     }
 
     private String serialize(Sort sort, Keyset keyset) {

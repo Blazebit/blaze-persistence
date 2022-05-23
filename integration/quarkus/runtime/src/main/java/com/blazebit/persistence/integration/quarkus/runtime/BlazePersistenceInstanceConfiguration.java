@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,14 @@ public class BlazePersistenceInstanceConfiguration {
      */
     @ConfigItem(defaultValue = "false")
     public boolean templateEagerLoading;
+
+    /**
+     * A boolean flag to make it possible to disable the managed type validation.
+     * By default the managed type validation is enabled, but since the validation is not bullet proof, it can be disabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     */
+    @ConfigItem(defaultValue = "false")
+    public boolean managedTypeValidationDisabled;
 
     /**
      * An integer value that defines the default batch size for entity view attributes.
@@ -158,6 +166,7 @@ public class BlazePersistenceInstanceConfiguration {
 
     public void apply(EntityViewConfiguration entityViewConfiguration) {
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.TEMPLATE_EAGER_LOADING, Boolean.toString(templateEagerLoading));
+        entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.MANAGED_TYPE_VALIDATION_DISABLED, Boolean.toString(managedTypeValidationDisabled));
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.DEFAULT_BATCH_SIZE, Integer.toString(defaultBatchSize));
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.EXPECT_BATCH_MODE, expectBatchMode);
         entityViewConfiguration.setProperty(com.blazebit.persistence.view.ConfigurationProperties.UPDATER_EAGER_LOADING, Boolean.toString(updaterEagerLoading));
@@ -177,6 +186,7 @@ public class BlazePersistenceInstanceConfiguration {
                 persistenceUnit.isPresent() ||
                 packages.isPresent() ||
                 templateEagerLoading ||
+                managedTypeValidationDisabled ||
                 !updaterDisallowOwnedUpdatableSubview ||
                 updaterEagerLoading ||
                 updaterErrorOnInvalidPluralSetter ||

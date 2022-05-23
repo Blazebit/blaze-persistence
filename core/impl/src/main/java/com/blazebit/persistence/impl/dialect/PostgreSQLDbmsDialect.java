@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,12 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public UpdateJoinStyle getUpdateJoinStyle() {
         return UpdateJoinStyle.FROM;
+    }
+
+    @Override
+    public Character getDefaultEscapeCharacter() {
+        // PostgreSQL is non SQL-standard compliant in this regard
+        return '\\';
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -372,6 +372,11 @@ public final class CachingJpaProvider implements JpaProvider {
     @Override
     public boolean needsCaseWhenElseBranch() {
         return jpaProvider.needsCaseWhenElseBranch();
+    }
+
+    @Override
+    public boolean supportsLikePatternEscape() {
+        return jpaProvider.supportsLikePatternEscape();
     }
 
     @Override

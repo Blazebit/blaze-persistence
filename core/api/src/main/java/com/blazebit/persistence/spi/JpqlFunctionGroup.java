@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ public final class JpqlFunctionGroup {
      * @return True if this is an aggregate function, false otherwise
      */
     public boolean isAggregate() {
-        return kind == JpqlFunctionKind.AGGREGATE;
+        return kind == JpqlFunctionKind.AGGREGATE || kind == JpqlFunctionKind.ORDERED_SET_AGGREGATE;
     }
 
     /**

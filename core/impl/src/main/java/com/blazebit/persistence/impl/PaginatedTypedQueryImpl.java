@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -410,7 +410,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 }
 
                 if (totalSize == -1) {
-                    if (inlinedCountQuery) {
+                    if (inlinedCountQuery && firstRow == 0) {
                         totalSize = 0L;
                     } else if (withCount) {
                         totalSize = getTotalCount();

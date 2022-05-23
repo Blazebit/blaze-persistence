@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,10 @@ public enum JpqlFunctionKind {
      * An aggregate function.
      */
     AGGREGATE,
+    /**
+     * An ordered set aggregate function.
+     */
+    ORDERED_SET_AGGREGATE,
     /**
      * A window function.
      */

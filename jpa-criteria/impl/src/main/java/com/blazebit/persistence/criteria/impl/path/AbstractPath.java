@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -200,7 +200,7 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
 
     private void checkDereferenceAllowed() {
         if (!isDereferencable()) {
-            throw new IllegalArgumentException("Dereferencing attributes in '" + getBasePath().getPathExpression() + "' is not allowed!");
+            throw new IllegalArgumentException("Dereferencing attributes in '" + getPathExpression() + "' is not allowed!");
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -395,6 +395,13 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @return this query
      */
     Q lateral();
+
+    /**
+     * Mark the last join as a default join.
+     *
+     * @return this query
+     */
+    Q defaultJoin();
 
     // Covariant Overrides
 

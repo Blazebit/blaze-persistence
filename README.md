@@ -57,7 +57,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.6.2</blaze-persistence.version>
+    <blaze-persistence.version>1.6.6</blaze-persistence.version>
 </properties>
 ```
 
@@ -84,47 +84,47 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 Spring-Boot archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 DeltaSpike Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.6.2"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.6.4"
 ```
 
 ## Supported Java runtimes
 
 All projects are built for Java 7 except for the ones where dependencies already use Java 8 like e.g. Hibernate 5.2, Spring Data 2.0 etc.
-So you are going to need a JDK 8 for building the project.
+So you are going to need a JDK 8 for building the project. The latest Java version we test and support is Java 17.
 
 We also support building the project with JDK 9 and try to keep up with newer versions.
 If you want to run your application on a Java 9 JVM you need to handle the fact that JDK 9+ doesn't export the JAXB and JTA APIs anymore.
-In fact, JDK 11 will even remove the modules so the command line flags to add modules to the classpath won't work.
+In fact, JDK 11 removed the modules, so the command line flags to add modules to the classpath won't work.
 
 Since libraries like Hibernate and others require these APIs you need to make them available. The easiest way to get these APIs back on the classpath is to package them along with your application.
 This will also work when running on Java 8. We suggest you add the following dependencies.
@@ -133,37 +133,46 @@ This will also work when running on Java 8. We suggest you add the following dep
 <dependency>
     <groupId>jakarta.xml.bind</groupId>
     <artifactId>jakarta.xml.bind-api</artifactId>
+    <!-- Use version 3.0.1 if you want to use Jakarta EE 9 -->
     <version>2.3.3</version>
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
     <artifactId>jaxb-impl</artifactId>
+    <!-- Use version 3.0.2 if you want to use Jakarta EE 9 -->
     <version>2.3.3</version>
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
+    <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.transaction</groupId>
     <artifactId>jakarta.transaction-api</artifactId>
+    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
     <version>1.3.3</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.activation</groupId>
     <artifactId>jakarta.activation-api</artifactId>
+    <!-- Use version 2.0.1 if you want to use Jakarta EE 9 -->
     <version>1.2.2</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.annotation</groupId>
     <artifactId>jakarta.annotation-api</artifactId>
+    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
     <version>1.3.5</version>
-    <!-- In a managed environment like Java EE, use 'provided'. Otherwise use 'compile' -->
+    <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 ```
 
-The `javax.transaction` and `javax.activation` dependencies are especially relevant for the JPA metamodel generation.
+The `jakarta.transaction` and `jakarta.activation` dependencies are especially relevant for the JPA metamodel generation.
 
 ## Supported environments/libraries
 
@@ -174,14 +183,14 @@ See the following table for an overview of supported versions.
 
 Module                           | Minimum version                      | Supported versions
 ---------------------------------|--------------------------------------|--------------------
-Hibernate integration            | Hibernate 4.2                        | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4 (not all features are available in older versions)
+Hibernate integration            | Hibernate 4.2                        | 4.2, 4.3, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 (not all features are available in older versions)
 EclipseLink integration          | EclipseLink 2.6                      | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
 DataNucleus integration          | DataNucleus 4.1                      | 4.1, 5.0
 OpenJPA integration              | N/A                                  | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
 Entity View CDI integration      | CDI 1.0                              | 1.0, 1.1, 1.2, 2.0
 Entity View Spring integration   | Spring 4.3                           | 4.3, 5.0, 5.1, 5.2
 DeltaSpike Data integration      | DeltaSpike 1.7                       | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5
+Spring Data integration          | Spring Data 1.11                     | 1.11, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.5, Spring WebMvc 4.3 - 5.2
 Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.5, Spring WebFlux 5.0 - 5.2
 Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2   | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
@@ -432,6 +441,8 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+  * `hibernate-5.6`
+  * `hibernate-5.5`
   * `hibernate-5.4`
   * `hibernate-5.3`
   * `hibernate-5.2`
@@ -455,6 +466,8 @@ To test a specific combination, you need to activate at least 4 profiles
   * `firebird`
   * `sqllite`
 * A Spring data profile
+  * `spring-data-2.5.x`
+  * `spring-data-2.4.x`
   * `spring-data-2.3.x`
   * `spring-data-2.2.x`
   * `spring-data-2.1.x`

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright 2014 - 2021 Blazebit.
+  Copyright 2014 - 2022 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence</artifactId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -37,6 +37,7 @@
 
         <version.servlet>4.0.1</version.servlet>
         <version.jaxb-api>2.3.3</version.jaxb-api>
+        <version.jakarta-jaxb-api>3.0.1</version.jakarta-jaxb-api>
         <version.jaxb>2.3.3</version.jaxb>
         <version.jta>1.3.3</version.jta>
         <version.validation>2.0.1.Final</version.validation>
@@ -46,6 +47,7 @@
         <version.blazeutils>0.1.21</version.blazeutils>
         <version.junit>4.12</version.junit>
         <version.javassist>3.27.0-GA</version.javassist>
+        <querydsl.version>5.0.0</querydsl.version>
         <!-- 1.18 messed up calculation of load index -->
         <version.bridge-injector>1.17</version.bridge-injector>
         <version.bridge-injector-asm>9.0</version.bridge-injector-asm>
@@ -62,6 +64,8 @@
         <version.hibernate-5.3>5.3.1.Final</version.hibernate-5.3>
         <!-- Older versions had an issue with rendering NULL in the IN predicate -->
         <version.hibernate-5.4>5.4.10.Final</version.hibernate-5.4>
+        <version.hibernate-5.5>5.5.0.Final</version.hibernate-5.5>
+        <version.hibernate-5.6>5.6.4.Final</version.hibernate-5.6>
         <!-- Use 5.2.9 for now until there is a milestone release because the maven release always messes up setting the appropriate version.. -->
         <!--<version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>-->
         <version.hibernate-6.0>5.3.1.Final</version.hibernate-6.0>
@@ -109,18 +113,23 @@
         <version.spring-data-2.5>2.5.4</version.spring-data-2.5>
         <version.spring-data-2.5-spring>5.3.9</version.spring-data-2.5-spring>
         <version.spring-data-2.5-spring-boot>2.5.4</version.spring-data-2.5-spring-boot>
+        <version.spring-data-2.6>2.6.1</version.spring-data-2.6>
+        <version.spring-data-2.6-spring>5.3.15</version.spring-data-2.6-spring>
+        <version.spring-data-2.6-spring-boot>2.6.3</version.spring-data-2.6-spring-boot>
 
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 
         <version.jpa-api>2.2.3</version.jpa-api>
+        <version.jakarta-jpa-api>3.0.0</version.jakarta-jpa-api>
 
         <version.weld>3.1.5.Final</version.weld>
-        <version.quarkus>1.11.0.Final</version.quarkus>
+        <version.quarkus>1.11.7.Final</version.quarkus>
         <version.jandex>2.0.4.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
         <!-- Plugin versions -->
+        <version.antrun.plugin>3.0.0</version.antrun.plugin>
         <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.exec.plugin>1.6.0</version.exec.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
@@ -131,7 +140,7 @@
         <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
         <asmVersion>9.1</asmVersion>
 
-        <version.h2>1.4.200</version.h2>
+        <h2.version>1.4.200</h2.version>
         <mssql.version>7.2.2.jre8</mssql.version>
 
         <!-- JVM values for surefire plugin -->
@@ -139,7 +148,7 @@
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
 
         <!-- Hibernate user types used for testing -->
-        <version.hibernate-types>2.2.2</version.hibernate-types>
+        <version.hibernate-types>2.12.1</version.hibernate-types>
     </properties>
 
     <dependencyManagement>
@@ -172,12 +181,22 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-parser</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-parser-jar</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-parser-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -192,12 +211,22 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-api-jar</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -212,7 +241,18 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -228,12 +268,22 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-jpa-criteria-impl-jar</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -258,7 +308,17 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-base-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -289,6 +349,26 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -355,6 +435,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi-jar</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-entity-view-cdi-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -449,12 +534,62 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jaxrs-jsonb-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-jackson</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jsonb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-jsonb-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-spqr</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -475,6 +610,11 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -553,12 +693,13 @@
             </dependency>
 
             <!-- RDBMS driver versions -->
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${version.h2}</version>
-                <scope>test</scope>
-            </dependency>
+            <!-- We unfortunately can't list the dependency here, because otherwise the Quarkus SNAPSHOT build would fail -->
+<!--            <dependency>-->
+<!--                <groupId>com.h2database</groupId>-->
+<!--                <artifactId>h2</artifactId>-->
+<!--                <version>${h2.version}</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
@@ -606,6 +747,10 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>${version.antrun.plugin}</version>
+                </plugin>
                 <plugin>
                     <groupId>org.bsc.maven</groupId>
                     <artifactId>maven-processor-plugin</artifactId>
@@ -749,6 +894,7 @@
                         <configuration>
                             <!-- Travis build workaround -->
                             <argLine>${surefire.jvm.params}</argLine>
+                            <reuseForks>false</reuseForks>
                             <skipTests>${skipTests}</skipTests>
                             <trimStackTrace>false</trimStackTrace>
                         </configuration>

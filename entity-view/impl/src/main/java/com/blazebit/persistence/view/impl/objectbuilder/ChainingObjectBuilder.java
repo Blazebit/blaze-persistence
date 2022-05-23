@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,15 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -48,19 +47,12 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T build(Object[] tuple) {
-        return (T) tuple;
+        return objectBuilder.build(transformator.transform(tuple));
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<T> buildList(List<T> list) {
-        List<Object[]> currentTuples = transformator.transformAll((List<Object[]>) list);
-        List<T> resultList = new ArrayList<T>(currentTuples.size());
-        for (Object[] tuple : currentTuples) {
-            resultList.add(objectBuilder.build(tuple));
-        }
-        return objectBuilder.buildList(resultList);
+        return objectBuilder.buildList(list);
     }
 }

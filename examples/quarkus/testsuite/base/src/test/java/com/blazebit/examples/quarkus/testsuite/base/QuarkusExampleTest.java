@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package com.blazebit.examples.quarkus.testsuite.base;
 import com.blazebit.persistence.examples.quarkus.testsuite.base.AbstractQuarkusExampleTest;
 import io.quarkus.test.junit.QuarkusTest;
 
+
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
 @QuarkusTest
 public class QuarkusExampleTest extends AbstractQuarkusExampleTest {
+
 }

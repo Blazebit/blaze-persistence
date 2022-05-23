@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ import com.blazebit.persistence.view.impl.collection.CollectionRemoveListener;
 import com.blazebit.persistence.view.impl.collection.MapInstantiatorImplementor;
 import com.blazebit.persistence.view.impl.collection.RecordingList;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
-import com.blazebit.persistence.view.impl.entity.CreateOnlyViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EmbeddableUpdaterBasedViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.EntityIdLoader;
 import com.blazebit.persistence.view.impl.entity.EntityLoader;
@@ -1232,23 +1231,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                 ownerMapping,
                                 localCache
                             );
-                        } else if (shouldFlushPersists) {
-                            viewToEntityMapper = new CreateOnlyViewToEntityMapper(
-                                    attributeLocation,
-                                    evm,
-                                    subviewType.getJavaType(),
-                                    readOnlyAllowedSubtypes,
-                                    persistAllowedSubtypes,
-                                    updateAllowedSubtypes,
-                                    null,
-                                    null,
-                                    entityIdAccessor,
-                                    shouldFlushPersists,
-                                    owner,
-                                    ownerMapping,
-                                    localCache
-                            );
-                        } else if (shouldPassThrough(evm, viewType, attribute)) {
+                        } else if (!shouldFlushPersists && shouldPassThrough(evm, viewType, attribute)) {
                             viewToEntityMapper = new LoadOnlyViewToEntityMapper(
                                 EntityLoaders.referenceLoaderForAttribute(evm, localCache, subviewType, attribute),
                                 subviewIdAccessor,
@@ -1263,7 +1246,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                                 persistAllowedSubtypes,
                                 updateAllowedSubtypes,
                                 EntityLoaders.referenceLoaderForAttribute(evm, localCache, subviewType, attribute),
-                                null,
+                                subviewIdAccessor,
                                 entityIdAccessor,
                                 shouldFlushPersists,
                                 owner,

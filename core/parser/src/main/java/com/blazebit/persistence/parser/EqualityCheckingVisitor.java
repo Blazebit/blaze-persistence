@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -229,6 +229,24 @@ public class EqualityCheckingVisitor implements Expression.ResultVisitor<Boolean
             referenceExpression = referenceExpressions.get(i);
             if (expressions.get(i).accept(this)) {
                 return Boolean.TRUE;
+            }
+        }
+        List<OrderByItem> referenceWithinGroup = reference.getWithinGroup();
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup == null && referenceWithinGroup != null || withinGroup != null && referenceWithinGroup == null) {
+            return Boolean.TRUE;
+        } else if (withinGroup != null) {
+            size = withinGroup.size();
+            if (size != referenceWithinGroup.size()) {
+                return Boolean.TRUE;
+            }
+            for (int i = 0; i < size; i++) {
+                OrderByItem orderByItem = withinGroup.get(i);
+                OrderByItem referenceOrderByItem = referenceWithinGroup.get(i);
+                referenceExpression = referenceOrderByItem.getExpression();
+                if (orderByItem.isAscending() != referenceOrderByItem.isAscending() || orderByItem.isNullFirst() != referenceOrderByItem.isNullFirst() || orderByItem.getExpression().accept(this)) {
+                    return Boolean.TRUE;
+                }
             }
         }
         WindowDefinition referenceWindowDefinition = reference.getWindowDefinition();

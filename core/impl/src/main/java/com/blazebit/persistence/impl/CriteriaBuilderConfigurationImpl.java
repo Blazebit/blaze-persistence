@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -505,10 +505,13 @@ import com.blazebit.persistence.impl.function.window.last.LastValueFunction;
 import com.blazebit.persistence.impl.function.window.lead.LeadFunction;
 import com.blazebit.persistence.impl.function.window.max.MaxFunction;
 import com.blazebit.persistence.impl.function.window.min.MinFunction;
+import com.blazebit.persistence.impl.function.window.mode.ModeFunction;
 import com.blazebit.persistence.impl.function.window.nth.NthValueFunction;
 import com.blazebit.persistence.impl.function.window.ntile.NtileFunction;
 import com.blazebit.persistence.impl.function.window.oragg.FallbackWindowOrAggFunction;
 import com.blazebit.persistence.impl.function.window.oragg.WindowOrAggFunction;
+import com.blazebit.persistence.impl.function.window.percentilecont.PercentileContFunction;
+import com.blazebit.persistence.impl.function.window.percentiledisc.PercentileDiscFunction;
 import com.blazebit.persistence.impl.function.window.percentrank.PercentRankFunction;
 import com.blazebit.persistence.impl.function.window.rank.RankFunction;
 import com.blazebit.persistence.impl.function.window.row.RowNumberFunction;
@@ -764,6 +767,18 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
         registerFunction(jpqlFunctionGroup);
 
+        // listagg
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("listagg", JpqlFunctionKind.ORDERED_SET_AGGREGATE);
+        jpqlFunctionGroup.add("db2", new DB2GroupConcatWindowFunction(dbmsDialects.get("db2")));
+        jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
+        jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
+        jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
+        jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
+        jpqlFunctionGroup.add("microsoft", new MSSQLGroupConcatFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
+        registerFunction(jpqlFunctionGroup);
+
         // window_group_concat
 
         jpqlFunctionGroup = new JpqlFunctionGroup("window_group_concat", JpqlFunctionKind.WINDOW);
@@ -774,7 +789,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
         registerFunction(jpqlFunctionGroup);
-        
+
         // datetime
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year", false);
@@ -1716,7 +1731,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // rank
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(RankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
+        jpqlFunctionGroup = new JpqlFunctionGroup(RankFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new RankFunction(dialectEntry.getValue()));
         }
@@ -1724,7 +1739,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // dense_rank
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(DenseRankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
+        jpqlFunctionGroup = new JpqlFunctionGroup(DenseRankFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new DenseRankFunction(dialectEntry.getValue()));
         }
@@ -1732,7 +1747,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // PERCENT_RANK
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(PercentRankFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
+        jpqlFunctionGroup = new JpqlFunctionGroup(PercentRankFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentRankFunction(dialectEntry.getValue()));
         }
@@ -1740,7 +1755,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // CUME_DIST
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(CumeDistFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
+        jpqlFunctionGroup = new JpqlFunctionGroup(CumeDistFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new CumeDistFunction(dialectEntry.getValue()));
         }
@@ -1818,6 +1833,30 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(GroupingSetsFunction.FUNCTION_NAME, new GroupingSetsFunction());
         registerFunction(CubeFunction.FUNCTION_NAME, new CubeFunction());
         registerFunction(RollupFunction.FUNCTION_NAME, new RollupFunction());
+
+        // MODE
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(ModeFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new ModeFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // PERCENTILE_CONT
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(PercentileContFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentileContFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
+
+        // PERCENTILE_DISC
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(PercentileDiscFunction.FUNCTION_NAME, JpqlFunctionKind.ORDERED_SET_AGGREGATE);
+        for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
+            jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentileDiscFunction(dialectEntry.getValue()));
+        }
+        registerFunction(jpqlFunctionGroup);
     }
 
     private void registerFunction(String name, JpqlFunction function) {

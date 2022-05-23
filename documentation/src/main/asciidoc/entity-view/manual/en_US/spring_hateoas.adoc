@@ -20,7 +20,7 @@ In short, the following Maven dependencies are required
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -111,4 +111,4 @@ public class MyCatController {
 ----
 
 For more information about the Spring-Data or Spring WebMvc integration, on which the Spring HATEOAS support is based on, take a look into the <<spring-data-features,Spring-Data chapter>>.
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-hateoas/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-hateoas/[example project].

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,6 +178,7 @@ WHEN                : [wW] [hH] [eE] [nN];
 WHERE               : [wW] [hH] [eE] [rR] [eE];
 WINDOW              : [wW] [iI] [nN] [dD] [oO] [wW];
 WITH                : [wW] [iI] [tT] [hH];
+WITHIN              : [wW] [iI] [tT] [hH] [iI] [nN];
 
 TIMESTAMP_ESCAPE_START  : '{ts';
 DATE_ESCAPE_START       : '{d';

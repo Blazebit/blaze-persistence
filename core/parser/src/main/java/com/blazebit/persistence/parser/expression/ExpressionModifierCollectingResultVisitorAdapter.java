@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,6 +169,15 @@ public abstract class ExpressionModifierCollectingResultVisitorAdapter implement
         for (int i = 0; i < size; i++) {
             if (Boolean.TRUE == expressions.get(i).accept(this)) {
                 onModifier(new ExpressionListModifier(expressions, i));
+            }
+        }
+        List<OrderByItem> withinGroup = expression.getWithinGroup();
+        if (withinGroup != null) {
+            size = withinGroup.size();
+            for (int i = 0; i < size; i++) {
+                if (Boolean.TRUE == withinGroup.get(i).getExpression().accept(this)) {
+                    onModifier(new OrderByItemModifier(withinGroup.get(i)));
+                }
             }
         }
         WindowDefinition windowDefinition = expression.getWindowDefinition();

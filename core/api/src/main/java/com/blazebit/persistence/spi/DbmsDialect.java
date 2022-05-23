@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -421,6 +421,14 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public String cast(String expression, String sqlType);
+
+    /**
+     * Returns default escape character of the like predicate.
+     *
+     * @return The default escape character of the like predicate
+     * @since 1.6.3
+     */
+    public Character getDefaultEscapeCharacter();
 
     /**
      * Returns whether sql types for the returning columns need to be provided.

@@ -2,9 +2,95 @@
 
 Changes that happened in releases
 
-## 1.6.3-SNAPSHOT
+## 1.6.7-SNAPSHOT
 
 Not yet released
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.6
+
+19/01/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.6+is%3Aclosed+sort%3Aupdated-desc)
+
+### New features
+
+* Support Spring Boot/Data 2.6
+
+### Bug fixes
+
+* Fix issues in Quarkus integration preventing the use of the Hibernate 5.6 integration in native mode
+* Fix boot issue when model contains an association to an entity type that has an id class
+
+### Backwards-incompatible changes
+
+None
+
+## 1.6.5
+
+19/01/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.5) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.5+is%3Aclosed+sort%3Aupdated-desc)
+
+### New features
+
+* Fire CDI event for `CriteriaBuilderConfiguration` on boot also in Quarkus integration
+* Create custom integrations for Hibernate 5.5 and 5.6 to avoid confusion
+
+### Bug fixes
+
+* Fix dev UI support for Quarkus 2
+* Fix support for non-public `@PostLoad` methods in entity view annotation processor
+* Fix lookup of constantified attributes in functional dependency analysis
+* Retain configurations added through `MetadataContributor` in Quarkus integration
+
+### Backwards-incompatible changes
+
+* Throw exception if non-streaming capable object builder is used for streaming
+* Replace `blaze-persistence-integration-hibernate-5.4-jakarta` with `blaze-persistence-integration-hibernate-5.5-jakarta`
+
+## 1.6.4
+
+27/12/2021 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.4) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.4+is%3Aclosed+sort%3Aupdated-desc)
+
+### New features
+
+* Create artifacts for Jakarta Persistence
+* Add `WITHIN GROUP` syntax support for ordered set-aggregate functions
+* Add SQL standard compliant `LISTAGG` ordered set-aggregate function as alternative to `GROUP_CONCAT`
+* Add `PERCENTILE_CONT`, `PERCENTILE_DISC` and `MODE` ordered set-aggregate functions
+* Add JPA Criteria support for aggregate `FILTER` clause, window functions and ordered set aggregate functions
+* Fire `EntityViewConfiguration` as event in Quarkus extension boot like in the CDI integration to allow customization
+* Add JSONB integration for deserializing entity views
+* Add Spring SPQR integration and example application
+* Add examples for SPQR, DGS and MicroProfile GraphQL showcasing how GraphQL mutations can be used
+
+### Bug fixes
+
+* Return proper totalSize on PagedList also if the requested page is empty
+* Get rid of a startup warning with Quarkus 2.4.0+
+* Fix typo in QueryDSL `GROUP_CONCAT` rendering leading to a syntax error
+* Add `getById` implementation as needed by Spring Data 2.5 to the integration
+* Ensure stream/iteration processing of results works with entity views containing no collections
+* Fix support for flushing flat view collections with read-only declared and updatable subview types
+* Ensure pending inserts for tables targeted by foreign keys by custom insert/update DML are flushed
+* Fix JSON serialization for entity views in Quarkus native image
+
+### Backwards-incompatible changes
+
+* Properly implement the `getOne` semantics to return a reference instead of querying an instance
+* Split JAX-RS integration into JAX-RS for Jackson and JAX-RS for JSONB integrations
+
+## 1.6.3
+
+10/10/2021 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.3) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.3+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -32,10 +118,11 @@ Not yet released
 * Make sure `LIMIT`/`OFFSET` is respected when generating a count query
 * Fix concurrency issue in entity view annotation processor leading to strange errors
 * Fix setter determination in entity views
+* Fix issues with non-PK single valued association id access optimization leading to joins
 
 ### Backwards-incompatible changes
 
-None yet
+* Automatically escape the LIKE pattern on PostgreSQL if no escape character is given, because it uses a backslash as default escape character
 
 ## 1.6.2
 

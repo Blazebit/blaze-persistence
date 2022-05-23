@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -258,7 +258,7 @@ class FunctionalDependencyAnalyzerVisitor extends EmbeddableSplittingVisitor {
             baseNodeKey = new AbstractMap.SimpleEntry<>(baseNode, associationName);
             if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE) {
                 boolean nonConstantParent = true;
-                Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNode);
+                Map<String, Boolean> constantifiedAttributes = constantifiedJoinNodeAttributeCollector.getConstantifiedJoinNodeAttributes().get(baseNodeKey);
                 if (constantifiedAttributes != null) {
                     Map<String, Boolean> orderedAttributes = new HashMap<>();
                     addAttributes(baseNode.getEntityType(), null, "", "", (SingularAttribute<?, ?>) attribute, orderedAttributes);

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright 2014 - 2021 Blazebit.
+  Copyright 2014 - 2022 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-parent</artifactId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,8 @@
         <module>hibernate-5.2</module>
         <module>hibernate-5.3</module>
         <module>hibernate-5.4</module>
+        <module>hibernate-5.5</module>
+        <module>hibernate-5.6</module>
         <module>hibernate-6.0</module>
         <module>datanucleus</module>
         <module>datanucleus-5.1</module>
@@ -50,13 +52,29 @@
         <module>spring-hateoas</module>
         <module>deltaspike-data</module>
         <module>jaxrs</module>
+        <module>jaxrs-jackson</module>
+        <module>jaxrs-jsonb</module>
         <module>jackson</module>
+        <module>jsonb</module>
         <module>graphql</module>
+        <module>graphql-spqr</module>
         <module>querydsl</module>
+        <module>quarkus</module>
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>
         <module>entity-view-cdi-jar</module>
-        <module>quarkus</module>
+
+        <module>jpa-base-jakarta</module>
+        <module>hibernate-base-jakarta</module>
+        <module>hibernate-5.5-jakarta</module>
+        <module>hibernate-5.6-jakarta</module>
+        <module>entity-view-cdi-jakarta</module>
+        <module>jaxrs-jackson-jakarta</module>
+        <module>jaxrs-jsonb-jakarta</module>
+        <module>jackson-jakarta</module>
+        <module>jsonb-jakarta</module>
+        <module>graphql-jakarta</module>
+        <module>graphql-spqr-jakarta</module>
     </modules>
 </project>

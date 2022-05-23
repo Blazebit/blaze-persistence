@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -163,6 +163,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
                 return FunctionKind.VOLATILE;
             case AGGREGATE:
                 return FunctionKind.AGGREGATE;
+            case ORDERED_SET_AGGREGATE:
+                return FunctionKind.ORDERED_SET_AGGREGATE;
             case DETERMINISTIC:
                 return FunctionKind.DETERMINISTIC;
             default:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,7 +124,9 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
     public Queryable<T, ?> render(Expression<?> expression) {
         this.criteriaBuilder = (CriteriaBuilder) criteriaBuilderFactory.create(entityManager, Object.class);
-        return (Queryable<T, ?>) serializeSubQuery(this.criteriaBuilder, expression);
+        Object output = serializeSubQuery(this.criteriaBuilder, expression);
+        renderConstants((ParameterHolder<?>) output);
+        return (Queryable<T, ?>) output;
     }
 
     private Object serializeSubQuery(Object criteriaBuilder, Expression<?> expression) {
@@ -324,7 +326,6 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
                 renderOrderBy(subQueryMetadata, (OrderByBuilder<?>) criteriaBuilder);
                 renderParameters(subQueryMetadata, (ParameterHolder<?>) criteriaBuilder);
-                renderConstants((ParameterHolder<?>) criteriaBuilder);
 
                 // Limit / offset on full query is set outside of the renderer, based on whether we're rendering a full count query or not
                 if (!(criteriaBuilder instanceof Queryable)) {
@@ -474,10 +475,13 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 }
             } else if (target instanceof Path<?>) {
                 Path<?> entityPath = (Path<?>) target;
-                if (alias == null) {
-                    alias = entityPath.getMetadata().getName();
-                }
                 boolean entityJoin = entityPath.getMetadata().isRoot();
+                String renderedExpression = renderExpression(entityPath);
+
+                // While this looks suspicious, this is actually in line with Querydsl's default behaviour in JPQLSerializer.handleJoinTarget
+                if (alias == null && entityJoin) {
+                    alias = renderedExpression;
+                }
 
                 switch (joinExpression.getType()) {
                     case DEFAULT:
@@ -498,13 +502,12 @@ public class BlazeCriteriaBuilderRenderer<T> {
                         if (entityJoin) {
                             criteriaBuilder = fromBuilder.from(entityPath.getType(), alias);
                         } else {
-                            String collectionExpression = renderExpression(entityPath);
                             if (fromBuilder instanceof BaseSubqueryBuilder) {
-                                criteriaBuilder = (X) ((BaseSubqueryBuilder<?>) fromBuilder).from(collectionExpression, alias);
+                                criteriaBuilder = (X) ((BaseSubqueryBuilder<?>) fromBuilder).from(renderedExpression, alias);
                             } else if (fromBuilder instanceof SubqueryInitiator<?>) {
-                                criteriaBuilder = (X) ((SubqueryInitiator<?>) fromBuilder).from(collectionExpression, alias);
+                                criteriaBuilder = (X) ((SubqueryInitiator<?>) fromBuilder).from(renderedExpression, alias);
                             } else {
-                                throw new IllegalArgumentException(collectionExpression + "  join not supported here");
+                                throw new IllegalArgumentException(renderedExpression + "  join not supported here");
                             }
                         }
 
@@ -523,13 +526,27 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(entityPath.getType(), alias, joinType);
                             setExpressionSubqueries(joinExpression.getCondition(), null, xJoinOnBuilder, JoinOnBuilderExpressionSetter.INSTANCE);
                         } else if (!hasCondition) {
+                            // If there is no alias, assume a default join
+                            boolean defaultJoin = alias == null || joinExpression.hasFlag(AbstractBlazeJPAQuery.DEFAULT);
+
                             if (fetch) {
-                                ((FullQueryBuilder<?, ?>) criteriaBuilder).joinDefault(renderExpression(entityPath), alias, joinType, fetch);
+                                if (defaultJoin) {
+                                    ((FullQueryBuilder<?, ?>) criteriaBuilder).joinDefault(renderedExpression, alias, joinType, fetch);
+                                } else {
+                                    ((FullQueryBuilder<?, ?>) criteriaBuilder).join(renderedExpression, alias, joinType, fetch);
+                                }
                             } else {
-                                criteriaBuilder.joinDefault(renderExpression(entityPath), alias, joinType);
+                                if (defaultJoin) {
+                                    criteriaBuilder.joinDefault(renderedExpression, alias, joinType);
+                                } else {
+                                    criteriaBuilder.join(renderedExpression, alias, joinType);
+                                }
                             }
                         } else {
-                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(renderExpression(entityPath), alias, joinType);
+                            if (alias == null) {
+                                throw new IllegalArgumentException("This association join requires an alias, like so: .join(" + renderedExpression + ", " + entityPath.getClass().getSimpleName() + "." + entityPath.getMetadata().getName() + ")");
+                            }
+                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(renderedExpression, alias, joinType);
                             setExpressionSubqueries(joinExpression.getCondition(), null, xJoinOnBuilder, JoinOnBuilderExpressionSetter.INSTANCE);
                         }
 

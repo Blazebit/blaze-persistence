@@ -30,7 +30,7 @@ and lots of bugfixes, most notably
 
 We advise you to update to 1.2.0-Alpha4 as soon as possible to prevent getting hit from the expression cloning issue https://github.com/Blazebit/blaze-persistence/issues/455[*#455*, window="_blank"].
 
-Initially, we https://github.com/Blazebit/blaze-persistence/blob/master/roadmap.asciidoc#21-black-panther[planned] to commit ourselves to implementing updatable entity views in version 2.1, because we thought the experimental support would suffice,
+Initially, we https://github.com/Blazebit/blaze-persistence/blob/main/roadmap.asciidoc#21-black-panther[planned] to commit ourselves to implementing updatable entity views in version 2.1, because we thought the experimental support would suffice,
 but we weren't happy with that state and decided to implement fully functional updatable entity views already as part of 1.2.0. You can expect a few blog posts about updatable entity views in the upcoming months that show one or another feature in action.
 We didn't release a new version because we weren't fully satisfied with how new features lacked one or another knob to make them really useful in practice. To not rush into an API design that we might regret later, we deferred a release until we verified the design.
 You might say that we are still in an Alpha stage and the quality expectations of users wouldn't be very high, but that's not our intention, we expect a lot of our releases.
@@ -42,6 +42,6 @@ If critical bugs are discovered, we will backport the fix and do bug fix release
 bug fixes will only be backported to older versions and released on occasion.
 If we aren't able to release a minor or major release because we haven't finished any of the planned features, we will at least release a bug fix version.
 
-For the interested among you, we updated our https://github.com/Blazebit/blaze-persistence/blob/master/roadmap.asciidoc[roadmap] to reflect our near future plans.
+For the interested among you, we updated our https://github.com/Blazebit/blaze-persistence/blob/main/roadmap.asciidoc[roadmap] to reflect our near future plans.
 
 Stay tuned, the final https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.2.0[1.2.0 release] is targeted for end of February.

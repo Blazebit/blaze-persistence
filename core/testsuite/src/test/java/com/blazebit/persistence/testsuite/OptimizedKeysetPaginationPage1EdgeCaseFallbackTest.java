@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,10 @@ public class OptimizedKeysetPaginationPage1EdgeCaseFallbackTest extends Abstract
                 doc2.setOwner(o2);
                 doc3.setOwner(o3);
                 doc4.setOwner(o4);
+                doc1.setFriend(o1);
+                doc2.setFriend(o2);
+                doc3.setFriend(o3);
+                doc4.setFriend(o4);
 
                 em.persist(o1);
                 em.persist(o2);

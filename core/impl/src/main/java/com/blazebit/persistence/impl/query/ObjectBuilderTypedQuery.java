@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,11 +82,17 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
         return resultStream.map(new Function<X, X>() {
             @Override
             public X apply(X tuple) {
+                Object[] array;
                 if (tuple instanceof Object[]) {
-                    return builder.build((Object[]) tuple);
+                    array = (Object[]) tuple;
                 } else {
-                    return builder.build(new Object[]{tuple});
+                    array = new Object[]{tuple};
                 }
+                X result = builder.build(array);
+                if (result == array) {
+                    throw new UnsupportedOperationException("Object builder is not streaming capable: " + builder);
+                }
+                return result;
             }
         }).onClose(new Runnable() {
             @Override

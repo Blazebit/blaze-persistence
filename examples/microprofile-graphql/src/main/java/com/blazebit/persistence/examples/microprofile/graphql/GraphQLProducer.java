@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,22 @@ package com.blazebit.persistence.examples.microprofile.graphql;
 
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupportFactory;
+import com.blazebit.persistence.integration.jsonb.EntityViewJsonbDeserializer;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import graphql.schema.GraphQLSchema;
+import io.smallrye.graphql.json.JsonBCreator;
 import io.smallrye.graphql.scalar.GraphQLScalarTypes;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -55,6 +63,25 @@ public class GraphQLProducer {
         graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
         graphQLEntityViewSupportFactory.setScalarTypeMap(GraphQLScalarTypes.getScalarMap());
         this.graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(schemaBuilder, evm);
+        // The integration with SmallRye GraphQL requires setting custom Jsonb objects in a registry
+        // TODO: move this into a separate integration for SmallRye?
+        Map<String, Jsonb> jsonMap;
+        try {
+            Field jsonMapField = JsonBCreator.class.getDeclaredField("jsonMap");
+            jsonMapField.setAccessible(true);
+            jsonMap = (Map<String, Jsonb>) jsonMapField.get(null);
+            JsonbConfig jsonbConfig = new JsonbConfig()
+                    .withFormatting(true)
+                    .withNullValues(true)
+                    .setProperty("jsonb.fail-on-unknown-properties", true);
+            EntityViewJsonbDeserializer.integrate(jsonbConfig, evm);
+            Jsonb jsonb = JsonbBuilder.create(jsonbConfig);
+            for (ManagedViewType<?> managedView : evm.getMetamodel().getManagedViews()) {
+                jsonMap.put(managedView.getJavaType().getName(), jsonb);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Couldn't register jsonb objects for deserialization!", ex);
+        }
     }
 
     @Produces

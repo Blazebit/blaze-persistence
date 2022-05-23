@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.MappingException;
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
@@ -47,6 +48,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -274,6 +276,12 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean needsCaseWhenElseBranch() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsLikePatternEscape() {
+        // Not yet supported
         return false;
     }
 
@@ -516,7 +524,7 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         AbstractEntityPersister persister = getEntityPersister(ownerType);
-        Type propertyType = persister.getPropertyType(attributeName);
+        Type propertyType = getPropertyType(persister, attributeName);
 
         if (propertyType instanceof org.hibernate.type.EntityType) {
             org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
@@ -529,7 +537,7 @@ public class HibernateJpaProvider implements JpaProvider {
             // ManyToOnes can have JoinTables, which can be treated as non-foreign
             // if table group joins are supported.
             if (supportsTableGroupJoins || propertyType instanceof OneToOneType) {
-                return (entityType).getRHSUniqueKeyPropertyName() != null;
+                return entityType.getRHSUniqueKeyPropertyName() != null && !supportsSingleValuedAssociationNaturalIdExpressions;
             }
         }
 
@@ -573,7 +581,7 @@ public class HibernateJpaProvider implements JpaProvider {
             return ConstraintType.WHERE;
         }
         AbstractEntityPersister persister = getEntityPersister(ownerType);
-        Type propertyType = persister.getPropertyType(attributeName);
+        Type propertyType = getPropertyType(persister, attributeName);
 
         if (!(propertyType instanceof AssociationType)) {
             return ConstraintType.NONE;
@@ -632,7 +640,7 @@ public class HibernateJpaProvider implements JpaProvider {
         List<String> propertiesToCheck = new ArrayList<>(Arrays.asList(subclassPersister.getPropertyNames()));
         while (!propertiesToCheck.isEmpty()) {
             String propertyName = propertiesToCheck.remove(propertiesToCheck.size() - 1);
-            Type propertyType = subclassPersister.getPropertyType(propertyName);
+            Type propertyType = getPropertyType(subclassPersister, propertyName);
             if (propertyType instanceof ComponentType) {
                 ComponentType componentType = (ComponentType) propertyType;
                 for (String subPropertyName : componentType.getPropertyNames()) {
@@ -660,8 +668,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 return "";
             }
         } else {
-            EntityPersister entityPersister = getEntityPersister(ownerType);
-            Type propertyType = entityPersister.getPropertyType(attributeName);
+            AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
+            Type propertyType = getPropertyType(entityPersister, attributeName);
             if (propertyType instanceof OneToOneType) {
                 return ((OneToOneType) propertyType).getRHSUniqueKeyPropertyName();
             }
@@ -764,7 +772,7 @@ public class HibernateJpaProvider implements JpaProvider {
         List<String> addedAttributeNames = new ArrayList<>();
         for (String attributeName : columnMatchingAttributeNames) {
             String elementAttributeName = iterator.next();
-            Type propertyType = entityPersister.getPropertyType(attributeName);
+            Type propertyType = getPropertyType(entityPersister, attributeName);
             if (propertyType instanceof org.hibernate.type.EntityType) {
                 // If the columns refer to an association, we map that through instead of trying to set just the identifier properties
                 if (elementPersister.getEntityName().equals(((org.hibernate.type.EntityType) propertyType).getAssociatedEntityName())) {
@@ -801,13 +809,51 @@ public class HibernateJpaProvider implements JpaProvider {
     public String[] getColumnNames(EntityType<?> entityType, String attributeName) {
         QueryableCollection collectionPersister = getCollectionPersister(entityType, attributeName);
         if (collectionPersister == null) {
-            try {
-                return getEntityPersister(entityType).getPropertyColumnNames(attributeName);
-            } catch (MappingException e) {
-                throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityType.getJavaType() + "]", e);
-            }
+            return getColumnNames(getEntityPersister(entityType), attributeName);
         } else {
             return collectionPersister.getElementColumnNames();
+        }
+    }
+
+    public String[] getColumnNames(AbstractEntityPersister entityPersister, String attributeName) {
+        try {
+            return entityPersister.getPropertyColumnNames(attributeName);
+        } catch (MappingException e) {
+            // Workaround for HHH-15051
+            int dotIndex = attributeName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                String attributePrefix = attributeName.substring(0, dotIndex);
+                Type propertyType = getPropertyType(entityPersister, attributePrefix);
+                if (propertyType instanceof org.hibernate.type.EntityType) {
+                    String[] columnNames = getColumnNames(entityPersister, attributePrefix);
+                    org.hibernate.type.EntityType hibernateEntityType = (org.hibernate.type.EntityType) propertyType;
+                    Type idType = hibernateEntityType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
+                    String attributeSubName = attributeName.substring(dotIndex + 1);
+                    if (idType instanceof CompositeType && ((CompositeType) idType).isEmbedded()) {
+                        CompositeType idClassType = (CompositeType) idType;
+                        int columnSpan = 0;
+                        int propertyIndex = -1;
+                        String[] propertyNames = idClassType.getPropertyNames();
+                        Type[] subtypes = idClassType.getSubtypes();
+                        for (int i = 0; i < propertyNames.length; i++) {
+                            if (propertyNames[i].equals(attributeSubName)) {
+                                propertyIndex = i;
+                                break;
+                            }
+                            columnSpan += subtypes[i].getColumnSpan(entityPersister.getFactory());
+                        }
+
+                        if (propertyIndex != -1) {
+                            String[] actualColumns = new String[subtypes[propertyIndex].getColumnSpan(entityPersister.getFactory())];
+                            System.arraycopy(columnNames, columnSpan, actualColumns, 0, actualColumns.length);
+                            return actualColumns;
+                        }
+                    } else if (attributeSubName.equals(hibernateEntityType.getIdentifierOrUniqueKeyPropertyName(entityPersister.getFactory()))) {
+                        return columnNames;
+                    }
+                }
+            }
+            throw new RuntimeException("Unknown property [" + attributeName + "] of entity [" + entityPersister.getEntityName() + "]", e);
         }
     }
 
@@ -885,7 +931,7 @@ public class HibernateJpaProvider implements JpaProvider {
         int offset = 0;
         for (int i = 0; i < propertyNames.length; i++) {
             String propertyName = propertyNames[i];
-            Type propertyType = persister.getPropertyType(prefix + propertyName);
+            Type propertyType = getPropertyType(persister, prefix + propertyName);
             int span = propertyType.getColumnSpan(factory);
             if (subAttributeName.equals(propertyName)) {
                 String[] columnNames = new String[span];
@@ -919,7 +965,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (collectionPersister == null) {
             AbstractEntityPersister entityPersister = getEntityPersister(entityType);
             SessionFactoryImplementor sfi = entityPersister.getFactory();
-            String[] columnNames = entityPersister.getPropertyColumnNames(attributeName);
+            String[] columnNames = getColumnNames(entityPersister, attributeName);
             Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
             Table[] tables;
 
@@ -945,7 +991,7 @@ public class HibernateJpaProvider implements JpaProvider {
             boolean isSubselect = tables.length == 1 && tables[0] == null;
 
             if (isSubselect || isFormula(columnNames)) {
-                Type propertyType = entityPersister.getPropertyType(attributeName);
+                Type propertyType = getPropertyType(entityPersister, attributeName);
                 return getColumnTypeForPropertyType(entityType, attributeName, sfi, propertyType);
             }
 
@@ -1157,7 +1203,7 @@ public class HibernateJpaProvider implements JpaProvider {
                     String identifierOrUniqueKeyPropertyName = ((ManyToOneType) persister.getElementType()).getIdentifierOrUniqueKeyPropertyName(persister.getFactory());
                     String[] targetPrimaryKeyColumnMetaData = identifierOrUniqueKeyPropertyName == null ?
                             elementPersister.getKeyColumnNames() : // IdClass returns null for getIdentifierOrUniqueKeyPropertyName
-                            elementPersister.getPropertyColumnNames(identifierOrUniqueKeyPropertyName);
+                            getColumnNames(elementPersister, identifierOrUniqueKeyPropertyName);
 
                     Map<String, String> targetIdColumnMapping = new LinkedHashMap<>();
 
@@ -1192,7 +1238,7 @@ public class HibernateJpaProvider implements JpaProvider {
             String[] propertyNames = ((EmbeddedComponentType) queryableCollection.getKeyType()).getPropertyNames();
             List<String> columnNames = new ArrayList<>(propertyNames.length);
             for (String propertyName : propertyNames) {
-                for (String propertyColumnName : ownerEntityPersister.getPropertyColumnNames(propertyName)) {
+                for (String propertyColumnName : getColumnNames(ownerEntityPersister, propertyName)) {
                     columnNames.add(propertyColumnName);
                 }
             }
@@ -1405,7 +1451,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
             propertyType = componentType.getSubtypes()[componentType.getPropertyIndex(propertyParts[propertyParts.length - 1])];
         } else {
-            propertyType = entityPersister.getPropertyType(attributeName);
+            propertyType = getPropertyType(entityPersister, attributeName);
         }
 
         if (propertyType instanceof CollectionType) {
@@ -1442,6 +1488,33 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return false;
+    }
+
+    private Type getPropertyType(AbstractEntityPersister entityPersister, String attributeName) {
+        try {
+            return entityPersister.getPropertyType(attributeName);
+        } catch (QueryException ex) {
+            // Workaround for HHH-15051
+            int dotIndex = attributeName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                Type propertyType = getPropertyType(entityPersister, attributeName.substring(0, dotIndex));
+                if (propertyType instanceof org.hibernate.type.EntityType) {
+                    org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+                    Type idType = entityType.getIdentifierOrUniqueKeyType(entityPersister.getFactory());
+                    String attributeSubName = attributeName.substring(dotIndex + 1);
+                    if (idType instanceof CompositeType && ((CompositeType) idType).isEmbedded()) {
+                        CompositeType idClassType = (CompositeType) idType;
+                        int propertyIndex = Arrays.asList(idClassType.getPropertyNames()).indexOf(attributeSubName);
+                        if (propertyIndex != -1) {
+                            return idClassType.getSubtypes()[propertyIndex];
+                        }
+                    } else if (attributeSubName.equals(entityType.getIdentifierOrUniqueKeyPropertyName(entityPersister.getFactory()))) {
+                        return idType;
+                    }
+                }
+            }
+            throw ex;
+        }
     }
 
     @Override
@@ -1542,7 +1615,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
             propertyType = componentType.getSubtypes()[componentType.getPropertyIndex(propertyParts[propertyParts.length - 1])];
         } else {
-            propertyType = entityPersister.getPropertyType(attributeName);
+            propertyType = getPropertyType(entityPersister, attributeName);
         }
 
         List<String> identifierOrUniqueKeyPropertyNames = new ArrayList<>();
@@ -1567,7 +1640,7 @@ public class HibernateJpaProvider implements JpaProvider {
                         }
                     } else {
                         AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
-                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, getPropertyType(elementPersister, mappedBy), factory);
 //                        if (sourceIdentifierOrUniqueKeyPropertyNames.size() != identifierOrUniqueKeyPropertyNames.size()) {
 //                            // We have a inverse map or inverse indexed list here
 //                            // Maybe at some point we can determine the index property name mapping as well
@@ -1579,10 +1652,10 @@ public class HibernateJpaProvider implements JpaProvider {
                 } else {
                     AbstractEntityPersister elementPersister = (AbstractEntityPersister) entityPersisters.get(((org.hibernate.type.EntityType) elementType).getAssociatedEntityName());
                     for (String targetAttributeName : targetAttributeNames) {
-                        collectPropertyNames(identifierOrUniqueKeyPropertyNames, targetAttributeName, elementPersister.getPropertyType(targetAttributeName), factory);
+                        collectPropertyNames(identifierOrUniqueKeyPropertyNames, targetAttributeName, getPropertyType(elementPersister, targetAttributeName), factory);
                     }
                     for (String idAttributeName : joinTable.getIdAttributeNames()) {
-                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, idAttributeName, entityPersister.getPropertyType(idAttributeName), factory);
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, idAttributeName, getPropertyType(entityPersister, idAttributeName), factory);
                     }
                 }
             }
@@ -1604,7 +1677,7 @@ public class HibernateJpaProvider implements JpaProvider {
                     if (mappedBy == null || mappedBy.isEmpty()) {
                         throw new IllegalArgumentException("One-to-one using natural key is unsupported!");
                     } else {
-                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, elementPersister.getPropertyType(mappedBy), factory);
+                        collectPropertyNames(sourceIdentifierOrUniqueKeyPropertyNames, null, getPropertyType(elementPersister, mappedBy), factory);
                     }
                 }
             }
@@ -1652,7 +1725,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (ownerType instanceof EntityType<?>) {
             AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
             Type propertyType;
-            propertyType = entityPersister.getPropertyType(attributeName);
+            propertyType = getPropertyType(entityPersister, attributeName);
             if (propertyType instanceof CollectionType) {
                 CollectionPersister collectionPersister = entityPersister.getFactory().getCollectionPersister(((CollectionType) propertyType).getRole());
                 if (key) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.blazebit.persistence.examples.quarkus.testsuite.h2;
 import com.blazebit.persistence.examples.quarkus.testsuite.base.AbstractQuarkusExampleTest;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.NativeImageTest;
+import io.quarkus.test.h2.H2DatabaseTestResource;
 
 /**
  * @author Moritz Becker

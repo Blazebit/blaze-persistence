@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         this.unwrap = unwrap;
         this.extractCount = extractCount;
         if (extractAll) {
-            this.keysets = new ArrayList<>(keysetSize);
+            this.keysets = new ArrayList<>(keysetSize == Integer.MAX_VALUE ? 0 : keysetSize);
         } else {
             this.keysets = null;
         }

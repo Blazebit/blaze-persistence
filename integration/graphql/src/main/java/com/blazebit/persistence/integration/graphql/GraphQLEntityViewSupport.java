@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,19 @@ package com.blazebit.persistence.integration.graphql;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.DefaultKeysetPage;
+import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
+import graphql.relay.Connection;
+import graphql.relay.DefaultConnection;
+import graphql.relay.DefaultConnectionCursor;
+import graphql.relay.DefaultEdge;
+import graphql.relay.DefaultPageInfo;
+import graphql.relay.Edge;
+import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldsContainer;
@@ -33,14 +42,19 @@ import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -220,6 +234,22 @@ public class GraphQLEntityViewSupport {
      * Returns a new entity view setting for the given data fetching environment.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
+     * @param first The GraphQL relay first parameter
+     * @param last The GraphQL relay last parameter
+     * @param offset The offset from which to fetch
+     * @param beforeCursor The GraphQL relay before cursor
+     * @param afterCursor The GraphQL relay after cursor
+     * @param <T> The entity view type
+     * @return the entity view setting
+     */
+    public <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> createPaginatedSetting(DataFetchingEnvironment dataFetchingEnvironment, Integer first, Integer last, Integer offset, String beforeCursor, String afterCursor) {
+        return createPaginatedSetting(dataFetchingEnvironment, pageElementsName, first, last, offset, beforeCursor, afterCursor);
+    }
+
+    /**
+     * Returns a new entity view setting for the given data fetching environment.
+     *
+     * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param elementRoot The field at which to find the elements for fetch extraction
      * @param <T> The entity view type
      * @return the entity view setting
@@ -242,7 +272,37 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
-     * Like calling {{@link #createSetting(Class, DataFetchingEnvironment, String)}} with the configured page elements name.
+     * Returns a new entity view setting for the given data fetching environment.
+     *
+     * @param dataFetchingEnvironment The GraphQL data fetching environment
+     * @param elementRoot The field at which to find the elements for fetch extraction
+     * @param first The GraphQL relay first parameter
+     * @param last The GraphQL relay last parameter
+     * @param offset The offset from which to fetch
+     * @param beforeCursor The GraphQL relay before cursor
+     * @param afterCursor The GraphQL relay after cursor
+     * @param <T> The entity view type
+     * @return the entity view setting
+     */
+    public <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> createPaginatedSetting(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot, Integer first, Integer last, Integer offset, String beforeCursor, String afterCursor) {
+        String objectRoot;
+        if (pageElementObjectName == null || pageElementObjectName.isEmpty()) {
+            objectRoot = elementRoot;
+        } else if (elementRoot == null || elementRoot.isEmpty()) {
+            objectRoot = pageElementObjectName;
+        } else {
+            objectRoot = elementRoot + "/" + pageElementObjectName;
+        }
+        String typeName = getElementTypeName(dataFetchingEnvironment, objectRoot);
+        Class<?> entityViewClass = typeNameToClass.get(typeName);
+        if (entityViewClass == null) {
+            throw new IllegalArgumentException("No entity view type is registered for the name: " + typeName);
+        }
+        return createPaginatedSetting((Class<T>) entityViewClass, dataFetchingEnvironment, elementRoot, extractKeysetPage(first, last, beforeCursor, afterCursor), first, last, offset);
+    }
+
+    /**
+     * Like calling {@link #createSetting(Class, DataFetchingEnvironment, String)} with the configured page elements name.
      *
      * @param entityViewClass The entity view class
      * @param dataFetchingEnvironment The GraphQL data fetching environment
@@ -254,7 +314,7 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
-     * Like calling {{@link #createSetting(Class, DataFetchingEnvironment, String)}} with the configured page elements name.
+     * Like calling {@link #createSetting(Class, DataFetchingEnvironment, String)} with the configured page elements name.
      *
      * @param entityViewClass The entity view class
      * @param dataFetchingEnvironment The GraphQL data fetching environment
@@ -263,6 +323,32 @@ public class GraphQLEntityViewSupport {
      * @return the entity view setting
      */
     public <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> createPaginatedSetting(Class<T> entityViewClass, DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
+        KeysetPage keysetPage = extractKeysetPage(dataFetchingEnvironment);
+        Integer pageSize = null;
+        Integer offset = null;
+        Integer last = null;
+        if (keysetPage != null) {
+            pageSize = dataFetchingEnvironment.getArgument(pageSizeName);
+            offset = dataFetchingEnvironment.getArgument(offsetName);
+            last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
+        }
+        return createPaginatedSetting(entityViewClass, dataFetchingEnvironment, elementRoot, keysetPage, pageSize, last, offset);
+    }
+
+    /**
+     * Like calling {@link #createSetting(Class, DataFetchingEnvironment, String, KeysetPage, Integer, Integer, Integer)} with the configured page elements name.
+     *
+     * @param entityViewClass The entity view class
+     * @param dataFetchingEnvironment The GraphQL data fetching environment
+     * @param elementRoot The field at which to find the elements for fetch extraction
+     * @param keysetPage The keyset page to use for pagination
+     * @param first The GraphQL relay first parameter
+     * @param last The GraphQL relay last parameter
+     * @param offset The offset from which to fetch
+     * @param <T> The entity view type
+     * @return the entity view setting
+     */
+    public <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> createPaginatedSetting(Class<T> entityViewClass, DataFetchingEnvironment dataFetchingEnvironment, String elementRoot, KeysetPage keysetPage, Integer first, Integer last, Integer offset) {
         String objectRoot;
         if (pageElementObjectName == null || pageElementObjectName.isEmpty()) {
             objectRoot = elementRoot;
@@ -271,7 +357,7 @@ public class GraphQLEntityViewSupport {
         } else {
             objectRoot = elementRoot + "/" + pageElementObjectName;
         }
-        EntityViewSetting<T, PaginatedCriteriaBuilder<T>> setting = (EntityViewSetting<T, PaginatedCriteriaBuilder<T>>) (EntityViewSetting<?, ?>) createSetting(entityViewClass, dataFetchingEnvironment, objectRoot);
+        EntityViewSetting<T, PaginatedCriteriaBuilder<T>> setting = (EntityViewSetting<T, PaginatedCriteriaBuilder<T>>) (EntityViewSetting<?, ?>) createSetting(entityViewClass, dataFetchingEnvironment, objectRoot, keysetPage, first, last, offset);
 
         if (!dataFetchingEnvironment.getSelectionSet().contains(totalCountName)) {
             setting.setProperty(ConfigurationProperties.PAGINATION_DISABLE_COUNT_QUERY, Boolean.TRUE);
@@ -293,7 +379,7 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
-     * Like calling {{@link #createSetting(DataFetchingEnvironment, String)}} with an empty element root.
+     * Like calling {@link #createSetting(DataFetchingEnvironment, String)} with an empty element root.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param <T> The entity view type
@@ -306,7 +392,7 @@ public class GraphQLEntityViewSupport {
     /**
      * Returns a new entity view setting for the given data fetching environment and element root.
      * Determines the entity view class by using the type of the element root as resolved with the {@link DataFetchingEnvironment}.
-     * Like calling {{@link #createSetting(Class, DataFetchingEnvironment, String)}} with the explicit entity view class.
+     * Like calling {@link #createSetting(Class, DataFetchingEnvironment, String)} with the explicit entity view class.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param elementRoot The field at which to find the elements for fetch extraction
@@ -372,7 +458,7 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
-     * Like calling {{@link #createSetting(Class, DataFetchingEnvironment, String)}} with an empty element root.
+     * Like calling {@link #createSetting(Class, DataFetchingEnvironment, String)} with an empty element root.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param <T> The entity view type
@@ -393,19 +479,55 @@ public class GraphQLEntityViewSupport {
      */
     public <T> EntityViewSetting<T, CriteriaBuilder<T>> createSetting(Class<T> entityViewClass, DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
         KeysetPage keysetPage = extractKeysetPage(dataFetchingEnvironment);
+        Integer pageSize = null;
+        Integer offset = null;
+        Integer last = null;
+        if (keysetPage != null) {
+            pageSize = dataFetchingEnvironment.getArgument(pageSizeName);
+            offset = dataFetchingEnvironment.getArgument(offsetName);
+            last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
+        }
+        return createSetting(entityViewClass, dataFetchingEnvironment, elementRoot, keysetPage, pageSize, last, offset);
+    }
+
+    /**
+     * Returns a new entity view setting for the given data fetching environment.
+     *
+     * @param <T> The entity view type
+     * @param entityViewClass The entity view class
+     * @param dataFetchingEnvironment The GraphQL data fetching environment
+     * @param elementRoot The field at which to find the elements for fetch extraction
+     * @param keysetPage The keyset page to use for pagination
+     * @param first The GraphQL relay first parameter
+     * @param last The GraphQL relay last parameter
+     * @param offset The offset from which to fetch
+     * @return the entity view setting
+     */
+    public <T> EntityViewSetting<T, CriteriaBuilder<T>> createSetting(Class<T> entityViewClass, DataFetchingEnvironment dataFetchingEnvironment, String elementRoot, KeysetPage keysetPage, Integer first, Integer last, Integer offset) {
         EntityViewSetting<T, CriteriaBuilder<T>> setting;
         boolean forceUseKeyset = false;
         if (keysetPage == null) {
-            setting = EntityViewSetting.create(entityViewClass);
-        } else {
-            Integer pageSize = dataFetchingEnvironment.getArgument(pageSizeName);
-            Integer offset = dataFetchingEnvironment.getArgument(offsetName);
-            Integer last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
-
-            if (pageSize == null) {
+            int pageSize;
+            if (first == null) {
                 pageSize = Integer.MAX_VALUE;
-            } else if (pageSize < 0) {
-                throw new RuntimeException("Illegal negative " + pageSizeName + " parameter: " + pageSize);
+            } else if (first < 0) {
+                throw new RuntimeException("Illegal negative " + pageSizeName + " parameter: " + first);
+            } else {
+                pageSize = first;
+            }
+            if (pageSize == Integer.MAX_VALUE && offset == null) {
+                setting = EntityViewSetting.create(entityViewClass);
+            } else {
+                setting = (EntityViewSetting<T, CriteriaBuilder<T>>) (EntityViewSetting<?, ?>) EntityViewSetting.create(entityViewClass, offset == null ? 0 : (int) offset, pageSize);
+            }
+        } else {
+            int pageSize;
+            if (first == null) {
+                pageSize = Integer.MAX_VALUE;
+            } else if (first < 0) {
+                throw new RuntimeException("Illegal negative " + pageSizeName + " parameter: " + first);
+            } else {
+                pageSize = first;
             }
             if (last != null) {
                 if (last < 0) {
@@ -418,10 +540,10 @@ public class GraphQLEntityViewSupport {
                     }
                 } else {
                     if (offset == null) {
-                        offset = pageSize - last;
+                        offset = first - last;
                         pageSize = last;
                     } else {
-                        offset += pageSize - last;
+                        offset += first - last;
                         pageSize = last;
                     }
                     if (offset < 0) {
@@ -436,7 +558,7 @@ public class GraphQLEntityViewSupport {
             } else if (offset < 0) {
                 throw new RuntimeException("Illegal negative " + offsetName + " parameter: " + offset);
             }
-            setting = (EntityViewSetting<T, CriteriaBuilder<T>>) (EntityViewSetting<?, ?>) EntityViewSetting.create(entityViewClass, offset == null ? 0 : (int) offset, (int) pageSize);
+            setting = (EntityViewSetting<T, CriteriaBuilder<T>>) (EntityViewSetting<?, ?>) EntityViewSetting.create(entityViewClass, offset == null ? 0 : (int) offset, pageSize);
             setting.withKeysetPage(keysetPage);
         }
 
@@ -449,7 +571,7 @@ public class GraphQLEntityViewSupport {
 
     /**
      * Extracts the {@link KeysetPage} from the {@link DataFetchingEnvironment} by extracting page size and offset,
-     * as well as deserializing before or afterCursors.
+     * as well as deserializing before or after cursors.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @return the {@link KeysetPage} or <code>null</code>
@@ -459,7 +581,21 @@ public class GraphQLEntityViewSupport {
         Integer last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
         String beforeCursor = dataFetchingEnvironment.getArgument(beforeCursorName);
         String afterCursor = dataFetchingEnvironment.getArgument(afterCursorName);
-        if (pageSize == null && last == null && beforeCursor == null && afterCursor == null) {
+        return extractKeysetPage(pageSize, last, beforeCursor, afterCursor);
+    }
+
+    /**
+     * Extracts the {@link KeysetPage} from the page size and offset,
+     * as well as deserializing before or after cursors.
+     *
+     * @param first The GraphQL relay first parameter
+     * @param last The GraphQL relay last parameter
+     * @param beforeCursor The GraphQL relay before cursor
+     * @param afterCursor The GraphQL relay after cursor
+     * @return the {@link KeysetPage} or <code>null</code>
+     */
+    public KeysetPage extractKeysetPage(Integer first, Integer last, String beforeCursor, String afterCursor) {
+        if (first == null && last == null && beforeCursor == null && afterCursor == null) {
             return null;
         } else {
             KeysetPage keysetPage;
@@ -480,8 +616,8 @@ public class GraphQLEntityViewSupport {
                     GraphQLCursor cursor = deserialize(afterCursor);
                     keysetPage = new DefaultKeysetPage(cursor.getOffset(), cursor.getPageSize(), null, new DefaultKeyset(cursor.getTuple()));
                 }
-            } else if (pageSize != null) {
-                keysetPage = new DefaultKeysetPage(0, pageSize, null, null);
+            } else if (first != null) {
+                keysetPage = new DefaultKeysetPage(0, first, null, null);
             } else {
                 // Keyset with empty tuple is a special case for traversing the result list in reverse order
                 keysetPage = new DefaultKeysetPage(0, last, new DefaultKeyset(null), null);
@@ -492,7 +628,7 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
-     * Like {{@link #applyFetches(DataFetchingEnvironment, EntityViewSetting, String)}} but with an empty element root.
+     * Like {@link #applyFetches(DataFetchingEnvironment, EntityViewSetting, String)} but with an empty element root.
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param setting The entity view setting
@@ -637,6 +773,26 @@ public class GraphQLEntityViewSupport {
     }
 
     /**
+     * Serializes the given cursor components to a byte array.
+     *
+     * @param offset The offset
+     * @param pageSize The page size
+     * @param tuple The tuple
+     * @return the serialized form of the cursor
+     */
+    protected byte[] serializeCursor(int offset, int pageSize, Serializable[] tuple) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.write(offset);
+            oos.write(pageSize);
+            oos.writeObject(tuple);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return baos.toByteArray();
+    }
+
+    /**
      * Returns the entity view class for the given GraphQL type name.
      *
      * @param typeName The GraphQL type name
@@ -674,6 +830,59 @@ public class GraphQLEntityViewSupport {
             result = 31 * result + root.hashCode();
             return result;
         }
+    }
+
+    /**
+     * Returns a relay connection from the given result list.
+     *
+     * @param list the result list
+     * @return the relay connection
+     */
+    public <T> Connection<T> createRelayConnection(List<T> list) {
+        List<Edge<T>> edges = new ArrayList<>(list.size());
+        boolean hasPreviousPage;
+        boolean hasNextPage;
+        KeysetPage keysetPage;
+        if (list instanceof PagedList<?>) {
+            PagedList<T> data = (PagedList<T>) list;
+            hasPreviousPage = data.getFirstResult() != 0;
+            hasNextPage = data.getTotalSize() == -1 || data.getFirstResult() + data.getMaxResults() < data.getTotalSize();
+            keysetPage = data.getKeysetPage();
+        } else {
+            hasPreviousPage = true;
+            hasNextPage = true;
+            keysetPage = null;
+        }
+        if (keysetPage == null) {
+            for (int i = 0; i < list.size(); i++) {
+                edges.add(new DefaultEdge<>(list.get(i), new DefaultConnectionCursor(Integer.toString(i + 1))));
+            }
+        } else {
+            PagedList<T> data = (PagedList<T>) list;
+            List<Keyset> keysets = keysetPage.getKeysets();
+            int listSize = list.size();
+            if (listSize != 0 && keysets.size() != listSize) {
+                int end = listSize - 1;
+                edges.add(new DefaultEdge<>(list.get(0), new DefaultConnectionCursor(Base64.getEncoder().encodeToString(serializeCursor(data.getFirstResult(), data.getMaxResults(), keysetPage.getLowest().getTuple())))));
+                for (int i = 1; i < end; i++) {
+                    T node = list.get(i);
+                    edges.add(new DefaultEdge<>(node, new DefaultConnectionCursor(Integer.toString(i + 1))));
+                }
+                edges.add(new DefaultEdge<>(list.get(end), new DefaultConnectionCursor(Base64.getEncoder().encodeToString(serializeCursor(data.getFirstResult(), data.getMaxResults(), keysetPage.getHighest().getTuple())))));
+            } else {
+                for (int i = 0; i < list.size(); i++) {
+                    T node = list.get(i);
+                    edges.add(new DefaultEdge<>(node, new DefaultConnectionCursor(Base64.getEncoder().encodeToString(serializeCursor(data.getFirstResult(), data.getMaxResults(), keysets.get(i).getTuple())))));
+                }
+            }
+        }
+        PageInfo pageInfo;
+        if (edges.isEmpty()) {
+            pageInfo = new DefaultPageInfo(null, null, hasPreviousPage, hasNextPage);
+        } else {
+            pageInfo = new DefaultPageInfo(edges.get(0).getCursor(), edges.get(edges.size() - 1).getCursor(), hasPreviousPage, hasNextPage);
+        }
+        return new DefaultConnection<>(edges, pageInfo);
     }
 
 }

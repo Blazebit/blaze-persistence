@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1051,7 +1051,7 @@ public class JPQLNextExpressions {
 
         for (int i = 0; i < orderSpecifiers.length; i++) {
             if (i == 0) {
-                template.append(", 'ORDER BY");
+                template.append(", 'ORDER BY'");
             }
             OrderSpecifier<?> orderSpecifier = orderSpecifiers[i];
             int expressionIndex = i * 2 + 2;

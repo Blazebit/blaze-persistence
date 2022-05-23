@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,24 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.criteria.BlazeAggregateFunctionExpression;
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaDelete;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
 import com.blazebit.persistence.criteria.BlazeCriteriaUpdate;
 import com.blazebit.persistence.criteria.BlazeExpression;
+import com.blazebit.persistence.criteria.BlazeFunctionExpression;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeListJoin;
 import com.blazebit.persistence.criteria.BlazeMapJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
+import com.blazebit.persistence.criteria.BlazeOrderedSetAggregateFunctionExpression;
 import com.blazebit.persistence.criteria.BlazePath;
 import com.blazebit.persistence.criteria.BlazeRoot;
 import com.blazebit.persistence.criteria.BlazeSetJoin;
+import com.blazebit.persistence.criteria.BlazeWindow;
+import com.blazebit.persistence.criteria.BlazeWindowFunctionExpression;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.AbstractPredicate;
 import com.blazebit.persistence.criteria.impl.expression.BetweenPredicate;
@@ -55,23 +60,20 @@ import com.blazebit.persistence.criteria.impl.expression.ParameterExpressionImpl
 import com.blazebit.persistence.criteria.impl.expression.QuantifiableSubqueryExpression;
 import com.blazebit.persistence.criteria.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.criteria.impl.expression.UnaryMinusExpression;
-import com.blazebit.persistence.criteria.impl.expression.function.AbsFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.AggregationFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.AggregationFunctionExpressionImpl;
 import com.blazebit.persistence.criteria.impl.expression.function.CoalesceFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.ConcatFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentDateFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimestampFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.FunctionFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.LengthFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
 import com.blazebit.persistence.criteria.impl.expression.function.LocateFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.LowerFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.NullifFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.OrderedSetAggregationFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.SizeFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.SqrtFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.SubstringFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.TrimFunction;
-import com.blazebit.persistence.criteria.impl.expression.function.UpperFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.WindowFunctionExpressionImpl;
 import com.blazebit.persistence.criteria.impl.path.AbstractJoin;
 import com.blazebit.persistence.criteria.impl.path.AbstractPath;
 import com.blazebit.persistence.criteria.impl.path.CollectionAttributeJoin;
@@ -592,53 +594,53 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
      **********************/
 
     @Override
-    public <N extends Number> Expression<Double> avg(Expression<N> x) {
-        return new AggregationFunction.AVG(this, x);
+    public <N extends Number> BlazeAggregateFunctionExpression<Double> avg(Expression<N> x) {
+        return new AggregationFunctionExpressionImpl<>(this, Double.class, "AVG", false, x);
     }
 
     @Override
-    public <N extends Number> Expression<N> sum(Expression<N> x) {
-        return new AggregationFunction.SUM<N>(this, x);
+    public <N extends Number> BlazeAggregateFunctionExpression<N> sum(Expression<N> x) {
+        return new AggregationFunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "SUM", false, x);
     }
 
     @Override
-    public Expression<Long> sumAsLong(Expression<Integer> x) {
-        return new AggregationFunction.SUM<Long>(this, x, Long.class);
+    public BlazeAggregateFunctionExpression<Long> sumAsLong(Expression<Integer> x) {
+        return new AggregationFunctionExpressionImpl<>(this, Long.class, "SUM", false, x);
     }
 
     @Override
-    public Expression<Double> sumAsDouble(Expression<Float> x) {
-        return new AggregationFunction.SUM<Double>(this, x, Double.class);
+    public BlazeAggregateFunctionExpression<Double> sumAsDouble(Expression<Float> x) {
+        return new AggregationFunctionExpressionImpl<>(this, Double.class, "SUM", false, x);
     }
 
     @Override
-    public <N extends Number> Expression<N> max(Expression<N> x) {
-        return new AggregationFunction.MAX<N>(this, x);
+    public <N extends Number> BlazeAggregateFunctionExpression<N> max(Expression<N> x) {
+        return new AggregationFunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "MAX", false, x);
     }
 
     @Override
-    public <N extends Number> Expression<N> min(Expression<N> x) {
-        return new AggregationFunction.MIN<N>(this, x);
+    public <N extends Number> BlazeAggregateFunctionExpression<N> min(Expression<N> x) {
+        return new AggregationFunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "MIN", false, x);
     }
 
     @Override
-    public <X extends Comparable<? super X>> Expression<X> greatest(Expression<X> x) {
-        return new AggregationFunction.GREATEST<>(this, x);
+    public <X extends Comparable<? super X>> BlazeAggregateFunctionExpression<X> greatest(Expression<X> x) {
+        return new AggregationFunctionExpressionImpl<>(this, (Class<X>) x.getJavaType(), "MAX", false, x);
     }
 
     @Override
-    public <X extends Comparable<? super X>> Expression<X> least(Expression<X> x) {
-        return new AggregationFunction.LEAST<>(this, x);
+    public <X extends Comparable<? super X>> BlazeAggregateFunctionExpression<X> least(Expression<X> x) {
+        return new AggregationFunctionExpressionImpl<>(this, (Class<X>) x.getJavaType(), "MIN", false, x);
     }
 
     @Override
-    public Expression<Long> count(Expression<?> x) {
-        return new AggregationFunction.COUNT(this, x, false);
+    public BlazeAggregateFunctionExpression<Long> count(Expression<?> x) {
+        return new AggregationFunctionExpressionImpl<>(this, Long.class, "COUNT", false, x);
     }
 
     @Override
-    public Expression<Long> countDistinct(Expression<?> x) {
-        return new AggregationFunction.COUNT(this, x, true);
+    public BlazeAggregateFunctionExpression<Long> countDistinct(Expression<?> x) {
+        return new AggregationFunctionExpressionImpl<>(this, Long.class, "COUNT", true, x);
     }
 
     /**********************
@@ -646,18 +648,48 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
      **********************/
 
     @Override
-    public <T> Expression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
-        return new FunctionFunction<T>(this, returnType, name, arguments);
+    public <T> BlazeFunctionExpression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
+        return new FunctionExpressionImpl<>(this, returnType, name, arguments);
+    }
+
+    @Override
+    public <T> BlazeWindowFunctionExpression<T> windowFunction(String name, Class<T> type, Expression<?>... args) {
+        return new WindowFunctionExpressionImpl<>(this, type, name, args);
+    }
+
+    @Override
+    public <T> BlazeWindowFunctionExpression<T> windowDistinctFunction(String name, Class<T> type, Expression<?>... args) {
+        return new AggregationFunctionExpressionImpl<>(this, type, name, true, args);
+    }
+
+    @Override
+    public <T> BlazeAggregateFunctionExpression<T> aggregateFunction(String name, Class<T> type, Expression<?>... args) {
+        return new AggregationFunctionExpressionImpl<>(this, type, name, false, args);
+    }
+
+    @Override
+    public <T> BlazeAggregateFunctionExpression<T> aggregateDistinctFunction(String name, Class<T> type, Expression<?>... args) {
+        return new AggregationFunctionExpressionImpl<>(this, type, name, true, args);
+    }
+
+    @Override
+    public <T> BlazeOrderedSetAggregateFunctionExpression<T> orderedSetAggregateFunction(String name, Class<T> type, Expression<?>... args) {
+        return new OrderedSetAggregationFunction<>(this, type, name, false, args);
+    }
+
+    @Override
+    public <T> BlazeOrderedSetAggregateFunctionExpression<T> orderedSetAggregateDistinctFunction(String name, Class<T> type, Expression<?>... args) {
+        return new OrderedSetAggregationFunction<>(this, type, name, true, args);
     }
 
     @Override
     public <N extends Number> Expression<N> abs(Expression<N> expression) {
-        return new AbsFunction<N>(this, expression);
+        return new FunctionExpressionImpl<>(this, (Class<N>) expression.getJavaType(), "ABS", expression);
     }
 
     @Override
     public Expression<Double> sqrt(Expression<? extends Number> expression) {
-        return new SqrtFunction(this, expression);
+        return new FunctionExpressionImpl<>(this, Double.class, "SQRT", expression);
     }
 
     @Override
@@ -727,17 +759,17 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
 
     @Override
     public Expression<String> lower(Expression<String> value) {
-        return new LowerFunction(this, value);
+        return new FunctionExpressionImpl<>(this, String.class, "LOWER", value);
     }
 
     @Override
     public Expression<String> upper(Expression<String> value) {
-        return new UpperFunction(this, value);
+        return new FunctionExpressionImpl<>(this, String.class, "UPPER", value);
     }
 
     @Override
     public Expression<Integer> length(Expression<String> value) {
-        return new LengthFunction(this, value);
+        return new FunctionExpressionImpl<>(this, Integer.class, "LENGTH", value);
     }
 
     @Override
@@ -1248,5 +1280,100 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public <X, T extends X> BlazeRoot<T> treat(BlazeRoot<X> root, Class<T> type) {
         return treat((Root<X>) root, type);
+    }
+
+    @Override
+    public BlazeWindow window() {
+        return new BlazeWindowImpl();
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Integer> rowNumber() {
+        return new WindowFunctionExpressionImpl<>(this, Integer.class, "ROW_NUMBER");
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Integer> rank(Expression<?> expression) {
+        return new WindowFunctionExpressionImpl<>(this, Integer.class, "RANK", expression);
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Integer> denseRank(Expression<?> expression) {
+        return new WindowFunctionExpressionImpl<>(this, Integer.class, "DENSE_RANK", expression);
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Double> percentRank(Expression<?> expression) {
+        return new WindowFunctionExpressionImpl<>(this, Double.class, "PERCENT_RANK", expression);
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Double> cumeDist(Expression<?> expression) {
+        return new WindowFunctionExpressionImpl<>(this, Double.class, "CUME_DIST", expression);
+    }
+
+    @Override
+    public BlazeWindowFunctionExpression<Integer> ntile(Expression<?> expression) {
+        return new WindowFunctionExpressionImpl<>(this, Integer.class, "NTILE", expression);
+    }
+
+    @Override
+    public <X> BlazeWindowFunctionExpression<X> lead(Expression<X> expression) {
+        //noinspection unchecked
+        return new WindowFunctionExpressionImpl<>(this, (Class<X>) expression.getJavaType(), "LEAD", expression);
+    }
+
+    @Override
+    public <X> BlazeWindowFunctionExpression<X> lag(Expression<X> expression) {
+        //noinspection unchecked
+        return new WindowFunctionExpressionImpl<>(this, (Class<X>) expression.getJavaType(), "LAG", expression);
+    }
+
+    @Override
+    public <X> BlazeWindowFunctionExpression<X> firstValue(Expression<X> expression) {
+        //noinspection unchecked
+        return new WindowFunctionExpressionImpl<>(this, (Class<X>) expression.getJavaType(), "FIRST_VALUE", expression);
+    }
+
+    @Override
+    public <X> BlazeWindowFunctionExpression<X> lastValue(Expression<X> expression) {
+        //noinspection unchecked
+        return new WindowFunctionExpressionImpl<>(this, (Class<X>) expression.getJavaType(), "LAST_VALUE", expression);
+    }
+
+    @Override
+    public <X> BlazeWindowFunctionExpression<X> nthValue(Expression<X> expression, Expression<Integer> index) {
+        //noinspection unchecked
+        return new WindowFunctionExpressionImpl<>(this, (Class<X>) expression.getJavaType(), "NTH_VALUE", expression, index);
+    }
+
+    @Override
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> percentileContWithinGroup(Expression<Double> fraction, Expression<X> group, boolean ascending, boolean nullsFirst) {
+        //noinspection unchecked
+        return new OrderedSetAggregationFunction<>(this, (Class<X>) group.getJavaType(), "PERCENTILE_CONT", false, fraction)
+                .withinGroup(ascending ? asc(group, nullsFirst) : desc(group, nullsFirst));
+    }
+
+    @Override
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> percentileDiscWithinGroup(Expression<Double> fraction, Expression<X> group, boolean ascending, boolean nullsFirst) {
+        //noinspection unchecked
+        return new OrderedSetAggregationFunction<>(this, (Class<X>) group.getJavaType(), "PERCENTILE_DISC", false, fraction)
+                .withinGroup(ascending ? asc(group, nullsFirst) : desc(group, nullsFirst));
+    }
+
+    @Override
+    public <X> BlazeOrderedSetAggregateFunctionExpression<X> modeWithinGroup(Expression<X> group) {
+        //noinspection unchecked
+        return new OrderedSetAggregationFunction<>(this, (Class<X>) group.getJavaType(), "MODE", false).withinGroup(asc(group));
+    }
+
+    @Override
+    public BlazeOrderedSetAggregateFunctionExpression<String> listagg(Expression<String> expression, Expression<String> separator) {
+        return new OrderedSetAggregationFunction<>(this, String.class, "LISTAGG", false, expression, separator);
+    }
+
+    @Override
+    public BlazeOrderedSetAggregateFunctionExpression<String> listaggDistinct(Expression<String> expression, Expression<String> separator) {
+        return new OrderedSetAggregationFunction<>(this, String.class, "LISTAGG", true, expression, separator);
     }
 }

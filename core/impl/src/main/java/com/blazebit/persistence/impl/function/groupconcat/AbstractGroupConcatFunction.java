@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,8 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
                 mode = Mode.SEPARATOR;
             } else if ("'ORDER BY'".equalsIgnoreCase(argument)) {
                 mode = Mode.ORDER_BY;
+            } else if ("'WITHIN GROUP'".equalsIgnoreCase(argument)) {
+                mode = Mode.ORDER_BY;
             } else {
                 if (mode == Mode.ORDER_BY) {
                     Order order = getOrder(argument, orderExpression);
@@ -114,7 +116,8 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
 
                     separator = argument.substring(argument.indexOf('\'') + 1, argument.lastIndexOf('\''));
                 } else {
-                    throw new IllegalArgumentException("Illegal input for group concat '" + argument + "'. Expected 'SEPARATOR' or 'ORDER BY'!");
+                    separator = argument.substring(argument.indexOf('\'') + 1, argument.lastIndexOf('\''));
+                    mode = Mode.SEPARATOR;
                 }
             }
         }

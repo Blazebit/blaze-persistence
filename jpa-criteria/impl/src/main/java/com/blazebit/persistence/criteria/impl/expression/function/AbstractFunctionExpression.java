@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.criteria.impl.expression.function;
 
+import com.blazebit.persistence.criteria.BlazeFunctionExpression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
@@ -24,7 +25,7 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X> {
+public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X> implements BlazeFunctionExpression<X> {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,6 +36,7 @@ public abstract class AbstractFunctionExpression<X> extends AbstractExpression<X
         this.functionName = functionName;
     }
 
+    @Override
     public String getFunctionName() {
         return functionName;
     }

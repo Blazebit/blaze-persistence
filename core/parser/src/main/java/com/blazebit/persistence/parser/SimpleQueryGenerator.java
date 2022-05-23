@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -163,6 +163,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return Character.toString(character);
     }
 
+    protected void renderLikePattern(LikePredicate predicate) {
+        predicate.getRight().accept(this);
+    }
+
     @Override
     public void visit(final CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
@@ -281,7 +285,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
-        predicate.getRight().accept(this);
+        renderLikePattern(predicate);
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }
@@ -598,6 +602,17 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                 }
             }
             sb.append(')');
+
+            List<OrderByItem> withinGroup = expression.getWithinGroup();
+            if (withinGroup != null && !withinGroup.isEmpty()) {
+                sb.append(" WITHIN GROUP (");
+                for (int i = 0; i < withinGroup.size(); i++) {
+                    visit(withinGroup.get(i));
+                    sb.append(", ");
+                }
+                sb.setLength(sb.length() - 1);
+                sb.setCharAt(sb.length() - 1, ')');
+            }
 
             visitWindowDefinition(windowDefinition);
         }

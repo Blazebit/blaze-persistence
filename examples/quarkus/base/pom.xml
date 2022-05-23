@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-examples-quarkus</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -41,13 +41,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

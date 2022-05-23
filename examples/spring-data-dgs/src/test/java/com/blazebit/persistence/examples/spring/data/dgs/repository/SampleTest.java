@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,32 @@ public class SampleTest extends AbstractSampleTest {
 
         assertEquals(5, nodes.size());
         assertEquals("Cat 5", nodes.get(0).get("name").asText());
+    }
+
+    @Test
+    public void testCreate() {
+        String requestGraphQL = "mutation {\n" +
+                "  createCat(\n" +
+                "    cat: {\n" +
+                "      name: \"Test\"\n" +
+                "      age: 1\n" +
+                "      owner: {id: 1}\n" +
+                "      kittens: [\n" +
+                "        { name: \"Kitten 1\", age: 1, owner: {id: 1}}\n" +
+                "      ]\n" +
+                "  \t}\n" +
+                "  )\n" +
+                "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-type", "application/graphql");
+        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+
+        int id = response.getBody().get("data").get("createCat").asInt();
+
+        requestGraphQL = "query { catById(id: " + id + ") { name } }";
+        response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+        String name = response.getBody().get("data").get("catById").get("name").asText();
+        assertEquals("Test", name);
     }
 
     static String request(int first, String after) {

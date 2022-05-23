@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-spring-data-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -253,6 +253,25 @@
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-commons</artifactId>
                     <version>${version.spring-data-2.5}</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.6.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.6-spring}</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-commons</artifactId>
+                    <version>${version.spring-data-2.6}</version>
                     <optional>true</optional>
                 </dependency>
                 <dependency>

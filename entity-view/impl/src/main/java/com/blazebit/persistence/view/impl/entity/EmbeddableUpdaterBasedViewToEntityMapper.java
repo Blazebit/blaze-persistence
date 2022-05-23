@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.mapper.Mapper;
-import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdaterImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
+import com.blazebit.persistence.view.impl.update.flush.CompositeAttributeFlusher;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 import com.blazebit.persistence.view.metamodel.Type;
+import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
 import java.util.List;
 import java.util.Map;
@@ -82,11 +83,18 @@ public class EmbeddableUpdaterBasedViewToEntityMapper extends AbstractViewToEnti
         Class<?> viewTypeClass = getViewTypeClass(view);
         EntityViewUpdater updater = persistUpdater.get(viewTypeClass);
         if (updater == null) {
-            // Currently we don't handle read only flat views, but not sure this is a problem
-            if (persistUpdater.isEmpty()) {
-                throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. No allowed types for updates found, maybe you forgot to annotate '" + viewTypeClass.getName() + "' with @UpdatableEntityView?");
+            if (view instanceof MutableStateTrackable) {
+                if (persistUpdater.isEmpty()) {
+                    throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. No allowed types for updates found, maybe you forgot to annotate '" + viewTypeClass.getName() + "' with @UpdatableEntityView?");
+                } else {
+                    throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + persistUpdater.keySet() + " but got: " + view);
+                }
             } else {
-                throw new IllegalStateException("Couldn't update object for attribute '" + attributeLocation + "'. Expected subviews of the types " + persistUpdater.keySet() + " but got: " + view);
+                if (entity == null) {
+                    entity = entityLoader.toEntity(context, view, null);
+                }
+                ((CompositeAttributeFlusher) defaultUpdater.getFullGraphNode()).flushEntity(context, entity, null, view, view, null);
+                return entity;
             }
         }
 

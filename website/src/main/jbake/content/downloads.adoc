@@ -9,7 +9,7 @@
 
 [.releases]
 |===
-| 1.6.2         | 2021-09-05     | https://github.com/Blazebit/blaze-persistence/releases/download/1.6.2/blaze-persistence-dist-1.6.2.zip[*Download*, window="_blank"] | link:news/2021/blaze-persistence-1.6.2-release.html[More...]
+| 1.6.6         | 2022-01-29     | https://github.com/Blazebit/blaze-persistence/releases/download/1.6.6/blaze-persistence-dist-1.6.6.zip[*Download*, window="_blank"] | link:news/2022/blaze-persistence-1.6.6-release.html[More...]
 | 1.5.1         | 2020-09-14     | https://github.com/Blazebit/blaze-persistence/releases/download/1.5.1/blaze-persistence-dist-1.5.1.zip[*Download*, window="_blank"] | link:news/2020/blaze-persistence-1.5.1-release.html[More...]
 | 1.4.1         | 2020-01-28     | https://github.com/Blazebit/blaze-persistence/releases/download/1.4.1/blaze-persistence-dist-1.4.1.zip[*Download*, window="_blank"] | link:news/2020/blaze-persistence-1.4.1-release.html[More...]
 | 1.3.2         | 2019-02-26     | https://github.com/Blazebit/blaze-persistence/releases/download/1.3.2/blaze-persistence-dist-1.3.2.zip[*Download*, window="_blank"] | link:news/2019/blaze-persistence-1.3.2-release.html[More...]
@@ -155,6 +155,18 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <artifactId>blaze-persistence-integration-jaxrs</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
+<!-- Use this if you want to use Jackson for JSON serialization/deserialization -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+<!-- Use this if you want to use JSONB for JSON serialization/deserialization -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
 
 <!-- GraphQL integration module -->
 <dependency>
@@ -167,6 +179,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-jackson</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- JSONB integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jsonb</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 

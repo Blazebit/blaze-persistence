@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,22 @@ package com.blazebit.persistence.criteria.impl.expression;
 
 import com.blazebit.persistence.criteria.BlazeExpression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.expression.function.CastFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Christian Beikov
@@ -36,14 +43,59 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
 
     private static final long serialVersionUID = 1L;
 
+    private static final Map<Class<?>, String> CAST_SUFFIXES;
+
+    static {
+        Map<Class<?>, String> s = new HashMap<Class<?>, String>();
+        s.put(Boolean.class, "BOOLEAN");
+        s.put(Boolean.TYPE, "BOOLEAN");
+        s.put(Byte.class, "BYTE");
+        s.put(Byte.TYPE, "BYTE");
+        s.put(Short.class, "SHORT");
+        s.put(Short.TYPE, "SHORT");
+        s.put(Integer.class, "INTEGER");
+        s.put(Integer.TYPE, "INTEGER");
+        s.put(Long.class, "LONG");
+        s.put(Long.TYPE, "LONG");
+
+        s.put(Float.class, "FLOAT");
+        s.put(Float.TYPE, "FLOAT");
+        s.put(Double.class, "DOUBLE");
+        s.put(Double.TYPE, "DOUBLE");
+
+        s.put(Character.class, "CHARACTER");
+        s.put(Character.TYPE, "CHARACTER");
+
+        s.put(String.class, "STRING");
+        s.put(BigInteger.class, "BIGINTEGER");
+        s.put(BigDecimal.class, "BIGDECIMAL");
+        s.put(Time.class, "TIME");
+        s.put(Date.class, "DATE");
+        s.put(Timestamp.class, "TIMESTAMP");
+        s.put(java.util.Date.class, "TIMESTAMP");
+        s.put(java.util.Calendar.class, "CALENDAR");
+
+        CAST_SUFFIXES = Collections.unmodifiableMap(s);
+    }
+
     public AbstractExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
         super(criteriaBuilder, javaType);
+    }
+
+    private static String castSuffix(Class<?> t) {
+        String suffix = CAST_SUFFIXES.get(t);
+
+        if (suffix == null) {
+            return t.getSimpleName().toUpperCase(Locale.ROOT);
+        }
+
+        return suffix;
     }
 
     @Override
     @SuppressWarnings({"unchecked"})
     public <X> BlazeExpression<X> as(Class<X> type) {
-        return type.equals(getJavaType()) ? (BlazeExpression<X>) this : new CastFunction<X, T>(criteriaBuilder, type, this);
+        return type.equals(getJavaType()) ? (BlazeExpression<X>) this : new FunctionExpressionImpl<>(criteriaBuilder, type, "CAST_" + castSuffix(type), this);
     }
 
     @Override

@@ -33,9 +33,9 @@ The generation will kick in as soon as
 
 If you don't like the group by generation or you run into a bug, you can always disable it on a per-query and per-clause basis if you like.
 
-* <<implicit_group_by_from_select,Property for `SELECT` clause>>
-* <<implicit_group_by_from_having,Property for `HAVING` clause>>
-* <<implicit_group_by_from_order_by,Property for `ORDER BY` clause>>
+* <<IMPLICIT_GROUP_BY_FROM_SELECT,Property for `SELECT` clause>>
+* <<IMPLICIT_GROUP_BY_FROM_HAVING,Property for `HAVING` clause>>
+* <<IMPLICIT_GROUP_BY_FROM_ORDER_BY,Property for `ORDER BY` clause>>
 
 Let's look at an example
 

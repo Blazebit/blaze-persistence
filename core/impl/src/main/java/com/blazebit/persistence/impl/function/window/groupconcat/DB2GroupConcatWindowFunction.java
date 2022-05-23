@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 package com.blazebit.persistence.impl.function.window.groupconcat;
 
-import com.blazebit.persistence.impl.function.Order;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-
-import java.util.List;
 
 /**
  *
@@ -35,20 +32,11 @@ public class DB2GroupConcatWindowFunction extends AbstractGroupConcatWindowFunct
 
     protected void renderArguments(FunctionRenderContext context, WindowFunction windowFunction) {
         GroupConcat groupConcat = (GroupConcat) windowFunction;
-        if ((groupConcat).isDistinct()) {
+        if (groupConcat.isDistinct()) {
             context.addChunk("distinct ");
         }
         super.renderArguments(context, windowFunction);
         context.addChunk(", ");
         context.addChunk(quoted(groupConcat.getSeparator()));
-        List<Order> orderBys = windowFunction.getOrderBys();
-        if (orderBys.size() != 0) {
-            context.addChunk(") within group (");
-            super.renderOrderBy(context, orderBys);
-        }
-    }
-
-    protected void renderOrderBy(FunctionRenderContext context, List<Order> orderBys) {
-        // Don't render the ORDER BY clause in the OVER clause
     }
 }

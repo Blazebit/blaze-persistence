@@ -22,7 +22,7 @@ The most notable bug fixes are:
 * https://github.com/Blazebit/blaze-persistence/issues/701[*#701*, window="_blank"] Basic element types of collection bindings are being expanded
 * https://github.com/Blazebit/blaze-persistence/issues/694[*#694*, window="_blank"] Joining embeddable on correlated root with JPA Criteria API produces invalid JPQL
 
-Take a look into the https://github.com/Blazebit/blaze-persistence/blob/master/CHANGELOG.md#131[changelog, window="_blank"] for a full list of changes and improvements.
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#131[changelog, window="_blank"] for a full list of changes and improvements.
 
 Thanks to all contributors for reporting issues and helping us understand the root causes.
 

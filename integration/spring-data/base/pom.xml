@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-spring-data-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -321,6 +321,44 @@
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
                     <version>${version.spring-data-2.5}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!--
+                    Disable the creation of bridge methods for this particular profile,
+                    because otherwise we will end up with duplicate methods,
+                    as the normal compilation process would create the necessary bridge methods already.
+                    The bridge methods are only needed in the profile that is used for releasing i.e. the default one,
+                    because we want the artifact to support all spring-data versions.
+                     -->
+                    <plugin>
+                        <groupId>com.infradna.tool</groupId>
+                        <artifactId>bridge-method-injector</artifactId>
+                        <version>${version.bridge-injector}</version>
+                        <executions>
+                            <execution>
+                                <id>bridge-injector</id>
+                                <phase>NONE</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>spring-data-2.6.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.6-spring}</version.spring>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.source>1.8</maven.compiler.source>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.6}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

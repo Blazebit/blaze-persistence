@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationConfig;
@@ -30,7 +29,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
-import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
@@ -46,6 +44,10 @@ public class EntityViewAwareObjectMapper {
 
     private final EntityViewManager entityViewManager;
     private final ObjectMapper objectMapper;
+
+    public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper) {
+        this(entityViewManager, objectMapper, null);
+    }
 
     public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, final EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
@@ -68,52 +70,12 @@ public class EntityViewAwareObjectMapper {
         objectMapper.configure(MapperFeature.ALLOW_FINAL_FIELDS_AS_MUTATORS, false);
         objectMapper.setVisibility(new VisibilityChecker.Std(JsonAutoDetect.Visibility.DEFAULT) {
 
-            // This is for de-serialization so we do metamodel.managedView(m.getDeclaringClass()) == null because de-serialization is only supported when setters are available
-            // The id attribute is the exception. We also consider the id a property even if it doesn't have a setter
-
-            @Override
-            public boolean isGetterVisible(Method m) {
-                ManagedViewType<?> managedViewType = entityViewManager.getMetamodel().managedView(m.getDeclaringClass());
-                return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
-                        && super.isGetterVisible(m);
-            }
-
-            @Override
-            public boolean isGetterVisible(AnnotatedMethod m) {
-                ManagedViewType<?> managedViewType = entityViewManager.getMetamodel().managedView(m.getDeclaringClass());
-                return (managedViewType == null || managedViewType instanceof ViewType<?> && ((ViewType<?>) managedViewType).getIdAttribute().getJavaMethod().getName().equals(m.getName()))
-                        && super.isGetterVisible(m);
-            }
-
-            @Override
-            public boolean isIsGetterVisible(Method m) {
-                return entityViewManager.getMetamodel().managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
-            }
-
-            @Override
-            public boolean isIsGetterVisible(AnnotatedMethod m) {
-                return entityViewManager.getMetamodel().managedView(m.getDeclaringClass()) == null && super.isGetterVisible(m);
-            }
-
-            // We make setters for collections "invisible" so that is uses a SetterlessProperty to always merge values into existing collections
+            // We make setters for collections "invisible" so that a SetterlessProperty is used to always merge values into existing collections
 
             @Override
             public boolean isSetterVisible(Method m) {
                 if (super.isSetterVisible(m)) {
                     Class<?> rawParameterType = m.getParameterTypes()[0];
-                    if (Collection.class.isAssignableFrom(rawParameterType) || Map.class.isAssignableFrom(rawParameterType)) {
-                        return isCollectionSetterVisible(m.getDeclaringClass(), m.getName());
-                    } else {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            @Override
-            public boolean isSetterVisible(AnnotatedMethod m) {
-                if (super.isSetterVisible(m)) {
-                    Class<?> rawParameterType = m.getRawParameterType(0);
                     if (Collection.class.isAssignableFrom(rawParameterType) || Map.class.isAssignableFrom(rawParameterType)) {
                         return isCollectionSetterVisible(m.getDeclaringClass(), m.getName());
                     } else {

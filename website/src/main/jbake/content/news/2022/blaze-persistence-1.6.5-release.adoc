@@ -1,0 +1,61 @@
+= Blaze-Persistence 1.6.5 Release
+Christian Beikov
+2022-01-19 0
+:description: Blaze-Persistence version 1.6.5 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the fifth bug fix release of the 1.6 series.
+
+=== Hibernate 5.6.2.Final+ support
+
+Hibernate ORM 5.6.2.Final unfortunately changed SPIs in a backwards incompatible way which was only fixed with the recently released version 5.6.4.Final.
+To leverage the new SPI methods we had to create a new integration module specific for Hibernate 5.6 though.
+
+So with this version, Blaze-Persistence now also comes with explicit integration modules for 5.5 and 5.6:+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
+    <version>1.6.5</version>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
+    <version>1.6.5</version>
+</dependency>
+----
+
+or if you are still working with Java EE APIs:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
+    <version>1.6.5</version>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+    <version>1.6.5</version>
+</dependency>
+----
+
+If you were using the 5.3 or 5.4 integration so far for Hibernate 5.5 or 5.6 we would like to ask you to switch to the respective integration module to avoid running into issues.
+
+=== Quarkus improvements/fixes
+
+Thanks to https://github.com/gsmet[Guillaume Smet, window="_blank"] for helping us fix issues with the Quarkus metadata in our integration which prevented using the Quarkus Dev UI with the Blaze-Persistence integration.
+
+While working on that and verifying everything works smoothly, we also added support for firing a `CriteriaBuilderConfiguration` CDI event on application start and https://quarkus.io/version/main/guides/blaze-persistence[documented, window="_blank"] this new way of customizing Blaze-Persistence within the Quarkus documentation.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#165[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

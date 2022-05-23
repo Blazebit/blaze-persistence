@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Copyright 2014 - 2021 Blazebit.
+  Copyright 2014 - 2022 Blazebit.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
     <parent>
         <artifactId>blaze-persistence-examples-showcase-runner</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.3-SNAPSHOT</version>
+        <version>1.6.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -78,7 +78,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>${version.hibernate-5.2}</version>
+            <version>${version.hibernate-5.4}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.javassist</groupId>
@@ -104,6 +104,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -399,6 +400,24 @@
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
                     <version>${version.spring-data-2.5}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.6.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.6-spring}</version.spring>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.6}</version>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>

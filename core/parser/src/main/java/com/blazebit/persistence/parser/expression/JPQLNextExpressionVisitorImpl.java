@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,31 +137,38 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     }
 
     @Override
-    public Expression visitAdditionExpression(JPQLNextParser.AdditionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.ADDITION);
+    public Expression visitMultiplicativeExpression(JPQLNextParser.MultiplicativeExpressionContext ctx) {
+        Expression lhs = ctx.getChild(0).accept(this);
+        Expression rhs = ctx.getChild(2).accept(this);
+        TerminalNode terminalNode = (TerminalNode) ctx.getChild(1);
+        switch (terminalNode.getSymbol().getType()) {
+            case JPQLNextParser.SLASH:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.DIVISION);
+            case JPQLNextParser.ASTERISK:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.MULTIPLICATION);
+            case JPQLNextParser.PERCENT:
+                List<Expression> args = new ArrayList<>(2);
+                args.add(lhs);
+                args.add(rhs);
+                return new FunctionExpression("MOD", args);
+            default:
+                throw new SyntaxErrorException("Invalid multiplicative operator: " + terminalNode.getText());
+        }
     }
 
     @Override
-    public Expression visitSubtractionExpression(JPQLNextParser.SubtractionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.SUBTRACTION);
-    }
-
-    @Override
-    public Expression visitMultiplicationExpression(JPQLNextParser.MultiplicationExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.MULTIPLICATION);
-    }
-
-    @Override
-    public Expression visitDivisionExpression(JPQLNextParser.DivisionExpressionContext ctx) {
-        return new ArithmeticExpression(ctx.lhs.accept(this), ctx.rhs.accept(this), ArithmeticOperator.DIVISION);
-    }
-
-    @Override
-    public Expression visitModuloExpression(JPQLNextParser.ModuloExpressionContext ctx) {
-        List<Expression> args = new ArrayList<>(2);
-        args.add(ctx.lhs.accept(this));
-        args.add(ctx.rhs.accept(this));
-        return new FunctionExpression("MOD", args);
+    public Expression visitAdditiveExpression(JPQLNextParser.AdditiveExpressionContext ctx) {
+        Expression lhs = ctx.getChild(0).accept(this);
+        Expression rhs = ctx.getChild(2).accept(this);
+        TerminalNode terminalNode = (TerminalNode) ctx.getChild(1);
+        switch (terminalNode.getSymbol().getType()) {
+            case JPQLNextParser.PLUS:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.ADDITION);
+            case JPQLNextParser.MINUS:
+                return new ArithmeticExpression(lhs, rhs, ArithmeticOperator.SUBTRACTION);
+            default:
+                throw new SyntaxErrorException("Invalid additive operator: " + terminalNode.getText());
+        }
     }
 
     @Override
@@ -401,7 +408,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         } else {
             arguments = Collections.emptyList();
         }
-        return handleFunction("COUNT", distinct, arguments, ctx, ctx.whereClause(), ctx.windowName, ctx.windowDefinition());
+        return handleFunction("COUNT", distinct, arguments, ctx, null, ctx.whereClause(), ctx.windowName, ctx.windowDefinition());
     }
 
     @Override
@@ -413,10 +420,10 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         for (int i = 0; i < size; i++) {
             arguments.add(expressions.get(i).accept(this));
         }
-        return handleFunction(ctx.name.getText(), distinct, arguments, ctx, ctx.whereClause(), ctx.windowName, ctx.windowDefinition());
+        return handleFunction(ctx.name.getText(), distinct, arguments, ctx, ctx.orderByClause(), ctx.whereClause(), ctx.windowName, ctx.windowDefinition());
     }
 
-    private Expression handleFunction(String name, boolean distinct, List<Expression> arguments, ParserRuleContext ctx, JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowName, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
+    private Expression handleFunction(String name, boolean distinct, List<Expression> arguments, ParserRuleContext ctx, JPQLNextParser.OrderByClauseContext orderByClauseContext, JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowName, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
         String lowerName = name.toLowerCase();
         FunctionKind functionKind;
         // Builtin functions
@@ -425,7 +432,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             case "current_date":
             case "current_time":
             case "current_timestamp":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 return new FunctionExpression(name, Collections.<Expression>emptyList());
             case "outer":
                 if (!allowOuter) {
@@ -442,40 +449,40 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             case "mod":
             case "coalesce":
             case "nullif":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 return new FunctionExpression(name, arguments);
             case "trim":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 return new TrimExpression(Trimspec.BOTH, null, arguments.get(0));
             case "size":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 ((PathExpression) arguments.get(0)).setUsedInCollectionFunction(true);
                 return new FunctionExpression(name, arguments);
             case "index":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 PathExpression listIndexPath = (PathExpression) arguments.get(0);
                 listIndexPath.setCollectionQualifiedPath(true);
                 return new ListIndexExpression(listIndexPath);
             case "key":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 PathExpression mapKeyPath = (PathExpression) arguments.get(0);
                 mapKeyPath.setCollectionQualifiedPath(true);
                 return new MapKeyExpression(mapKeyPath);
             case "value":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 PathExpression mapValuePath = (PathExpression) arguments.get(0);
                 mapValuePath.setCollectionQualifiedPath(true);
                 return new MapValueExpression(mapValuePath);
             case "entry":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 PathExpression mapEntryPath = (PathExpression) arguments.get(0);
                 mapEntryPath.setCollectionQualifiedPath(true);
                 return new MapEntryExpression(mapEntryPath);
             case "type":
-                failDistinct(distinct, ctx);
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
                 return new TypeFunctionExpression(arguments.get(0));
             case "function":
-                failDistinct(distinct, ctx);
+                assertNotDistinct(distinct, ctx);
                 String functionName = ((StringLiteral) arguments.get(0)).getValue();
                 functionKind = functions.get(functionName.toLowerCase());
                 if (functionKind == null) {
@@ -489,27 +496,52 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             //CHECKSTYLE:ON: FallThrough
         }
         if (functionKind == null) {
-            if (whereClauseContext == null && windowName == null && windowDefinitionContext == null) {
-                failDistinct(distinct, ctx);
-                return handleMacro(name, arguments, ctx);
-            }
-            throw new SyntaxErrorException("No function with the name '" + name + "' exists!");
+            assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
+            return handleMacro(name, arguments, ctx);
         }
-        if (functionKind == FunctionKind.AGGREGATE) {
-            // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
-            if (windowName == null && windowDefinitionContext == null) {
-                if (whereClauseContext == null) {
-                    return new AggregateExpression(distinct, name, arguments);
-                } else {
-                    return new AggregateExpression(distinct, "window_" + name, arguments, (Predicate) whereClauseContext.predicate().accept(this));
+        switch (functionKind) {
+            case AGGREGATE:
+                if (orderByClauseContext != null) {
+                    throw new SyntaxErrorException("Invalid use of WITHIN GROUP for function: " + getInputText(ctx));
                 }
-            } else {
-                failDistinct(distinct, ctx);
-                return new FunctionExpression("window_" + name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
-            }
-        } else {
-            failDistinct(distinct, ctx);
-            return new FunctionExpression(name, arguments, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
+                // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
+                if (windowName == null && windowDefinitionContext == null) {
+                    if (whereClauseContext == null) {
+                        return new AggregateExpression(distinct, name, arguments);
+                    } else {
+                        return new AggregateExpression(distinct, "window_" + name, arguments, null, (Predicate) whereClauseContext.predicate().accept(this));
+                    }
+                } else {
+                    if (distinct) {
+                        arguments.add(0, new StringLiteral("DISTINCT"));
+                    }
+                    return new FunctionExpression("window_" + name, arguments, null, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
+                }
+            case ORDERED_SET_AGGREGATE:
+                // NOTE: We currently don't support JUST filtering for aggregate functions, but maybe in the future
+                if (windowName == null && windowDefinitionContext == null) {
+                    if (orderByClauseContext == null && whereClauseContext == null) {
+                        return new AggregateExpression(distinct, name, arguments);
+                    } else {
+                        return new AggregateExpression(distinct, name, arguments, createOrderByItems(orderByClauseContext), whereClauseContext == null ? null : (Predicate) whereClauseContext.predicate().accept(this));
+                    }
+                } else {
+                    if (distinct) {
+                        arguments.add(0, new StringLiteral("DISTINCT"));
+                    }
+                    return new FunctionExpression(name, arguments, createOrderByItems(orderByClauseContext), createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
+                }
+            case WINDOW:
+                if (orderByClauseContext != null) {
+                    throw new SyntaxErrorException("Invalid use of WITHIN GROUP for function: " + getInputText(ctx));
+                }
+                if (distinct) {
+                    arguments.add(0, new StringLiteral("DISTINCT"));
+                }
+                return new FunctionExpression(name, arguments, null, createWindowDefinition(whereClauseContext, windowName, windowDefinitionContext, functionKind));
+            default:
+                assertNormalFunctionInvocation(distinct, ctx, orderByClauseContext, whereClauseContext, windowName, windowDefinitionContext);
+                return new FunctionExpression(name, arguments, null, null);
         }
     }
 
@@ -529,7 +561,20 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
     }
 
-    private void failDistinct(boolean distinct, ParserRuleContext ctx) {
+    private void assertNormalFunctionInvocation(boolean distinct, ParserRuleContext ctx, JPQLNextParser.OrderByClauseContext orderByClauseContext, JPQLNextParser.WhereClauseContext whereClauseContext, JPQLNextParser.IdentifierContext windowName, JPQLNextParser.WindowDefinitionContext windowDefinitionContext) {
+        assertNotDistinct(distinct, ctx);
+        if (orderByClauseContext != null) {
+            throw new SyntaxErrorException("Invalid use of WITHIN GROUP for function: " + getInputText(ctx));
+        }
+        if (whereClauseContext != null) {
+            throw new SyntaxErrorException("Invalid use of FILTER for function: " + getInputText(ctx));
+        }
+        if (windowName != null || windowDefinitionContext != null) {
+            throw new SyntaxErrorException("Invalid use of OVER for function: " + getInputText(ctx));
+        }
+    }
+
+    private void assertNotDistinct(boolean distinct, ParserRuleContext ctx) {
         if (distinct) {
             throw new SyntaxErrorException("Invalid use of DISTINCT for function: " + getInputText(ctx));
         }

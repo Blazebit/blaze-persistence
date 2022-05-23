@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -572,6 +572,14 @@ public interface JpaProvider {
      * @since 1.6.0
      */
     public boolean needsCaseWhenElseBranch();
+
+    /**
+     * Indicates whether the provider supports automatic like pattern escaping according to the database requirements.
+     *
+     * @return true if supported, else false
+     * @since 1.6.3
+     */
+    public boolean supportsLikePatternEscape();
 
     /**
      * Enables query result caching for the given query.

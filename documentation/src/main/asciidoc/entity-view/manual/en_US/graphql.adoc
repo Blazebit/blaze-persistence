@@ -22,6 +22,18 @@ To use the GraphQL integration you need the following Maven dependencies:
 </dependency>
 ----
 
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
 Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`.
 
 === Usage
@@ -147,7 +159,7 @@ SchemaGenerator schemaGenerator = new SchemaGenerator();
 return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== Netflix DGS setup
 
@@ -224,7 +236,87 @@ public class CatFetcher {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
+
+==== SPQR setup
+
+To use the SPQR GraphQL integration you need the following Maven dependencies:
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-spqr</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+or if you are using Jakarta JPA
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+The SPQR configuration is very simple and since the framework is fully declarative, you don't need a dedicated GraphQL schema definition.
+
+[source,java]
+----
+@Configuration
+public class GraphQLProvider {
+
+    @Autowired
+    EntityViewManager evm;
+    @Autowired
+    GraphQLSchema graphQLSchema;
+
+    private GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    @PostConstruct
+    public void init() {
+        GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(false, false);
+        graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+        graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(false);
+        this.graphQLEntityViewSupport = graphQLEntityViewSupportFactory.create(graphQLSchema, evm);
+    }
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public GraphQLEntityViewSupport graphQLEntityViewSupport() {
+        return graphQLEntityViewSupport;
+    }
+
+}
+----
+
+Next, one needs to define a `DataFetcher` for the defined query `catById` like so
+
+[source,java]
+----
+@Component
+@GraphQLApi
+public class CatFetcher {
+
+    @Autowired
+    CatViewRepository repository;
+    @Autowired
+    GraphQLEntityViewSupport graphQLEntityViewSupport;
+
+    @GraphQLQuery
+    public CatWithOwnerView catById(@GraphQLArgument(name = "id") Long id, @GraphQLEnvironment ResolutionEnvironment env) {
+        return repository.findById(graphQLEntityViewSupport.createSetting(env.dataFetchingEnvironment), id);
+    }
+}
+----
+
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== MicroProfile GraphQL - SmallRye
 
@@ -302,7 +394,7 @@ public class CatFetcher {
 }
 ----
 
-For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[example project].
+For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/microprofile-graphql/[example project].
 
 ==== Sample query
 
@@ -561,6 +653,7 @@ query: {
 
 For a full example see one of the following example projects:
 
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-graphql/[Plain graphql-java]
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/spring-data-dgs/[Netflix DGS]
-* https://github.com/Blazebit/blaze-persistence/blob/master/examples/microprofile-graphql/[MicroProfile GraphQL]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[Plain graphql-java]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-dgs/[Netflix DGS]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/microprofile-graphql/[MicroProfile GraphQL]
+* https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-spqr/[SPQR]

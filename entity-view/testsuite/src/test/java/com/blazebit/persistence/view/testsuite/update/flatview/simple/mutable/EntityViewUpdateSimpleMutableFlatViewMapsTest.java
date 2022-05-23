@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
+import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.IntIdEntityCreateView;
+import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.IntIdEntityIdView;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.UpdatableDocumentWithMapsView;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.mutable.model.UpdatableNameObjectView;
 import org.junit.Assert;
@@ -60,6 +62,8 @@ public class EntityViewUpdateSimpleMutableFlatViewMapsTest extends AbstractEntit
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(UpdatableNameObjectView.class);
+        cfg.addEntityView(IntIdEntityIdView.class);
+        cfg.addEntityView(IntIdEntityCreateView.class);
     }
 
     @Override

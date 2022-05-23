@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2021 Blazebit.
+ * Copyright 2014 - 2022 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,8 @@ public interface BlazeExpression<X> extends Expression<X> {
      * Like {@link Expression#as} but returns the subtype {@link BlazeExpression} instead.
      *
      * @param type intended type of the expression
-     * @param <X>  The intended expression type
+     * @param <T>  The intended expression type
      * @return A new expression of the given type
      */
-    <X> BlazeExpression<X> as(Class<X> type);
+    <T> BlazeExpression<T> as(Class<T> type);
 }

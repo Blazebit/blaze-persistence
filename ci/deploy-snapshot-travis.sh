@@ -5,7 +5,7 @@ set -x
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
-    [ "$TRAVIS_BRANCH" == "master" ] &&
+    [ "$TRAVIS_BRANCH" == "main" ] &&
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$SNAPSHOT_PUBLISH" == "true" ]; then
 

@@ -393,6 +393,52 @@ Example: `GROUP_CONCAT('DISTINCT', d.name, 'SEPARATOR', ', ', 'ORDER BY', d.name
 
 WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
 
+NOTE: The use of this function is discouraged and should be replaced with the SQL standard compliant version, the ordered set-aggregate `LISTAGG`.
+
+==== LISTAGG function
+
+Syntax: `LISTAGG ( DISTINCT? expression (, separator_expression)? ) (WITHIN GROUP (order_by_clause))?`
+
+The `separator_expression` is `','` by default.
+
+Aggregates/concatenates the values produced by `expression` to a single string separated by `separator_expression` in the order defined by the `ORDER BY` clause.
+
+Example: `LISTAGG(DISTINCT d.name, ', ') WITHIN GROUP (ORDER BY d.name, d.id DESC)`
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
+NOTE: This function is similar to `GROUP_CONCAT` but represents the SQL standard compliant version.
+
+==== MODE function
+
+Syntax: `MODE() WITHIN GROUP (ORDER BY order_by_item)`
+
+Returns the value of the order by item that appears most frequently.
+
+Example: `MODE() WITHIN GROUP (ORDER BY d.name)`
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
+==== PERCENTILE_CONT function
+
+Syntax: `PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY order_by_item)`
+
+Returns the value of the order by item at the requested fraction, interpolating if needed.
+
+Example: `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY d.name)`
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
+==== PERCENTILE_DISC function
+
+Syntax: `PERCENTILE_DISC(fraction) WITHIN GROUP (ORDER BY order_by_item)`
+
+Returns the value of the order by item at the requested fraction.
+
+Example: `PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY d.name)`
+
+WARNING: This function might not be supported by all DBMS, so make sure your target database does before using it
+
 ===== WINDOW functions
 
 Syntax: `WINDOW_XXX ( arguments+, (, 'FILTER' (, filter_by_expression)+ )? (, 'PARTITION BY' (, partition_by_expression)+ )? (, 'ORDER BY' (, order_by_expression (, order_specification ) )+ )? ((, 'RANGE' | 'ROWS' | 'GROUPS') (, ( 'UNBOUNDED PRECEDING' | ( number_expression, 'PRECEDING') | 'CURRENT ROW'), 'AND', ( 'UNBOUNDED FOLLOWING' | ( number_expression, 'FOLLOWING') | 'CURRENT ROW' ) ) )`
