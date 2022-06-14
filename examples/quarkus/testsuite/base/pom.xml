@@ -199,7 +199,7 @@
                 <dependency>
                     <groupId>io.quarkus</groupId>
                     <artifactId>quarkus-test-h2</artifactId>
-                    <scope>provided</scope>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <build>
