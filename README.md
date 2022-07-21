@@ -84,37 +84,49 @@ If you want a sample application with everything setup where you can poke around
 Core-only archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample" "-DarchetypeVersion=1.6.7"
 ```
 
 Entity view archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample" "-DarchetypeVersion=1.6.7"
 ```
 
 Spring-Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-data-sample" "-DarchetypeVersion=1.6.7"
 ```
 
 Spring-Boot archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-spring-boot-sample" "-DarchetypeVersion=1.6.7"
 ```
 
 DeltaSpike Data archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-deltaspike-data-sample" "-DarchetypeVersion=1.6.7"
 ```
 
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.6.4"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.6.7"
+```
+
+Core-only Jakarta archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample-jakarta" "-DarchetypeVersion=1.6.7"
+```
+
+Entity view Jakarta archetype:
+
+```bash
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample-jakarta" "-DarchetypeVersion=1.6.7"
 ```
 
 ## Supported Java runtimes

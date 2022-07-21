@@ -35,5 +35,8 @@
         <module>spring-boot-sample</module>
         <module>deltaspike-data-sample</module>
         <module>java-ee-sample</module>
+
+        <module>core-sample-jakarta</module>
+        <module>entity-view-sample-jakarta</module>
     </modules>
 </project>
