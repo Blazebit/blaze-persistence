@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-entity-view-cdi-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.view.cdi</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

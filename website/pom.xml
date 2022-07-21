@@ -64,13 +64,13 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.blazebit</groupId>
+                        <groupId>org.jbake</groupId>
                         <artifactId>jbake-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <phase>compile</phase>
                                 <goals>
-                                    <goal>serve</goal>
+                                    <goal>inline</goal>
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.build.directory}/site</outputDirectory>
@@ -97,13 +97,13 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.blazebit</groupId>
+                        <groupId>org.jbake</groupId>
                         <artifactId>jbake-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <phase>generate-resources</phase>
                                 <goals>
-                                    <goal>build</goal>
+                                    <goal>generate</goal>
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.build.directory}/site</outputDirectory>
@@ -134,13 +134,13 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.blazebit</groupId>
+                        <groupId>org.jbake</groupId>
                         <artifactId>jbake-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <phase>generate-resources</phase>
                                 <goals>
-                                    <goal>build</goal>
+                                    <goal>generate</goal>
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.build.directory}/site</outputDirectory>
@@ -171,13 +171,13 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.blazebit</groupId>
+                        <groupId>org.jbake</groupId>
                         <artifactId>jbake-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <phase>generate-resources</phase>
                                 <goals>
-                                    <goal>build</goal>
+                                    <goal>generate</goal>
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.build.directory}/site</outputDirectory>
@@ -204,25 +204,21 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>com.blazebit</groupId>
+                    <groupId>org.jbake</groupId>
                     <artifactId>jbake-maven-plugin</artifactId>
-                    <version>1.0.0</version>
+                    <version>0.3.5</version>
                     <dependencies>
                         <dependency>
-                            <groupId>org.jbake</groupId>
-                            <artifactId>jbake-core</artifactId>
-                            <version>2.6.1</version>
+                            <groupId>org.freemarker</groupId>
+                            <artifactId>freemarker</artifactId>
+                            <version>2.3.28</version>
+                            <scope>runtime</scope>
                         </dependency>
                         <dependency>
                             <groupId>org.asciidoctor</groupId>
                             <artifactId>asciidoctorj</artifactId>
-                            <version>${version.asciidoctor}</version>
-                        </dependency>
-                        <!-- Interesting stuff... https://github.com/asciidoctor/asciidoctorj/issues/680 -->
-                        <dependency>
-                            <groupId>org.jruby</groupId>
-                            <artifactId>jruby-complete</artifactId>
-                            <version>9.1.17.0</version>
+                            <version>2.4.3</version>
+                            <scope>runtime</scope>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -248,8 +244,8 @@
                 			<pluginExecutions>
                 				<pluginExecution>
                 					<pluginExecutionFilter>
-                						<groupId>com.blazebit</groupId>
-                						<artifactId>jbake-maven-plugin</artifactId>
+                                        <groupId>org.jbake</groupId>
+                                        <artifactId>jbake-maven-plugin</artifactId>
                 						<versionRange>[1.0.0,)</versionRange>
                 						<goals>
                 							<goal>build</goal>

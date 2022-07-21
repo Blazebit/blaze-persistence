@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.criteria.impl</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

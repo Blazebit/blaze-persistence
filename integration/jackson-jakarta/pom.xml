@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.jackson</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

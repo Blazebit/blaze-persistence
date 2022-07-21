@@ -1,0 +1,8 @@
+:linkattrs:
+
+= Dummy
+:page: dummy
+:jbake-type: index
+:jbake-status: published
+
+A dummy file which has to exist as first file, because the jbake-maven-plugin seems to skip the first file!?

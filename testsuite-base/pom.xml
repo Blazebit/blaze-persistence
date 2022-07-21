@@ -45,7 +45,7 @@
         <profile>
             <id>jdk11+</id>
             <activation>
-                <jdk>11</jdk>
+                <jdk>[11,)</jdk>
             </activation>
             <modules>
                 <module>jpa</module>

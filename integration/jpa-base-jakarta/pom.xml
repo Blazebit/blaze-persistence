@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.jpa</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -46,6 +50,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-core-parser-jakarta</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

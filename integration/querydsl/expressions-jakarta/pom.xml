@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.querydsl</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

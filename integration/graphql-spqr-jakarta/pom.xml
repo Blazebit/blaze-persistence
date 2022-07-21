@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.graphql.spqr</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
