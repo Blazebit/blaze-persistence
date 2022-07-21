@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.11.0</version>
+            <version>2.12.6.1</version>
         </dependency>
 
         <!-- Add mockito early to the local maven repo since the Hibernate,DB2 build froze on downloading this dependency -->
