@@ -18,6 +18,7 @@ Not yet released
 * Fix CTE rendering issues in Querydsl integration
 * Support joins in queries with multiple FROM nodes in Querydsl
 * Fix compatibility issues with Spring Data 2.3 series due to newly added methods in 2.3.1
+* Fix compatibility issues with Spring Data 2.5 series due to newly added methods
 
 ### Backwards-incompatible changes
 

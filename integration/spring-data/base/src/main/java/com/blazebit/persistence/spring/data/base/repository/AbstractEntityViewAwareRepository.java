@@ -75,6 +75,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
     private static final String ID_MUST_NOT_BE_NULL = "The given id must not be null!";
     private static final String DELETE_ALL_QUERY_STRING = "delete from %s x";
+    private static final String DELETE_ALL_QUERY_BY_ID_STRING = "delete from %s x where %s in :ids";
     private static final String[] EMPTY = new String[0];
 
     private final JpaEntityInformation<E, ?> entityInformation;
@@ -147,6 +148,13 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     @Transactional
     public <S extends E> List<S> saveAll(Iterable<S> entities) {
         return save(entities);
+    }
+
+    @Transactional
+    public <S extends E> List<S> saveAllAndFlush(Iterable<S> entities) {
+        List<S> result = saveAll(entities);
+        flush();
+        return result;
     }
 
     @Transactional
@@ -240,11 +248,42 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     @Transactional
+    public void deleteAllInBatch(Iterable<E> entities) {
+        deleteInBatch(entities);
+    }
+
+    @Transactional
+    public void deleteAllByIdInBatch(Iterable<ID> ids) {
+
+        Assert.notNull(ids, "Ids must not be null!");
+
+        if (!ids.iterator().hasNext()) {
+            return;
+        }
+
+        String queryTemplate = DELETE_ALL_QUERY_BY_ID_STRING;
+        String queryString = String.format(queryTemplate, entityInformation.getEntityName(), entityInformation.getIdAttribute().getName());
+
+        Query query = entityManager.createQuery(queryString);
+        query.setParameter("ids", ids);
+
+        query.executeUpdate();
+    }
+
+    @Transactional
     public void deleteAllInBatch() {
         entityManager.createQuery(getQueryString(DELETE_ALL_QUERY_STRING, entityInformation.getEntityName())).executeUpdate();
     }
 
     public E getOne(ID id) {
+        return (E) getReference(id);
+    }
+
+    public E getById(ID id) {
+        return (E) getReference(id);
+    }
+
+    public E getReferenceById(ID id) {
         return (E) getReference(id);
     }
 
