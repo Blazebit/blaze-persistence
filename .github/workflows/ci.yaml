@@ -475,39 +475,51 @@ jobs:
             jdk: 11
 
 ################################################
-# JDK 9+
+# LTS JDKs
 ################################################
           - rdbms: h2
             provider: hibernate-5.2
             jdk: 11
           - rdbms: h2
             provider: hibernate-5.2
-            jdk: 16
+            jdk: 11
+            build-jdk: 11
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.5.x
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 17
             deltaspike: deltaspike-1.9
             spring-data: spring-data-2.6.x
           - rdbms: h2
-            provider: hibernate-5.2
-            jdk: 11
-            build-jdk: 11
-            deltaspike: deltaspike-1.9
-          - rdbms: h2
-            provider: hibernate-5.2
-            jdk: 16
-            build-jdk: 16
-            deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.5.x
-# Neither Spring nor Deltaspike support reading JDK 17 class files yet
-          - rdbms: h2
-            provider: hibernate-5.2
+            provider: hibernate-5.6
             jdk: 17
             build-jdk: 17
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.5.x
+            spring-data: spring-data-2.6.x
+# Latest GA JDK
+          - rdbms: h2
+            provider: hibernate-5.6
+            jdk: 18
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.6.x
+          - rdbms: h2
+            provider: hibernate-5.6
+            jdk: 18
+            build-jdk: 18
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.6.x
+# Early access JDKs
+          - rdbms: h2
+            provider: hibernate-5.6
+            jdk: 19-ea
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.6.x
+          - rdbms: h2
+            provider: hibernate-5.6
+            jdk: 19-ea
+            build-jdk: 19-ea
+            deltaspike: deltaspike-1.9
+            spring-data: spring-data-2.6.x
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
@@ -525,18 +537,12 @@ jobs:
         with:
           version: 8
           targets: JDK8_HOME;JAVA_HOME
-      - name: Download Requested JDK
-        uses: sormuras/download-jdk@1.1
-        id: jdk
-        if: ${{ matrix.jdk != 8 }}
-        with:
-          feature: ${{ matrix.jdk }}
       - name: Set up Requested JDK
-        uses: actions/setup-java@v1.4.3
+        uses: actions/setup-java@v3
         if: ${{ matrix.jdk != 8 }}
         with:
           java-version: ${{ matrix.jdk }}
-          jdkFile: ${{ env.JDK_FILE }}
+          distribution: 'temurin'
 
       - name: Get year/month for cache key
         id: get-date

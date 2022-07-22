@@ -68,7 +68,7 @@
                         <configuration>
                             <target>
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
-                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
+                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer" fork="true">
                                     <!--suppress UnresolvedMavenProperty -->
                                     <arg value="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" />
                                     <arg value="${project.build.directory}/${project.build.finalName}.jar" />
@@ -95,7 +95,7 @@
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
                                 <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" regexp="\.jar$" replace="-sources.jar" global="true" />
-                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
+                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer" fork="true">
                                     <!--suppress UnresolvedMavenProperty -->
                                     <arg value="${source}" />
                                     <arg value="${project.build.directory}/${project.build.finalName}-sources.jar" />
@@ -122,7 +122,7 @@
                                 <property name="plugin_classpath" refid="maven.plugin.classpath" />
                                 <!--suppress UnresolvedMavenProperty -->
                                 <ac:propertyregex xmlns:ac="antlib:net.sf.antcontrib" property="source" input="${com.blazebit:blaze-persistence-integration-hibernate-5.6:jar}" regexp="\.jar$" replace="-javadoc.jar" global="true" />
-                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer">
+                                <java classname="org.eclipse.transformer.jakarta.JakartaTransformer" fork="true">
                                     <!--suppress UnresolvedMavenProperty -->
                                     <arg value="${source}" />
                                     <arg value="${project.build.directory}/${project.build.finalName}-javadoc.jar" />

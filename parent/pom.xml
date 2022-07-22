@@ -53,7 +53,7 @@
         <querydsl.version>5.0.0</querydsl.version>
         <!-- 1.18 messed up calculation of load index -->
         <version.bridge-injector>1.17</version.bridge-injector>
-        <version.bridge-injector-asm>9.0</version.bridge-injector-asm>
+        <version.bridge-injector-asm>9.3</version.bridge-injector-asm>
         <version.bridge-injector-indexer>1.12</version.bridge-injector-indexer>
 
         <!-- Minimum version is 4.2.8.Final -->
@@ -91,7 +91,7 @@
 
         <version.deltaspike-1.7>1.7.2</version.deltaspike-1.7>
         <version.deltaspike-1.8>1.8.1</version.deltaspike-1.8>
-        <version.deltaspike-1.9>1.9.5</version.deltaspike-1.9>
+        <version.deltaspike-1.9>1.9.6</version.deltaspike-1.9>
 
         <version.spring-data-1.x>1.11.10.RELEASE</version.spring-data-1.x>
         <version.spring-data-1.x-spring>4.3.9.RELEASE</version.spring-data-1.x-spring>
@@ -124,13 +124,13 @@
         <version.jpa-api>2.2.3</version.jpa-api>
         <version.jakarta-jpa-api>3.0.0</version.jakarta-jpa-api>
 
-        <version.weld>3.1.5.Final</version.weld>
+        <version.weld>3.1.9.Final</version.weld>
         <version.quarkus>1.11.7.Final</version.quarkus>
-        <version.jandex>2.0.4.Final</version.jandex>
+        <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
         <!-- Plugin versions -->
-        <version.antrun.plugin>3.0.0</version.antrun.plugin>
+        <version.antrun.plugin>3.1.0</version.antrun.plugin>
         <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.exec.plugin>1.6.0</version.exec.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
@@ -139,7 +139,7 @@
         <version.shade.plugin>3.2.4</version.shade.plugin>
         <version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
         <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
-        <asmVersion>9.1</asmVersion>
+        <asmVersion>9.3</asmVersion>
 
         <h2.version>1.4.200</h2.version>
         <mssql.version>7.2.2.jre8</mssql.version>
