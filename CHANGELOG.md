@@ -11,6 +11,7 @@ Not yet released
 * Add integration for Hibernate 6 supporting versions starting with 6.1.1.Final
 * Support for Java 16, 17, 18 and 19 EA
 * Support CTE's for left-nested set queries
+* Add separate integration modules for Spring Data 2.5, 2.6 and 2.7
 
 ### Bug fixes
 

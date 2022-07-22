@@ -40,6 +40,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.convert.QueryByExamplePredicateBuilder;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.EscapeCharacter;
 import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
@@ -56,6 +57,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,6 +79,9 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     private static final String DELETE_ALL_QUERY_STRING = "delete from %s x";
     private static final String DELETE_ALL_QUERY_BY_ID_STRING = "delete from %s x where %s in :ids";
     private static final String[] EMPTY = new String[0];
+    private static final EscapeCharacter DEFAULT = EscapeCharacter.of('\\');
+
+    protected EscapeCharacter escapeCharacter = DEFAULT;
 
     private final JpaEntityInformation<E, ?> entityInformation;
     private final EntityManager entityManager;
@@ -100,12 +105,20 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         this.metadata = crudMethodMetadata;
     }
 
+    public void setEscapeCharacter(EscapeCharacter escapeCharacter) {
+        this.escapeCharacter = escapeCharacter;
+    }
+
     protected EntityViewAwareCrudMethodMetadata getRepositoryMethodMetadata() {
         return metadata;
     }
 
     protected Class<E> getDomainClass() {
         return entityInformation.getJavaType();
+    }
+
+    protected EntityManager getEntityManager() {
+        return entityManager;
     }
 
     protected abstract Map<String, Object> tryGetFetchGraphHints(EntityManager entityManager, JpaEntityGraph entityGraph, Class<?> entityType);
@@ -253,6 +266,11 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     @Transactional
+    public void deleteAllById(Iterable<? extends ID> ids) {
+        deleteAllByIdInBatch((Iterable<ID>) ids);
+    }
+
+    @Transactional
     public void deleteAllByIdInBatch(Iterable<ID> ids) {
 
         Assert.notNull(ids, "Ids must not be null!");
@@ -288,26 +306,30 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     public <S extends E> long count(Example<S> example) {
-        return executeCountQuery(getCountQuery(new ExampleSpecification<>(example), example.getProbeType()));
+        return executeCountQuery(getCountQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType()));
     }
 
     public <S extends E> boolean exists(Example<S> example) {
-        return !getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getResultList()
+        return !getQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType(), (Sort) null).getResultList()
                 .isEmpty();
     }
 
+    public boolean exists(Specification<E> spec) {
+        return !getQuery(spec, getDomainClass(), (Sort) null).getResultList().isEmpty();
+    }
+
     public <S extends E> List<S> findAll(Example<S> example) {
-        return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getResultList();
+        return getQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType(), (Sort) null).getResultList();
     }
 
     public <S extends E> List<S> findAll(Example<S> example, Sort sort) {
-        return getQuery(new ExampleSpecification<>(example), example.getProbeType(), sort).getResultList();
+        return getQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType(), sort).getResultList();
     }
 
     public <S extends E> Page<S> findAll(Example<S> example, Pageable pageable) {
-        ExampleSpecification<S> spec = new ExampleSpecification<>(example);
+        ExampleSpecification<S> spec = new ExampleSpecification<>(example, escapeCharacter);
         Class<S> probeType = example.getProbeType();
-        TypedQuery<S> query = getQuery(new ExampleSpecification<>(example), probeType, pageable);
+        TypedQuery<S> query = getQuery(new ExampleSpecification<>(example, escapeCharacter), probeType, pageable);
 
         return pageable == null ? new KeysetAwarePageImpl<>(query.getResultList()) : new KeysetAwarePageImpl<>((PagedList<S>) query.getResultList(), pageable);
     }
@@ -330,15 +352,39 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
      */
     protected static class ExampleSpecification<T> implements Specification<T> {
 
-        private final Example<T> example;
+        private static final Method GET_PREDICATE_NEW;
 
-        public ExampleSpecification(Example<T> example) {
+        static {
+            Method getPredicate = null;
+            try {
+                getPredicate = QueryByExamplePredicateBuilder.class.getMethod("getPredicate", Root.class, javax.persistence.criteria.CriteriaBuilder.class, Example.class, EscapeCharacter.class);
+            } catch (NoSuchMethodException e) {
+                // Ignore
+            }
+            GET_PREDICATE_NEW = getPredicate;
+        }
+
+        private final Example<T> example;
+        private final EscapeCharacter escapeCharacter;
+
+        public ExampleSpecification(Example<T> example, EscapeCharacter escapeCharacter) {
             Assert.notNull(example, "Example must not be null!");
+            Assert.notNull(escapeCharacter, "EscapeCharacter must not be null!");
             this.example = example;
+            this.escapeCharacter = escapeCharacter;
         }
 
         @Override
         public Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, javax.persistence.criteria.CriteriaBuilder cb) {
+            if ( GET_PREDICATE_NEW != null ) {
+                try {
+                    return (Predicate) GET_PREDICATE_NEW.invoke(null, cb, example, escapeCharacter);
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
             return QueryByExamplePredicateBuilder.getPredicate(root, cb, example);
         }
     }

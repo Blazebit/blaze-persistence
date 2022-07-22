@@ -77,9 +77,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>1.0.0.Final</version>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -386,7 +385,7 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.5</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -402,7 +401,23 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.6</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.7.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-2.7}</version.spring.data>
+                <version.spring.hateoas>1.5.1</version.spring.hateoas>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

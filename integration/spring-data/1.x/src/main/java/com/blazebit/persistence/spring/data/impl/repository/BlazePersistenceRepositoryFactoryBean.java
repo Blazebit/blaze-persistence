@@ -118,4 +118,11 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
         super.afterPropertiesSet();
     }
 
+    public void setEscapeCharacter(char escapeCharacter) {
+    }
+
+    public char getEscapeCharacter() {
+        return '\\';
+    }
+
 }

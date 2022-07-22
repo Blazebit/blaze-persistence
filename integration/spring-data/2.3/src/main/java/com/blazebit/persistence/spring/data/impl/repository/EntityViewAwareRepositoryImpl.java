@@ -59,7 +59,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
     @WithBridgeMethods(value = Object.class, adapterMethod = "convert")
     public <S extends E> Optional<S> findOne(Example<S> example) {
         try {
-            return Optional.of(getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult());
+            return Optional.of(getQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType(), (Sort) null).getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
         }
