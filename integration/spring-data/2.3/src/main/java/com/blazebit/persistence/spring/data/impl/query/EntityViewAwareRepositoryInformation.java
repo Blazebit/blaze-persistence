@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.data.repository.core.CrudMethods;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.util.Streamable;
+import org.springframework.data.util.TypeInformation;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -127,5 +128,10 @@ public class EntityViewAwareRepositoryInformation implements RepositoryInformati
 
     public boolean isReactiveRepository() {
         return metadata.isReactiveRepository();
+    }
+
+    @Override
+    public TypeInformation<?> getReturnType(Method method) {
+        return repositoryInformation.getReturnType(method);
     }
 }

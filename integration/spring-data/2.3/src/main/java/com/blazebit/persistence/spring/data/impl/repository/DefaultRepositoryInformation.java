@@ -24,6 +24,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.util.Streamable;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -245,6 +246,15 @@ class DefaultRepositoryInformation implements RepositoryInformation {
     @Override
     public Class<?> getReturnedDomainClass(Method method) {
         return metadata.getReturnedDomainClass(method);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.data.repository.core.RepositoryMetadata#getReturnType(java.lang.reflect.Method)
+     */
+    @Override
+    public TypeInformation<?> getReturnType(Method method) {
+        return this.metadata.getReturnType(method);
     }
 
     /*

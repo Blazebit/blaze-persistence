@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import org.springframework.data.repository.core.CrudMethods;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.util.TypeInformation;
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -84,6 +85,11 @@ public class EntityViewAwareRepositoryMetadataImpl implements EntityViewAwareRep
         } else {
             return managedViewType.getEntityClass();
         }
+    }
+
+    @Override
+    public TypeInformation<?> getReturnType(Method method) {
+        return metadata.getReturnType(method);
     }
 
     @Override
