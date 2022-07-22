@@ -205,7 +205,7 @@
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.5</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -219,7 +219,21 @@
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.6</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-2.7.x</id>
+            <properties>
+                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.7}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

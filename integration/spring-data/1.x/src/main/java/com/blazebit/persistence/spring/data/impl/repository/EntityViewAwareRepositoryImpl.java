@@ -54,7 +54,7 @@ public class EntityViewAwareRepositoryImpl<V, E, ID extends Serializable> extend
 
     public <S extends E> S findOne(Example<S> example) {
         try {
-            return getQuery(new ExampleSpecification<>(example), example.getProbeType(), (Sort) null).getSingleResult();
+            return getQuery(new ExampleSpecification<>(example, escapeCharacter), example.getProbeType(), (Sort) null).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }

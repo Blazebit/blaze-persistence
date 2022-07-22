@@ -70,10 +70,15 @@ jobs:
             jdk: 8
             spring-data: spring-data-2.4.x
             deltaspike: deltaspike-1.9
+          - rdbms: h2
+            provider: hibernate-5.2
+            jdk: 8
+            spring-data: spring-data-2.5.x
+            deltaspike: deltaspike-1.9
           - rdbms: postgresql
             provider: hibernate-apt
             jdk: 8
-            spring-data: spring-data-2.5.x
+            spring-data: spring-data-2.6.x
             deltaspike: deltaspike-1.9
             
 ################################################
@@ -479,37 +484,37 @@ jobs:
             provider: hibernate-5.6
             jdk: 17
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 17
             build-jdk: 17
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
 # Latest GA JDK
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 18
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 18
             build-jdk: 18
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
 # Early access JDKs
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 19-ea
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
           - rdbms: h2
             provider: hibernate-5.6
             jdk: 19-ea
             build-jdk: 19-ea
             deltaspike: deltaspike-1.9
-            spring-data: spring-data-2.6.x
+            spring-data: spring-data-2.7.x
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
