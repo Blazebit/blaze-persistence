@@ -30,6 +30,18 @@
             <artifactId>rest-assured</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asmVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asmVersion}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

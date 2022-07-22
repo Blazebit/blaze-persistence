@@ -9,6 +9,7 @@ Not yet released
 ### New features
 
 * Add integration for Hibernate 6 supporting versions starting with 6.1.1.Final
+* Support for Java 16, 17, 18 and 19 EA
 
 ### Bug fixes
 
