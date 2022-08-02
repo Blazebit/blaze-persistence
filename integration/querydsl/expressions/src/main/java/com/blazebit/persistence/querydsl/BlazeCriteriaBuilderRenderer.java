@@ -55,6 +55,7 @@ import com.blazebit.persistence.WindowContainerBuilder;
 import com.blazebit.persistence.WindowFrameBetweenBuilder;
 import com.blazebit.persistence.WindowFrameBuilder;
 import com.blazebit.persistence.WindowFrameExclusionBuilder;
+import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
@@ -283,16 +284,12 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
                             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, pathExpression.getType());
                             Map<String, ? extends ExtendedAttribute<?, ?>> ownedSingularAttributes = managedType.getOwnedSingularAttributes();
+                            Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(ownedSingularAttributes, null, false, false);
 
-                            for (Map.Entry<String, ? extends ExtendedAttribute<?,?>> ownedSingularAttribute : ownedSingularAttributes.entrySet()) {
-                                String attributeName = ownedSingularAttribute.getKey();
-                                ExtendedAttribute<?, ?> attribute = ownedSingularAttribute.getValue();
-
-                                if (!JpaMetamodelUtils.isAssociation(attribute.getAttribute())) {
-                                    final SelectBuilder<?> bindBuilder = selectBaseCriteriaBuilder.bind(attributeName);
-                                    BeanPath<?> beanPath = new BeanPath<Object>(attribute.getElementClass(), pathExpression, attributeName);
-                                    setExpressionSubqueries(beanPath, null,  bindBuilder, SelectBuilderExpressionSetter.INSTANCE);
-                                }
+                            for (String embeddedPropertyPath : embeddedPropertyPaths) {
+                                final SelectBuilder<?> bindBuilder = selectBaseCriteriaBuilder.bind(embeddedPropertyPath);
+                                BeanPath<?> beanPath = new BeanPath<>(Object.class, pathExpression, embeddedPropertyPath);
+                                setExpressionSubqueries(beanPath, null,  bindBuilder, SelectBuilderExpressionSetter.INSTANCE);
                             }
                         } else {
                             for (int i = 0; i < projection.size(); i++) {

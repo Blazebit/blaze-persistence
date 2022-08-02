@@ -13,7 +13,7 @@ Not yet released
 
 ### Bug fixes
 
-None yet
+* Fix returning entities with embeddables from subqueries in the FROM / JOIN clause in Querydsl 
 
 ### Backwards-incompatible changes
 
