@@ -32,7 +32,6 @@ import com.querydsl.core.types.dsl.DateExpression;
 import com.querydsl.core.types.dsl.DateTimeExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.core.types.dsl.SimpleOperation;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLOps;
@@ -46,6 +45,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
+
+import static com.querydsl.core.types.dsl.Expressions.asNumber;
 
 /**
  * Utility methods for creating JPQL.next expressions
@@ -1113,6 +1114,20 @@ public class JPQLNextExpressions {
     }
 
     /**
+     * A cast invocation will always generate a ANSI SQL cast.
+     * The SQL data type for a Java type is determined by {@code DbmsDialect.getSqlType()}.
+     * By providing a custom DBMS dialect you can override these types.
+     *
+     * @param result Type to cast the value as
+     * @param expression Expression
+     * @param <T> Expression type
+     * @return The casted expression
+     */
+    public static <T extends Number & Comparable<?>> NumberExpression<T> castToNum(Class<T> result, Expression<?> expression) {
+        return asNumber(cast(result, expression));
+    }
+
+    /**
      * A treat invocation will only adjust the type of the expression in the JPQL expression and not cause an explicit cast on the DBMS side.
      * This can be used for cases when the type of an expression is actually known but can’t be inferred.
      *
@@ -1123,7 +1138,7 @@ public class JPQLNextExpressions {
      * @param <T> Expression type
      * @return The treated expression
      */
-    public static <T> SimpleOperation<T> treat(Class<T> result, Expression<?> expression) {
+    public static <T> Expression<T> treat(Class<T> result, Expression<?> expression) {
         if (Boolean.class.equals(result) || boolean.class.equals(result)) {
             return Expressions.simpleOperation(result, JPQLNextOps.TREAT_BOOLEAN, expression);
         } else if (Byte.class.equals(result) || byte.class.equals(result)) {
@@ -1157,6 +1172,21 @@ public class JPQLNextExpressions {
         } else {
             throw new IllegalArgumentException("No cast operation for " + result.getName());
         }
+    }
+
+    /**
+     * A treat invocation will only adjust the type of the expression in the JPQL expression and not cause an explicit cast on the DBMS side.
+     * This can be used for cases when the type of an expression is actually known but can’t be inferred.
+     *
+     * <em>This function is used internally and no user should ever have the need for this!</em>
+     *
+     * @param result Type to treat the value as
+     * @param expression Expression
+     * @param <T> Expression type
+     * @return The treated expression
+     */
+    public static <T extends Number & Comparable<?>> NumberExpression<T> treatAsNum(Class<T> result, Expression<?> expression) {
+        return asNumber(treat(result, expression));
     }
 
     /**

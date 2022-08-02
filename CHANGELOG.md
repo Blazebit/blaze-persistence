@@ -11,7 +11,6 @@ Not yet released
 * Add integration for Hibernate 6 supporting versions starting with 6.1.1.Final
 * Support for Java 16, 17, 18 and 19 EA
 * Support CTE's for left-nested set queries
-* 
 
 ### Bug fixes
 
@@ -22,7 +21,7 @@ Not yet released
 ### Backwards-incompatible changes
 
 * Drop the default `','` as second argument (`separator_expression`) for `listagg`
-* Minor class signature changes in `JPQLNextQuery` and `JPQLNextQueryFactory` in the Querydsl integration.
+* Minor class signature changes in `JPQLNextQuery` and `JPQLNextQueryFactory` in the Querydsl integration. You will probably need to recompile your code after the upgrade.
 
 ## 1.6.6
 

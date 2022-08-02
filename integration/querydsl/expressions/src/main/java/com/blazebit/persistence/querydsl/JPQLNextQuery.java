@@ -272,7 +272,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#union(List)}.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     <RT> SetExpression<RT> union(List<SubQueryExpression<RT>> sq);
@@ -282,7 +282,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#unionAll(List)}.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     <RT> SetExpression<RT> unionAll(List<SubQueryExpression<RT>> sq);
@@ -291,7 +291,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -301,7 +301,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an intersect expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -311,7 +311,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an except expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -321,7 +321,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an except expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -332,7 +332,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#union(List)}.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -343,7 +343,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#unionAll(List)}.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -353,7 +353,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -363,7 +363,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -373,7 +373,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an except expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -383,7 +383,7 @@ public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
      * Creates an except expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq JPQLNextQuery<T> subqueries
+     * @param sq JPQLNextQuery subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
