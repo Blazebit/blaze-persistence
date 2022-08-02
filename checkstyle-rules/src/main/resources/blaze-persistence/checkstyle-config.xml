@@ -108,11 +108,11 @@
 
 
         <module name="LineLength">
-            <property name="max" value="400"/>
+            <property name="max" value="450"/>
             <property name="ignorePattern" value="@version|@see"/>
         </module>
         <module name="MethodLength">
-            <property name="max" value="400"/>
+            <property name="max" value="450"/>
         </module>
         <module name="ParameterNumber">
             <property name="max" value="30"/>

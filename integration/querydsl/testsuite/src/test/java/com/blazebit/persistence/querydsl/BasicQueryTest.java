@@ -74,6 +74,7 @@ import static com.blazebit.persistence.testsuite.entity.QDocument.document;
 import static com.blazebit.persistence.testsuite.entity.QIdHolderCTE.idHolderCTE;
 import static com.blazebit.persistence.testsuite.entity.QPerson.person;
 import static com.blazebit.persistence.testsuite.entity.QRecursiveEntity.recursiveEntity;
+import static com.querydsl.core.types.dsl.Expressions.asNumber;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -243,7 +244,7 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     public static BooleanExpression bitwiseAndLong(NumberExpression<Long> expression, long bit) {
-        NumberExpression<Long> mod = expression.divide(1L << bit).floor().mod(2L);
+        NumberExpression<Long> mod = castToNum(Long.class, expression.divide(1L << bit).floor()).mod(2L);
         return mod.eq(1L);
     }
 
