@@ -16,6 +16,7 @@ Not yet released
 
 * Fix returning entities with embeddables from subqueries in the FROM / JOIN clause in Querydsl 
 * Fix CTE rendering issues in Querydsl integration
+* Support joins in queries with multiple FROM nodes in Querydsl
 
 ### Backwards-incompatible changes
 

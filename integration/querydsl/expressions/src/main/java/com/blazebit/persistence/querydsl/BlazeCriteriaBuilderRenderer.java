@@ -59,7 +59,6 @@ import com.blazebit.persistence.WindowFrameBuilder;
 import com.blazebit.persistence.WindowFrameExclusionBuilder;
 import com.blazebit.persistence.impl.JpaUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
-import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.querydsl.core.JoinExpression;
@@ -448,6 +447,8 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
     private <X extends FromBuilder<X>> X renderJoins(QueryMetadata metadata, FromBaseBuilder<X> fromBuilder) {
         X criteriaBuilder = null;
+        String rootAlias = null;
+
         for (final JoinExpression joinExpression : metadata.getJoins()) {
             boolean fetch = joinExpression.hasFlag(JPAQueryMixin.FETCH);
             boolean hasCondition = joinExpression.getCondition() != null;
@@ -518,6 +519,7 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             }
                         }
 
+                        rootAlias = alias;
                         break;
                     default:
                         JoinType joinType = getJoinType(joinExpression);
@@ -530,7 +532,10 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             if (!hasCondition) {
                                 throw new IllegalStateException("No on-clause for entity join!");
                             }
-                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(entityPath.getType(), alias, joinType);
+                            if (rootAlias == null) {
+                                throw new IllegalArgumentException("An explicit base join node is required when multiple root nodes are used!");
+                            }
+                            final JoinOnBuilder<X> xJoinOnBuilder = criteriaBuilder.joinOn(rootAlias, entityPath.getType(), alias, joinType);
                             setExpressionSubqueries(joinExpression.getCondition(), null, xJoinOnBuilder, JoinOnBuilderExpressionSetter.INSTANCE);
                         } else if (!hasCondition) {
                             // If there is no alias, assume a default join
@@ -568,6 +573,7 @@ public class BlazeCriteriaBuilderRenderer<T> {
                         criteriaBuilder = o instanceof FinalSetOperationCTECriteriaBuilder ?
                                 ((FinalSetOperationCTECriteriaBuilder<X>) o).end() :
                                 ((FullSelectCTECriteriaBuilder<X>) o).end();
+                        rootAlias = alias;
                         break;
                     }
                     default: {
@@ -588,7 +594,10 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             if (isLateral) {
                                 String subqueryAlias = subQueryExpression.getMetadata().getJoins().get(0).getTarget().accept(new JoinTargetAliasPathResolver(), null).getMetadata().getName();
                                 if (entityJoin) {
-                                    joinOnBuilderFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralOnSubquery(target.getType(), alias, joinType);
+                                    if (rootAlias == null) {
+                                        throw new IllegalArgumentException("An explicit base join node is required when multiple root nodes are used!");
+                                    }
+                                    joinOnBuilderFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralOnSubquery(rootAlias, target.getType(), alias, joinType);
                                 } else {
                                     joinOnBuilderFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralOnSubquery(renderExpression(fromPath), alias, subqueryAlias, joinType);
                                 }
@@ -596,7 +605,10 @@ public class BlazeCriteriaBuilderRenderer<T> {
                                 if (!entityJoin) {
                                     throw new IllegalStateException("Entity join to association");
                                 }
-                                joinOnBuilderFullSelectCTECriteriaBuilder = criteriaBuilder.joinOnSubquery(target.getType(), alias, joinType);
+                                if (rootAlias == null) {
+                                    throw new IllegalArgumentException("An explicit base join node is required when multiple root nodes are used!");
+                                }
+                                joinOnBuilderFullSelectCTECriteriaBuilder = criteriaBuilder.joinOnSubquery(rootAlias, target.getType(), alias, joinType);
                             }
 
                             Object o = serializeSubQuery(joinOnBuilderFullSelectCTECriteriaBuilder, target);
@@ -610,7 +622,10 @@ public class BlazeCriteriaBuilderRenderer<T> {
                                 String subqueryAlias = subQueryExpression.getMetadata().getJoins().get(0).getTarget().accept(new JoinTargetAliasPathResolver(), null).getMetadata().getName();
 
                                 if (entityJoin) {
-                                    xFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralSubquery(target.getType(), alias, joinType);
+                                    if (rootAlias == null) {
+                                        throw new IllegalArgumentException("An explicit base join node is required when multiple root nodes are used!");
+                                    }
+                                    xFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralSubquery(rootAlias, target.getType(), alias, joinType);
                                 } else {
                                     xFullSelectCTECriteriaBuilder = criteriaBuilder.joinLateralSubquery(renderExpression(fromPath), alias, subqueryAlias, joinType);
                                 }
