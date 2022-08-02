@@ -65,7 +65,7 @@ import static com.blazebit.persistence.querydsl.HintsAccessor.getHints;
  * @since 1.5.0
  */
 @SuppressWarnings("unused")
-public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T, Q>> extends AbstractJPAQuery<T, Q> implements JPQLNextQuery<T, Q>, ExtendedFetchable<T> {
+public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T, Q>> extends AbstractJPAQuery<T, Q> implements JPQLNextQuery<T>, ExtendedFetchable<T> {
 
     /**
      * Lateral join flag.
