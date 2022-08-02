@@ -34,6 +34,7 @@ import com.blazebit.persistence.GroupByBuilder;
 import com.blazebit.persistence.HavingBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.LeafOngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.LimitBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
@@ -47,6 +48,7 @@ import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SetOperationBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereBuilder;
@@ -75,6 +77,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.ParamExpression;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.SubQueryExpression;
 import com.querydsl.core.types.TemplateExpression;
 import com.querydsl.core.types.Visitor;
@@ -125,6 +128,7 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
     public Queryable<T, ?> render(Expression<?> expression) {
         this.criteriaBuilder = (CriteriaBuilder) criteriaBuilderFactory.create(entityManager, Object.class);
+        renderCTEs(expression);
         Object output = serializeSubQuery(this.criteriaBuilder, expression);
         renderConstants((ParameterHolder<?>) output);
         return (Queryable<T, ?>) output;
@@ -158,7 +162,11 @@ public class BlazeCriteriaBuilderRenderer<T> {
                         SubqueryInitiator<?> subqueryInitiator = (SubqueryInitiator<?>) criteriaBuilder;
                         criteriaBuilder = subqueryInitiator.startSet();
                     } else {
-                        criteriaBuilder = criteriaBuilderFactory.startSet(entityManager, Object.class);
+                        StartOngoingSetOperationCriteriaBuilder<Object, LeafOngoingFinalSetOperationCriteriaBuilder<Object>> startOngoingSetOperationCriteriaBuilder =
+                                criteriaBuilderFactory.startSet(entityManager, Object.class);
+                        // Copy CTE's that were already rendered.
+                        startOngoingSetOperationCriteriaBuilder.withCtesFrom(BlazeCriteriaBuilderRenderer.this.criteriaBuilder);
+                        criteriaBuilder = startOngoingSetOperationCriteriaBuilder;
                     }
 
                     criteriaBuilder = setOperationFlag.getFlag().accept(this, criteriaBuilder);
@@ -254,8 +262,6 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 if (setOperationFlag != null) {
                     return setOperationFlag.getFlag().accept(this, criteriaBuilder);
                 }
-
-                renderCTEs(subQueryMetadata);
 
                 criteriaBuilder = renderJoins(subQueryMetadata, (FromBaseBuilder) criteriaBuilder);
                 criteriaBuilder = renderNamedWindows(subQueryMetadata, (WindowContainerBuilder) criteriaBuilder);
@@ -356,6 +362,10 @@ public class BlazeCriteriaBuilderRenderer<T> {
         }
 
         return result;
+    }
+
+    private Object renderCTEs(Expression<?> expression) {
+        return expression.accept(new CTERenderVisitor(), this.criteriaBuilder);
     }
 
     private void renderCTEs(QueryMetadata subQueryMetadata) {
@@ -1454,4 +1464,72 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
     }
 
+    /**
+     * Recursively find CTE's and render these against the CriteriaBuilder.
+     *
+     * @since 1.6.7
+     */
+    private class CTERenderVisitor implements Visitor<Object, Object> {
+
+        @Override
+        public Object visit(Constant<?> expr, Object context) {
+            return context;
+        }
+
+        @Override
+        public Object visit(FactoryExpression<?> expr, Object context) {
+            for (Expression<?> arg : expr.getArgs()) {
+                arg.accept(this, context);
+            }
+            return context;
+        }
+
+        @Override
+        public Object visit(Operation<?> expr, Object context) {
+            for (Expression<?> arg : expr.getArgs()) {
+                arg.accept(this, context);
+            }
+            return context;
+        }
+
+        @Override
+        public Object visit(ParamExpression<?> expr, Object context) {
+            return context;
+        }
+
+        @Override
+        public Object visit(Path<?> expr, Object context) {
+            return context;
+        }
+
+        @Override
+        public Object visit(SubQueryExpression<?> expr, Object context) {
+            QueryMetadata metadata = expr.getMetadata();
+
+            renderCTEs(metadata);
+
+            metadata.getProjection().accept(this, context);
+
+            for (QueryFlag flag : metadata.getFlags()) {
+                flag.getFlag().accept(this, context);
+            }
+
+            for (JoinExpression join : metadata.getJoins()) {
+                join.getTarget().accept(this, context);
+            }
+
+            Predicate where = metadata.getWhere();
+            if (where != null) {
+                where.accept(this, context);
+            }
+
+            return context;
+        }
+
+        @Override
+        public Object visit(TemplateExpression<?> expr, Object context) {
+            return context;
+        }
+
+    }
 }
