@@ -126,8 +126,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testSubqueryInCase() {
         doInJPA(em -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
-            BlazeJPAQuery<Boolean> select = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQuery<Boolean> select = queryFactory
                     .from(document)
                     .select(Expressions.cases().when(
                             selectFrom(person).where(person.id.eq(1L)).exists()
@@ -140,7 +141,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testFetchResults() {
         doInJPA(em -> {
-            QueryResults<Person> personQueryResults = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            QueryResults<Person> personQueryResults = queryFactory
                     .from(person)
                     .select(person)
                     .limit(1)
@@ -158,7 +161,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testExplicitJoinFollowedByImplicitJoin() {
         doInJPA(em -> {
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            JPQLNextQuery<Tuple> query = queryFactory
                     .from(person)
                     .select(person.name, person.friend.name, person.friend.partnerDocument.name)
                     .leftJoin(person.friend.partnerDocument);
@@ -172,7 +177,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testExplicitJoinFollowedByImplicitJoin2() {
         doInJPA(em -> {
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            JPQLNextQuery<Tuple> query = queryFactory
                     .from(person)
                     .select(person.name, person.friend.name, person.friend.partnerDocument.name, person.friend.friend.name)
                     .leftJoin(person.friend)
@@ -188,7 +195,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testExplicitJoinFollowedByImplicitJoin3() {
         doInJPA(em -> {
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            JPQLNextQuery<Tuple> query = queryFactory
                     .from(person)
                     .select(person.name, person.friend.name, person.friend.partnerDocument.name, person.friend.friend.name)
                     .leftJoin(person.friend)
@@ -207,7 +216,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     public void testFetchCount() {
         doInJPA(em -> {
-            long totalCount = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            long totalCount = queryFactory
                     .from(person)
                     .select(person)
                     .limit(1)
@@ -239,7 +250,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testPagination() {
         doInJPA(em -> {
-            PagedList<Person> personQueryResults = new BlazeJPAQuery<>(em, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            PagedList<Person> personQueryResults = queryFactory
                     .from(person)
                     .select(person)
                     .orderBy(person.id.asc())
@@ -269,7 +282,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testThroughBlazeJPAQuery() {
         doInJPA(entityManager -> {
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, cbf).from(document)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("blep"), document.name.substring(0, 2))
                     .where(document.name.length().gt(1));
 
@@ -283,7 +298,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testResultStream() {
         doInJPA(entityManager -> {
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, cbf).from(document)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("blep"), document.name.substring(0, 2))
                     .where(document.name.length().gt(1));
 
@@ -297,9 +314,11 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testParameterExpression() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             Param<Integer> param = new Param<>(Integer.class, "theSuperName");
 
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("blep"), document.name.substring(0, 2))
                     .where(document.name.length().gt(param))
                     .set(param, 1);
@@ -314,9 +333,11 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({NoDatanucleus.class})
     public void testParameterExpressionInSelect() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             Param<Integer> param = new Param<>(Integer.class, "theSuperName");
 
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("blep"), param)
                     .where(document.name.length().gt(param))
                     .set(param, 1);
@@ -329,8 +350,10 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testSubQuery() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QDocument sub = new QDocument("sub");
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("blep"), document.name.substring(0, 2))
                     .where(document.id.in(select(sub.id).from(sub)));
 
@@ -346,9 +369,11 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeTrue(dbmsDialect.supportsWindowFunctions());
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QDocument sub = new QDocument("sub");
 
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("documentName"), rowNumber().over().orderBy(document.id), lastValue(document.name).over().partitionBy(document.id).orderBy(document.id))
                     .where(document.id.in(select(sub.id).from(sub)));
 
@@ -364,11 +389,13 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeTrue(dbmsDialect.supportsWindowFunctions());
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QDocument sub = new QDocument("sub");
 
             NamedWindow namedWindow = new NamedWindow("namedWindow").partitionBy(document.id).orderBy(document.id);
 
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .window(namedWindow)
                     .select(document.name.as("documentName"), rowNumber().over(namedWindow), lastValue(document.name).over(namedWindow))
                     .where(document.id.in(select(sub.id).from(sub)));
@@ -383,12 +410,14 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Ignore("Filter support is work in progress")
     @Category({ NoMySQLOld.class })
     public void testFilteredWindowfunction() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         Assume.assumeTrue(dbmsDialect.supportsWindowFunctions());
 
         doInJPA(entityManager -> {
             NamedWindow namedWindow = new NamedWindow("namedWindow").partitionBy(document.id).orderBy(document.id);
 
-            BlazeJPAQuery<?> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<?> query = queryFactory.from(document)
                     .window(namedWindow)
                     .select(
                             sum(document.age).filter(document.age.lt(literal(5))),
@@ -405,10 +434,12 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testNestedSubQuery() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         doInJPA(entityManager -> {
             QDocument sub = new QDocument("sub");
             QDocument sub2 = new QDocument("sub2");
-            BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQuery<Tuple> query = queryFactory.from(document)
                     .select(document.name.as("documentName"), document.name.substring(0, 2))
                     .where(document.id.in(select(sub.id).from(sub).where(sub.id.in(select(sub2.id).from(sub2).where(sub2.id.eq(sub.id)))).orderBy(sub.id.asc()).limit(5)));
 
@@ -420,7 +451,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testTransformBlazeJPAQuery() {
         doInJPA(entityManager -> {
-            Map<Long, String> blep = new BlazeJPAQuery<Document>(entityManager, cbf).from(document)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            Map<Long, String> blep = queryFactory.from(document)
                     .where(document.name.length().gt(1))
                     .groupBy(document.id, document.name)
                     .transform(GroupBy.groupBy(document.id).as(document.name));
@@ -433,7 +466,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     public void testAssociationJoin() {
         doInJPA(entityManager -> {
-            Map<Person, List<Document>> booksByAuthor = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            Map<Person, List<Document>> booksByAuthor = queryFactory
                     .from(person)
                     .innerJoin(person.ownedDocuments, document)
                     .transform(GroupBy.groupBy(person).as(GroupBy.list(document)));
@@ -449,9 +484,11 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeTrue(jpaProvider.supportsEntityJoin());
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QPerson otherAuthor = new QPerson("otherAuthor");
             QDocument otherBook = new QDocument("otherBook");
-            Map<Person, List<Document>> booksByAuthor = new BlazeJPAQuery<Document>(entityManager, cbf)
+            Map<Person, List<Document>> booksByAuthor = queryFactory
                     .from(otherAuthor)
                     .innerJoin(otherBook).on(otherBook.owner.eq(otherAuthor))
                     .transform(GroupBy.groupBy(otherAuthor).as(GroupBy.list(otherBook)));
@@ -464,12 +501,14 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testFromValues() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         doInJPA(entityManager -> {
             Document theBook = new Document();
             theBook.setId(1337L);
             theBook.setName("test");
 
-            List<Document> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<Document> fetch = queryFactory
                     .fromValues(document, Collections.singleton(theBook))
                     .select(document)
                     .fetch();
@@ -482,12 +521,14 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testFromValuesStream() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         doInJPA(entityManager -> {
             Document theBook = new Document();
             theBook.setId(1337L);
             theBook.setName("test");
 
-            try (Stream<Document> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            try (Stream<Document> fetch = queryFactory
                     .fromValues(document, Collections.singleton(theBook))
                     .select(document)
                     .stream()) {
@@ -503,10 +544,12 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testFromValuesAttributes() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         doInJPA(entityManager -> {
             StringPath bookName = Expressions.stringPath("bookName");
 
-            List<String> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<String> fetch = queryFactory
                     .fromValues(document.name, bookName, Collections.singleton("book"))
                     .select(bookName)
                     .fetch();
@@ -519,6 +562,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Test
     @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void  testComplexUnion() {
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
         doInJPA(entityManager -> {
             Person person = new Person();
             person.setName("Person");
@@ -538,11 +583,11 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
 
         doInJPA(entityManager -> {
-            List<Document> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<Document> fetch = queryFactory
                     .union(
-                        new BlazeJPAQuery<Document>().intersect(
+                        queryFactory.intersect(
                                 select(document).from(document).where(document.id.eq(41L)),
-                                new BlazeJPAQuery<Document>().except(
+                                queryFactory.except(
                                         select(document).from(document).where(document.id.eq(42L)),
                                         select(document).from(document).where(document.id.eq(43L)))),
                         select(document).from(document).where(document.id.eq(46L)))
@@ -576,11 +621,13 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
 
         doInJPA(entityManager -> {
-            SetExpression<Long> union = new BlazeJPAQuery<Long>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            SetExpression<Long> union = queryFactory
                     .union(select(document.id).from(document).where(document.id.eq(1337L)),
-                            new BlazeJPAQuery<Long>().intersect(
+                            queryFactory.intersect(
                                     select(document.id).from(document).where(document.id.eq(41L)),
-                                    new BlazeJPAQuery<Long>().except(
+                                    queryFactory.except(
                                             select(document.id).from(document).where(document.id.eq(42L)),
                                             select(document.id).from(document).where(document.id.eq(43L)))),
                             select(document.id).from(document).where(document.id.eq(46L))
@@ -588,7 +635,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
             QDocument book2 = new QDocument("secondBook");
 
-            List<Document> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<Document> fetch = queryFactory
                     .select(book2)
                     .from(book2).where(book2.id.in(union))
                     .fetch();
@@ -602,7 +649,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTE() {
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                     .with(idHolderCTE, idHolderCTE.id).as(select(document.id).from(document))
                     .select(idHolderCTE.id).from(idHolderCTE)
                     .fetch();
@@ -632,7 +681,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
     public void testCTEStream() {
         doInJPA(entityManager -> {
-            try (Stream<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            try (Stream<Long> fetch = queryFactory
                     .with(idHolderCTE, idHolderCTE.id).as(select(document.id).from(document))
                     .select(idHolderCTE.id).from(idHolderCTE)
                     .stream()) {
@@ -647,7 +698,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTEWithBinds() {
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                     .with(idHolderCTE, select(new Binds<IdHolderCTE>().bind(idHolderCTE.id, document.id)).from(document))
                     .select(idHolderCTE.id).from(idHolderCTE)
                     .fetch();
@@ -661,7 +714,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTEWithBindsWithAlias() {
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                     .with(idHolderCTE, select(new Binds<IdHolderCTE>().bind(idHolderCTE.id, document.id.as("alias"))).from(document))
                     .select(idHolderCTE.id).from(idHolderCTE)
                     .fetch();
@@ -675,7 +730,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCTEWithBinds2() {
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                 .with(idHolderCTE, select(
                         bind(idHolderCTE.id, document.id)).from(document))
                 .select(idHolderCTE.id).from(idHolderCTE)
@@ -691,7 +748,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testCTEUnion() {
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                     .with(idHolderCTE, idHolderCTE.id).as(union(select(document.id).from(document), intersect(select(document.id).from(document), select(document.id).from(document))))
                     .select(idHolderCTE.id).from(idHolderCTE)
                     .fetch();
@@ -705,12 +764,14 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testCTEFromValues() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             Document theBook = new Document();
             theBook.setId(1337L);
             theBook.setName("test");
 
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
-                    .with(idHolderCTE, idHolderCTE.id).as(new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<Long> fetch = queryFactory
+                    .with(idHolderCTE, idHolderCTE.id).as(queryFactory
                             .fromValues(document, Collections.singleton(theBook))
                             .select(document.id))
                     .select(idHolderCTE.id).from(idHolderCTE)
@@ -726,9 +787,11 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
     public void testRecursiveCTEUnion() {
         Assume.assumeTrue(dbmsDialect.supportsWithClause());
+        JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
 
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            List<Long> fetch = queryFactory
                     .withRecursive(idHolderCTE, idHolderCTE.id).as(unionAll(select(document.id).from(document).where(document.id.eq(1L)), select(document.id).from(document)
                             .from(idHolderCTE).where(idHolderCTE.id.add(1L).eq(document.id))))
                     .select(idHolderCTE.id).from(idHolderCTE)
@@ -746,9 +809,11 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeTrue(dbmsDialect.supportsWithClause());
 
         doInJPA(entityManager -> {
-            List<Long> fetch = new BlazeJPAQuery<Document>(entityManager, cbf)
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
+            List<Long> fetch = queryFactory
                     .withRecursive(idHolderCTE, idHolderCTE.id)
-                        .as(new BlazeJPAQuery<>().unionAll(
+                        .as(queryFactory.unionAll(
                                 select(document.id).from(document).where(document.id.eq(1L)),
                                 select(document.id).from(document).join(idHolderCTE).on(idHolderCTE.id.add(1L).eq(document.id))))
                     .select(idHolderCTE.id).from(idHolderCTE)
@@ -763,9 +828,11 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testInlineEntityWithLimit() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+            
             QRecursiveEntity recursiveEntity = new QRecursiveEntity("t");
 
-            List<RecursiveEntity> fetch = new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            List<RecursiveEntity> fetch = queryFactory
                     .select(recursiveEntity)
                     .from(select(recursiveEntity)
                             .from(recursiveEntity)
@@ -783,9 +850,11 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testCteInSubquery() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QIdHolderCTE idHolderCTE = QIdHolderCTE.idHolderCTE;
 
-            List<Document> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+            List<Document> fetch = queryFactory
                     .select(document)
                     .from(document)
                     .innerJoin(selectFrom(idHolderCTE)
@@ -803,13 +872,15 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
     public void testMultipleInlineEntityWithLimitJoin() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
 
-            List<RecursiveEntity> fetch = new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            List<RecursiveEntity> fetch = queryFactory
                     .select(t)
-                    .from(new BlazeJPAQuery<RecursiveEntity>().select(t).from(t)
+                    .from(queryFactory.select(t).from(t)
                             .leftJoin(selectFrom(subT).where(subT.parent.name.eq("root1")).orderBy(subT.name.asc()).limit(1), subT)
                             .on(t.eq(subT))
                             .where(t.parent.name.eq("root1"))
@@ -836,14 +907,16 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
             QRecursiveEntity subT3 = new QRecursiveEntity("subT3");
 
-            new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            queryFactory
                     .select(t)
-                    .from(new BlazeJPAQuery<RecursiveEntity>().select(t).from(t)
+                    .from(queryFactory.selectFrom(t)
                             .leftJoin(selectFrom(subT).where(subT.parent.name.eq("root1")).orderBy(subT.name.asc()).limit(1), subT)
                             .on(t.eq(subT))
                             .where(t.parent.name.eq("root1"))
@@ -869,11 +942,13 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
 
-            List<Tuple> fetch = new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            List<Tuple> fetch = queryFactory
                     .select(t, subT2)
                     .from(t)
                     .leftJoin(select(subT).from(t.children, subT).orderBy(subT.id.asc()).limit(1), subT2)
@@ -893,11 +968,13 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
 
-            List<Tuple> fetch = new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            List<Tuple> fetch = queryFactory
                     .with(idHolderCTE, idHolderCTE.id)
                     .as(select(document.id).from(document).where(document.id.eq(1L)))
                     .select(t, subT2)
@@ -917,6 +994,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoMySQL.class })
     public void testJoinInlineWithLimitUnion() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
@@ -935,12 +1014,12 @@ public class BasicQueryTest extends AbstractCoreTest {
                         .bind(recursiveEntity.name, subT3.name)
                         .bind(recursiveEntity.parent, subT3.parent)).from(subT3);
 
-            SubQueryExpression<RecursiveEntity> union = new BlazeJPAQuery<RecursiveEntity>().unionAll(
+            SubQueryExpression<RecursiveEntity> union = queryFactory.unionAll(
                     subA,
                     subB
             );
 
-            new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            queryFactory
                     .select(t, subT2)
                     .from(t)
                     .leftJoin(union, subT2).on(subT2.eq(subT2))
@@ -955,6 +1034,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoMySQL.class })
     public void testJoinInlineEntityWithLimitUnion() {
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
@@ -963,12 +1044,12 @@ public class BasicQueryTest extends AbstractCoreTest {
             JPQLQuery<RecursiveEntity> subA = selectFrom(subT).where(subT.id.lt(5L));
             JPQLQuery<RecursiveEntity> subB = selectFrom(subT3).where(subT3.id.gt(10L));
 
-            SubQueryExpression<RecursiveEntity> union = new BlazeJPAQuery<RecursiveEntity>().unionAll(
+            SubQueryExpression<RecursiveEntity> union = queryFactory.unionAll(
                     subA,
                     subB
             );
 
-            new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            queryFactory
                     .select(t, subT2)
                     .from(t)
                     .leftJoin(union, subT2).on(subT2.eq(subT2))
@@ -985,6 +1066,8 @@ public class BasicQueryTest extends AbstractCoreTest {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
         doInJPA(entityManager -> {
+            JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
+
             QRecursiveEntity t = new QRecursiveEntity("t");
             QRecursiveEntity subT = new QRecursiveEntity("subT");
             QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
@@ -993,7 +1076,7 @@ public class BasicQueryTest extends AbstractCoreTest {
             JPQLQuery<RecursiveEntity> subA = selectFrom(subT).where(subT.id.lt(5L));
             JPQLQuery<RecursiveEntity> subB = selectFrom(subT3).where(subT3.id.gt(10L));
 
-            SubQueryExpression<RecursiveEntity> union = new BlazeJPAQuery<RecursiveEntity>().unionAll(
+            SubQueryExpression<RecursiveEntity> union = queryFactory.unionAll(
                     subA,
                     subB
             );
@@ -1001,7 +1084,7 @@ public class BasicQueryTest extends AbstractCoreTest {
             expectedException.expect(IllegalStateException.class);
             expectedException.expectMessage("Lateral join with set operations is not yet supported!");
 
-            new BlazeJPAQuery<RecursiveEntity>(entityManager, cbf)
+            queryFactory
                     .select(t, subT2)
                     .from(t)
                     .leftJoin(union, subT2).on(subT2.eq(subT2))

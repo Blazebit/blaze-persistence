@@ -17,6 +17,7 @@
 package com.blazebit.persistence.querydsl;
 
 import com.querydsl.core.QueryModifiers;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.CollectionExpression;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
@@ -35,12 +36,11 @@ import java.util.List;
  * Query interface for JPQL.Next queries
  *
  * @param <T> Query result type
- * @param <Q> Concrete query type
  * @author Jan-Willem Gmelig Meyling
  * @since 1.5.0
  */
 @SuppressWarnings("unused")
-public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQuery<T> {
+public interface JPQLNextQuery<T> extends JPQLQuery<T>, ExtendedFetchable<T> {
 
     /**
      * Register a common table expression (CTE).
@@ -51,7 +51,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> CTE type
      * @return this query
      */
-    <X> Q with(Path<X> alias, SubQueryExpression<?> o);
+    <X> JPQLNextQuery<T> with(Path<X> alias, SubQueryExpression<?> o);
 
     /**
      * Register a recursive common table expression (CTE).
@@ -62,7 +62,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> CTE type
      * @return this query
      */
-    <X> Q withRecursive(Path<X> alias, SubQueryExpression<?> o);
+    <X> JPQLNextQuery<T> withRecursive(Path<X> alias, SubQueryExpression<?> o);
 
     /**
      * Register a common table expression (CTE). Returns a builder through which
@@ -75,7 +75,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param columns The columns for the CTE
      * @return this query
      */
-    WithBuilder<Q> with(EntityPath<?> alias, Path<?>... columns);
+    WithBuilder<? extends JPQLNextQuery<T>> with(EntityPath<?> alias, Path<?>... columns);
 
     /**
      * Register a recursive common table expression (CTE). Returns a builder through which
@@ -88,7 +88,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param columns The columns for the CTE
      * @return this query
      */
-    WithBuilder<Q> withRecursive(EntityPath<?> alias, Path<?>... columns);
+    WithBuilder<? extends JPQLNextQuery<T>> withRecursive(EntityPath<?> alias, Path<?>... columns);
 
     /**
      * Select from a set of values using the {@code VALUES} clause.
@@ -98,7 +98,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> The element type
      * @return this query
      */
-    <X> Q fromValues(EntityPath<X> path, Collection<X> elements);
+    <X> JPQLNextQuery<T> fromValues(EntityPath<X> path, Collection<X> elements);
 
     /**
      * Select from a set of values using the {@code VALUES} clause.
@@ -108,18 +108,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> The element type
      * @return this query
      */
-    <X> Q fromIdentifiableValues(EntityPath<X> path, Collection<X> elements);
-
-    /**
-     * Select from a set of values using the {@code VALUES} clause.
-     *
-     * @param path Type of values
-     * @param alias The alias from which the values can be referenced
-     * @param elements The elements
-     * @param <X> The element type
-     * @return this query
-     */
-    <X> Q fromValues(Path<X> path, Path<X> alias, Collection<X> elements);
+    <X> JPQLNextQuery<T> fromIdentifiableValues(EntityPath<X> path, Collection<X> elements);
 
     /**
      * Select from a set of values using the {@code VALUES} clause.
@@ -130,7 +119,18 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> The element type
      * @return this query
      */
-    <X> Q fromIdentifiableValues(Path<X> path, Path<X> alias, Collection<X> elements);
+    <X> JPQLNextQuery<T> fromValues(Path<X> path, Path<X> alias, Collection<X> elements);
+
+    /**
+     * Select from a set of values using the {@code VALUES} clause.
+     *
+     * @param path Type of values
+     * @param alias The alias from which the values can be referenced
+     * @param elements The elements
+     * @param <X> The element type
+     * @return this query
+     */
+    <X> JPQLNextQuery<T> fromIdentifiableValues(Path<X> path, Path<X> alias, Collection<X> elements);
 
     /**
      * Create a full join with the given target.
@@ -143,7 +143,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @return this query
      * @apiNote Full joins are only supported by some ORMs, like Hibernate.
      */
-    <P> Q fullJoin(CollectionExpression<?, P> target);
+    <P> JPQLNextQuery<T> fullJoin(CollectionExpression<?, P> target);
 
     /**
      * Create a full join with the given target.
@@ -157,7 +157,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @return the current object
      * @apiNote Full joins are only supported by some ORMs, like Hibernate.
      */
-    <P> Q fullJoin(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> fullJoin(CollectionExpression<?, P> target, Path<P> alias);
 
     /**
      * Create a full join with the given target.
@@ -170,34 +170,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @return the current object
      * @apiNote Full joins are only supported by some ORMs, like Hibernate.
      */
-    <P> Q fullJoin(EntityPath<P> target);
-
-    /**
-     * Create a full join with the given target.
-     * Analog to {@link com.querydsl.sql.SQLCommonQuery#fullJoin(EntityPath)}.
-     * Use {@link #fetchJoin()} to add the fetchJoin parameter to this join.
-     * Use {@link #lateral()} to use a lateral join for this join.
-     *
-     * @param <P> The type of the join target
-     * @param target The join target
-     * @param alias The alias under which the join can be referenced
-     * @return the current object
-     * @apiNote Full joins are only supported by some ORMs, like Hibernate.
-     */
-    <P> Q fullJoin(EntityPath<P> target, Path<P> alias);
-
-    /**
-     * Create a full join with the given target.
-     * Analog to {@link com.querydsl.sql.SQLCommonQuery#fullJoin(EntityPath)}.
-     * Use {@link #fetchJoin()} to add the fetchJoin parameter to this join.
-     * Use {@link #lateral()} to use a lateral join for this join.
-     *
-     * @param <P> The type of the join target
-     * @param target The join target
-     * @return the current object
-     * @apiNote Full joins are only supported by some ORMs, like Hibernate.
-     */
-    <P> Q fullJoin(MapExpression<?, P> target);
+    <P> JPQLNextQuery<T> fullJoin(EntityPath<P> target);
 
     /**
      * Create a full join with the given target.
@@ -211,7 +184,34 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @return the current object
      * @apiNote Full joins are only supported by some ORMs, like Hibernate.
      */
-    <P> Q fullJoin(MapExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> fullJoin(EntityPath<P> target, Path<P> alias);
+
+    /**
+     * Create a full join with the given target.
+     * Analog to {@link com.querydsl.sql.SQLCommonQuery#fullJoin(EntityPath)}.
+     * Use {@link #fetchJoin()} to add the fetchJoin parameter to this join.
+     * Use {@link #lateral()} to use a lateral join for this join.
+     *
+     * @param <P> The type of the join target
+     * @param target The join target
+     * @return the current object
+     * @apiNote Full joins are only supported by some ORMs, like Hibernate.
+     */
+    <P> JPQLNextQuery<T> fullJoin(MapExpression<?, P> target);
+
+    /**
+     * Create a full join with the given target.
+     * Analog to {@link com.querydsl.sql.SQLCommonQuery#fullJoin(EntityPath)}.
+     * Use {@link #fetchJoin()} to add the fetchJoin parameter to this join.
+     * Use {@link #lateral()} to use a lateral join for this join.
+     *
+     * @param <P> The type of the join target
+     * @param target The join target
+     * @param alias The alias under which the join can be referenced
+     * @return the current object
+     * @apiNote Full joins are only supported by some ORMs, like Hibernate.
+     */
+    <P> JPQLNextQuery<T> fullJoin(MapExpression<?, P> target, Path<P> alias);
 
     /**
      * Add sources to this query
@@ -221,7 +221,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> Expression type
      * @return the current object
      */
-    <X> Q from(SubQueryExpression<X> subQueryExpression, Path<X> alias);
+    <X> JPQLNextQuery<T> from(SubQueryExpression<X> subQueryExpression, Path<X> alias);
 
     /**
      * Adds a left join to the given subquery target.
@@ -232,7 +232,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> Expression type
      * @return the current object
      */
-    <X> Q leftJoin(SubQueryExpression<X> o, Path<X> alias);
+    <X> JPQLNextQuery<T> leftJoin(SubQueryExpression<X> o, Path<X> alias);
 
     /**
      * Adds a right join to the given target.
@@ -243,7 +243,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> Expression type
      * @return the current object
      */
-    <X> Q rightJoin(SubQueryExpression<X> o, Path<X> alias);
+    <X> JPQLNextQuery<T> rightJoin(SubQueryExpression<X> o, Path<X> alias);
 
     /**
      * Adds a full join to the given target.
@@ -254,7 +254,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> Expression type
      * @return the current object
      */
-    <X> Q fullJoin(SubQueryExpression<X> o, Path<X> alias);
+    <X> JPQLNextQuery<T> fullJoin(SubQueryExpression<X> o, Path<X> alias);
 
     /**
      * Adds a inner join to the given target.
@@ -265,14 +265,14 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param <X> Expression type
      * @return the current object
      */
-    <X> Q innerJoin(SubQueryExpression<X> o, Path<X> alias);
+    <X> JPQLNextQuery<T> innerJoin(SubQueryExpression<X> o, Path<X> alias);
 
     /**
      * Creates an union expression for the given subqueries.
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#union(List)}.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     <RT> SetExpression<RT> union(List<SubQueryExpression<RT>> sq);
@@ -282,7 +282,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#unionAll(List)}.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     <RT> SetExpression<RT> unionAll(List<SubQueryExpression<RT>> sq);
@@ -291,7 +291,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -301,7 +301,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an intersect expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -311,7 +311,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an except expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -321,7 +321,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an except expression for the given subqueries
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      * @see #union(List)
      */
@@ -332,7 +332,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#union(List)}.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -343,7 +343,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Analog to {@link com.querydsl.sql.ProjectableSQLQuery#unionAll(List)}.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -353,7 +353,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -363,7 +363,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an intersect expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -373,7 +373,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an except expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -383,7 +383,7 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * Creates an except expression for the given subqueries.
      *
      * @param <RT> set operation type
-     * @param sq subqueries
+     * @param sq JPQLNextQuery<T> subqueries
      * @return the set operation result
      */
     @SuppressWarnings("unchecked")
@@ -394,130 +394,130 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * 
      * @return this query
      */
-    Q lateral();
+    JPQLNextQuery<T> lateral();
 
     /**
      * Mark the last join as a default join.
      *
      * @return this query
      */
-    Q defaultJoin();
+    JPQLNextQuery<T> defaultJoin();
 
     // Covariant Overrides
 
     @Override
-    Q from(EntityPath<?>... sources);
+    JPQLNextQuery<T> from(EntityPath<?>... sources);
 
     @Override
-    <P> Q from(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> from(CollectionExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q innerJoin(EntityPath<P> target);
+    <P> JPQLNextQuery<T> innerJoin(EntityPath<P> target);
 
     @Override
-    <P> Q innerJoin(EntityPath<P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> innerJoin(EntityPath<P> target, Path<P> alias);
 
     @Override
-    <P> Q innerJoin(CollectionExpression<?, P> target);
+    <P> JPQLNextQuery<T> innerJoin(CollectionExpression<?, P> target);
 
     @Override
-    <P> Q innerJoin(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> innerJoin(CollectionExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q innerJoin(MapExpression<?, P> target);
+    <P> JPQLNextQuery<T> innerJoin(MapExpression<?, P> target);
 
     @Override
-    <P> Q innerJoin(MapExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> innerJoin(MapExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q join(EntityPath<P> target);
+    <P> JPQLNextQuery<T> join(EntityPath<P> target);
 
     @Override
-    <P> Q join(EntityPath<P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> join(EntityPath<P> target, Path<P> alias);
 
     @Override
-    <P> Q join(CollectionExpression<?, P> target);
+    <P> JPQLNextQuery<T> join(CollectionExpression<?, P> target);
 
     @Override
-    <P> Q join(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> join(CollectionExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q join(MapExpression<?, P> target);
+    <P> JPQLNextQuery<T> join(MapExpression<?, P> target);
 
     @Override
-    <P> Q join(MapExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> join(MapExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q leftJoin(EntityPath<P> target);
+    <P> JPQLNextQuery<T> leftJoin(EntityPath<P> target);
 
     @Override
-    <P> Q leftJoin(EntityPath<P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> leftJoin(EntityPath<P> target, Path<P> alias);
 
     @Override
-    <P> Q leftJoin(CollectionExpression<?, P> target);
+    <P> JPQLNextQuery<T> leftJoin(CollectionExpression<?, P> target);
 
     @Override
-    <P> Q leftJoin(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> leftJoin(CollectionExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q leftJoin(MapExpression<?, P> target);
+    <P> JPQLNextQuery<T> leftJoin(MapExpression<?, P> target);
 
     @Override
-    <P> Q leftJoin(MapExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> leftJoin(MapExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q rightJoin(EntityPath<P> target);
+    <P> JPQLNextQuery<T> rightJoin(EntityPath<P> target);
 
     @Override
-    <P> Q rightJoin(EntityPath<P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> rightJoin(EntityPath<P> target, Path<P> alias);
 
     @Override
-    <P> Q rightJoin(CollectionExpression<?, P> target);
+    <P> JPQLNextQuery<T> rightJoin(CollectionExpression<?, P> target);
 
     @Override
-    <P> Q rightJoin(CollectionExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> rightJoin(CollectionExpression<?, P> target, Path<P> alias);
 
     @Override
-    <P> Q rightJoin(MapExpression<?, P> target);
+    <P> JPQLNextQuery<T> rightJoin(MapExpression<?, P> target);
 
     @Override
-    <P> Q rightJoin(MapExpression<?, P> target, Path<P> alias);
+    <P> JPQLNextQuery<T> rightJoin(MapExpression<?, P> target, Path<P> alias);
 
     @Override
-    Q on(Predicate... condition);
+    JPQLNextQuery<T> on(Predicate... condition);
 
     @Override
-    Q fetchJoin();
+    JPQLNextQuery<T> fetchJoin();
 
     @Override
-    Q fetchAll();
+    JPQLNextQuery<T> fetchAll();
 
     @Override
-    Q groupBy(Expression<?>... expressions);
+    JPQLNextQuery<T> groupBy(Expression<?>... expressions);
 
     @Override
-    Q having(Predicate... predicates);
+    JPQLNextQuery<T> having(Predicate... predicates);
 
     @Override
-    Q limit(long l);
+    JPQLNextQuery<T> limit(long l);
 
     @Override
-    Q offset(long l);
+    JPQLNextQuery<T> offset(long l);
 
     @Override
-    Q restrict(QueryModifiers queryModifiers);
+    JPQLNextQuery<T> restrict(QueryModifiers queryModifiers);
 
     @Override
-    Q orderBy(OrderSpecifier<?>... orderSpecifiers);
+    JPQLNextQuery<T> orderBy(OrderSpecifier<?>... orderSpecifiers);
 
     @Override
-    <U> Q set(ParamExpression<U> paramExpression, U t);
+    <U> JPQLNextQuery<T> set(ParamExpression<U> paramExpression, U t);
 
     @Override
-    Q distinct();
+    JPQLNextQuery<T> distinct();
 
     @Override
-    Q where(Predicate... predicates);
+    JPQLNextQuery<T> where(Predicate... predicates);
 
     /**
      * Add a named window to this query.
@@ -525,6 +525,11 @@ public interface JPQLNextQuery<T, Q extends JPQLNextQuery<T, Q>> extends JPQLQue
      * @param namedWindow The window definition to add
      * @return this query
      */
-    Q window(NamedWindow namedWindow);
+    JPQLNextQuery<T> window(NamedWindow namedWindow);
 
+    @Override
+    <U> JPQLNextQuery<U> select(Expression<U> expr);
+
+    @Override
+    JPQLNextQuery<Tuple> select(Expression<?>... exprs);
 }

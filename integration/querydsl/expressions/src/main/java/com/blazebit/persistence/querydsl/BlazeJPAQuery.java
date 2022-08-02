@@ -31,7 +31,7 @@ import javax.persistence.EntityManager;
  * @since 1.5.0
  */
 @SuppressWarnings("unused")
-public class BlazeJPAQuery<T> extends AbstractBlazeJPAQuery<T, BlazeJPAQuery<T>> implements JPQLNextQuery<T, BlazeJPAQuery<T>>, ExtendedFetchable<T> {
+public class BlazeJPAQuery<T> extends AbstractBlazeJPAQuery<T, BlazeJPAQuery<T>> implements JPQLNextQuery<T>, ExtendedFetchable<T> {
 
     private static final long serialVersionUID = -7384005953945213671L;
 

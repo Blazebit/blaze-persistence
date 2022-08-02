@@ -1,33 +1,14 @@
-/*
- * Copyright 2014 - 2022 Blazebit.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.blazebit.persistence.querydsl;
 
-import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.dml.DeleteClause;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.SubQueryExpression;
 import com.querydsl.jpa.JPQLQueryFactory;
-import com.querydsl.jpa.impl.JPADeleteClause;
-import com.querydsl.jpa.impl.JPAInsertClause;
-import com.querydsl.jpa.impl.JPAUpdateClause;
 
-import javax.persistence.EntityManager;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Query factory to simplify {@link BlazeJPAQuery} instantiation.
@@ -35,103 +16,260 @@ import javax.persistence.EntityManager;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.6.2
  */
-public class JPQLNextQueryFactory implements JPQLQueryFactory {
-
-    private final EntityManager entityManager;
-    private final CriteriaBuilderFactory criteriaBuilderFactory;
-    private JPQLNextTemplates templates;
-
-    public JPQLNextQueryFactory(EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory) {
-        this.entityManager = entityManager;
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
-    }
-
-    public JPQLNextQueryFactory(JPQLNextTemplates templates, EntityManager entityManager, CriteriaBuilderFactory criteriaBuilderFactory) {
-        this.templates = templates;
-        this.entityManager = entityManager;
-        this.criteriaBuilderFactory = criteriaBuilderFactory;
-    }
+public interface JPQLNextQueryFactory extends JPQLQueryFactory {
 
     @Override
-    public <T> BlazeJPAQuery<T> select(Expression<T> expr) {
-        return query().select(expr);
-    }
+    <T> JPQLNextQuery<T> select(Expression<T> expr);
 
     @Override
-    public BlazeJPAQuery<Tuple> select(Expression<?>... exprs) {
-        return query().select(exprs);
-    }
+    JPQLNextQuery<Tuple> select(Expression<?>... exprs);
 
     @Override
-    public <T> BlazeJPAQuery<T> selectDistinct(Expression<T> expr) {
-        return select(expr).distinct();
-    }
+    <T> JPQLNextQuery<T> selectDistinct(Expression<T> expr);
 
     @Override
-    public BlazeJPAQuery<Tuple> selectDistinct(Expression<?>... exprs) {
-        return select(exprs).distinct();
-    }
+    JPQLNextQuery<Tuple> selectDistinct(Expression<?>... exprs);
 
     @Override
-    public BlazeJPAQuery<Integer> selectOne() {
-        return select(Expressions.ONE);
-    }
+    JPQLNextQuery<Integer> selectOne();
 
     @Override
-    public BlazeJPAQuery<Integer> selectZero() {
-        return select(Expressions.ZERO);
-    }
+    JPQLNextQuery<Integer> selectZero();
 
     @Override
-    public <T> BlazeJPAQuery<T> selectFrom(EntityPath<T> from) {
-        return query().from(from).select(from);
-    }
+    <T> JPQLNextQuery<T> selectFrom(EntityPath<T> from);
 
     @Override
-    public BlazeJPAQuery<?> from(EntityPath<?> from) {
-        return query().from(from);
-    }
+    JPQLNextQuery<?> from(EntityPath<?> from);
 
     @Override
-    public BlazeJPAQuery<?> from(EntityPath<?>... from) {
-        return query().from(from);
-    }
+    JPQLNextQuery<?> from(EntityPath<?>... from);
 
+    /**
+     * Create a new Query with the given source
+     *
+     * @param subQueryExpression The subquery expression
+     * @param alias Alias for the subquery in the outer query
+     * @return from(from)
+     */
+    <X> JPQLNextQuery<?> from(SubQueryExpression<X> subQueryExpression, Path<X> alias);
+
+    /**
+     * Create a new Query with the given source
+     *
+     * @param subQueryExpression The subquery expression
+     * @param alias Alias for the subquery in the outer query
+     * @return from(from)
+     */
+    <X> JPQLNextQuery<X> selectFrom(SubQueryExpression<X> subQueryExpression, Path<X> alias);
+
+    /**
+     * Select from a set of values using the {@code VALUES} clause.
+     *
+     * @param path Type of values
+     * @param elements The elements
+     * @param <X> The element type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> fromValues(EntityPath<X> path, Collection<X> elements);
+
+    /**
+     * Select from a set of values using the {@code VALUES} clause.
+     *
+     * @param path Type of values
+     * @param elements The elements
+     * @param <X> The element type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> fromIdentifiableValues(EntityPath<X> path, Collection<X> elements);
+
+    /**
+     * Select from a set of values using the {@code VALUES} clause.
+     *
+     * @param path Type of values
+     * @param alias The alias from which the values can be referenced
+     * @param elements The elements
+     * @param <X> The element type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> fromValues(Path<X> path, Path<X> alias, Collection<X> elements);
+
+    /**
+     * Select from a set of values using the {@code VALUES} clause.
+     *
+     * @param path Type of values
+     * @param alias The alias from which the values can be referenced
+     * @param elements The elements
+     * @param <X> The element type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> fromIdentifiableValues(Path<X> path, Path<X> alias, Collection<X> elements);
+
+    /**
+     * Register a common table expression (CTE).
+     *
+     * @param alias The alias for the CTE
+     * @param o The subquery expression
+     * @param <X> CTE type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> with(Path<X> alias, SubQueryExpression<?> o);
+
+    /**
+     * Register a recursive common table expression (CTE).
+     *
+     * @param alias The alias for the CTE
+     * @param o The subquery expression
+     * @param <X> CTE type
+     * @return this query
+     */
+    <X> JPQLNextQuery<?> withRecursive(Path<X> alias, SubQueryExpression<?> o);
+
+    /**
+     * Register a common table expression (CTE). Returns a builder through which
+     * the CTE can be provided as {@link SubQueryExpression}.
+     *
+     * @apiNote This version does not allow for set operands to use different column bindings.
+     *  For that purpose, use {@link #with(Path, SubQueryExpression)} instead, and wrap each
+     *  select expression inside a {@link JPQLNextOps#BIND} operation.
+     * @param alias The alias for the CTE
+     * @param columns The columns for the CTE
+     * @return this query
+     */
+    WithBuilder<? extends JPQLNextQuery<?>> with(EntityPath<?> alias, Path<?>... columns);
+
+    /**
+     * Register a recursive common table expression (CTE). Returns a builder through which
+     * the CTE can be provided as {@link SubQueryExpression}.
+     *
+     * @apiNote This version does not allow for set operands to use different column bindings.
+     *  For that purpose, use {@link #with(Path, SubQueryExpression)} instead, and wrap each
+     *  select expression inside a {@link JPQLNextOps#BIND} operation.
+     * @param alias The alias for the CTE
+     * @param columns The columns for the CTE
+     * @return this query
+     */
+    WithBuilder<? extends JPQLNextQuery<?>> withRecursive(EntityPath<?> alias, Path<?>... columns);
 
     @Override
-    public BlazeJPAQuery<?> query() {
-        if (templates != null) {
-            return new BlazeJPAQuery<Void>(entityManager, templates, criteriaBuilderFactory);
-        } else {
-            return new BlazeJPAQuery<Void>(entityManager, criteriaBuilderFactory);
-        }
-    }
+    JPQLNextQuery<?> query();
 
-    @Override
-    public JPAUpdateClause update(EntityPath<?> path) {
-        if (templates != null) {
-            return new JPAUpdateClause(entityManager, path, templates);
-        } else {
-            return new JPAUpdateClause(entityManager, path);
-        }
-    }
+    /**
+     * Creates an union expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    <RT> SetExpression<RT> union(List<SubQueryExpression<RT>> sq);
 
-    @Override
-    public JPAInsertClause insert(EntityPath<?> path) {
-        if (templates != null) {
-            return new JPAInsertClause(entityManager, path, templates);
-        } else {
-            return new JPAInsertClause(entityManager, path);
-        }
-    }
+    /**
+     * Creates an union expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    <RT> SetExpression<RT> unionAll(List<SubQueryExpression<RT>> sq);
 
-    @Override
-    public DeleteClause<?> delete(EntityPath<?> path) {
-        if (templates != null) {
-            return new JPADeleteClause(entityManager, path, templates);
-        } else {
-            return new JPADeleteClause(entityManager, path);
-        }
-    }
+    /**
+     * Creates an intersect expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     * @see #union(List)
+     */
+    <RT> SetExpression<RT> intersect(List<SubQueryExpression<RT>> sq);
+
+    /**
+     * Creates an intersect expression for the given subqueries
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     * @see #union(List)
+     */
+    <RT> SetExpression<RT> intersectAll(List<SubQueryExpression<RT>> sq);
+
+    /**
+     * Creates an except expression for the given subqueries
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     * @see #union(List)
+     */
+    <RT> SetExpression<RT> except(List<SubQueryExpression<RT>> sq);
+
+    /**
+     * Creates an except expression for the given subqueries
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     * @see #union(List)
+     */
+    <RT> SetExpression<RT> exceptAll(List<SubQueryExpression<RT>> sq);
+
+    /**
+     * Creates an union expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> union(SubQueryExpression<RT>... sq);
+
+    /**
+     * Creates an union expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> unionAll(SubQueryExpression<RT>... sq);
+
+    /**
+     * Creates an intersect expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> intersect(SubQueryExpression<RT>... sq);
+
+    /**
+     * Creates an intersect expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> intersectAll(SubQueryExpression<RT>... sq);
+
+    /**
+     * Creates an except expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> except(SubQueryExpression<RT>... sq);
+
+    /**
+     * Creates an except expression for the given subqueries.
+     *
+     * @param <RT> set operation type
+     * @param sq subqueries
+     * @return the set operation result
+     */
+    @SuppressWarnings("unsafe")
+    <RT> SetExpression<RT> exceptAll(SubQueryExpression<RT>... sq);
 
 }
