@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.querydsl;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.Queryable;
 import com.blazebit.persistence.spi.LateralStyle;
@@ -970,6 +973,111 @@ public class BasicQueryTest extends AbstractCoreTest {
                     .leftJoin(union, subT2).on(subT2.eq(subT2))
                     .lateral()
                     .fetch();
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    public void testMultipleFromEntitySubqueries() {
+        doInJPA(em -> {
+            String expected = cbf.create(em, Person.class)
+                    .fromEntitySubquery(Person.class, "a", "person")
+                    .where("person.id").eqLiteral(1L)
+                    .end()
+                    .fromEntitySubquery(Person.class, "b", "person")
+                    .where("person.id").eqLiteral(2L)
+                    .end()
+                    .joinOnEntitySubquery("b", Person.class, "c", "person", JoinType.INNER)
+                    .where("person.id").eqLiteral(3L)
+                    .end().on("1").eqExpression("1").end()
+                    .select("a").select("c")
+                    .getQueryString();
+
+
+            BlazeJPAQuery<Tuple> select = new BlazeJPAQuery<>(em, cbf)
+                    .from(selectFrom(person).where(person.id.eq(literal(1L))), new QPerson("a"))
+                    .from(selectFrom(person).where(person.id.eq(literal(2L))), new QPerson("b"))
+                    .innerJoin(selectFrom(person).where(person.id.eq(literal(3L))), new QPerson("c"))
+                    .on(Expressions.ONE.eq(Expressions.ONE))
+                    .select(new QPerson("a"), new QPerson("c"));
+
+
+            String result = select.getQueryString();
+            assertEquals(expected, result);
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    public void testCteInLeftNestedSet() {
+        doInJPA(em -> {
+            FinalSetOperationCriteriaBuilder<Tuple> cb = cbf.startSet(em, Tuple.class)
+                    .with(IdHolderCTE.class).from(Document.class).bind("id").select("id").end()
+                    .fromEntitySubquery(Document.class, "a", "document").where("responsiblePerson").in()
+                    .from(Person.class, "person").select("person").where("id").in()
+                    .from(IdHolderCTE.class).select("id").end().end().end()
+                    .select("a").select("a.age")
+                    .union()
+                    .fromEntitySubquery(Document.class, "b", "document").where("responsiblePerson").in()
+                    .from(Person.class, "person").select("person").where("id").eqLiteral(2L).end().end()
+                    .select("b").select("b.age")
+                    .endSet()
+                    .union()
+                    .fromEntitySubquery(Document.class, "c", "document").whereExists()
+                    .from(Person.class, "person").select("1").where("id").eqLiteral(3L).end().end()
+                    .select("c").select("c.age")
+                    .endSet();
+
+            String expected = cb.getQueryString();
+
+            QDocument a = new QDocument("a");
+            QDocument b = new QDocument("b");
+            QDocument c = new QDocument("c");
+
+            BlazeJPAQuery<Tuple> queryA = new BlazeJPAQuery<>(em, cbf)
+                    .from(select(document).from(document).where(document.responsiblePerson.in(new BlazeJPAQuery<>()
+                            .with(idHolderCTE, idHolderCTE.id).as(select(document.id).from(document))
+                            .from(person).select(person)
+                            .where(person.id.in(select(idHolderCTE.id).from(idHolderCTE))))), a).select(a, a.age);
+
+            BlazeJPAQuery<Tuple> queryB = new BlazeJPAQuery<>()
+                    .from(selectFrom(document).where(document.responsiblePerson.in(selectFrom(person).where(person.id.eq(literal(2L))))), b).select(b, b.age);
+
+            BlazeJPAQuery<Tuple> queryC = new BlazeJPAQuery<>()
+                    .from(selectFrom(document).where(selectOne().from(person).where(person.id.eq(literal(3L))).exists()), c).select(c, c.age);
+
+            SetExpression<Tuple> union = new BlazeJPAQuery<>(em, cbf).union(new BlazeJPAQuery<>().union(queryA, queryB), queryC);
+            String queryString = union.getQueryString();
+            assertEquals(expected, queryString);
+        });
+    }
+
+    // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    public void testExpressionEqualToSubquery() {
+        doInJPA(em -> {
+            CriteriaBuilder<Person> select = cbf.create(em, Person.class)
+                    .from(Person.class, "person")
+                    .where("person.id")
+                    .eqSubqueries("a")
+                    .with("a").from(Document.class, "document").select("document.id").setMaxResults(1).end()
+                    .end()
+                    .select("person");
+
+            String expected = select
+                    .getQueryString();
+
+            BlazeJPAQuery<Person> query = new BlazeJPAQuery<>(em, cbf)
+                    .from(person)
+                    .where(person.id.eq(select(document.id).from(document).limit(1)))
+                    .select(person);
+
+
+            String actual = query.getQueryString();
+            assertEquals(expected, actual);
         });
     }
 
