@@ -29,7 +29,7 @@
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
