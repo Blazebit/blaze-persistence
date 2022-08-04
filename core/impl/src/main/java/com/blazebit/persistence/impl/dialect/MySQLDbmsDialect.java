@@ -45,8 +45,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     protected static Map<Class<?>, String> getSqlTypes() {
         Map<Class<?>, String> types = new HashMap<Class<?>, String>();
 
-        types.put(String.class, "longtext");
+        types.put(Character.class, "char");
+        types.put(String.class, "char");
+        types.put(Short.class, "signed");
         types.put(Integer.class, "signed");
+        types.put(Long.class, "signed");
         types.put(Boolean.class, "unsigned");
 
         return types;
