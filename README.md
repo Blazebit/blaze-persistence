@@ -57,7 +57,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-    <blaze-persistence.version>1.6.6</blaze-persistence.version>
+    <blaze-persistence.version>1.6.7</blaze-persistence.version>
 </properties>
 ```
 

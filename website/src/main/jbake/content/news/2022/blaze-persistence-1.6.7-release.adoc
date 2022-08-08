@@ -1,0 +1,48 @@
+= Blaze-Persistence 1.6.7 Release
+Christian Beikov
+2022-08-04 0
+:description: Blaze-Persistence version 1.6.7 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the seventh bug fix release of the 1.6 series.
+
+=== Hibernate 6 support
+
+The long awaited Hibernate 6 integration is finally finished. It took longer than anticipated for various reasons.
+Hibernate 6 changed quite a lot under the hood, and since Blaze-Persistence integrates so deeply with it,
+it ran into a lot of the early regressions which first had to be fixed in Hibernate 6.
+
+With Hibernate 6.1.1.Final being released, we were finally able to also release the Hibernate 6 integration,
+as that version +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ has all the fixes and SPIs needed for Blaze-Persistence to work again.
+
+=== New Spring Data integrations
+
+After a few reports about boot errors with the Spring Data integrations for 2.5 and 2.6,
+saying that some methods weren't implemented, after updating to a newer Spring Data bugfix version,
+we decided to create dedicated integration modules for every Spring Data version and try to keep up to date
+with the latest bug fix versions from now on, to avoid these issues in the future.
+
+In addition to that, we also added an integration for Spring Data 2.7.
+
+If you have been using the Spring Data 2.4 integration previously on Spring Data 2.5, 2.6 or 2.7,
+please switch to the new integration modules for the respective versions.
+
+=== New Java version support
+
+The previous version already worked with Java 16 and 17, but now we also added proper continuous integration
+matrix entries for Java 16, 17, 18 and 19-EA to make sure everything still works fine with the latest JDKs.
+
+=== Various bug fixes
+
+Apart from the new integrations, this release comes with quite a few bug fixes in the QueryDSL integration,
+as well as one parsing issue where the multiplication operator has higher precedence than the division operator.
+We highly advise updating to this latest version to avoid running into this nasty parser bug.
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#167[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
