@@ -9,7 +9,7 @@ Always remember, there are no stupid questions, so don't hesitate to ask anythin
 If would you like to research a topic before discussing it, take a look at our [documentation](https://persistence.blazebit.com/documentation.html) or
 [search the issue tracker](https://github.com/Blazebit/blaze-persistence/issues?q=something) for something similar.
 You can also try to search on [Stack Overflow](http://stackoverflow.com/questions/tagged/blaze-persistence), but if all you want is just ask a quick question,
-it's probably best to join us on Slack! [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) 
+it's probably best to join us on [Zulip Chat](https://blazebit.zulipchat.com)! 
 
 ### Bugs
 

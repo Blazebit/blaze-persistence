@@ -16,7 +16,7 @@ Blaze-Persistence is an open source project that is developed in the open. It is
 If you can't find what you are looking for on the Internet or in the link:documentation.html[*documentation*, window="_blank"] you can get into touch with
 the community around Blaze-Persistence via multiple channels:
 
-+++<a href="https://blazebit.herokuapp.com" target="_blank">Slack <img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++::
+https://blazebit.zulipchat.com[Zulip Chat, window="_blank"]::
 Ask anything you want, anytime. You will almost always get an immediate response.
 
 https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow, window="_blank"]::
@@ -45,7 +45,7 @@ GitHub issues::
 https://github.com/Blazebit/blaze-persistence/issues/new[Create issues, window="_blank"] about problems or just simple questions.
 
 Help Other Users::
-Answer questions on https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow, window="_blank"], on https://blazebit.herokuapp.com[Slack, window="_blank"] or on https://github.com/Blazebit/blaze-persistence/issues[GitHub issues, window="_blank"].
+Answer questions on https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow, window="_blank"], on https://blazebit.zulipchat.com[Zulip Chat, window="_blank"] or on https://github.com/Blazebit/blaze-persistence/issues[GitHub issues, window="_blank"].
 
 Improve Documentation::
 Found a typo or would like to re-work sections, maybe even add new sections? Send us a pull requests and you will be surprised how fast that will be merged!

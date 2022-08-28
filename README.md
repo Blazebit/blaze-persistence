@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/Blazebit/blaze-persistence/workflows/Blaze-Persistence%20CI/badge.svg)](https://github.com/Blazebit/blaze-persistence/actions)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl)
-[![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com)
+[![Zulip Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://blazebit.zulipchat.com)
 
 [![Javadoc - Core](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-core-api.svg?label=javadoc%20-%20core-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-core-api)
 [![Javadoc - Entity-View](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-entity-view-api.svg?label=javadoc%20-%20entity-view-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-entity-view-api)
@@ -385,7 +385,7 @@ You can always override the join type of implicit joins with `joinDefault` if yo
 Questions or issues
 ===================
 
-Drop by on [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new) or ask on [Stackoverflow](https://stackoverflow.com/questions/ask?tags=java+blaze-persistence).
+Drop by on [![Zulip Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://blazebit.zulipchat.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new) or ask on [Stackoverflow](https://stackoverflow.com/questions/ask?tags=java+blaze-persistence).
 
 Commercial support
 ==================
