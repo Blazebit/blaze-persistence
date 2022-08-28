@@ -63,5 +63,23 @@
                 <module>testsuite-jakarta-runner</module>
             </modules>
         </profile>
+        <profile>
+            <id>blazebit-release</id>
+            <modules>
+                <module>api</module>
+                <module>impl</module>
+                <module>jpa-2-compatibility</module>
+                <module>testsuite</module>
+
+                <module>api-jar</module>
+                <module>impl-jar</module>
+                <module>jpa-2-compatibility-jar</module>
+
+                <module>api-jakarta</module>
+                <module>impl-jakarta</module>
+                <module>testsuite-jakarta</module>
+                <module>testsuite-jakarta-runner</module>
+            </modules>
+        </profile>
     </profiles>
 </project>
