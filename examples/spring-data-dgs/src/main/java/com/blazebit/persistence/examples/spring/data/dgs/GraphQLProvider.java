@@ -40,6 +40,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
+ * The following is a bit against the <a href="https://netflix.github.io/dgs/getting-started/#creating-a-schema">schema first DGS principle</a>
+ * but we do it anyway since it's a lot easier to work this way than to define types twice and try to make sure they match up.
+ *
  * @author Christian Beikov
  * @since 1.6.2
  */

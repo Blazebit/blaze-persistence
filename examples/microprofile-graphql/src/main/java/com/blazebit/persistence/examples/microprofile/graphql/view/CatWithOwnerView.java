@@ -18,6 +18,7 @@ package com.blazebit.persistence.examples.microprofile.graphql.view;
 
 import com.blazebit.persistence.examples.microprofile.graphql.model.Cat;
 import com.blazebit.persistence.view.EntityView;
+import org.eclipse.microprofile.graphql.Query;
 
 /**
  * @author Christian Beikov
@@ -28,4 +29,11 @@ public interface CatWithOwnerView extends CatSimpleView {
 
     PersonSimpleView getOwner();
 
+    @Query("theData")
+    default String abc() {
+        return "def";
+    }
+    default String getSampleData() {
+        return "abc";
+    }
 }

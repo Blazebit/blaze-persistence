@@ -81,26 +81,53 @@ public class GraphQLProvider {
 
     private RuntimeWiring buildWiring() {
         return RuntimeWiring.newRuntimeWiring()
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("catById", new DataFetcher() {
-                            @Override
-                            public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
-                                return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), Long.valueOf(dataFetchingEnvironment.getArgument("id")));
+            .type(TypeRuntimeWiring.newTypeWiring("Query")
+                    .dataFetcher("catById", new DataFetcher() {
+                        @Override
+                        public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                            return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), Long.valueOf(dataFetchingEnvironment.getArgument("id")));
+                        }
+                    })
+                    .dataFetcher("findAll", new DataFetcher() {
+                        @Override
+                        public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                            EntityViewSetting<CatWithOwnerView, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(dataFetchingEnvironment);
+                            setting.addAttributeSorter("id", Sorters.ascending());
+                            if (setting.getMaxResults() == 0) {
+                                return new GraphQLRelayConnection<>(Collections.emptyList());
                             }
-                        })
-                        .dataFetcher("findAll", new DataFetcher() {
-                            @Override
-                            public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
-                                EntityViewSetting<CatWithOwnerView, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(dataFetchingEnvironment);
-                                setting.addAttributeSorter("id", Sorters.ascending());
-                                if (setting.getMaxResults() == 0) {
-                                    return new GraphQLRelayConnection<>(Collections.emptyList());
-                                }
-                                return new GraphQLRelayConnection<>(repository.findAll(setting));
-                            }
-                        })
-                )
-                .build();
+                            return new GraphQLRelayConnection<>(repository.findAll(setting));
+                        }
+                    })
+            )
+            // Even though the CatWithOwnerView type will have a field for the name "theData",
+            // the regular GraphQL Java runtime can't access the field through the "abc" method,
+            // so we need to add dedicated DataFetcher here
+            .type(TypeRuntimeWiring.newTypeWiring("CatWithOwnerView")
+                      .dataFetcher("theData", new DataFetcher() {
+                          @Override
+                          public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                              Object source = dataFetchingEnvironment.getSource();
+                              if (source instanceof CatWithOwnerView) {
+                                  return ((CatWithOwnerView) source).abc();
+                              }
+                              return null;
+                          }
+                      })
+            )
+            .type(TypeRuntimeWiring.newTypeWiring("CatWithOwnerViewNode")
+                      .dataFetcher("theData", new DataFetcher() {
+                          @Override
+                          public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                              Object source = dataFetchingEnvironment.getSource();
+                              if (source instanceof CatWithOwnerView) {
+                                  return ((CatWithOwnerView) source).abc();
+                              }
+                              return null;
+                          }
+                      })
+            )
+            .build();
     }
 
     @Bean

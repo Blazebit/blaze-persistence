@@ -18,6 +18,7 @@ package com.blazebit.persistence.examples.spring.data.spqr.view;
 
 import com.blazebit.persistence.examples.spring.data.spqr.model.Cat;
 import com.blazebit.persistence.view.EntityView;
+import io.leangen.graphql.annotations.GraphQLQuery;
 
 /**
  * @author Christian Beikov
@@ -27,5 +28,13 @@ import com.blazebit.persistence.view.EntityView;
 public interface CatWithOwnerView extends CatSimpleView {
 
     PersonSimpleView getOwner();
+
+    @GraphQLQuery(name = "theData")
+    default String abc() {
+        return "def";
+    }
+    default String getSampleData() {
+        return "abc";
+    }
 
 }

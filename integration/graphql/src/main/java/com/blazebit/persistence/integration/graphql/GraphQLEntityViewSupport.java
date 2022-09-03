@@ -649,12 +649,7 @@ public class GraphQLEntityViewSupport {
         String prefix = elementRoot == null || elementRoot.isEmpty() ? "" : elementRoot + "/";
         StringBuilder sb = new StringBuilder();
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
-        GraphQLFieldsContainer baseType;
-        if (typeNameToFieldMapping.isEmpty()) {
-            baseType = null;
-        } else {
-            baseType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
-        }
+        GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
         try {
             if (GET_QUALIFIED_NAME == null) {
                 Collection<String> keys = ((Map<String, ?>) GET_FIELDS.invoke(selectionSet)).keySet();
@@ -662,6 +657,7 @@ public class GraphQLEntityViewSupport {
                     if (key.length() < prefix.length()) {
                         continue;
                     }
+                    GraphQLFieldsContainer baseType = rootType;
                     sb.setLength(0);
                     int fieldStartIndex = 0;
                     for (int i = 0; i < key.length(); i++) {
@@ -674,7 +670,9 @@ public class GraphQLEntityViewSupport {
                             }
                         }
                         if (c == '/') {
-                            baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex);
+                            if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
+                                continue OUTER;
+                            }
                             sb.append('.');
                             fieldStartIndex = sb.length();
                         } else {
@@ -682,8 +680,9 @@ public class GraphQLEntityViewSupport {
                         }
                     }
                     if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                        applyFieldMapping(sb, baseType, fieldStartIndex);
-                        setting.fetch(sb.toString());
+                        if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
+                            setting.fetch(sb.toString());
+                        }
                     }
                 }
             } else {
@@ -693,6 +692,7 @@ public class GraphQLEntityViewSupport {
                     if (key.length() < prefix.length()) {
                         continue;
                     }
+                    GraphQLFieldsContainer baseType = rootType;
                     sb.setLength(0);
                     int fieldStartIndex = 0;
                     for (int i = 0; i < key.length(); i++) {
@@ -705,7 +705,9 @@ public class GraphQLEntityViewSupport {
                             }
                         }
                         if (c == '/') {
-                            baseType = (GraphQLObjectType) applyFieldMapping(sb, baseType, fieldStartIndex);
+                            if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
+                                continue OUTER;
+                            }
                             sb.append('.');
                             fieldStartIndex = sb.length();
                         } else {
@@ -713,8 +715,9 @@ public class GraphQLEntityViewSupport {
                         }
                     }
                     if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                        applyFieldMapping(sb, baseType, fieldStartIndex);
-                        setting.fetch(sb.toString());
+                        if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
+                            setting.fetch(sb.toString());
+                        }
                     }
                 }
             }
@@ -723,6 +726,11 @@ public class GraphQLEntityViewSupport {
         }
     }
 
+    /**
+     * Returns the entity view path for the GraphQL field path contained in the given string builder,
+     * for the given GraphQL base type.
+     * Will return <code>null</code> if there is no entity view attribute for this path.
+     */
     private GraphQLType applyFieldMapping(StringBuilder sb, GraphQLFieldsContainer baseType, int fieldStartIndex) {
         if (baseType == null) {
             return null;
@@ -734,13 +742,17 @@ public class GraphQLEntityViewSupport {
             typeName = ((GraphQLInterfaceType) baseType).getName();
         }
         Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
+        if (fieldMapping == null) {
+            return null;
+        }
         String fieldName = sb.substring(fieldStartIndex);
-        if (fieldMapping != null) {
-            String mapping = fieldMapping.get(fieldName);
-            if (mapping != null) {
-                sb.setLength(fieldStartIndex);
-                sb.append(mapping);
-            }
+        String mapping = fieldMapping.get(fieldName);
+        if (mapping == null) {
+            return null;
+        }
+        if (!mapping.equals(fieldName)) {
+            sb.setLength(fieldStartIndex);
+            sb.append(mapping);
         }
         GraphQLType type = baseType.getFieldDefinition(fieldName).getType();
         if (type instanceof GraphQLNonNull) {

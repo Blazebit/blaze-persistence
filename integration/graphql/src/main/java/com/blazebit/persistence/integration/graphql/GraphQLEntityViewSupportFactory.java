@@ -16,10 +16,13 @@
 
 package com.blazebit.persistence.integration.graphql;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -73,6 +76,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -431,7 +435,8 @@ public class GraphQLEntityViewSupportFactory {
         Map<String, Class<?>> typeNameToClass = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
-            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()) {
+            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()
+                || isIgnored(managedView.getJavaType())) {
                 continue;
             }
             String typeName = getObjectTypeName(managedView);
@@ -439,6 +444,7 @@ public class GraphQLEntityViewSupportFactory {
             String description = getDescription(managedView.getJavaType());
             List<FieldDefinition> fieldDefinitions = new ArrayList<>(managedView.getAttributes().size());
             List<InputValueDefinition> valueDefinitions = new ArrayList<>(managedView.getAttributes().size());
+            Set<String> fieldNames = new HashSet<>();
             for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
                 if (isIgnored(attribute.getJavaMethod())) {
                     continue;
@@ -463,13 +469,49 @@ public class GraphQLEntityViewSupportFactory {
                     type = new ListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
                     inputType = new ListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
                 }
-                String fieldName = getFieldName(attribute);
-                FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
-                fieldDefinitions.add(fieldDefinition);
-                addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
-                valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
-                addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                if (type != null) {
+                    String fieldName = getFieldName(attribute);
+                    FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
+                    fieldDefinitions.add(fieldDefinition);
+                    fieldNames.add(fieldName);
+                    addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                    addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                }
             }
+            for (Method method : managedView.getJavaType().getMethods()) {
+                if (isIgnored(method) || !isReadAccessor(method)) {
+                    continue;
+                }
+                String fieldName = getFieldName(method);
+                if (!fieldNames.add(fieldName)) {
+                    continue;
+                }
+                Class<?> fieldType = ReflectionUtils.resolveType(managedView.getJavaType(), method.getGenericReturnType());
+                Type type;
+                Type inputType;
+                if (Map.class.isAssignableFrom(fieldType)) {
+                    Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
+                    Class<?> keyType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
+                    type = getEntryType(typeRegistry, typeName, fieldName, getKeyType(typeRegistry, entityViewManager, keyType), getElementType(typeRegistry, entityViewManager, elementType));
+                    inputType = getInputEntryType(typeRegistry, inputTypeName, fieldName, getInputKeyType(typeRegistry, entityViewManager, keyType), getInputElementType(typeRegistry, entityViewManager, elementType));
+                } else if (Collection.class.isAssignableFrom(fieldType)) {
+                    Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
+                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    type = new ListType(getElementType(typeRegistry, entityViewManager, elementType));
+                    inputType = new ListType(getInputElementType(typeRegistry, entityViewManager, elementType));
+                } else {
+                    type = getElementType(typeRegistry, entityViewManager, fieldType);
+                    inputType = getInputElementType(typeRegistry, entityViewManager, fieldType);
+                }
+                if (type != null) {
+                    FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
+                    fieldDefinitions.add(fieldDefinition);
+                    valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                }
+            }
+
             addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, newObjectTypeDefinition(typeName, fieldDefinitions, description), newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
         }
 
@@ -485,6 +527,20 @@ public class GraphQLEntityViewSupportFactory {
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
         return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes);
+    }
+
+    /**
+     * Determine whether the given method represents a read accessor
+     *
+     * @param method The method to check
+     * @return <code>true</code> if the method represents a read accessor, false otherwise
+     */
+    protected boolean isReadAccessor(Method method) {
+        String methodName = method.getName();
+        return !method.isSynthetic() && method.getReturnType() != void.class && method.getParameterTypes().length == 0 && (
+            methodName.startsWith("get") && methodName.length() > 3 && Character.isUpperCase(methodName.charAt(3))
+                || methodName.startsWith("is") && methodName.length() > 2 && Character.isUpperCase(methodName.charAt(2))
+                || getExplicitFieldName(method) != null);
     }
 
     /**
@@ -532,7 +588,8 @@ public class GraphQLEntityViewSupportFactory {
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
-            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()) {
+            if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()
+                || isIgnored(managedView.getJavaType())) {
                 continue;
             }
             String typeName = getObjectTypeName(managedView);
@@ -570,11 +627,47 @@ public class GraphQLEntityViewSupportFactory {
                     type = new GraphQLList(getElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
                     inputType = new GraphQLList(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
                 }
-                fieldBuilder.type(type);
-                builder.field(fieldBuilder);
-                addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
-                inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
-                addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                if (type != null) {
+                    fieldBuilder.type(type);
+                    builder.field(fieldBuilder);
+                    addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                    addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                }
+            }
+            for (Method method : managedView.getJavaType().getMethods()) {
+                if (isIgnored(method) || !isReadAccessor(method)) {
+                    continue;
+                }
+                String fieldName = getFieldName(method);
+                if (inputBuilder.hasField(fieldName)) {
+                    continue;
+                }
+                GraphQLFieldDefinition.Builder fieldBuilder = GraphQLFieldDefinition.newFieldDefinition();
+                Class<?> fieldType = ReflectionUtils.resolveType(managedView.getJavaType(), method.getGenericReturnType());
+                fieldBuilder.name(fieldName);
+                GraphQLOutputType type;
+                GraphQLInputType inputType;
+                if (Map.class.isAssignableFrom(fieldType)) {
+                    Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
+                    Class<?> keyType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
+                    type = getEntryType(schemaBuilder, typeName, fieldName, getKeyType(schemaBuilder, entityViewManager, keyType, registeredTypeNames), getElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                    inputType = getInputEntryType(schemaBuilder, inputTypeName, fieldName, getInputKeyType(schemaBuilder, entityViewManager, keyType, registeredTypeNames), getInputElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                } else if (Collection.class.isAssignableFrom(fieldType)) {
+                    Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
+                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    type = getListType(getElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                    inputType = getListType(getInputElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                } else {
+                    type = getElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
+                    inputType = getInputElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
+                }
+                if (type != null) {
+                    fieldBuilder.type(type);
+                    builder.field(fieldBuilder);
+                    inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                }
             }
             addObjectTypeDefinition(schemaBuilder, typeNameToClass, managedView, builder.build(), inputBuilder.build());
         }
@@ -606,14 +699,19 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes);
     }
 
-    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, String typeName, MethodAttribute<?, ?> attribute, String fieldName) {
-        if (!fieldName.equals(attribute.getName())) {
-            Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
-            if (fieldMapping == null) {
-                typeNameToFieldMapping.put(typeName, fieldMapping = new HashMap<>());
-            }
-            fieldMapping.put(fieldName, attribute.getName());
+    private GraphQLList getListType(GraphQLType elementType) {
+        if (elementType == null) {
+            return null;
         }
+        return new GraphQLList(elementType);
+    }
+
+    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, String typeName, MethodAttribute<?, ?> attribute, String fieldName) {
+        Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
+        if (fieldMapping == null) {
+            typeNameToFieldMapping.put(typeName, fieldMapping = new HashMap<>());
+        }
+        fieldMapping.put(fieldName, attribute.getName());
     }
 
     private <T> T getAnnotationValue(Annotation annotation, String memberName) {
@@ -686,17 +784,17 @@ public class GraphQLEntityViewSupportFactory {
     protected InputObjectTypeDefinition newInputObjectTypeDefinition(String typeName, List<InputValueDefinition> valueDefinitions, String description) {
         try {
             if (INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR != null) {
-                //                new InputObjectTypeDefinition(typeName, directives, valueDefinitions);
+//                new InputObjectTypeDefinition(typeName, directives, valueDefinitions);
                 InputObjectTypeDefinition typeDefinition = INPUT_OBJECT_TYPE_DEFINITION_CONSTRUCTOR.newInstance(typeName, new ArrayList<>(0), valueDefinitions);
                 if (description != null) {
                     INPUT_OBJECT_TYPE_DEFINITION_SET_DESCRIPTION.invoke(typeDefinition, new Description(description, null, false));
                 }
                 return typeDefinition;
             } else {
-                //                InputObjectTypeDefinition.newInputObjectTypeDefinition()
-                //                        .name(typeName)
-                //                        .valueDefinitions(valueDefinitions)
-                //                        .build()
+//                InputObjectTypeDefinition.newInputObjectTypeDefinition()
+//                        .name(typeName)
+//                        .valueDefinitions(valueDefinitions)
+//                        .build()
                 Object newInputObjectTypeDefinitionBuilder = INPUT_OBJECT_TYPE_DEFINITION_NEW_BUILDER.invoke(null);
                 INPUT_OBJECT_TYPE_DEFINITION_BUILDER_NAME.invoke(newInputObjectTypeDefinitionBuilder, typeName);
                 if (description != null) {
@@ -988,7 +1086,27 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getEntryType(TypeDefinitionRegistry typeRegistry, MethodAttribute<?, ?> attribute, Type key, Type value) {
-        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "Entry";
+        if (key == null || value == null) {
+            return null;
+        }
+        return getEntryType(typeRegistry, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param typeRegistry The type registry
+     * @param typeName The declaring type name
+     * @param fieldName The map attribute field name
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected Type getEntryType(TypeDefinitionRegistry typeRegistry, String typeName, String fieldName, Type key, Type value) {
+        if (key == null || value == null) {
+            return null;
+        }
+        String entryName = typeName + StringUtils.firstToUpper(fieldName) + "Entry";
         List<FieldDefinition> fields = new ArrayList<>();
         fields.add(new FieldDefinition("key", key));
         fields.add(new FieldDefinition("value", value));
@@ -1008,7 +1126,27 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getInputEntryType(TypeDefinitionRegistry typeRegistry, MethodAttribute<?, ?> attribute, Type key, Type value) {
-        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "EntryInput";
+        if (key == null || value == null) {
+            return null;
+        }
+        return getInputEntryType(typeRegistry, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param typeRegistry The type registry
+     * @param typeName The declaring type name
+     * @param fieldName The map attribute field name
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected Type getInputEntryType(TypeDefinitionRegistry typeRegistry, String typeName, String fieldName, Type key, Type value) {
+        if (key == null || value == null) {
+            return null;
+        }
+        String entryName = typeName + StringUtils.firstToUpper(fieldName) + "EntryInput";
         List<FieldDefinition> fields = new ArrayList<>();
         fields.add(new FieldDefinition("key", key));
         fields.add(new FieldDefinition("value", value));
@@ -1028,11 +1166,31 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected GraphQLOutputType getEntryType(GraphQLSchema.Builder schemaBuilder, MethodAttribute<?, ?> attribute, GraphQLOutputType key, GraphQLOutputType value) {
-        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "Entry";
+        if (key == null || value == null) {
+            return null;
+        }
+        return getEntryType(schemaBuilder, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param schemaBuilder The schema builder
+     * @param typeName The declaring type name
+     * @param fieldName The map attribute field name
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected GraphQLOutputType getEntryType(GraphQLSchema.Builder schemaBuilder, String typeName, String fieldName, GraphQLOutputType key, GraphQLOutputType value) {
+        if (key == null || value == null) {
+            return null;
+        }
+        String entryName = typeName + StringUtils.firstToUpper(fieldName) + "Entry";
         GraphQLObjectType type = GraphQLObjectType.newObject().name(entryName)
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("key").type(key))
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("value").type(value))
-                .build();
+            .field(GraphQLFieldDefinition.newFieldDefinition().name("key").type(key))
+            .field(GraphQLFieldDefinition.newFieldDefinition().name("value").type(value))
+            .build();
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(type);
         }
@@ -1049,11 +1207,31 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected GraphQLInputType getInputEntryType(GraphQLSchema.Builder schemaBuilder, MethodAttribute<?, ?> attribute, GraphQLInputType key, GraphQLInputType value) {
-        String entryName = getObjectTypeName(attribute.getDeclaringType()) + StringUtils.firstToLower(attribute.getName()) + "EntryInput";
+        if (key == null || value == null) {
+            return null;
+        }
+        return getInputEntryType(schemaBuilder, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+    }
+
+    /**
+     * Return the GraphQL entry type for the given map attribute with the given key and value types.
+     *
+     * @param schemaBuilder The schema builder
+     * @param typeName The declaring type name
+     * @param fieldName The map attribute field name
+     * @param key The key type
+     * @param value The value type
+     * @return The type
+     */
+    protected GraphQLInputType getInputEntryType(GraphQLSchema.Builder schemaBuilder, String typeName, String fieldName, GraphQLInputType key, GraphQLInputType value) {
+        if (key == null || value == null) {
+            return null;
+        }
+        String entryName = typeName + StringUtils.firstToUpper(fieldName) + "EntryInput";
         GraphQLInputObjectType type = GraphQLInputObjectType.newInputObject().name(entryName)
-                .field(GraphQLInputObjectField.newInputObjectField().name("key").type(key))
-                .field(GraphQLInputObjectField.newInputObjectField().name("value").type(value))
-                .build();
+            .field(GraphQLInputObjectField.newInputObjectField().name("key").type(key))
+            .field(GraphQLInputObjectField.newInputObjectField().name("value").type(value))
+            .build();
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(type);
         }
@@ -1067,9 +1245,20 @@ public class GraphQLEntityViewSupportFactory {
      * @return The GraphQL type name
      */
     protected String getObjectTypeName(ManagedViewType type) {
+        return getObjectTypeName(type.getJavaType());
+    }
+
+    /**
+     * Returns the GraphQL type name for the given managed view type java type.
+     *
+     * @param javaType The managed view type java type
+     * @return The GraphQL type name
+     */
+    protected String getObjectTypeName(Class<?> javaType) {
         //CHECKSTYLE:OFF: MissingSwitchDefault
-        for (Annotation annotation : type.getJavaType().getAnnotations()) {
+        for (Annotation annotation : javaType.getAnnotations()) {
             switch (annotation.annotationType().getName()) {
+                case "com.blazebit.persistence.integration.graphql.GraphQLName":
                 case "org.eclipse.microprofile.graphql.Name":
                 case "org.eclipse.microprofile.graphql.Type":
                     return getAnnotationValue(annotation, "value");
@@ -1080,7 +1269,7 @@ public class GraphQLEntityViewSupportFactory {
             }
         }
         //CHECKSTYLE:ON: MissingSwitchDefault
-        return type.getJavaType().getSimpleName();
+        return javaType.getSimpleName();
     }
 
     /**
@@ -1102,6 +1291,24 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Returns the GraphQL input type name for the given managed view java type.
+     *
+     * @param managedViewJavaType The managed view java type
+     * @return The GraphQL type name
+     */
+    protected String getInputObjectTypeName(Class<?> managedViewJavaType) {
+        String typeName = getObjectTypeName(managedViewJavaType);
+        // So far, we only use this for MicroProfile GraphQL where we can't register custom types
+        // and instead have to simply use the name the MP GraphQL implementations choose for such types.
+        // In case of input object types, implementations don't suffix the name with "Input" since the type is abstract
+        if (Modifier.isAbstract(managedViewJavaType.getModifiers()) && (AnnotationUtils.findAnnotation(managedViewJavaType, CreatableEntityView.class) != null || AnnotationUtils.findAnnotation(managedViewJavaType, UpdatableEntityView.class) != null)) {
+            return typeName;
+        } else {
+            return typeName + "Input";
+        }
+    }
+
+    /**
      * Returns the GraphQL type name for the given java type.
      *
      * @param type The java type
@@ -1111,6 +1318,7 @@ public class GraphQLEntityViewSupportFactory {
         //CHECKSTYLE:OFF: MissingSwitchDefault
         for (Annotation annotation : type.getAnnotations()) {
             switch (annotation.annotationType().getName()) {
+                case "com.blazebit.persistence.integration.graphql.GraphQLName":
                 case "org.eclipse.microprofile.graphql.Name":
                 case "org.eclipse.microprofile.graphql.Type":
                     return getAnnotationValue(annotation, "value");
@@ -1128,16 +1336,12 @@ public class GraphQLEntityViewSupportFactory {
         return type.getSimpleName();
     }
 
-    /**
-     * Returns the GraphQL field name for the given attribute.
-     *
-     * @param attribute The attribute
-     * @return The GraphQL field name
-     */
-    protected String getFieldName(MethodAttribute<?, ?> attribute) {
+    protected String getExplicitFieldName(Method method) {
         //CHECKSTYLE:OFF: MissingSwitchDefault
-        for (Annotation annotation : attribute.getJavaMethod().getAnnotations()) {
+        for (Annotation annotation : method.getAnnotations()) {
             switch (annotation.annotationType().getName()) {
+                case "com.blazebit.persistence.integration.graphql.GraphQLName":
+                case "org.eclipse.microprofile.graphql.Query":
                 case "org.eclipse.microprofile.graphql.Name":
                     return getAnnotationValue(annotation, "value");
                 case "com.netflix.graphql.dgs.DgsData":
@@ -1146,7 +1350,34 @@ public class GraphQLEntityViewSupportFactory {
                     return getAnnotationValue(annotation, "name");
             }
         }
-        //CHECKSTYLE:ON: MissingSwitchDefault
+        return null;
+    }
+
+    protected String getFieldName(Method method) {
+        String explicitFieldName = getExplicitFieldName(method);
+        if (explicitFieldName != null && !explicitFieldName.isEmpty()) {
+            return explicitFieldName;
+        }
+        String methodName = method.getName();
+        if (methodName.startsWith("get") && methodName.length() > 3) {
+            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        } else if (methodName.startsWith("is") && methodName.length() > 2) {
+            return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+        }
+        return methodName;
+    }
+
+    /**
+     * Returns the GraphQL field name for the given attribute.
+     *
+     * @param attribute The attribute
+     * @return The GraphQL field name
+     */
+    protected String getFieldName(MethodAttribute<?, ?> attribute) {
+        String explicitFieldName = getExplicitFieldName(attribute.getJavaMethod());
+        if (explicitFieldName != null && !explicitFieldName.isEmpty()) {
+            return explicitFieldName;
+        }
         return attribute.getName();
     }
 
@@ -1173,6 +1404,25 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Returns whether the GraphQL type for the class should be ignored.
+     *
+     * @param javaType The java type
+     * @return Whether the type should be ignored
+     */
+    protected boolean isIgnored(Class<?> javaType) {
+        //CHECKSTYLE:OFF: MissingSwitchDefault
+        for (Annotation annotation : javaType.getAnnotations()) {
+            switch (annotation.annotationType().getName()) {
+                case "com.blazebit.persistence.integration.graphql.GraphQLIgnore":
+                case "io.leangen.graphql.annotations.GraphQLIgnore":
+                    return true;
+            }
+        }
+        //CHECKSTYLE:ON: MissingSwitchDefault
+        return false;
+    }
+
+    /**
      * Returns whether the GraphQL field for the method should be ignored.
      *
      * @param javaMethod The java method
@@ -1182,6 +1432,7 @@ public class GraphQLEntityViewSupportFactory {
         //CHECKSTYLE:OFF: MissingSwitchDefault
         for (Annotation annotation : javaMethod.getAnnotations()) {
             switch (annotation.annotationType().getName()) {
+                case "com.blazebit.persistence.integration.graphql.GraphQLIgnore":
                 case "org.eclipse.microprofile.graphql.Ignore":
                 case "io.leangen.graphql.annotations.GraphQLIgnore":
                     return true;
@@ -1198,6 +1449,9 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getObjectType(ManagedViewType type) {
+        if (isIgnored(type.getJavaType())) {
+            return null;
+        }
         return new TypeName(getObjectTypeName(type));
     }
 
@@ -1208,6 +1462,9 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getInputObjectType(ManagedViewType type) {
+        if (isIgnored(type.getJavaType())) {
+            return null;
+        }
         return new TypeName(getObjectTypeName(type) + "Input");
     }
 
@@ -1218,6 +1475,9 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected GraphQLOutputType getObjectTypeReference(ManagedViewType<?> type) {
+        if (isIgnored(type.getJavaType())) {
+            return null;
+        }
         return new GraphQLTypeReference(getObjectTypeName(type));
     }
 
@@ -1228,6 +1488,9 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected GraphQLInputType getInputObjectTypeReference(ManagedViewType<?> type) {
+        if (isIgnored(type.getJavaType())) {
+            return null;
+        }
         return new GraphQLTypeReference(getInputObjectTypeName(type));
     }
 
@@ -1247,7 +1510,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getObjectType((ManagedViewType<?>) elementType);
         }
-        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
             type = new NonNullType(type);
         }
         return type;
@@ -1269,7 +1532,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getInputObjectType((ManagedViewType<?>) elementType);
         }
-        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
             type = new NonNullType(type);
         }
         return type;
@@ -1295,6 +1558,23 @@ public class GraphQLEntityViewSupportFactory {
      * Return the GraphQL type for the given plural attribute.
      *
      * @param typeRegistry The type registry
+     * @param evm The entity view manager
+     * @param elementType The map element type
+     * @return The type
+     */
+    protected Type getElementType(TypeDefinitionRegistry typeRegistry, EntityViewManager evm, Class<?> elementType) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(elementType);
+        if (managedViewType == null) {
+            return getScalarType(typeRegistry, elementType);
+        } else {
+            return getObjectType(managedViewType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param typeRegistry The type registry
      * @param pluralAttribute The plural attribute
      * @return The type
      */
@@ -1304,6 +1584,23 @@ public class GraphQLEntityViewSupportFactory {
             return getScalarType(typeRegistry, elementType.getJavaType());
         } else {
             return getInputObjectType((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param typeRegistry The type registry
+     * @param evm The entity view manager
+     * @param elementType The map element type
+     * @return The type
+     */
+    protected Type getInputElementType(TypeDefinitionRegistry typeRegistry, EntityViewManager evm, Class<?> elementType) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(elementType);
+        if (managedViewType == null) {
+            return getScalarType(typeRegistry, elementType);
+        } else {
+            return getInputObjectType(managedViewType);
         }
     }
 
@@ -1323,7 +1620,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
-        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
             type = new GraphQLNonNull(type);
         }
         return type;
@@ -1345,7 +1642,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
-        if (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel)) {
+        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
             type = new GraphQLNonNull(type);
         }
         return type;
@@ -1371,6 +1668,23 @@ public class GraphQLEntityViewSupportFactory {
      * Return the GraphQL type for the given plural attribute.
      *
      * @param schemaBuilder The schema builder
+     * @param evm The entity view manager
+     * @param elementType The element type
+     * @return The type
+     */
+    protected GraphQLOutputType getElementType(GraphQLSchema.Builder schemaBuilder, EntityViewManager evm, Class<?> elementType, Map<Class<?>, String> registeredTypeNames) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(elementType);
+        if (managedViewType == null) {
+            return getScalarType(schemaBuilder, elementType, registeredTypeNames);
+        } else {
+            return getObjectTypeReference(managedViewType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param schemaBuilder The schema builder
      * @param pluralAttribute The plural attribute
      * @return The type
      */
@@ -1380,6 +1694,23 @@ public class GraphQLEntityViewSupportFactory {
             return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
             return getInputObjectTypeReference((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given plural attribute.
+     *
+     * @param schemaBuilder The schema builder
+     * @param evm The entity view manager
+     * @param elementType The element type
+     * @return The type
+     */
+    protected GraphQLInputType getInputElementType(GraphQLSchema.Builder schemaBuilder, EntityViewManager evm, Class<?> elementType, Map<Class<?>, String> registeredTypeNames) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(elementType);
+        if (managedViewType == null) {
+            return (GraphQLInputType) getScalarType(schemaBuilder, elementType, registeredTypeNames);
+        } else {
+            return getInputObjectTypeReference(managedViewType);
         }
     }
 
@@ -1403,6 +1734,23 @@ public class GraphQLEntityViewSupportFactory {
      * Return the GraphQL type for the key of the given map attribute.
      *
      * @param typeRegistry The type registry
+     * @param evm The entity view manager
+     * @param keyType The map key type
+     * @return The type
+     */
+    protected Type getKeyType(TypeDefinitionRegistry typeRegistry, EntityViewManager evm, Class<?> keyType) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(keyType);
+        if (managedViewType == null) {
+            return getScalarType(typeRegistry, keyType);
+        } else {
+            return getObjectType(managedViewType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
+     * @param typeRegistry The type registry
      * @param mapAttribute The map attribute
      * @return The type
      */
@@ -1412,6 +1760,23 @@ public class GraphQLEntityViewSupportFactory {
             return getScalarType(typeRegistry, elementType.getJavaType());
         } else {
             return getInputObjectType((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
+     * @param typeRegistry The type registry
+     * @param evm The entity view manager
+     * @param keyType The map key type
+     * @return The type
+     */
+    protected Type getInputKeyType(TypeDefinitionRegistry typeRegistry, EntityViewManager evm, Class<?> keyType) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(keyType);
+        if (managedViewType == null) {
+            return getScalarType(typeRegistry, keyType);
+        } else {
+            return getInputObjectType(managedViewType);
         }
     }
 
@@ -1435,6 +1800,23 @@ public class GraphQLEntityViewSupportFactory {
      * Return the GraphQL type for the key of the given map attribute.
      *
      * @param schemaBuilder The schema builder
+     * @param evm The entity view manager
+     * @param keyType The map key type
+     * @return The type
+     */
+    protected GraphQLOutputType getKeyType(GraphQLSchema.Builder schemaBuilder, EntityViewManager evm, Class<?> keyType, Map<Class<?>, String> registeredTypeNames) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(keyType);
+        if (managedViewType == null) {
+            return getScalarType(schemaBuilder, keyType, registeredTypeNames);
+        } else {
+            return getObjectTypeReference(managedViewType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
+     * @param schemaBuilder The schema builder
      * @param mapAttribute The map attribute
      * @return The type
      */
@@ -1444,6 +1826,23 @@ public class GraphQLEntityViewSupportFactory {
             return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
             return getInputObjectTypeReference((ManagedViewType<?>) elementType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the key of the given map attribute.
+     *
+     * @param schemaBuilder The schema builder
+     * @param evm The entity view manager
+     * @param keyType The map key type
+     * @return The type
+     */
+    protected GraphQLInputType getInputKeyType(GraphQLSchema.Builder schemaBuilder, EntityViewManager evm, Class<?> keyType, Map<Class<?>, String> registeredTypeNames) {
+        ManagedViewType<?> managedViewType = evm.getMetamodel().managedView(keyType);
+        if (managedViewType == null) {
+            return (GraphQLInputType) getScalarType(schemaBuilder, keyType, registeredTypeNames);
+        } else {
+            return getInputObjectTypeReference(managedViewType);
         }
     }
 

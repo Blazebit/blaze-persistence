@@ -70,6 +70,8 @@ public class SampleTest extends AbstractSampleTest {
 
         assertEquals(5, nodes.size());
         assertEquals("Cat 5", nodes.get(0).get("name").asText());
+        assertEquals("def", nodes.get(0).get("theData").asText());
+        assertEquals("abc", nodes.get(0).get("sampleData").asText());
     }
 
     @Test
@@ -109,6 +111,8 @@ public class SampleTest extends AbstractSampleTest {
                 "      node {\n" +
                 "        id\n" +
                 "        name\n" +
+                "        theData\n" +
+                "        sampleData\n" +
                 "      }\n" +
                 "    }\n" +
                 "    pageInfo {\n" +
