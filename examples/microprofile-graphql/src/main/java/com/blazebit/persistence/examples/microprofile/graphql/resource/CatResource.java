@@ -18,7 +18,6 @@ package com.blazebit.persistence.examples.microprofile.graphql.resource;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.examples.microprofile.graphql.model.Cat;
 import com.blazebit.persistence.examples.microprofile.graphql.view.CatCreateView;
 import com.blazebit.persistence.examples.microprofile.graphql.view.CatSimpleView;
@@ -112,7 +111,7 @@ public class CatResource {
             @Name("before") String before,
             @Name("after") String after) {
         CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
-        EntityViewSetting<CatWithOwnerView, PaginatedCriteriaBuilder<CatWithOwnerView>> setting = graphQLEntityViewSupport.createPaginatedSetting(
+        EntityViewSetting<CatWithOwnerView, ?> setting = graphQLEntityViewSupport.createPaginatedSetting(
                 context.unwrap(DataFetchingEnvironment.class)
         );
         setting.addAttributeSorter("id", Sorters.ascending());

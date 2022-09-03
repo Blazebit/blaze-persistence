@@ -159,6 +159,79 @@ SchemaGenerator schemaGenerator = new SchemaGenerator();
 return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
 ----
 
+===== Naming types or additional fields
+
+Types can be explicitly named by putting the `@GraphQLName` annotation on a type.
+
+[source,java]
+----
+@GraphQLName("TheEntity")
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+}
+----
+
+Additional fields can be declared as getter methods that follow the Java beans convention:
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    default String getAdditionalField() {
+        return "some data";
+    }
+
+    @GraphQLName("additionalData")
+    default String getData() {
+        return "more data";
+    }
+}
+----
+
+In this case the schema for `MyEntityView` will contain two additional fields `additionalField` and `additionalData`.
+Note that when the GraphQL field name does not match the property name of a getter method like in the previous example,
+an additional data fetcher must be declared for the field:
+
+[source,java]
+----
+RuntimeWiring.newRuntimeWiring()
+    .type(TypeRuntimeWiring.newTypeWiring("MyEntityView")
+            .dataFetcher("additionalData", new DataFetcher() {
+                @Override
+                public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                      Object source = dataFetchingEnvironment.getSource();
+                      if (source instanceof MyEntityView) {
+                          return ((MyEntityView) source).getData();
+                      }
+                      return null;
+                }
+            })
+    )
+    .build();
+----
+
+===== Ignoring types or fields
+
+Types can be explicitly ignored by putting the `@GraphQLIgnore` annotation on a type.
+
+It's also possible to prevent getters in entity views to appear as fields in the GraphQL type schema, by annotating the getter method with the `@GraphQLIgnore` annotation.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLIgnore
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
+
 For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== Netflix DGS setup
@@ -232,6 +305,76 @@ public class CatFetcher {
     @DgsQuery
     public CatWithOwnerView catById(@InputArgument("id") Long id, DataFetchingEnvironment dataFetchingEnvironment) {
         return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), Long.valueOf(dataFetchingEnvironment.getArgument("id")));
+    }
+}
+----
+
+===== Naming types or additional fields
+
+Types can be explicitly named by putting the `@GraphQLName` annotation on a type.
+
+[source,java]
+----
+@GraphQLName("TheEntity")
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+}
+----
+
+Additional fields can be declared as getter methods that follow the Java beans convention:
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    default String getAdditionalField() {
+        return "some data";
+    }
+
+    @GraphQLName("additionalData")
+    default String getData() {
+        return "more data";
+    }
+}
+----
+
+In this case the schema for `MyEntityView` will contain two additional fields `additionalField` and `additionalData`.
+Note that when the GraphQL field name does not match the property name of a getter method like in the previous example,
+an additional data fetcher must be declared for the field:
+
+[source,java]
+----
+@DgsComponent
+public class GraphQLExtensionApi {
+    @DgsData(parentType = "MyEntityView", field = "theData")
+    public String getNodeData(DataFetchingEnvironment dataFetchingEnvironment) {
+      Object source = dataFetchingEnvironment.getSource();
+      if (source instanceof MyEntityView) {
+          return ((MyEntityView) source).getData();
+      }
+      return null;
+    }
+}
+----
+
+===== Ignoring types or fields
+
+Types can be explicitly ignored by putting the `@GraphQLIgnore` annotation on a type.
+
+It's also possible to prevent getters in entity views to appear as fields in the GraphQL type schema, by annotating the getter method with the `@GraphQLIgnore` annotation.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLIgnore
+    default String getAdditionalField() {
+        return "some data";
     }
 }
 ----
@@ -316,6 +459,62 @@ public class CatFetcher {
 }
 ----
 
+===== Naming types or additional fields
+
+Types can be explicitly named by putting the `@GraphQLType` or `@GraphQLName` annotation on a type.
+
+[source,java]
+----
+@GraphQLType("TheEntity")
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+}
+----
+
+Additional fields can be declared as getter methods that follow the Java beans convention,
+or named explicitly by annotating the methods with `@GraphQLQuery`:
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    default String getAdditionalField() {
+        return "some data";
+    }
+
+    @GraphQLQuery(name = "additionalData")
+    default String getData() {
+        return "more data";
+    }
+}
+----
+
+In this case the schema for `MyEntityView` will contain two additional fields `additionalField` and `additionalData`.
+Note that when the GraphQL field name does not match the property name of a getter method like in the previous example,
+the `@GraphQLName` annotation will not work, and the SPQR annotation `@GraphQLQuery` is preferred.
+
+===== Ignoring types or fields
+
+Types can be explicitly ignored by putting the `@GraphQLIgnore` annotation on a type.
+
+It's also possible to prevent getters in entity views to appear as fields in the GraphQL type schema, by annotating the getter method with the `@GraphQLIgnore` annotation.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLIgnore
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
+
 For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== MicroProfile GraphQL - SmallRye
@@ -390,6 +589,62 @@ public class CatFetcher {
     @Query
     public CatWithOwnerView catById(@Input("id") Long id) {
         return repository.findById(graphQLEntityViewSupport.createSetting(context.unwrap(DataFetchingEnvironment.class)), id);
+    }
+}
+----
+
+===== Naming types or additional fields
+
+Types can be explicitly named by putting the `@Name` or `@GraphQLName` annotation on a type.
+
+[source,java]
+----
+@Name("TheEntity")
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+}
+----
+
+Additional fields can be declared as getter methods that follow the Java beans convention,
+or named explicitly by annotating the methods with `@Query`:
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    default String getAdditionalField() {
+        return "some data";
+    }
+
+    @Query("additionalData")
+    default String getData() {
+        return "more data";
+    }
+}
+----
+
+In this case the schema for `MyEntityView` will contain two additional fields `additionalField` and `additionalData`.
+Note that when the GraphQL field name does not match the property name of a getter method like in the previous example,
+the `@GraphQLName` annotation will not work, and the MicroProfile GraphQL annotation `@Query` is preferred.
+
+===== Ignoring types or fields
+
+Types can be explicitly ignored by putting the `@Ignore` or `@GraphQLIgnore` annotation on a type.
+
+It's also possible to prevent getters in entity views to appear as fields in the GraphQL type schema, by annotating the getter method with the `@GraphQLIgnore` annotation.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @Ignore
+    default String getAdditionalField() {
+        return "some data";
     }
 }
 ----

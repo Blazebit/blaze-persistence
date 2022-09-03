@@ -6,7 +6,7 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Support exposing additional (computed) GraphQL fields in Entity Views and support ignoring types and fields
 
 ### Bug fixes
 

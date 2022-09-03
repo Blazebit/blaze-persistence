@@ -24,6 +24,7 @@ import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
 import com.netflix.graphql.dgs.DgsComponent;
+import com.netflix.graphql.dgs.DgsData;
 import com.netflix.graphql.dgs.DgsMutation;
 import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
@@ -63,5 +64,27 @@ public class CatGraphQLApi {
     public Long createCat(@InputArgument(name = "cat") CatCreateView cat) {
         repository.save(cat);
         return cat.getId();
+    }
+
+    // Even though the CatWithOwnerView type will have a field for the name "theData",
+    // the DGS runtime can't access the field through the "abc" method,
+    // so we need to add dedicated DataFetcher here
+
+    @DgsData(parentType = "CatWithOwnerView", field = "theData")
+    public String getData(DataFetchingEnvironment dataFetchingEnvironment) {
+        Object source = dataFetchingEnvironment.getSource();
+        if (source instanceof CatWithOwnerView) {
+            return ((CatWithOwnerView) source).abc();
+        }
+        return null;
+    }
+
+    @DgsData(parentType = "CatWithOwnerViewNode", field = "theData")
+    public String getNodeData(DataFetchingEnvironment dataFetchingEnvironment) {
+        Object source = dataFetchingEnvironment.getSource();
+        if (source instanceof CatWithOwnerView) {
+            return ((CatWithOwnerView) source).abc();
+        }
+        return null;
     }
 }
