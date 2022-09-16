@@ -29,7 +29,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     private final Optional<com.blazebit.persistence.view.processor.model.BView> optionalValue;
     private final List<X> test;
 
-    public AViewImpl(AViewImpl noop, Map<String, Object> optionalParameters) {
+    public AViewImpl(AViewImpl noop, Map<String, Object> blazePersistenceOptionalParameters) {
         this.age = 0;
         this.bytes = null;
         this.id = null;

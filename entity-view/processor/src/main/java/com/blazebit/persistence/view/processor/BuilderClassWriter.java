@@ -33,6 +33,11 @@ import java.util.List;
  */
 public final class BuilderClassWriter {
 
+    public static final String OPTIONAL_PARAMS = "blazePersistenceOptionalParameters";
+
+    private static final String LISTENER = "blazePersistenceListener";
+    private static final String RESULT = "blazePersistenceResult";
+
     private static final String BUILDER_CLASS_NAME_SUFFIX = "Builder";
     private static final String NEW_LINE = System.lineSeparator();
     private static final String PARAMETER_PREFIX = "Param";
@@ -67,7 +72,7 @@ public final class BuilderClassWriter {
             metaMember.appendBuilderAttributeDeclarationString(sb);
             sb.append(NEW_LINE);
         }
-        sb.append("    protected final ").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters;").append(NEW_LINE);
+        sb.append("    protected final ").append(entity.builderImportType(Constants.MAP)).append("<String, Object> ").append(OPTIONAL_PARAMS).append(";").append(NEW_LINE);
 
         sb.append(NEW_LINE);
 
@@ -135,16 +140,16 @@ public final class BuilderClassWriter {
             }
 
             sb.append(NEW_LINE);
-            sb.append("        public ").append(className).append("(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters) {").append(NEW_LINE);
-            sb.append("            super(optionalParameters);").append(NEW_LINE);
+            sb.append("        public ").append(className).append("(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> ").append(OPTIONAL_PARAMS).append(") {").append(NEW_LINE);
+            sb.append("            super(").append(OPTIONAL_PARAMS).append(");").append(NEW_LINE);
             for (MetaAttribute metaMember : constructor.getParameters()) {
                 if (metaMember.getKind() == MappingKind.PARAMETER) {
                     if (metaMember.isPrimitive()) {
-                        sb.append("!optionalParameters.containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
+                        sb.append("!").append(OPTIONAL_PARAMS).append(".containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
                         metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                         sb.append(" : ");
                     }
-                    sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
+                    sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") ").append(OPTIONAL_PARAMS).append(".get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
                 }
             }
             sb.append("        }").append(NEW_LINE);
@@ -155,7 +160,7 @@ public final class BuilderClassWriter {
             sb.append("        public ").append(entity.builderImportType(entity.getQualifiedName())).append(" build() {").append(NEW_LINE);
             sb.append("            return new ").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append("(");
             if (members.isEmpty() && constructor.getParameters().isEmpty()) {
-                sb.append("(").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append(") null, optionalParameters);").append(NEW_LINE);
+                sb.append("(").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append(") null, ").append(OPTIONAL_PARAMS).append(");").append(NEW_LINE);
             } else {
                 sb.append(NEW_LINE);
                 appendConstructorArguments(sb, entity, constructor);
@@ -263,8 +268,8 @@ public final class BuilderClassWriter {
         sb.append(builderType);
         sb.append("> {").append(NEW_LINE);
         sb.append(NEW_LINE);
-        sb.append("        private final ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener;").append(NEW_LINE);
-        sb.append("        private final ").append(builderResult).append(" result;").append(NEW_LINE);
+        sb.append("        private final ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" ").append(LISTENER).append(";").append(NEW_LINE);
+        sb.append("        private final ").append(builderResult).append(" ").append(RESULT).append(";").append(NEW_LINE);
 
         for (MetaAttribute metaMember : constructor.getParameters()) {
             metaMember.appendBuilderAttributeDeclarationString(sb);
@@ -272,35 +277,35 @@ public final class BuilderClassWriter {
         }
 
         sb.append(NEW_LINE);
-        sb.append("        public Nested(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters, ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener, ").append(builderResult).append(" result) {").append(NEW_LINE);
-        sb.append("            super(optionalParameters);").append(NEW_LINE);
+        sb.append("        public Nested(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> ").append(OPTIONAL_PARAMS).append(", ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" ").append(LISTENER).append(", ").append(builderResult).append(" ").append(RESULT).append(") {").append(NEW_LINE);
+        sb.append("            super(").append(OPTIONAL_PARAMS).append(");").append(NEW_LINE);
         for (MetaAttribute metaMember : constructor.getParameters()) {
             if (metaMember.getKind() == MappingKind.PARAMETER) {
                 if (metaMember.isPrimitive()) {
-                    sb.append("!optionalParameters.containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
+                    sb.append("!").append(OPTIONAL_PARAMS).append(".containsKey(\"").append(metaMember.getMapping()).append("\") ? ");
                     metaMember.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
-                sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") optionalParameters.get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
+                sb.append("            this.").append(metaMember.getPropertyName()).append(" = (").append(entity.builderImportType(metaMember.getBuilderImplementationTypeString())).append(") ").append(OPTIONAL_PARAMS).append(".get(\"").append(metaMember.getMapping()).append("\");").append(NEW_LINE);
             }
         }
-        sb.append("            this.listener = listener;").append(NEW_LINE);
-        sb.append("            this.result = result;").append(NEW_LINE);
+        sb.append("            this.").append(LISTENER).append(" = ").append(LISTENER).append(";").append(NEW_LINE);
+        sb.append("            this.").append(RESULT).append(" = ").append(RESULT).append(";").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
 
         // X build()
         sb.append(NEW_LINE);
         sb.append("        @Override").append(NEW_LINE);
         sb.append("        public ").append(builderResult).append(" build() {").append(NEW_LINE);
-        sb.append("            listener.onBuildComplete(new ").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append("(");
+        sb.append("            ").append(LISTENER).append(".onBuildComplete(new ").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append("(");
         if (members.isEmpty() && constructor.getParameters().isEmpty()) {
-            sb.append("(").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append(") null, optionalParameters));").append(NEW_LINE);
+            sb.append("(").append(entity.builderImportType(TypeUtils.getDerivedTypeName(entity.getTypeElement()) + ImplementationClassWriter.IMPL_CLASS_NAME_SUFFIX)).append(") null, ").append(OPTIONAL_PARAMS).append("));").append(NEW_LINE);
         } else {
             sb.append(NEW_LINE);
             appendConstructorArguments(sb, entity, constructor);
             sb.append(NEW_LINE).append("            ));").append(NEW_LINE);
         }
-        sb.append("            return result;").append(NEW_LINE);
+        sb.append("            return ").append(RESULT).append(";").append(NEW_LINE);
         sb.append("        }").append(NEW_LINE);
 
         // X with(int parameterIndex, Object value)
@@ -466,7 +471,7 @@ public final class BuilderClassWriter {
                 sb.append("Builder(Object key) {")
                         .append(NEW_LINE)
                         .append("        return new ").append(entity.builderImportType(memberBuilderFqn))
-                        .append(".Nested<>(optionalParameters, ").append(listener).append(", (").append(builderType).append(") this);")
+                        .append(".Nested<>(").append(OPTIONAL_PARAMS).append(", ").append(listener).append(", (").append(builderType).append(") this);")
                         .append(NEW_LINE)
                         .append("    }");
 
@@ -507,11 +512,11 @@ public final class BuilderClassWriter {
                     sb.append(Character.toUpperCase(metaMember.getPropertyName().charAt(0)));
                     sb.append(metaMember.getPropertyName(), 1, metaMember.getPropertyName().length());
                     sb.append("Builder() { ").append(NEW_LINE);
-                    sb.append("        ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" listener = new ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER)).append("(getMap(\"").append(metaMember.getPropertyName()).append("\"));").append(NEW_LINE);
+                    sb.append("        ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_LISTENER)).append(" ").append(LISTENER).append(" = new ").append(entity.builderImportType(Constants.ENTITY_VIEW_BUILDER_MAP_KEY_LISTENER)).append("(getMap(\"").append(metaMember.getPropertyName()).append("\"));").append(NEW_LINE);
                     sb.append("        return new ").append(entity.builderImportType(keyMemberBuilderFqn))
-                            .append(".Nested<>(optionalParameters, listener, ").append(NEW_LINE);
+                            .append(".Nested<>(").append(OPTIONAL_PARAMS).append(", ").append(LISTENER).append(", ").append(NEW_LINE);
                     sb.append("            new ").append(entity.builderImportType(memberBuilderFqn))
-                            .append(".Nested<>(optionalParameters, listener, (").append(builderType).append(") this)").append(NEW_LINE);
+                            .append(".Nested<>(").append(OPTIONAL_PARAMS).append(", ").append(LISTENER).append(", (").append(builderType).append(") this)").append(NEW_LINE);
                     sb.append("        );").append(NEW_LINE);
                     sb.append("    }");
 
@@ -548,7 +553,7 @@ public final class BuilderClassWriter {
                         sb.append("Builder(int index) {")
                                 .append(NEW_LINE)
                                 .append("        return new ").append(entity.builderImportType(memberBuilderFqn))
-                                .append(".Nested<>(optionalParameters, ").append(listener).append(", (").append(builderType).append(") this);")
+                                .append(".Nested<>(").append(OPTIONAL_PARAMS).append(", ").append(listener).append(", (").append(builderType).append(") this);")
                                 .append(NEW_LINE)
                                 .append("    }");
 
@@ -584,7 +589,7 @@ public final class BuilderClassWriter {
                 sb.append("Builder() {")
                         .append(NEW_LINE)
                         .append("    return new ").append(entity.builderImportType(memberBuilderFqn))
-                        .append(".Nested<>(optionalParameters, ").append(listener).append(", (").append(builderType).append(") this);")
+                        .append(".Nested<>(").append(OPTIONAL_PARAMS).append(", ").append(listener).append(", (").append(builderType).append(") this);")
                         .append(NEW_LINE)
                         .append("    }");
 
@@ -1261,17 +1266,17 @@ public final class BuilderClassWriter {
     }
 
     private static void printConstructors(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.append("    public ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX).append("(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> optionalParameters) {").append(NEW_LINE);
+        sb.append("    public ").append(entity.getSimpleName()).append(BUILDER_CLASS_NAME_SUFFIX).append("(").append(entity.builderImportType(Constants.MAP)).append("<String, Object> ").append(OPTIONAL_PARAMS).append(") {").append(NEW_LINE);
 
         for (MetaAttribute member : entity.getMembers()) {
             sb.append("        this.").append(member.getPropertyName()).append(" = ");
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
-                    sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
+                    sb.append("!").append(OPTIONAL_PARAMS).append(".containsKey(\"").append(member.getMapping()).append("\") ? ");
                     member.appendDefaultValue(sb, false, true, entity.getBuilderImportContext());
                     sb.append(" : ");
                 }
-                sb.append("(").append(entity.builderImportType(member.getImplementationTypeString())).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")").append(NEW_LINE);
+                sb.append("(").append(entity.builderImportType(member.getImplementationTypeString())).append(") ").append(OPTIONAL_PARAMS).append(".get(\"").append(member.getMapping()).append("\")").append(NEW_LINE);
             } else {
                 member.appendDefaultValue(sb, true, true, entity.getBuilderImportContext());
             }
@@ -1279,7 +1284,7 @@ public final class BuilderClassWriter {
             sb.append(NEW_LINE);
         }
 
-        sb.append("        this.optionalParameters = optionalParameters;").append(NEW_LINE);
+        sb.append("        this.").append(OPTIONAL_PARAMS).append(" = ").append(OPTIONAL_PARAMS).append(";").append(NEW_LINE);
         sb.append("    }");
         sb.append(NEW_LINE);
     }

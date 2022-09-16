@@ -33,7 +33,7 @@ public class BViewImpl<X extends Serializable> extends BaseView_com_blazebit_per
             throw new RuntimeException("Could not initialize post construct accessor!", ex);
         }
     }
-    public BViewImpl(BViewImpl noop, Map<String, Object> optionalParameters) {
+    public BViewImpl(BViewImpl noop, Map<String, Object> blazePersistenceOptionalParameters) {
         this.id = null;
         if (this.name == null) {
             this.name = null;
