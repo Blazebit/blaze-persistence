@@ -19,6 +19,7 @@
     <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
         <class>com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Document</class>
         <class>com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Person</class>
+        <class>com.blazebit.persistence.spring.data.testsuite.webmvc.entity.IdClassEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>

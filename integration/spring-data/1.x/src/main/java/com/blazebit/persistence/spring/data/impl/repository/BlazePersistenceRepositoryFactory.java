@@ -18,6 +18,7 @@ package com.blazebit.persistence.spring.data.impl.repository;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareJpaQueryMethod;
 import com.blazebit.persistence.spring.data.base.query.EntityViewAwareRepositoryMetadata;
 import com.blazebit.persistence.spring.data.base.repository.EntityViewAwareCrudMethodMetadata;
@@ -116,17 +117,25 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
 
     @Override
     protected Object getTargetRepository(RepositoryInformation information) {
-        // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
-        JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-        AbstractEntityViewAwareRepository<?, ?, ?> entityViewAwareRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, ((EntityViewAwareRepositoryInformation) information).getEntityViewType());
-        entityViewAwareRepository.setRepositoryMethodMetadata(getCrudMethodMetadata());
-        return entityViewAwareRepository;
+        if (information instanceof EntityViewAwareRepositoryInformation && information.getRepositoryBaseClass() == EntityViewAwareRepositoryImpl.class) {
+            // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
+            JpaEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
+            AbstractEntityViewAwareRepository<?, ?, ?> entityViewAwareRepository = getTargetRepositoryViaReflection(information, entityInformation, entityManager, cbf, evm, ((EntityViewAwareRepositoryInformation) information).getEntityViewType());
+            entityViewAwareRepository.setRepositoryMethodMetadata(getCrudMethodMetadata());
+            return entityViewAwareRepository;
+        }
+        return super.getTargetRepository(information);
     }
 
     @Override
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-        // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
-        return EntityViewAwareRepositoryImpl.class;
+        ExtendedManagedType<?> managedType = cbf.getService(EntityMetamodel.class).getManagedType(ExtendedManagedType.class, metadata.getDomainType());
+        // Only use the entity view aware repository if the domain type has a single id attribute
+        if (managedType.getIdAttributes().size() == 1) {
+            // TODO: at some point, we might want to switch to the default if the repository doesn't contain entity views or keyset pagination
+            return EntityViewAwareRepositoryImpl.class;
+        }
+        return super.getRepositoryBaseClass(metadata);
     }
 
     @Override

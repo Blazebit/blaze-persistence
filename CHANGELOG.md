@@ -10,7 +10,7 @@ Changes that happened in releases
 
 ### Bug fixes
 
-None yet
+* Switch to default Spring Repository implementation when a repository with an id class is used
 
 ### Backwards-incompatible changes
 
