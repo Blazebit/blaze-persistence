@@ -214,9 +214,6 @@
         <!-- Profiles for various Spring-Data versions -->
         <profile>
             <id>spring-data-1.11.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-1.x-spring}</version.spring>
             </properties>
@@ -386,6 +383,9 @@
         </profile>
         <profile>
             <id>spring-data-2.7.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.7-spring}</version.spring>
                 <maven.compiler.target>1.8</maven.compiler.target>

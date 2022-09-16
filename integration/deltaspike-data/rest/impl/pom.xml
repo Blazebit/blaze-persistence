@@ -84,9 +84,6 @@
     <profiles>
         <profile>
             <id>deltaspike-1.7</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencyManagement>
                 <dependencies>
                     <dependency>
@@ -115,6 +112,9 @@
         </profile>
         <profile>
             <id>deltaspike-1.9</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencyManagement>
                 <dependencies>
                     <dependency>

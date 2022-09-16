@@ -178,9 +178,6 @@
     <profiles>
         <profile>
             <id>spring-data-1.11.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
@@ -400,6 +397,9 @@
         </profile>
         <profile>
             <id>spring-data-2.7.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.7-spring}</version.spring>
                 <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
@@ -429,15 +429,15 @@
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <version.spring>${version.spring-data-2.5-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.5-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
+                <version.hibernate>${version.hibernate-5.6}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.5}</version>
+                    <version>${version.spring-data-2.7}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -446,11 +446,11 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

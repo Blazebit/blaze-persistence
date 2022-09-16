@@ -918,9 +918,6 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
@@ -1331,6 +1328,9 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
@@ -2363,9 +2363,6 @@
         <!-- Profiles for various Spring-Data versions -->
         <profile>
             <id>spring-data-1.11.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-1.x-spring}</version.spring>
             </properties>
@@ -2518,6 +2515,9 @@
         </profile>
         <profile>
             <id>spring-data-2.7.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.7-spring}</version.spring>
             </properties>
