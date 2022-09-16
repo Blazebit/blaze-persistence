@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.AttributeFilter;
+import com.blazebit.persistence.view.processor.BuilderClassWriter;
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.EntityViewTypeUtils;
@@ -401,7 +402,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
             sb.append("new ").append(attributeImplementationType).append("((")
                     .append(attributeImplementationType).append(") null, ");
             if (createConstructor) {
-                sb.append("optionalParameters)");
+                sb.append(BuilderClassWriter.OPTIONAL_PARAMS).append(")");
             } else {
                 sb.append(importContext.importType(Collections.class.getName())).append(".emptyMap())");
             }

@@ -13,6 +13,7 @@ Changes that happened in releases
 * Switch to default Spring Repository implementation when a repository with an id class is used
 * Make sure `Pageable.unpaged()` works properly in Spring Data integration
 * Update to the latest Spring Data bug fix versions (1.11.23, 2.0.14, 2.1.21, 2.2.13, 2.3.9, 2.4.15, 2.5.12, 2.6.6) for testing
+* Rename some annotation processor generated fields to avoid collision with application specific entity view attribute names
 
 ### Backwards-incompatible changes
 

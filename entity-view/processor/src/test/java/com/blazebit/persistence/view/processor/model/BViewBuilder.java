@@ -29,13 +29,13 @@ public abstract class BViewBuilder<X extends Serializable, BuilderType extends E
     protected Integer id;
     protected String name;
     protected Integer parent;
-    protected final Map<String, Object> optionalParameters;
+    protected final Map<String, Object> blazePersistenceOptionalParameters;
 
-    public BViewBuilder(Map<String, Object> optionalParameters) {
+    public BViewBuilder(Map<String, Object> blazePersistenceOptionalParameters) {
         this.id = null;
         this.name = null;
         this.parent = null;
-        this.optionalParameters = optionalParameters;
+        this.blazePersistenceOptionalParameters = blazePersistenceOptionalParameters;
     }
 
     public Integer getId() {
@@ -404,8 +404,8 @@ public abstract class BViewBuilder<X extends Serializable, BuilderType extends E
 
     public static class Create<X extends Serializable> extends BViewBuilder<X, EntityViewBuilder<BView>> implements EntityViewBuilder<BView> {
 
-        public Create(Map<String, Object> optionalParameters) {
-            super(optionalParameters);
+        public Create(Map<String, Object> blazePersistenceOptionalParameters) {
+            super(blazePersistenceOptionalParameters);
         }
 
         @Override
@@ -718,8 +718,8 @@ public abstract class BViewBuilder<X extends Serializable, BuilderType extends E
     public static class Init<X extends Serializable> extends BViewBuilder<X, EntityViewBuilder<BView>> implements EntityViewBuilder<BView> {
         protected BView self;
 
-        public Init(Map<String, Object> optionalParameters) {
-            super(optionalParameters);
+        public Init(Map<String, Object> blazePersistenceOptionalParameters) {
+            super(blazePersistenceOptionalParameters);
         }
 
         @Override
@@ -1047,30 +1047,30 @@ public abstract class BViewBuilder<X extends Serializable, BuilderType extends E
             return (Init<X>) this;
         }
         public <SubX extends Serializable> BViewBuilder.Nested<SubX, ? extends Init<X>> withParamSelfBuilder() {
-            return new BViewBuilder.Nested<>(optionalParameters, new SingularNameEntityViewBuilderListener(this, "self"), (Init<X>) this);
+            return new BViewBuilder.Nested<>(blazePersistenceOptionalParameters, new SingularNameEntityViewBuilderListener(this, "self"), (Init<X>) this);
         }
 
     }
 
     public static class Nested<X extends Serializable, BuilderResult> extends BViewBuilder<X, Nested<X, BuilderResult>> implements EntityViewNestedBuilder<BView, BuilderResult, Nested<X, BuilderResult>> {
 
-        private final EntityViewBuilderListener listener;
-        private final BuilderResult result;
+        private final EntityViewBuilderListener blazePersistenceListener;
+        private final BuilderResult blazePersistenceResult;
 
-        public Nested(Map<String, Object> optionalParameters, EntityViewBuilderListener listener, BuilderResult result) {
-            super(optionalParameters);
-            this.listener = listener;
-            this.result = result;
+        public Nested(Map<String, Object> blazePersistenceOptionalParameters, EntityViewBuilderListener blazePersistenceListener, BuilderResult blazePersistenceResult) {
+            super(blazePersistenceOptionalParameters);
+            this.blazePersistenceListener = blazePersistenceListener;
+            this.blazePersistenceResult = blazePersistenceResult;
         }
 
         @Override
         public BuilderResult build() {
-            listener.onBuildComplete(new BViewImpl(
+            blazePersistenceListener.onBuildComplete(new BViewImpl(
                     this.id,
                     this.name,
                     this.parent
             ));
-            return result;
+            return blazePersistenceResult;
         }
 
         @Override

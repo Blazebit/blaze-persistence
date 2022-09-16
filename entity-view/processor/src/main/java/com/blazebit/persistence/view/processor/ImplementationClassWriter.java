@@ -1469,7 +1469,7 @@ public final class ImplementationClassWriter {
             sb.append("        ").append(member.getImplementationTypeString()).append(" ").append(member.getPropertyName());
         }
         if (first) {
-            sb.append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, ").append(entity.implementationImportType(Constants.MAP)).append("<String, Object> optionalParameters) {");
+            sb.append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, ").append(entity.implementationImportType(Constants.MAP)).append("<String, Object> ").append(BuilderClassWriter.OPTIONAL_PARAMS).append(") {");
         } else {
             sb.append(NEW_LINE);
             sb.append("    ) {");
@@ -1770,7 +1770,7 @@ public final class ImplementationClassWriter {
                 sb.append("    }").append(NEW_LINE);
             }
         }
-        sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, ").append(entity.implementationImportType(Constants.MAP)).append("<String, Object> optionalParameters) {");
+        sb.append("    public ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append("(").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX).append(" noop, ").append(entity.implementationImportType(Constants.MAP)).append("<String, Object> ").append(BuilderClassWriter.OPTIONAL_PARAMS).append(") {");
         sb.append(NEW_LINE);
 
         if (entity.isCreatable() || entity.isUpdatable()) {
@@ -1793,11 +1793,11 @@ public final class ImplementationClassWriter {
             }
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
-                    sb.append("!optionalParameters.containsKey(\"").append(member.getMapping()).append("\") ? ");
+                    sb.append("!").append(BuilderClassWriter.OPTIONAL_PARAMS).append(".containsKey(\"").append(member.getMapping()).append("\") ? ");
                     member.appendDefaultValue(sb, false, true, entity.getImplementationImportContext());
                     sb.append(" : ");
                 }
-                sb.append("(").append(member.getImplementationTypeString()).append(") optionalParameters.get(\"").append(member.getMapping()).append("\")");
+                sb.append("(").append(member.getImplementationTypeString()).append(") ").append(BuilderClassWriter.OPTIONAL_PARAMS).append(".get(\"").append(member.getMapping()).append("\")");
             } else {
                 member.appendDefaultValue(sb, true, true, entity.getImplementationImportContext());
             }
