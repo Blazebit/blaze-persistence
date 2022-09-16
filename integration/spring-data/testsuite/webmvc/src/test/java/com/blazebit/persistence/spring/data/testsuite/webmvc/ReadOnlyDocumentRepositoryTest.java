@@ -64,6 +64,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -754,6 +755,41 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(actualIds.get(1), d4.getId());
         assertEquals(actualIds.get(2), d2.getId() < d3.getId() ? d2.getId() : d3.getId());
         assertEquals(actualIds.get(3), d2.getId() < d3.getId() ? d3.getId() : d2.getId());
+    }
+
+    @Test
+    public void testUnpaged() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Page<DocumentAccessor> result = DocumentAccessors.of(readOnlyDocumentRepository.findAll(
+            new Specification<Document>() {
+                @Override
+                public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+                    return null;
+                }
+            },
+            unpaged()
+        ));
+
+        // Then
+        List<Long> actualIds = getIdsFromViews(result);
+
+        // Then
+        assertEquals(2, actualIds.size());
+        assertEquals(actualIds.get(0), d1.getId());
+        assertEquals(actualIds.get(1), d2.getId());
+    }
+
+    private Pageable unpaged() {
+        try {
+            Method unpaged = Class.forName("org.springframework.data.domain.Pageable").getMethod("unpaged");
+            return (Pageable) unpaged.invoke(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private List<Long> getIdsFromViews(Iterable<DocumentAccessor> views) {

@@ -11,6 +11,7 @@ Changes that happened in releases
 ### Bug fixes
 
 * Switch to default Spring Repository implementation when a repository with an id class is used
+* Make sure `Pageable.unpaged()` works properly in Spring Data integration
 
 ### Backwards-incompatible changes
 
