@@ -17,8 +17,8 @@ A release involves various steps which are outlined here and should be kept up-t
 . Open `website/src/main/jbake/jbake.properties` and update `stable.version` to the latest released version
 . Open `website/pom.xml` and update the property `stable.version` to the latest released version, `snapshot.version` to the latest snapshot version and `series.version` to the current version series
 . Open `documentation/pom.xml` and update the property `stable.version` to the latest released version and `series.version` to the current version series
-. Prepare a local Maven release via `mvn -P "blazebit-release,h2,hibernate-5.2,deltaspike-1.7,spring-data-1.11.x" release:clean release:prepare "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
-. Actually deploy the release with `mvn -P "blazebit-release,h2,hibernate-5.2,deltaspike-1.7,spring-data-1.11.x" release:perform "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
+. Prepare a local Maven release via `mvn -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:clean release:prepare "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
+. Actually deploy the release with `mvn -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:perform "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Java\jdk1.8.0_181'"`
 . Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`

@@ -39,6 +39,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.provider.QueryExtractor;
+import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
 import org.springframework.data.jpa.repository.query.EscapeCharacter;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
@@ -338,10 +339,17 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         @Override
         public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
             try {
-                return lookupStrategy.resolveQuery(method, metadata, factory, namedQueries);
+                RepositoryQuery repositoryQuery = lookupStrategy.resolveQuery(method, metadata, factory, namedQueries);
+                // Only return something if the RepositoryQuery is not an instance of org.springframework.data.jpa.repository.query.JpaQueryLookupStrategy.NoQuery
+                // Since we can't refer to the class though, we instead check if the returned class is an instance of AbstractJpaQuery,
+                // because we know that NoQuery is not matching that
+                if (repositoryQuery instanceof AbstractJpaQuery) {
+                    return repositoryQuery;
+                }
             } catch (IllegalStateException e) {
-                return createStrategy.resolveQuery(method, metadata, factory, namedQueries);
+                // Ignore
             }
+            return createStrategy.resolveQuery(method, metadata, factory, namedQueries);
         }
     }
 

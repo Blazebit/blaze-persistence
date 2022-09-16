@@ -263,7 +263,7 @@ class ParameterMetadataProviderImpl implements ParameterMetadataProvider {
 			}
 
 			return Collection.class.isAssignableFrom(expressionType) //
-					? persistenceProvider.potentiallyConvertEmptyCollection(upperIfIgnoreCase(ignoreCase, toCollection(value))) //
+					? upperIfIgnoreCase(ignoreCase, toCollection(value)) //
 					: value;
 		}
 

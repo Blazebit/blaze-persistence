@@ -28,7 +28,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.showcase.runner.cdi</module.name>
-        <version.deltaspike>${version.deltaspike-1.7}</version.deltaspike>
+        <version.deltaspike>${version.deltaspike-1.9}</version.deltaspike>
     </properties>
 
     <dependencyManagement>
@@ -216,9 +216,6 @@
     <profiles>
         <profile>
             <id>deltaspike-1.7</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.weld>2.4.5.Final</version.weld>
                 <version.deltaspike>${version.deltaspike-1.7}</version.deltaspike>
@@ -233,6 +230,9 @@
         </profile>
         <profile>
             <id>deltaspike-1.9</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.deltaspike>${version.deltaspike-1.9}</version.deltaspike>
             </properties>

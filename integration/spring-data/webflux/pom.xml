@@ -125,9 +125,6 @@
         </profile>
         <profile>
             <id>spring-data-2.0.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.0-spring}</version.spring>
                 <version.spring-data>${version.spring-data-2.0}</version.spring-data>
@@ -226,6 +223,9 @@
         </profile>
         <profile>
             <id>spring-data-2.7.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-2.7-spring}</version.spring>
                 <version.spring-data>${version.spring-data-2.7}</version.spring-data>
