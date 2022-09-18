@@ -19,6 +19,9 @@ package com.blazebit.persistence.examples.spring.data.dgs.view;
 import com.blazebit.persistence.examples.spring.data.dgs.model.Cat;
 import com.blazebit.persistence.integration.graphql.GraphQLName;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingSingular;
+
+import java.util.List;
 
 /**
  * @author Christian Beikov
@@ -28,6 +31,9 @@ import com.blazebit.persistence.view.EntityView;
 public interface CatWithOwnerView extends CatSimpleView {
 
     PersonSimpleView getOwner();
+
+    @MappingSingular
+    List<String> getNicknames();
 
     @GraphQLName("theData")
     default String abc() {

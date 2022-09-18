@@ -111,6 +111,7 @@ public class SampleTest extends AbstractSampleTest {
                 "      node {\n" +
                 "        id\n" +
                 "        name\n" +
+                "        nicknames\n" +
                 "        theData\n" +
                 "        sampleData\n" +
                 "      }\n" +

@@ -67,6 +67,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -1506,7 +1507,11 @@ public class GraphQLEntityViewSupportFactory {
         com.blazebit.persistence.view.metamodel.Type elementType = singularAttribute.getType();
         Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            type = getScalarType(typeRegistry, elementType.getJavaType());
+            if (Collection.class.isAssignableFrom(elementType.getJavaType())) {
+                type = getScalarType(typeRegistry, singularAttribute.getDeclaringType().getJavaType(), ((MethodAttribute<?, ?>) singularAttribute).getJavaMethod().getGenericReturnType());
+            } else {
+                type = getScalarType(typeRegistry, elementType.getJavaType());
+            }
         } else {
             type = getObjectType((ManagedViewType<?>) elementType);
         }
@@ -1528,7 +1533,11 @@ public class GraphQLEntityViewSupportFactory {
         com.blazebit.persistence.view.metamodel.Type elementType = singularAttribute.getType();
         Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            type = getScalarType(typeRegistry, elementType.getJavaType());
+            if (Collection.class.isAssignableFrom(elementType.getJavaType())) {
+                type = getScalarType(typeRegistry, singularAttribute.getDeclaringType().getJavaType(), ((MethodAttribute<?, ?>) singularAttribute).getJavaMethod().getGenericReturnType());
+            } else {
+                type = getScalarType(typeRegistry, elementType.getJavaType());
+            }
         } else {
             type = getInputObjectType((ManagedViewType<?>) elementType);
         }
@@ -1616,7 +1625,11 @@ public class GraphQLEntityViewSupportFactory {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = singularAttribute.getType();
         GraphQLOutputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            type = getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            if (Collection.class.isAssignableFrom(elementType.getJavaType())) {
+                type = getScalarType(schemaBuilder, singularAttribute.getDeclaringType().getJavaType(), ((MethodAttribute<?, ?>) singularAttribute).getJavaMethod().getGenericReturnType(), registeredTypeNames);
+            } else {
+                type = getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            }
         } else {
             type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
@@ -1638,7 +1651,11 @@ public class GraphQLEntityViewSupportFactory {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = singularAttribute.getType();
         GraphQLInputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            type = (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            if (Collection.class.isAssignableFrom(elementType.getJavaType())) {
+                type = (GraphQLInputType) getScalarType(schemaBuilder, singularAttribute.getDeclaringType().getJavaType(), ((MethodAttribute<?, ?>) singularAttribute).getJavaMethod().getGenericReturnType(), registeredTypeNames);
+            } else {
+                type = (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            }
         } else {
             type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
@@ -1860,6 +1877,32 @@ public class GraphQLEntityViewSupportFactory {
      * Return the GraphQL type for the given scalar java type.
      *
      * @param typeRegistry The type registry
+     * @param ownerType The owner of the java type
+     * @param javaType The java type
+     * @return The type
+     */
+    protected Type getScalarType(TypeDefinitionRegistry typeRegistry, Class<?> ownerType, java.lang.reflect.Type javaType) {
+        if (javaType instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) javaType;
+            Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+            if (Collection.class.isAssignableFrom(rawType)) {
+                Class<?> elementType = ReflectionUtils.resolveType(ownerType, parameterizedType.getActualTypeArguments()[0]);
+                return new ListType(getScalarType(typeRegistry, elementType));
+            } else {
+                javaType = rawType;
+            }
+        }
+        if (javaType instanceof Class<?>) {
+            return getScalarType(typeRegistry, (Class<?>) javaType);
+        } else {
+            throw new IllegalArgumentException("Unsupported scalar type: " + javaType);
+        }
+    }
+
+    /**
+     * Return the GraphQL type for the given scalar java type.
+     *
+     * @param typeRegistry The type registry
      * @param javaType The java type
      * @return The type
      */
@@ -1883,6 +1926,33 @@ public class GraphQLEntityViewSupportFactory {
             }
         }
         return new TypeName(typeName);
+    }
+
+    /**
+     * Return the GraphQL type for the given scalar java type.
+     *
+     * @param schemaBuilder The schema builder
+     * @param ownerType The owner of the java type
+     * @param javaType The java type
+     * @param registeredTypeNames The registered type names
+     * @return The type
+     */
+    protected GraphQLOutputType getScalarType(GraphQLSchema.Builder schemaBuilder, Class<?> ownerType, java.lang.reflect.Type javaType, Map<Class<?>, String> registeredTypeNames) {
+        if (javaType instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) javaType;
+            Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+            if (Collection.class.isAssignableFrom(rawType)) {
+                Class<?> elementType = ReflectionUtils.resolveType(ownerType, parameterizedType.getActualTypeArguments()[0]);
+                return new GraphQLList(getScalarType(schemaBuilder, elementType, registeredTypeNames));
+            } else {
+                javaType = rawType;
+            }
+        }
+        if (javaType instanceof Class<?>) {
+            return getScalarType(schemaBuilder, (Class<?>) javaType, registeredTypeNames);
+        } else {
+            throw new IllegalArgumentException("Unsupported scalar type: " + javaType);
+        }
     }
 
     /**

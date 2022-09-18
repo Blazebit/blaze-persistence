@@ -19,6 +19,7 @@ package com.blazebit.persistence.examples.spring.data.dgs.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -26,6 +27,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -47,6 +49,8 @@ public class Cat {
     private Cat mother;
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     private Cat father;
+    @Convert(converter = ListStringConverter.class)
+    private List<String> nicknames;
     @JsonIgnore
     @ManyToMany
     private Set<Cat> kittens = new HashSet<>();
