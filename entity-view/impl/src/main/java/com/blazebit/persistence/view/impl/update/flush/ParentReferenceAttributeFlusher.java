@@ -42,7 +42,7 @@ public class ParentReferenceAttributeFlusher<E, V> extends BasicAttributeFlusher
     private final Map.Entry<String, AttributeAccessor>[] parameterAccessors;
 
     public ParentReferenceAttributeFlusher(EntityViewManagerImpl evm, Class<?> parentEntityClass, String attributeName, String mapping, Map<String, String> writableMappings, TypeDescriptor typeDescriptor, AttributeAccessor attributeAccessor, Mapper<V, E> mapper) {
-        super(attributeName, mapping, true, false, true, false, false, false, null, typeDescriptor, mapping, mapping, attributeAccessor, null, null, null, null);
+        super(attributeName, mapping, true, false, true, false, false, false, null, evm.getJpaProvider(), typeDescriptor, mapping, mapping, attributeAccessor, null, null, null, null);
         this.writableMappings = writableMappings;
         this.mapper = mapper;
         if (writableMappings != null) {

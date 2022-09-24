@@ -95,6 +95,12 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public Character getDefaultEscapeCharacter() {
+        // MySQL is non SQL-standard compliant in this regard
+        return '\\';
+    }
+
+    @Override
     public boolean supportsArbitraryLengthMultiset() {
         return true;
     }

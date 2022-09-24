@@ -520,7 +520,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 componentFlusherEntries = componentFlushers.entrySet().toArray(new Map.Entry[componentFlushers.size()]);
             }
             TypeDescriptor typeDescriptor = TypeDescriptor.forType(evm, localCache, null, idAttribute, type, null, null);
-            return new BasicAttributeFlusher<>(attributeName, attributeMapping, true, false, true, false, false, false, componentFlusherEntries, typeDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null, null, null);
+            return new BasicAttributeFlusher<>(attributeName, attributeMapping, true, false, true, false, false, false, componentFlusherEntries, evm.getJpaProvider(), typeDescriptor, updateFragment, parameterName, entityAttributeAccessor, viewAttributeAccessor, null, null, null);
         }
     }
 
@@ -548,6 +548,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         false,
                         false,
                         null,
+                        evm.getJpaProvider(),
                         TypeDescriptor.forEntityComponentType(),
                         updateFragment,
                         parameterName,
@@ -594,7 +595,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
         @SuppressWarnings("unchecked")
         VersionBasicUserType<Object> userType = (VersionBasicUserType<Object>) ((BasicType<?>) type).getUserType();
         boolean jpaVersion = entityType.getSingularAttribute(versionAttribute.getMapping()).isVersion();
-        return new VersionAttributeFlusher<>(attributeName, attributeMapping, userType, updateFragment, parameterName, attributeAccessor, viewAttributeAccessor, jpaVersion);
+        return new VersionAttributeFlusher<>(attributeName, attributeMapping, userType, updateFragment, parameterName, attributeAccessor, viewAttributeAccessor, jpaVersion, evm.getJpaProvider());
     }
 
     @Override
@@ -1071,6 +1072,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     false,
                     false,
                     null,
+                    evm.getJpaProvider(),
                     elementDescriptor,
                     updateFragment,
                     parameterName,
@@ -1338,6 +1340,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         attribute.isOrphanRemoval(),
                         viewOnlyDeleteCascaded,
                         componentFlusherEntries,
+                        evm.getJpaProvider(),
                         elementDescriptor,
                         updateFragment,
                         parameterName,

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
@@ -36,8 +37,8 @@ public class VersionAttributeFlusher<E, V> extends BasicAttributeFlusher<E, V> {
 
     private final boolean jpaVersion;
 
-    public VersionAttributeFlusher(String attributeName, String mapping, VersionBasicUserType<Object> userType, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, boolean jpaVersion) {
-        super(attributeName, mapping, true, false, true, false, false, false, null, new TypeDescriptor(
+    public VersionAttributeFlusher(String attributeName, String mapping, VersionBasicUserType<Object> userType, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, boolean jpaVersion, JpaProvider jpaProvider) {
+        super(attributeName, mapping, true, false, true, false, false, false, null, jpaProvider, new TypeDescriptor(
                 false,
                 false,
                 false,

@@ -558,6 +558,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public void setSingularParameter(Query query, String name, Object value) {
+        query.setParameter(name, value);
+    }
+
+    @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> ownerType, String attributeName) {
         AttributeImpl<?, ?> attribute = getAttribute(ownerType, attributeName);
         if (attribute.getType() instanceof EntityType<?>) {

@@ -1448,6 +1448,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public void setSingularParameter(Query query, String name, Object value) {
+        query.setParameter(name, value);
+    }
+
+    @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
         return new ArrayList<>(getJoinMappingPropertyNames(owner, null, attributeName).keySet());
     }

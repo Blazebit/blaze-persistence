@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.view.InverseRemoveStrategy;
 import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.InitialValueAttributeAccessor;
@@ -52,6 +53,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final boolean orphanRemoval;
     private final boolean viewOnlyDeleteCascaded;
     private final Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers;
+    private final JpaProvider jpaProvider;
     private final String updateFragment;
     private final AttributeAccessor viewAttributeAccessor;
     private final InitialValueAttributeAccessor initialValueViewAttributeAccessor;
@@ -62,7 +64,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
     private final boolean update;
     private final BasicFlushOperation flushOperation;
 
-    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers,
+    public BasicAttributeFlusher(String attributeName, String mapping, boolean supportsQueryFlush, boolean optimisticLockProtected, boolean updatable, boolean cascadeDelete, boolean orphanRemoval, boolean viewOnlyDeleteCascaded, Map.Entry<AttributeAccessor, BasicAttributeFlusher>[] componentFlushers, JpaProvider jpaProvider,
                                  TypeDescriptor elementDescriptor, String updateFragment, String parameterName, AttributeAccessor entityAttributeAccessor, AttributeAccessor viewAttributeAccessor, UnmappedBasicAttributeCascadeDeleter deleter, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
         super(elementDescriptor);
         this.attributeName = attributeName;
@@ -76,6 +78,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.fetchGraphNode = elementDescriptor.getEntityToEntityMapper() == null ? null : elementDescriptor.getEntityToEntityMapper().getFullGraphNode();
         this.updatable = updatable;
         this.componentFlushers = componentFlushers;
+        this.jpaProvider = jpaProvider;
         this.updateFragment = updateFragment;
         this.parameterName = parameterName;
         this.entityAttributeAccessor = entityAttributeAccessor;
@@ -99,6 +102,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
         this.fetchGraphNode = fetchGraphNode;
         this.updatable = original.updatable;
         this.componentFlushers = original.componentFlushers;
+        this.jpaProvider = original.jpaProvider;
         this.cascadeDelete = original.cascadeDelete;
         this.orphanRemoval = original.orphanRemoval;
         this.viewOnlyDeleteCascaded = original.viewOnlyDeleteCascaded;
@@ -266,7 +270,7 @@ public class BasicAttributeFlusher<E, V> extends BasicDirtyChecker<V> implements
                 } else {
                     parameter = parameterPrefix + parameterName;
                 }
-                query.setParameter(parameter, finalValue);
+                jpaProvider.setSingularParameter(query, parameter, finalValue);
             } else {
                 for (int i = 0; i < componentFlushers.length; i++) {
                     Object val = componentFlushers[i].getKey().getValue(finalValue);

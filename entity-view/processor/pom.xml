@@ -106,6 +106,15 @@
 
     <profiles>
         <profile>
+        <id>post-10</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <properties>
+                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
+            </properties>
+        </profile>
+        <profile>
             <id>post-10-unsafe-code-non-mac</id>
             <activation>
                 <jdk>[11,)</jdk>
@@ -113,9 +122,6 @@
                     <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
                 </file>
             </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -142,9 +148,6 @@
                     <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
                 </file>
             </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
