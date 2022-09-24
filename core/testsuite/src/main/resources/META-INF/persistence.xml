@@ -83,6 +83,7 @@
         <class>com.blazebit.persistence.testsuite.entity.SchemaEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.SeniorProjectLeader</class>
         <class>com.blazebit.persistence.testsuite.entity.SequenceBaseEntity</class>
+        <class>com.blazebit.persistence.testsuite.entity.SingularListEntity</class>
         <class>com.blazebit.persistence.testsuite.entity.SmallProject</class>
         <class>com.blazebit.persistence.testsuite.entity.StringIdCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.TPCBase</class>

@@ -144,6 +144,12 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public Character getDefaultEscapeCharacter() {
+        // H2 is non SQL-standard compliant in this regard
+        return '\\';
+    }
+
+    @Override
     public boolean supportsArbitraryLengthMultiset() {
         return true;
     }

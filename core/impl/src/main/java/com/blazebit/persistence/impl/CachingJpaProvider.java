@@ -405,6 +405,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public void setSingularParameter(Query query, String name, Object value) {
+        jpaProvider.setSingularParameter(query, name, value);
+    }
+
+    @Override
     public List<String> getIdentifierOrUniqueKeyEmbeddedPropertyNames(EntityType<?> owner, String attributeName) {
         // TODO: cache this via extended metamodel
         return jpaProvider.getIdentifierOrUniqueKeyEmbeddedPropertyNames(owner, attributeName);

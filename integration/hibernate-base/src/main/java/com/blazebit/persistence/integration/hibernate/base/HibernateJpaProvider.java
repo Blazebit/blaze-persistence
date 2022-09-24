@@ -23,6 +23,7 @@ import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
@@ -89,6 +90,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     private static final Method GET_TYPE_NAME;
     private static final Method IS_NULLABLE;
+    private static final Method GET_PARAMETER_METADATA;
     private static final Logger LOG = Logger.getLogger(HibernateJpaProvider.class.getName());
 
     protected final PersistenceUnitUtil persistenceUnitUtil;
@@ -159,6 +161,13 @@ public class HibernateJpaProvider implements JpaProvider {
         } catch (Exception ex) {
             throw new IllegalStateException("Unknown Hibernate version in use, could not find isNullable method!", ex);
         }
+        Method getParameterMetadata = null;
+        try {
+            getParameterMetadata = Class.forName("org.hibernate.internal.AbstractQueryImpl").getMethod("getParameterMetadata");
+        } catch (Exception cnfe) {
+            // Ignore, as that means the Hibernate version does not need this method
+        }
+        GET_PARAMETER_METADATA = getParameterMetadata;
     }
 
     /**
@@ -1601,6 +1610,26 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public void setCacheable(Query query) {
         query.setHint("org.hibernate.cacheable", true);
+    }
+
+    @Override
+    public void setSingularParameter(Query query, String name, Object value) {
+        if (value instanceof Collection) {
+            org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
+            Type expectedType = null;
+            if (GET_PARAMETER_METADATA != null) {
+                // For Hibernate <= 5.1 we have to set the expected type
+                try {
+                    ParameterMetadata metadata = (ParameterMetadata) GET_PARAMETER_METADATA.invoke(hibernateQuery);
+                    expectedType = metadata.getNamedParameterExpectedType(name);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            hibernateQuery.setParameter(name, value, expectedType);
+        } else {
+            query.setParameter(name, value);
+        }
     }
 
     @Override

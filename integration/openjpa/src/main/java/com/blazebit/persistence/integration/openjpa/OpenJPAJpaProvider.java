@@ -415,6 +415,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
         }
     }
 
+    @Override
+    public void setSingularParameter(Query query, String name, Object value) {
+        query.setParameter(name, value);
+    }
+
     private Attribute<?, ?> getAttribute(ManagedType<?> ownerType, String attributeName) {
         if (attributeName.indexOf('.') == -1) {
             return ownerType.getAttribute(attributeName);

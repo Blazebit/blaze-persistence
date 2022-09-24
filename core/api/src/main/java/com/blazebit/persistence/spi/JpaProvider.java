@@ -622,6 +622,16 @@ public interface JpaProvider {
     public void setCacheable(Query query);
 
     /**
+     * Sets the given parameter as singular parameter on the given query.
+     *
+     * @param query The query to set the parameter on
+     * @param name The parameter name
+     * @param value The parameter value
+     * @since 1.6.8
+     */
+    public void setSingularParameter(Query query, String name, Object value);
+
+    /**
      * Get the identifier or unique key inverse properties of an association attribute.
      *
      * @param owner The owning entity type

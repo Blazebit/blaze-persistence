@@ -466,6 +466,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, int queryPartNumber) {
+        if (!mainQuery.jpaProvider.supportsSetOperations()) {
+            return -1;
+        }
         List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperations = setOperationManager.getSetOperations();
         int offset;
         if (baseQuery instanceof SetTypedQuery) {
