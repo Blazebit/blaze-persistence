@@ -31,8 +31,10 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,7 +109,36 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         int threads = context.getThreads();
         ExecutorService executorService;
         if (threads == 1) {
-            executorService = Executors.newSingleThreadExecutor();
+            executorService = new AbstractExecutorService() {
+                @Override
+                public void shutdown() {
+                }
+
+                @Override
+                public List<Runnable> shutdownNow() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public boolean isShutdown() {
+                    return false;
+                }
+
+                @Override
+                public boolean isTerminated() {
+                    return false;
+                }
+
+                @Override
+                public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+                    return false;
+                }
+
+                @Override
+                public void execute(Runnable command) {
+                    command.run();
+                }
+            };
         } else {
             executorService = Executors.newFixedThreadPool(threads);
         }
