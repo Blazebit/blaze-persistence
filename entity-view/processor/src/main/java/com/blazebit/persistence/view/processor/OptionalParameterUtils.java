@@ -28,7 +28,43 @@ public final class OptionalParameterUtils {
     private OptionalParameterUtils() {
     }
 
-    public static void addOptionalParameters(Map<String, TypeElement> optionalParameters, String mapping, Context context) {
+    public static void addOptionalParameters(Map<String, String> optionalParameters, String mapping, Context context) {
+        addOptionalParameters(
+            new OptionalParameterConsumer() {
+                @Override
+                public void addOptionalParameter(String name, TypeElement typeElement) {
+                    if (!optionalParameters.containsKey(name)) {
+                        if (typeElement == null) {
+                            typeElement = context.getTypeElement("java.lang.Object");
+                        }
+                        optionalParameters.put(name, typeElement.getQualifiedName().toString());
+                    }
+                }
+            },
+            mapping,
+            context
+        );
+    }
+
+    public static void addOptionalParametersTypeElement(Map<String, TypeElement> optionalParameters, String mapping, Context context) {
+        addOptionalParameters(
+            new OptionalParameterConsumer() {
+                @Override
+                public void addOptionalParameter(String name, TypeElement typeElement) {
+                    if (!optionalParameters.containsKey(name)) {
+                        if (typeElement == null) {
+                            typeElement = context.getTypeElement("java.lang.Object");
+                        }
+                        optionalParameters.put(name, typeElement);
+                    }
+                }
+            },
+            mapping,
+            context
+        );
+    }
+
+    private static void addOptionalParameters(OptionalParameterConsumer optionalParameters, String mapping, Context context) {
         if (mapping == null || mapping.isEmpty()) {
             return;
         }
@@ -52,17 +88,16 @@ public final class OptionalParameterUtils {
             if (sb.length() != 0) {
                 String name = sb.toString();
                 TypeElement existingTypeElement = context.getOptionalParameters().get(name);
-                if (existingTypeElement == null) {
-                    if (!optionalParameters.containsKey(name)) {
-                        if (objectTypeElement == null) {
-                            objectTypeElement = context.getTypeElement("java.lang.Object");
-                        }
-                        optionalParameters.put(name, objectTypeElement);
-                    }
-                } else {
-                    optionalParameters.put(name, existingTypeElement);
-                }
+                optionalParameters.addOptionalParameter(name, existingTypeElement);
             }
         }
+    }
+
+    /**
+     * @author Christian Beikov
+     * @since 1.6.8
+     */
+    private static interface OptionalParameterConsumer {
+        void addOptionalParameter(String name, TypeElement typeElement);
     }
 }

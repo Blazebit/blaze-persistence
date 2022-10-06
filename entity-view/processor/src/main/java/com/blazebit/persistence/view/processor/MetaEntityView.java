@@ -17,12 +17,13 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -50,6 +51,10 @@ public interface MetaEntityView {
 
     String getQualifiedName();
 
+    String getDerivedTypeName();
+
+    List<JavaTypeVariable> getTypeVariables();
+
     String getPackageName();
 
     String getBaseSuperclass();
@@ -58,15 +63,15 @@ public interface MetaEntityView {
 
     String getJpaManagedBaseClass();
 
-    Element getEntityVersionAttribute();
+    String getEntityVersionAttributeName();
 
-    ExecutableElement getPostCreate();
+    EntityViewLifecycleMethod getPostCreateForReflection();
 
-    ExecutableElement getPostLoad();
+    EntityViewLifecycleMethod getPostLoad();
 
-    Map<String, TypeElement> getForeignPackageSuperTypes();
+    Map<String, ForeignPackageType> getForeignPackageSuperTypes();
 
-    List<TypeMirror> getForeignPackageSuperTypeVariables();
+    List<String> getForeignPackageSuperTypeVariables();
 
     MetaAttribute getIdMember();
 
@@ -76,7 +81,7 @@ public interface MetaEntityView {
 
     Collection<MetaAttribute> getMembers();
 
-    Collection<ExecutableElement> getSpecialMembers();
+    Collection<EntityViewSpecialMemberMethod> getSpecialMembers();
 
     ImportContext getMetamodelImportContext();
 
@@ -104,13 +109,21 @@ public interface MetaEntityView {
 
     TypeElement getTypeElement();
 
+    ElementKind getElementKind();
+
+    Set<Modifier> getModifiers();
+
     Element[] getOriginatingElements();
 
-    Map<String, TypeElement> getOptionalParameters();
+    Map<String, String> getOptionalParameters();
 
     Map<String, ViewFilter> getViewFilters();
 
     String getSafeTypeVariable(String typeVariable);
 
     int getDefaultDirtyMask();
+
+    boolean hasCustomEqualsOrHashCodeMethod();
+
+    boolean hasCustomToStringMethod();
 }

@@ -16,32 +16,27 @@
 
 package com.blazebit.persistence.view.processor;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import javax.lang.model.element.ExecutableElement;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.8
  */
-public interface MetaConstructor {
+public class EntityViewSpecialMemberMethod {
 
-    Comparator<MetaConstructor> NAME_COMPARATOR = new Comparator<MetaConstructor>() {
-        @Override
-        public int compare(MetaConstructor o1, MetaConstructor o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
+    private final String name;
+    private final String returnTypeName;
 
-    MetaEntityView getHostingEntity();
+    public EntityViewSpecialMemberMethod(ExecutableElement postCreate) {
+        this.name = postCreate.getSimpleName().toString();
+        this.returnTypeName = postCreate.getReturnType().toString();
+    }
 
-    String getName();
+    public String getName() {
+        return name;
+    }
 
-    boolean isReal();
-
-    boolean hasSelfParameter();
-
-    List<MetaAttribute> getParameters();
-
-    Map<String, String> getOptionalParameters();
+    public String getReturnTypeName() {
+        return returnTypeName;
+    }
 }

@@ -150,15 +150,15 @@ public class Context {
         if (cached != null) {
             return cached == NULL_OBJECT ? null : (TypeElement) cached;
         }
-        synchronized (this) {
-            TypeElement typeElement = pe.getElementUtils().getTypeElement(name);
-            if (typeElement == null) {
-                typeElements.put(name, NULL_OBJECT);
-            } else {
-                typeElements.put(name, typeElement);
-            }
-            return typeElement;
+//        synchronized (this) {
+        TypeElement typeElement = pe.getElementUtils().getTypeElement(name);
+        if (typeElement == null) {
+            typeElements.put(name, NULL_OBJECT);
+        } else {
+            typeElements.put(name, typeElement);
         }
+        return typeElement;
+//        }
     }
 
     public Elements getElementUtils() {

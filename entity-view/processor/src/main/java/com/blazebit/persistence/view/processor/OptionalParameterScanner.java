@@ -17,7 +17,6 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import java.util.Map;
 
 /**
@@ -29,7 +28,7 @@ public final class OptionalParameterScanner {
     private OptionalParameterScanner() {
     }
 
-    public static void scan(Map<String, TypeElement> optionalParameters, ExecutableElement executableElement, Context context) {
+    public static void scan(Map<String, String> optionalParameters, ExecutableElement executableElement, Context context) {
         try {
             JavacOptionalParameterScanner.scan(optionalParameters, executableElement, context);
         } catch (Exception ex) {

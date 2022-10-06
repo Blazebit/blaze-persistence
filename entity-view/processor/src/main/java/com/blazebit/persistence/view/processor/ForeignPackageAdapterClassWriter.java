@@ -16,90 +16,104 @@
 
 package com.blazebit.persistence.view.processor;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeVariable;
+import javax.tools.FileObject;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
-public final class ForeignPackageAdapterClassWriter {
+public final class ForeignPackageAdapterClassWriter extends ClassWriter {
 
     private static final String NEW_LINE = System.lineSeparator();
+    private final ForeignPackageType typeElement;
+    private final String baseType;
+    private final String metaModelPackage;
 
-    private ForeignPackageAdapterClassWriter() {
+    private ForeignPackageAdapterClassWriter(FileObject fileObject, MetaEntityView entity, Context context, Collection<Runnable> mainThreadQueue, LongAdder elapsedTime, ForeignPackageType typeElement, String baseType, String metaModelPackage) {
+        super(fileObject, entity, null, context, mainThreadQueue, elapsedTime);
+        this.typeElement = typeElement;
+        this.baseType = baseType;
+        this.metaModelPackage = metaModelPackage;
     }
 
-    public static void writeFiles(StringBuilder sb, MetaEntityView entity, Context context) {
-        ArrayList<Map.Entry<String, TypeElement>> entries = new ArrayList<>(entity.getForeignPackageSuperTypes().entrySet());
+    public static void writeFiles(MetaEntityView entity, Context context, ExecutorService executorService, Collection<Runnable> mainThreadQueue, LongAdder implementationTime) {
+        ArrayList<Map.Entry<String, ForeignPackageType>> entries = new ArrayList<>(entity.getForeignPackageSuperTypes().entrySet());
         for (int i = 0; i < entries.size(); i++) {
-            Map.Entry<String, TypeElement> entry = entries.get(i);
-            String name = entry.getValue().getQualifiedName().toString() + "_" + entity.getQualifiedName().replace('.', '_');
+            Map.Entry<String, ForeignPackageType> entry = entries.get(i);
+            String name = entry.getValue().getName() + "_" + entity.getQualifiedName().replace('.', '_');
             if (!context.markGenerated(name)) {
                 continue;
             }
-            String baseType = entries.size() < i + 1 ? entries.get(i + 1).getValue().getQualifiedName().toString() : entity.getQualifiedName();
-            sb.setLength(0);
-            writeFile(sb, entry.getKey(), baseType, name, entry.getValue(), entity, context);
+            String baseType = entries.size() < i + 1 ? entries.get(i + 1).getValue().getName() : entity.getQualifiedName();
+            writeFile(entry.getKey(), baseType, name, entry.getValue(), entity, context, executorService, mainThreadQueue, implementationTime);
         }
     }
 
-    private static void writeFile(StringBuilder sb, String metaModelPackage, String baseType, String name, TypeElement typeElement, MetaEntityView entity, Context context) {
-        generateBody(sb, typeElement, baseType, entity, context);
-        ClassWriterUtils.writeFile(sb, metaModelPackage, name.substring(metaModelPackage.length() + 1), null, context, entity.getOriginatingElements());
+    private static void writeFile(String metaModelPackage, String baseType, String name, ForeignPackageType typeElement, MetaEntityView entity, Context context, ExecutorService executorService, Collection<Runnable> mainThreadQueue, LongAdder implementationTime) {
+        FileObject fileObject = ClassWriter.createFile(metaModelPackage, name.substring(metaModelPackage.length() + 1), context, entity.getOriginatingElements());
+        if (fileObject == null) {
+            return;
+        }
+        executorService.submit(new ForeignPackageAdapterClassWriter(fileObject, entity, context, mainThreadQueue, implementationTime, typeElement, baseType, metaModelPackage));
     }
 
-    private static void generateBody(StringBuilder sb, TypeElement typeElement, String baseType, MetaEntityView entity, Context context) {
+    @Override
+    protected String getPackageName() {
+        return metaModelPackage;
+    }
+
+    @Override
+    protected void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
+        generateBody(sb, typeElement, baseType, entity, context);
+    }
+
+    private static void generateBody(StringBuilder sb, ForeignPackageType typeElement, String baseType, MetaEntityView entity, Context context) {
         if (context.addGeneratedAnnotation()) {
-            ClassWriterUtils.writeGeneratedAnnotation(sb, null, context);
+            ClassWriter.writeGeneratedAnnotation(sb, null, context);
             sb.append(NEW_LINE);
         }
         if (context.isAddSuppressWarningsAnnotation()) {
-            sb.append(ClassWriterUtils.writeSuppressWarnings());
+            sb.append(ClassWriter.writeSuppressWarnings());
             sb.append(NEW_LINE);
         }
 
         sb.append("public abstract class ")
-                .append(typeElement.getSimpleName().toString())
+                .append(typeElement.getSimpleName())
                 .append('_')
                 .append(entity.getQualifiedName().replace('.', '_'));
 
-        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
-        List<TypeVariable> typeParameters = (List<TypeVariable>) ((DeclaredType) typeElement.asType()).getTypeArguments();
+        List<JavaTypeVariable> typeArguments = entity.getTypeVariables();
+        List<JavaTypeVariable> typeParameters = typeElement.getTypeVariables();
         if (typeArguments.isEmpty()) {
             if (!typeParameters.isEmpty()) {
                 sb.append('<');
-                printTypeVariable(sb, typeParameters.get(0));
+                typeParameters.get(0).append(ImportContext.NOOP, sb);
                 for (int i = 1; i < typeParameters.size(); i++) {
                     sb.append(", ");
-                    printTypeVariable(sb, typeParameters.get(i));
+                    typeParameters.get(i).append(ImportContext.NOOP, sb);
                 }
                 sb.append('>');
             }
         } else {
             sb.append('<');
             if (!typeParameters.isEmpty()) {
-                printTypeVariable(sb, typeParameters.get(0));
+                typeParameters.get(0).append(ImportContext.NOOP, sb);
                 for (int i = 1; i < typeParameters.size(); i++) {
                     sb.append(", ");
-                    printTypeVariable(sb, typeParameters.get(i));
+                    typeParameters.get(i).append(ImportContext.NOOP, sb);
                 }
                 sb.append(", ");
             }
-            printTypeVariable(sb, typeArguments.get(0));
+            typeArguments.get(0).append(ImportContext.NOOP, sb);
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                printTypeVariable(sb, typeArguments.get(i));
+                typeArguments.get(i).append(ImportContext.NOOP, sb);
             }
             sb.append('>');
         }
@@ -110,10 +124,10 @@ public final class ForeignPackageAdapterClassWriter {
 
         if (!typeArguments.isEmpty()) {
             sb.append('<');
-            sb.append(typeArguments.get(0));
+            sb.append(typeArguments.get(0).getName());
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                sb.append(typeArguments.get(i));
+                sb.append(typeArguments.get(i).getName());
             }
             sb.append('>');
         }
@@ -126,49 +140,45 @@ public final class ForeignPackageAdapterClassWriter {
 
         sb.append(NEW_LINE);
 
-        for (Element element : typeElement.getEnclosedElements()) {
-            if (element instanceof ExecutableElement && element.getModifiers().contains(Modifier.ABSTRACT) && !element.getModifiers().contains(Modifier.PUBLIC) && !element.getModifiers().contains(Modifier.PRIVATE)) {
-                ExecutableElement executableElement = (ExecutableElement) element;
-                boolean packagePrivate = !element.getModifiers().contains(Modifier.PROTECTED);
-                boolean isGeneric = false;
+        for (ForeignPackageMethod element : typeElement.getMethods()) {
+            sb.append("    public abstract ");
+            sb.append(element.getReturnType())
+                    .append(" ")
+                    .append(element.getName())
+                    .append("(");
+            List<ForeignPackageMethodParameter> parameters = element.getParameters();
+            if (!parameters.isEmpty()) {
+                sb.append(parameters.get(0).getType())
+                    .append(" arg0");
+                for (int i = 1; i < parameters.size(); i++) {
+                    sb.append(", ");
+                    sb.append(parameters.get(i).getType())
+                        .append(" arg")
+                        .append(i);
+                }
+            }
+
+            sb.append(");");
+            sb.append(NEW_LINE);
+            if (element.isPackagePrivate() && element.isGeneric()) {
                 sb.append("    public abstract ");
-                sb.append(TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), executableElement.getReturnType(), context))
+                sb.append(element.getRealReturnType())
                         .append(" ")
-                        .append(executableElement.getSimpleName())
+                        .append(element.getName())
                         .append("(");
-                List<? extends VariableElement> parameters = executableElement.getParameters();
                 if (!parameters.isEmpty()) {
-                    isGeneric = parameters.get(0).asType().getKind() == TypeKind.TYPEVAR;
-                    printParameter(sb, entity, parameters.get(0), 0, context);
+                    sb.append(parameters.get(0).getRealType())
+                            .append(" arg0");
                     for (int i = 1; i < parameters.size(); i++) {
-                        isGeneric = isGeneric || parameters.get(i).asType().getKind() == TypeKind.TYPEVAR;
                         sb.append(", ");
-                        printParameter(sb, entity, parameters.get(i), i, context);
+                        sb.append(parameters.get(i).getRealType())
+                                .append(" arg")
+                                .append(i);
                     }
                 }
 
                 sb.append(");");
                 sb.append(NEW_LINE);
-                if (packagePrivate && isGeneric) {
-                    sb.append("    public abstract ");
-                    sb.append(executableElement.getReturnType())
-                            .append(" ")
-                            .append(executableElement.getSimpleName())
-                            .append("(");
-                    if (!parameters.isEmpty()) {
-                        sb.append(parameters.get(0).asType())
-                                .append(" arg0");
-                        for (int i = 1; i < parameters.size(); i++) {
-                            sb.append(", ");
-                            sb.append(parameters.get(i).asType())
-                                    .append(" arg")
-                                    .append(i);
-                        }
-                    }
-
-                    sb.append(");");
-                    sb.append(NEW_LINE);
-                }
             }
         }
 
@@ -177,73 +187,61 @@ public final class ForeignPackageAdapterClassWriter {
         sb.append(NEW_LINE);
     }
 
-    private static void printParameter(StringBuilder sb, MetaEntityView entity, VariableElement variableElement, int index, Context context) {
-        sb.append(TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), variableElement.asType(), context))
+    private static void printParameter(StringBuilder sb, MetaEntityView entity, ForeignPackageMethodParameter variableElement, int index, Context context) {
+        sb.append(variableElement.getRealType())
                 .append(" arg")
                 .append(index);
     }
 
-    private static void printTypeVariable(StringBuilder sb, TypeVariable t) {
-        sb.append(t);
-        if (t.getLowerBound().getKind() == TypeKind.NULL) {
-            sb.append(" extends ").append(t.getUpperBound().toString());
-        } else {
-            sb.append(" super ").append(t.getLowerBound().toString());
-        }
-    }
+    private static void printConstructors(StringBuilder sb, ForeignPackageType typeElement, MetaEntityView entity, Context context) {
+        String simpleName = typeElement.getSimpleName() + "_" + entity.getQualifiedName().replace('.', '_');
+        for (MetaConstructor constructor : entity.getConstructors()) {
+            sb.append("    public ").append(simpleName).append("(");
 
-    private static void printConstructors(StringBuilder sb, TypeElement typeElement, MetaEntityView entity, Context context) {
-        String simpleName = typeElement.getSimpleName().toString() + "_" + entity.getQualifiedName().replace('.', '_');
-        for (Element enclosedElement : entity.getTypeElement().getEnclosedElements()) {
-            if (!enclosedElement.getModifiers().contains(Modifier.PRIVATE) && enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
-                ExecutableElement constructor = (ExecutableElement) enclosedElement;
-                sb.append("    public ").append(simpleName).append("(");
-
-                boolean first = true;
-                for (VariableElement parameter : constructor.getParameters()) {
-                    if (first) {
-                        first = false;
-                        sb.append(NEW_LINE);
-                        sb.append("        ").append(parameter.asType()).append(" ").append(parameter.getSimpleName());
-                    } else {
-                        sb.append(",");
-                        sb.append(NEW_LINE);
-                        sb.append("        ").append(parameter.asType()).append(" ").append(parameter.getSimpleName());
-                        sb.append(NEW_LINE);
-                    }
-                }
+            boolean first = true;
+            for (MetaAttribute parameter : constructor.getParameters()) {
                 if (first) {
-                    sb.append(") {");
+                    first = false;
                     sb.append(NEW_LINE);
+                    sb.append("        ").append(parameter.getModelType()).append(" ").append(parameter.getPropertyName());
                 } else {
-                    sb.append("    ) {");
+                    sb.append(",");
+                    sb.append(NEW_LINE);
+                    sb.append("        ").append(parameter.getModelType()).append(" ").append(parameter.getPropertyName());
                     sb.append(NEW_LINE);
                 }
-                sb.append("        super(");
-
-                first = true;
-                for (VariableElement parameter : constructor.getParameters()) {
-                    if (first) {
-                        first = false;
-                        sb.append(NEW_LINE);
-                        sb.append("            ").append(parameter.getSimpleName());
-                    } else {
-                        sb.append(",");
-                        sb.append(NEW_LINE);
-                        sb.append("            ").append(parameter.getSimpleName());
-                    }
-                }
-                if (first) {
-                    sb.append(");");
-                    sb.append(NEW_LINE);
-                } else {
-                    sb.append(NEW_LINE);
-                    sb.append("        );");
-                    sb.append(NEW_LINE);
-                }
-                sb.append("    }");
+            }
+            if (first) {
+                sb.append(") {");
+                sb.append(NEW_LINE);
+            } else {
+                sb.append("    ) {");
                 sb.append(NEW_LINE);
             }
+            sb.append("        super(");
+
+            first = true;
+            for (MetaAttribute parameter : constructor.getParameters()) {
+                if (first) {
+                    first = false;
+                    sb.append(NEW_LINE);
+                    sb.append("            ").append(parameter.getPropertyName());
+                } else {
+                    sb.append(",");
+                    sb.append(NEW_LINE);
+                    sb.append("            ").append(parameter.getPropertyName());
+                }
+            }
+            if (first) {
+                sb.append(");");
+                sb.append(NEW_LINE);
+            } else {
+                sb.append(NEW_LINE);
+                sb.append("        );");
+                sb.append(NEW_LINE);
+            }
+            sb.append("    }");
+            sb.append(NEW_LINE);
         }
     }
 }
