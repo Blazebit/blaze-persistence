@@ -25,13 +25,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.8
  */
-public final class ClassWriterUtils {
+public abstract class ClassWriter implements Runnable {
 
     private static final ThreadLocal<SimpleDateFormat> SIMPLE_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -39,11 +41,67 @@ public final class ClassWriterUtils {
             return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         }
     };
+    private static final ThreadLocal<StringBuilder> THREAD_LOCAL_STRING_BUILDER = new ThreadLocal<StringBuilder>() {
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder(64 * 1024);
+        }
+    };
+    private final FileObject fileObject;
+    private final MetaEntityView entity;
+    private final ImportContext importContext;
+    private final Context context;
+    private final Collection<Runnable> mainThreadQueue;
+    private final LongAdder elapsedTime;
 
-    private ClassWriterUtils() {
+    public ClassWriter(FileObject fileObject, MetaEntityView entity, ImportContext importContext, Context context, Collection<Runnable> mainThreadQueue, LongAdder elapsedTime) {
+        this.fileObject = fileObject;
+        this.entity = entity;
+        this.importContext = importContext;
+        this.context = context;
+        this.mainThreadQueue = mainThreadQueue;
+        this.elapsedTime = elapsedTime;
     }
 
-    public static void writeFile(StringBuilder sb, String basePackage, String simpleName, ImportContext importContext, Context context, Element... originatingElements) {
+    @Override
+    public void run() {
+        StringBuilder sb = THREAD_LOCAL_STRING_BUILDER.get();
+        sb.setLength(0);
+        long start = System.nanoTime();
+        String basePackage = getPackageName();
+
+        PrintWriter pw = null;
+        try {
+            OutputStream os = fileObject.openOutputStream();
+            pw = new PrintWriter(os);
+
+            if (!basePackage.isEmpty()) {
+                pw.println("package " + basePackage + ";");
+                pw.println();
+            }
+            generateBody(sb, entity, context);
+            if (importContext != null) {
+                pw.println(importContext.generateImports());
+            }
+            pw.println(sb);
+
+            pw.flush();
+        } catch (FilerException filerEx) {
+            context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: " + filerEx.getMessage());
+        } catch (IOException ioEx) {
+            context.logMessage(Diagnostic.Kind.ERROR, "Problem opening file to write [" + fileObject.getName() + "]: " + ioEx.getMessage());
+        }
+        elapsedTime.add(System.nanoTime() - start);
+        mainThreadQueue.add(new PrintWriterCloser(pw));
+    }
+
+    protected String getPackageName() {
+        return entity.getPackageName();
+    }
+
+    protected abstract void generateBody(StringBuilder sb, MetaEntityView entity, Context context);
+
+    public static FileObject createFile(String basePackage, String simpleName, Context context, Element... originatingElements) {
         Element[] elements;
         Filer filer = context.getProcessingEnvironment().getFiler();
         if (originatingElements.length > 0 && filer.getClass().getName().startsWith("org.gradle.api")) {
@@ -54,35 +112,15 @@ public final class ClassWriterUtils {
             // other compilers like the IntelliJ compiler support multiple
             elements = originatingElements;
         }
+        String fullyQualifiedClassName = getFullyQualifiedClassName(basePackage, simpleName);
         try {
-            FileObject fo;
-            OutputStream os;
-            String fullyQualifiedClassName = getFullyQualifiedClassName(basePackage, simpleName);
-            context.getTypeElement(fullyQualifiedClassName);
-            synchronized (context) {
-                fo = filer.createSourceFile(fullyQualifiedClassName, elements);
-                os = fo.openOutputStream();
-            }
-            PrintWriter pw = new PrintWriter(os);
-
-            if (!basePackage.isEmpty()) {
-                pw.println("package " + basePackage + ";");
-                pw.println();
-            }
-            if (importContext != null) {
-                pw.println(importContext.generateImports());
-            }
-            pw.println(sb);
-
-            pw.flush();
-            synchronized (context) {
-                pw.close();
-            }
+            return filer.createSourceFile(fullyQualifiedClassName, elements);
         } catch (FilerException filerEx) {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: " + filerEx.getMessage());
         } catch (IOException ioEx) {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem opening file to write " + simpleName + ioEx.getMessage());
         }
+        return null;
     }
 
     private static String getFullyQualifiedClassName(String metaModelPackage, String simpleName) {
@@ -108,11 +146,11 @@ public final class ClassWriterUtils {
             generatedAnnotation.append(importContext.importType(context.getGeneratedAnnotation().getQualifiedName().toString()));
         }
         generatedAnnotation.append("(value = \"")
-                .append(EntityViewAnnotationProcessor.class.getName());
+            .append(EntityViewAnnotationProcessor.class.getName());
         if (context.addGeneratedDate()) {
             generatedAnnotation.append("\", date = \"")
-                    .append(SIMPLE_DATE_FORMAT.get().format(new Date()))
-                    .append("\")");
+                .append(SIMPLE_DATE_FORMAT.get().format(new Date()))
+                .append("\")");
         } else {
             generatedAnnotation.append("\")");
         }

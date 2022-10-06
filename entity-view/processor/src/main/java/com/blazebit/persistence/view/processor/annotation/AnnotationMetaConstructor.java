@@ -33,9 +33,9 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author Christian Beikov
@@ -44,21 +44,18 @@ import java.util.Map;
 public class AnnotationMetaConstructor implements MetaConstructor {
 
     private final AnnotationMetaEntityView parent;
-    private final ExecutableElement element;
     private final boolean isReal;
     private final boolean hasSelfParameter;
     private final String name;
     private final List<MetaAttribute> parameters;
-    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, String> optionalParameters;
 
-    public AnnotationMetaConstructor(AnnotationMetaEntityView parent) {
+    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeElement> parentOptionalParameters) {
         this.parent = parent;
-        this.element = null;
         this.name = "init";
         this.parameters = Collections.emptyList();
         this.hasSelfParameter = false;
         boolean isReal = false;
-        Map<String, TypeElement> optionalParameters = new HashMap<>();
         TypeMirror superclassMirror = parent.getTypeElement().getSuperclass();
         while (superclassMirror.getKind() != TypeKind.NONE) {
             TypeElement superclass = (TypeElement) ((DeclaredType) superclassMirror).asElement();
@@ -78,12 +75,15 @@ public class AnnotationMetaConstructor implements MetaConstructor {
             superclassMirror = superclass.getSuperclass();
         }
         this.isReal = isReal;
+        Map<String, String> optionalParameters = new TreeMap<>();
+        for (Map.Entry<String, TypeElement> entry : parentOptionalParameters.entrySet()) {
+            optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+        }
         this.optionalParameters = optionalParameters;
     }
 
-    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, ExecutableElement element, MetaAttributeGenerationVisitor visitor, Context context) {
+    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeElement> parentOptionalParameters, Map<String, TypeElement> optionalParameters, ExecutableElement element, MetaAttributeGenerationVisitor visitor, Context context) {
         this.parent = parent;
-        this.element = element;
         this.isReal = true;
         String name = "init";
         for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
@@ -101,7 +101,6 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         List<MetaAttribute> parameters = new ArrayList<>(element.getParameters().size());
         List<? extends VariableElement> elementParameters = element.getParameters();
         boolean hasSelfParameter = false;
-        Map<String, TypeElement> optionalParameters = new HashMap<>();
         for (int i = 0; i < elementParameters.size(); i++) {
             VariableElement parameter = elementParameters.get(i);
             AnnotationMetaAttribute result = parameter.asType().accept(visitor, parameter);
@@ -114,11 +113,36 @@ public class AnnotationMetaConstructor implements MetaConstructor {
                     optionalParameters.put(entry.getKey(), entry.getValue());
                 }
             }
+            result.getOptionalParameters().clear();
             hasSelfParameter = hasSelfParameter || result.isSelf();
         }
         this.parameters = parameters;
         this.hasSelfParameter = hasSelfParameter;
-        this.optionalParameters = optionalParameters;
+        this.optionalParameters = createOrderedOptionalParameters(parentOptionalParameters, context, optionalParameters);
+    }
+
+    private static Map<String, String> createOrderedOptionalParameters(Map<String, TypeElement> entityOptionalParameters, Context context, Map<String, TypeElement> elementOptionalParameters) {
+        Map<String, String> optionalParameters = new TreeMap<>();
+        for (Map.Entry<String, TypeElement> entry : elementOptionalParameters.entrySet()) {
+            if (!context.getOptionalParameters().containsKey(entry.getKey())) {
+                TypeElement typeElement = entityOptionalParameters.get(entry.getKey());
+                if (typeElement == null) {
+                    optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+                } else {
+                    if (context.getTypeUtils().isAssignable(typeElement.asType(), entry.getValue().asType())) {
+                        optionalParameters.put(entry.getKey(), typeElement.getQualifiedName().toString());
+                    } else {
+                        optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+                    }
+                }
+            }
+        }
+        for (Map.Entry<String, TypeElement> entry : entityOptionalParameters.entrySet()) {
+            if (!context.getOptionalParameters().containsKey(entry.getKey())) {
+                optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+            }
+        }
+        return optionalParameters;
     }
 
     @Override
@@ -147,7 +171,7 @@ public class AnnotationMetaConstructor implements MetaConstructor {
     }
 
     @Override
-    public Map<String, TypeElement> getOptionalParameters() {
+    public Map<String, String> getOptionalParameters() {
         return optionalParameters;
     }
 }

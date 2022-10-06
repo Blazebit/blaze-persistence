@@ -99,9 +99,9 @@ public final class TypeUtils {
 
     public static TypeMirror asMemberOf(Context context, DeclaredType containing, Element element) {
         Types typeUtils = context.getTypeUtils();
-        synchronized (typeUtils) {
-            return typeUtils.asMemberOf(containing, element);
-        }
+//        synchronized (typeUtils) {
+        return typeUtils.asMemberOf(containing, element);
+//        }
     }
 
     public static boolean containsAnnotation(Element element, String... annotations) {

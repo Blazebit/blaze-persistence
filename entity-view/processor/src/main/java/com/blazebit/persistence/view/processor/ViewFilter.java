@@ -30,13 +30,11 @@ import java.util.Map;
 public class ViewFilter {
 
     private final String name;
-    private final TypeElement filterProvider;
-    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, String> optionalParameters;
 
     public ViewFilter(String name, TypeElement filterProvider, Context context) {
         this.name = name;
-        this.filterProvider = filterProvider;
-        Map<String, TypeElement> optionalParameters = new HashMap<>();
+        Map<String, String> optionalParameters = new HashMap<>();
         for (Element enclosedElement : filterProvider.getEnclosedElements()) {
             if (enclosedElement instanceof ExecutableElement) {
                 ExecutableElement executableElement = (ExecutableElement) enclosedElement;
@@ -53,11 +51,7 @@ public class ViewFilter {
         return name;
     }
 
-    public TypeElement getFilterProvider() {
-        return filterProvider;
-    }
-
-    public Map<String, TypeElement> getOptionalParameters() {
+    public Map<String, String> getOptionalParameters() {
         return optionalParameters;
     }
 }

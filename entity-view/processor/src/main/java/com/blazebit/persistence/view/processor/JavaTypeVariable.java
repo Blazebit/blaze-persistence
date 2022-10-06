@@ -16,28 +16,26 @@
 
 package com.blazebit.persistence.view.processor;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.8
  */
-public class AttributeFilter {
+public class JavaTypeVariable {
 
     private final String name;
-    private final JavaType filterValueType;
+    private final boolean isExtends;
+    private final JavaType bound;
 
-    public AttributeFilter(String name, TypeElement filterProvider, String attributeType, Context context) {
-        this.name = name;
-        TypeMirror typeMirror = TypeUtils.asMemberOf(context, (DeclaredType) filterProvider.asType(), context.getTypeElement(Constants.ATTRIBUTE_FILTER_PROVIDER).getTypeParameters().get(0));
-
-        if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-            this.filterValueType = new JavaType(attributeType);
+    public JavaTypeVariable(TypeVariable typeVariable) {
+        this.name = typeVariable.toString();
+        this.isExtends = typeVariable.getLowerBound().getKind() == TypeKind.NULL;
+        if (isExtends) {
+            this.bound = new JavaType(typeVariable.getUpperBound());
         } else {
-            this.filterValueType = new JavaType(typeMirror);
+            this.bound = new JavaType(typeVariable.getLowerBound());
         }
     }
 
@@ -45,7 +43,13 @@ public class AttributeFilter {
         return name;
     }
 
-    public JavaType getFilterValueType() {
-        return filterValueType;
+    public void append(ImportContext importContext, StringBuilder sb) {
+        sb.append(name);
+        if (isExtends) {
+            sb.append(" extends ");
+        } else {
+            sb.append(" super ");
+        }
+        bound.append(importContext, sb);
     }
 }

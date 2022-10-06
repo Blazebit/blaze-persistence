@@ -16,32 +16,31 @@
 
 package com.blazebit.persistence.view.processor;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.8
  */
-public interface MetaConstructor {
+public class ForeignPackageMethodParameter {
 
-    Comparator<MetaConstructor> NAME_COMPARATOR = new Comparator<MetaConstructor>() {
-        @Override
-        public int compare(MetaConstructor o1, MetaConstructor o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
+    private final String name;
+    private final String type;
+    private final String realType;
 
-    MetaEntityView getHostingEntity();
+    public ForeignPackageMethodParameter(String name, String type, String realType) {
+        this.name = name;
+        this.type = type;
+        this.realType = realType;
+    }
 
-    String getName();
+    public String getName() {
+        return name;
+    }
 
-    boolean isReal();
+    public String getType() {
+        return type;
+    }
 
-    boolean hasSelfParameter();
-
-    List<MetaAttribute> getParameters();
-
-    Map<String, String> getOptionalParameters();
+    public String getRealType() {
+        return realType;
+    }
 }

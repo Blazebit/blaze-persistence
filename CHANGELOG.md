@@ -15,6 +15,7 @@ Changes that happened in releases
 * Update to the latest Spring Data bug fix versions (1.11.23, 2.0.14, 2.1.21, 2.2.13, 2.3.9, 2.4.15, 2.5.12, 2.6.6) for testing
 * Rename some annotation processor generated fields to avoid collision with application specific entity view attribute names
 * Make sure that singular collection typed attributes are mapped as list in GraphQL
+* Rewrite entity view annotation processor to avoid concurrency issues
 
 ### Backwards-incompatible changes
 

@@ -19,11 +19,11 @@ package com.blazebit.persistence.view.processor.annotation;
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
 import com.blazebit.persistence.view.processor.ImportContext;
+import com.blazebit.persistence.view.processor.MetaEntityView;
 import com.blazebit.persistence.view.processor.MetamodelClassWriter;
 import com.blazebit.persistence.view.processor.TypeUtils;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
 /**
@@ -34,7 +34,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 
     private final String keyType;
     private final String realKeyType;
-    private final TypeElement keySubviewElement;
+    private final MetaEntityView keySubviewElement;
     private final String generatedKeyTypePrefix;
     private final String implementationTypeString;
 
@@ -43,7 +43,17 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         super(parent, element, collectionType, collectionJavaType, elementCollectionJavaType, elementType, realElementType, context);
         this.keyType = keyType;
         this.realKeyType = realKeyType;
-        this.keySubviewElement = getSubview(keyType, context);
+        TypeElement subviewElement = getSubview(keyType, context);
+        if (subviewElement == null) {
+            this.keySubviewElement = null;
+        } else {
+            String subviewFqcn = subviewElement.getQualifiedName().toString();
+            MetaEntityView subviewEntityView = context.getMetaEntityViewMap().get(subviewFqcn);
+            if (subviewEntityView == null) {
+                subviewEntityView = new AnnotationMetaEntityView(subviewElement, context);
+            }
+            this.keySubviewElement = subviewEntityView;
+        }
         if (keySubviewElement != null) {
             this.generatedKeyTypePrefix = TypeUtils.getDerivedTypeName(context.getTypeElement(keyType));
         } else {
@@ -68,7 +78,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
         return keySubviewElement != null;
     }
 
-    public TypeElement getKeySubviewElement() {
+    public MetaEntityView getKeySubviewElement() {
         return keySubviewElement;
     }
 
@@ -80,7 +90,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
     @Override
     public void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext) {
         if (createEmpty) {
-            if (getElement().getKind() == ElementKind.PARAMETER) {
+            if (isParameter()) {
                 sb.append("new ").append(importCollectionType(importContext)).append("<>()");
             } else {
 

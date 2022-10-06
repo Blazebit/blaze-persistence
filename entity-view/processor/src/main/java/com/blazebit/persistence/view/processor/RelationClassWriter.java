@@ -16,37 +16,40 @@
 
 package com.blazebit.persistence.view.processor;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.tools.FileObject;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
-public final class RelationClassWriter {
+public final class RelationClassWriter extends ClassWriter {
 
     public static final String RELATION_CLASS_NAME_SUFFIX = "Relation";
     private static final String NEW_LINE = System.lineSeparator();
 
-    private RelationClassWriter() {
+    public RelationClassWriter(FileObject fileObject, MetaEntityView entity, Context context, Collection<Runnable> mainThreadQueue, LongAdder elapsedTime) {
+        super(fileObject, entity, entity.getRelationImportContext(), context, mainThreadQueue, elapsedTime);
     }
 
-    public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.setLength(0);
-        generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + RELATION_CLASS_NAME_SUFFIX, entity.getRelationImportContext(), context, entity.getOriginatingElements());
+    public static void writeFile(MetaEntityView entity, Context context, ExecutorService executorService, Collection<Runnable> mainThreadQueue, LongAdder relationTime) {
+        FileObject fileObject = ClassWriter.createFile(entity.getPackageName(), entity.getSimpleName() + RELATION_CLASS_NAME_SUFFIX, context, entity.getOriginatingElements());
+        if (fileObject == null) {
+            return;
+        }
+        executorService.submit(new RelationClassWriter(fileObject, entity, context, mainThreadQueue, relationTime));
     }
 
-    private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
+    @Override
+    public void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
         if (context.addGeneratedAnnotation()) {
-            ClassWriterUtils.writeGeneratedAnnotation(sb, entity.getRelationImportContext(), context);
+            ClassWriter.writeGeneratedAnnotation(sb, entity.getRelationImportContext(), context);
             sb.append(NEW_LINE);
         }
         if (context.isAddSuppressWarningsAnnotation()) {
-            sb.append(ClassWriterUtils.writeSuppressWarnings());
+            sb.append(ClassWriter.writeSuppressWarnings());
             sb.append(NEW_LINE);
         }
 
@@ -131,26 +134,7 @@ public final class RelationClassWriter {
                 for (AttributeFilter filter : metaMember.getFilters()) {
                     sb.append(NEW_LINE);
                     sb.append("    public ").append(entity.relationImportType(Constants.ATTRIBUTE_FILTER_MAPPING_PATH)).append("<T, ");
-                    if (filter.getFilterValueType().getKind() == TypeKind.TYPEVAR) {
-                        sb.append(entity.relationImportType(metaMember.getDeclaredJavaType()));
-                    } else {
-                        DeclaredType filterValueType = (DeclaredType) filter.getFilterValueType();
-                        TypeElement filterValueTypeElement = (TypeElement) filterValueType.asElement();
-                        sb.append(entity.relationImportType(filterValueTypeElement.getQualifiedName().toString()));
-                        if (!filterValueType.getTypeArguments().isEmpty()) {
-                            sb.append("<");
-                            for (TypeMirror typeArgument : filterValueType.getTypeArguments()) {
-                                if (typeArgument.getKind() == TypeKind.TYPEVAR) {
-                                    sb.append(entity.relationImportType(metaMember.getDeclaredJavaType()));
-                                } else {
-                                    sb.append(entity.relationImportType(typeArgument.toString()));
-                                }
-                                sb.append(", ");
-                            }
-                            sb.setLength(sb.length() - 2);
-                            sb.append(">");
-                        }
-                    }
+                    filter.getFilterValueType().append(entity.getRelationImportContext(), sb);
                     sb.append("> ").append(metaMember.getPropertyName()).append('_');
                     if (filter.getName().isEmpty()) {
                         sb.append("filter");

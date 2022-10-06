@@ -22,6 +22,18 @@ package com.blazebit.persistence.view.processor;
  */
 public interface ImportContext {
 
+    ImportContext NOOP = new ImportContext() {
+        @Override
+        public String importType(String fqcn) {
+            return fqcn;
+        }
+
+        @Override
+        public String generateImports() {
+            return "";
+        }
+    };
+
     String importType(String fqcn);
 
     String generateImports();

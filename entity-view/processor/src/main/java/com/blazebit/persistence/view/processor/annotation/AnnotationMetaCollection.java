@@ -25,7 +25,6 @@ import com.blazebit.persistence.view.processor.TypeUtils;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import java.util.Comparator;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class AnnotationMetaCollection extends AnnotationMetaAttribute {
     @Override
     public void appendDefaultValue(StringBuilder sb, boolean createEmpty, boolean createConstructor, ImportContext importContext) {
         if (createEmpty) {
-            if (getElement().getKind() == ElementKind.PARAMETER) {
+            if (isParameter()) {
                 sb.append("new ").append(importCollectionType(importContext)).append("<>()");
             } else {
                 sb.append("(").append(getImplementationTypeString()).append(") (").append(collectionJavaType).append("<?>) ");

@@ -18,42 +18,39 @@ package com.blazebit.persistence.view.processor;
 
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaCollection;
 import com.blazebit.persistence.view.processor.annotation.AnnotationMetaVersionAttribute;
+import com.blazebit.persistence.view.processor.serialization.FieldSerializationField;
+import com.blazebit.persistence.view.processor.serialization.SerializationField;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.ObjectStreamConstants;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
-public final class ImplementationClassWriter {
+public final class ImplementationClassWriter extends ClassWriter {
 
     public static final String IMPL_CLASS_NAME_SUFFIX = "Impl";
     // The following two must be aligned with com.blazebit.persistence.view.SerializableEntityViewManager
@@ -63,22 +60,26 @@ public final class ImplementationClassWriter {
     private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     private static final String NEW_LINE = System.lineSeparator();
 
-    private ImplementationClassWriter() {
+    private ImplementationClassWriter(FileObject fileObject, MetaEntityView entity, Context context, Collection<Runnable> mainThreadQueue, LongAdder elapsedTime) {
+        super(fileObject, entity, entity.getImplementationImportContext(), context, mainThreadQueue, elapsedTime);
     }
 
-    public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.setLength(0);
-        generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX, entity.getImplementationImportContext(), context, entity.getOriginatingElements());
+    public static void writeFile(MetaEntityView entity, Context context, ExecutorService executorService, Collection<Runnable> mainThreadQueue, LongAdder implementationTime) {
+        FileObject fileObject = ClassWriter.createFile(entity.getPackageName(), entity.getSimpleName() + IMPL_CLASS_NAME_SUFFIX, context, entity.getOriginatingElements());
+        if (fileObject == null) {
+            return;
+        }
+        executorService.submit(new ImplementationClassWriter(fileObject, entity, context, mainThreadQueue, implementationTime));
     }
 
-    private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
+    @Override
+    public void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
         if (context.addGeneratedAnnotation()) {
-            ClassWriterUtils.writeGeneratedAnnotation(sb, entity.getImplementationImportContext(), context);
+            ClassWriter.writeGeneratedAnnotation(sb, entity.getImplementationImportContext(), context);
             sb.append(NEW_LINE);
         }
         if (context.isAddSuppressWarningsAnnotation()) {
-            sb.append(ClassWriterUtils.writeSuppressWarnings());
+            sb.append(ClassWriter.writeSuppressWarnings());
             sb.append(NEW_LINE);
         }
 
@@ -118,10 +119,10 @@ public final class ImplementationClassWriter {
 
         sb.append(NEW_LINE);
 
-        for (ExecutableElement specialMember : entity.getSpecialMembers()) {
-            if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnType().toString())) {
+        for (EntityViewSpecialMemberMethod specialMember : entity.getSpecialMembers()) {
+            if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnTypeName())) {
                 sb.append("    @Override").append(NEW_LINE);
-                sb.append("    public ").append(entity.implementationImportType(specialMember.getReturnType().toString())).append(" ").append(specialMember.getSimpleName().toString()).append("() {").append(NEW_LINE);
+                sb.append("    public ").append(entity.implementationImportType(specialMember.getReturnTypeName())).append(" ").append(specialMember.getName()).append("() {").append(NEW_LINE);
                 sb.append("        return ").append(SERIALIZABLE_EVM_FIELD_NAME).append(";").append(NEW_LINE);
                 sb.append("    }").append(NEW_LINE);
                 sb.append(NEW_LINE);
@@ -299,9 +300,9 @@ public final class ImplementationClassWriter {
             sb.append("    public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject) {").append(NEW_LINE);
             sb.append("        switch (attributeIndex) {").append(NEW_LINE);
             for (MetaAttribute member : members) {
-                if (member.getDirtyStateIndex() != -1 && member.getSetter() != null) {
+                if (member.getDirtyStateIndex() != -1 && member.getSetterName() != null) {
                     sb.append("            case ").append(member.getDirtyStateIndex()).append(": ");
-                    sb.append(member.getSetter().getSimpleName().toString()).append('(');
+                    sb.append(member.getSetterName()).append('(');
                     if (member.isPrimitive()) {
                         appendUnwrap(sb, member.getDeclaredJavaType(), "newObject");
                     } else {
@@ -437,20 +438,20 @@ public final class ImplementationClassWriter {
 
         sb.append("    private static class ").append(serializableClassSimpleName);
 
-        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
+        List<JavaTypeVariable> typeArguments = entity.getTypeVariables();
         if (!typeArguments.isEmpty()) {
             sb.append("<");
-            printTypeVariable(sb, entity, typeArguments.get(0));
+            typeArguments.get(0).append(entity.getImplementationImportContext(), sb);
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                printTypeVariable(sb, entity, typeArguments.get(i));
+                typeArguments.get(i).append(entity.getImplementationImportContext(), sb);
             }
             sb.append(">");
         }
-        if (entity.getTypeElement().getKind() == ElementKind.CLASS) {
+        if (entity.getElementKind() == ElementKind.CLASS) {
             sb.append(" extends ").append(entity.implementationImportType(entity.getBaseSuperclass()));
         } else {
-            sb.append(" implements ").append(entity.implementationImportType(entity.getTypeElement().getQualifiedName().toString()));
+            sb.append(" implements ").append(entity.implementationImportType(entity.getQualifiedName()));
         }
 
         if (typeArguments.isEmpty()) {
@@ -473,14 +474,14 @@ public final class ImplementationClassWriter {
                 }
                 sb.append(", ");
             }
-            sb.append(typeArguments.get(0));
+            sb.append(typeArguments.get(0).getName());
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                sb.append(typeArguments.get(i));
+                sb.append(typeArguments.get(i).getName());
             }
             sb.append(">");
         }
-        if (entity.getTypeElement().getKind() == ElementKind.CLASS) {
+        if (entity.getElementKind() == ElementKind.CLASS) {
             sb.append(" implements ");
         } else {
             sb.append(", ");
@@ -524,7 +525,7 @@ public final class ImplementationClassWriter {
             sb.append(member.getImplementationTypeString());
 
             sb.append(' ')
-                    .append(member.getElement().getSimpleName().toString())
+                    .append(member.getGetterName())
                     .append("() {")
                     .append(NEW_LINE)
                     .append("            return ")
@@ -534,11 +535,11 @@ public final class ImplementationClassWriter {
                     .append("        }")
                     .append(NEW_LINE);
 
-            if (member.getSetter() != null) {
+            if (member.getSetterName() != null) {
                 sb.append("        @Override")
                         .append(NEW_LINE)
                         .append("        public void ")
-                        .append(member.getSetter().getSimpleName().toString())
+                        .append(member.getSetterName())
                         .append('(');
 
                 sb.append(member.getImplementationTypeString());
@@ -558,10 +559,10 @@ public final class ImplementationClassWriter {
             }
         }
 
-        for (ExecutableElement specialMember : entity.getSpecialMembers()) {
-            if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnType().toString())) {
+        for (EntityViewSpecialMemberMethod specialMember : entity.getSpecialMembers()) {
+            if (Constants.ENTITY_VIEW_MANAGER.equals(specialMember.getReturnTypeName())) {
                 sb.append("        @Override").append(NEW_LINE);
-                sb.append("        public ").append(entity.implementationImportType(specialMember.getReturnType().toString())).append(" ").append(specialMember.getSimpleName().toString()).append("() {").append(NEW_LINE);
+                sb.append("        public ").append(entity.implementationImportType(specialMember.getReturnTypeName())).append(" ").append(specialMember.getName()).append("() {").append(NEW_LINE);
                 sb.append("            return ").append(SERIALIZABLE_EVM_FIELD_NAME).append(";").append(NEW_LINE);
                 sb.append("        }").append(NEW_LINE);
                 sb.append(NEW_LINE);
@@ -605,13 +606,14 @@ public final class ImplementationClassWriter {
             List<List<SerializationField>> serializationFieldHierarchy = new ArrayList<>();
             List<SerializationField> serializationFields = new ArrayList<>();
             for (MetaAttribute member : entity.getMembers()) {
-                serializationFields.add(new MetaSerializationField(member));
+                serializationFields.add(member.getSerializationField());
             }
             serializationFieldHierarchy.add(serializationFields);
             writeFields(serializationFields, oos);
             oos.writeByte(ObjectStreamConstants.TC_ENDBLOCKDATA);
 
-            // TODO: foreign package supertypes?
+            // For the following to be safe, we trust that the foreign package checks in AnnotationMetaEntityView
+            // initialize all super classes elements properly
             TypeElement superclass = entity.getTypeElement();
             TypeMirror serializableTypeMirror = context.getTypeElement(Serializable.class.getName()).asType();
             while (superclass.getKind() == ElementKind.CLASS && !superclass.getQualifiedName().toString().equals("java.lang.Object")) {
@@ -637,7 +639,7 @@ public final class ImplementationClassWriter {
                 if (context.getTypeUtils().isAssignable(superclass.asType(), serializableTypeMirror)) {
                     // Serial version UID of the class
                     if (serialVersionUID == null) {
-                        oos.writeLong(computeDefaultSUID(superclass, fields));
+                        oos.writeLong(SerializationField.computeDefaultSUID(superclass, fields));
                     } else {
                         oos.writeLong(serialVersionUID);
                     }
@@ -660,7 +662,7 @@ public final class ImplementationClassWriter {
             for (List<SerializationField> fields : serializationFieldHierarchy) {
                 for (SerializationField serializationField : fields) {
                     if (serializationField.isPrimitive()) {
-                        switch (serializationField.getTypeMirror().getKind()) {
+                        switch (serializationField.getTypeKind()) {
                             case INT:
                                 oos.writeInt(0);
                                 break;
@@ -689,7 +691,7 @@ public final class ImplementationClassWriter {
                                 oos.writeByte(ObjectStreamConstants.TC_NULL);
                                 break;
                             default:
-                                throw new UnsupportedOperationException("Unsupported primitive type: " + serializationField.getTypeMirror().toString());
+                                throw new UnsupportedOperationException("Unsupported primitive type: " + serializationField.getTypeCode());
                         }
                     } else {
                         oos.writeByte(ObjectStreamConstants.TC_NULL);
@@ -717,447 +719,6 @@ public final class ImplementationClassWriter {
         }
     }
 
-
-    private static long computeDefaultSUID(TypeElement clazz, List<SerializationField> fields) {
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            DataOutputStream dout = new DataOutputStream(bout);
-
-            dout.writeUTF(clazz.getQualifiedName().toString());
-            Set<Modifier> modifiers = clazz.getModifiers();
-
-            int classMods = 0;
-            if (modifiers.contains(Modifier.PUBLIC)) {
-                classMods = classMods | java.lang.reflect.Modifier.PUBLIC;
-            }
-            if (modifiers.contains(Modifier.FINAL)) {
-                classMods = classMods | java.lang.reflect.Modifier.FINAL;
-            }
-            if (clazz.getKind() == ElementKind.INTERFACE) {
-                classMods = classMods | java.lang.reflect.Modifier.INTERFACE;
-            }
-            if (modifiers.contains(Modifier.ABSTRACT)) {
-                classMods = classMods | java.lang.reflect.Modifier.ABSTRACT;
-            }
-
-            List<ExecutableElement> methods = new ArrayList<>();
-            List<ExecutableElement> cons = new ArrayList<>();
-            boolean hasStaticInitializer = false;
-            for (Element enclosedElement : clazz.getEnclosedElements()) {
-                if (enclosedElement.getKind() == ElementKind.CONSTRUCTOR) {
-                    cons.add((ExecutableElement) enclosedElement);
-                } else if (enclosedElement.getKind() == ElementKind.METHOD) {
-                    methods.add((ExecutableElement) enclosedElement);
-                } else if (enclosedElement.getKind() == ElementKind.STATIC_INIT) {
-                    hasStaticInitializer = true;
-                }
-            }
-
-
-            /*
-             * compensate for javac bug in which ABSTRACT bit was set for an
-             * interface only if the interface declared methods
-             */
-            if ((classMods & java.lang.reflect.Modifier.INTERFACE) != 0) {
-                classMods = (methods.size() > 0) ?
-                        (classMods | java.lang.reflect.Modifier.ABSTRACT) :
-                        (classMods & ~java.lang.reflect.Modifier.ABSTRACT);
-            }
-            dout.writeInt(classMods);
-
-            /*
-             * compensate for change in 1.2FCS in which
-             * Class.getInterfaces() was modified to return Cloneable and
-             * Serializable for array classes.
-             */
-            List<? extends TypeMirror> interfaces = clazz.getInterfaces();
-            String[] ifaceNames = new String[interfaces.size()];
-            for (int i = 0; i < interfaces.size(); i++) {
-                ifaceNames[i] = ((TypeElement) ((DeclaredType) interfaces.get(i)).asElement()).getQualifiedName().toString();
-            }
-            Arrays.sort(ifaceNames);
-            for (int i = 0; i < ifaceNames.length; i++) {
-                dout.writeUTF(ifaceNames[i]);
-            }
-
-            MemberSignature[] fieldSigs = new MemberSignature[fields.size()];
-            for (int i = 0; i < fields.size(); i++) {
-                fieldSigs[i] = new MemberSignature((VariableElement) fields.get(i).getElement());
-            }
-            Arrays.sort(fieldSigs, new Comparator<MemberSignature>() {
-                public int compare(MemberSignature ms1, MemberSignature ms2) {
-                    return ms1.name.compareTo(ms2.name);
-                }
-            });
-            for (int i = 0; i < fieldSigs.length; i++) {
-                MemberSignature sig = fieldSigs[i];
-                Set<Modifier> fieldModifiers = sig.member.getModifiers();
-                int mods = 0;
-                if (fieldModifiers.contains(Modifier.PUBLIC)) {
-                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
-                }
-                if (fieldModifiers.contains(Modifier.PRIVATE)) {
-                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
-                }
-                if (fieldModifiers.contains(Modifier.PROTECTED)) {
-                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
-                }
-                if (fieldModifiers.contains(Modifier.STATIC)) {
-                    mods = mods | java.lang.reflect.Modifier.STATIC;
-                }
-                if (fieldModifiers.contains(Modifier.FINAL)) {
-                    mods = mods | java.lang.reflect.Modifier.FINAL;
-                }
-                if (fieldModifiers.contains(Modifier.VOLATILE)) {
-                    mods = mods | java.lang.reflect.Modifier.VOLATILE;
-                }
-                if (fieldModifiers.contains(Modifier.TRANSIENT)) {
-                    mods = mods | java.lang.reflect.Modifier.TRANSIENT;
-                }
-                if (((mods & java.lang.reflect.Modifier.PRIVATE) == 0) ||
-                        ((mods & (java.lang.reflect.Modifier.STATIC | java.lang.reflect.Modifier.TRANSIENT)) == 0)) {
-                    dout.writeUTF(sig.name);
-                    dout.writeInt(mods);
-                    dout.writeUTF(sig.signature);
-                }
-            }
-
-            if (hasStaticInitializer) {
-                dout.writeUTF("<clinit>");
-                dout.writeInt(java.lang.reflect.Modifier.STATIC);
-                dout.writeUTF("()V");
-            }
-
-            MemberSignature[] consSigs = new MemberSignature[cons.size()];
-            for (int i = 0; i < cons.size(); i++) {
-                consSigs[i] = new MemberSignature(cons.get(i));
-            }
-            Arrays.sort(consSigs, new Comparator<MemberSignature>() {
-                public int compare(MemberSignature ms1, MemberSignature ms2) {
-                    return ms1.signature.compareTo(ms2.signature);
-                }
-            });
-            for (int i = 0; i < consSigs.length; i++) {
-                MemberSignature sig = consSigs[i];
-                Set<Modifier> constructorModifiers = sig.member.getModifiers();
-                int mods = 0;
-                if (constructorModifiers.contains(Modifier.PUBLIC)) {
-                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
-                }
-                if (constructorModifiers.contains(Modifier.PRIVATE)) {
-                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
-                }
-                if (constructorModifiers.contains(Modifier.PROTECTED)) {
-                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
-                }
-                if (constructorModifiers.contains(Modifier.STATIC)) {
-                    mods = mods | java.lang.reflect.Modifier.STATIC;
-                }
-                if (constructorModifiers.contains(Modifier.FINAL)) {
-                    mods = mods | java.lang.reflect.Modifier.FINAL;
-                }
-                if (constructorModifiers.contains(Modifier.SYNCHRONIZED)) {
-                    mods = mods | java.lang.reflect.Modifier.SYNCHRONIZED;
-                }
-                if (constructorModifiers.contains(Modifier.NATIVE)) {
-                    mods = mods | java.lang.reflect.Modifier.NATIVE;
-                }
-                if (constructorModifiers.contains(Modifier.ABSTRACT)) {
-                    mods = mods | java.lang.reflect.Modifier.ABSTRACT;
-                }
-                if (constructorModifiers.contains(Modifier.STRICTFP)) {
-                    mods = mods | java.lang.reflect.Modifier.STRICT;
-                }
-                if ((mods & java.lang.reflect.Modifier.PRIVATE) == 0) {
-                    dout.writeUTF("<init>");
-                    dout.writeInt(mods);
-                    dout.writeUTF(sig.signature.replace('/', '.'));
-                }
-            }
-
-            MemberSignature[] methSigs = new MemberSignature[methods.size()];
-            for (int i = 0; i < methods.size(); i++) {
-                methSigs[i] = new MemberSignature(methods.get(i));
-            }
-            Arrays.sort(methSigs, new Comparator<MemberSignature>() {
-                public int compare(MemberSignature ms1, MemberSignature ms2) {
-                    int comp = ms1.name.compareTo(ms2.name);
-                    if (comp == 0) {
-                        comp = ms1.signature.compareTo(ms2.signature);
-                    }
-                    return comp;
-                }
-            });
-            for (int i = 0; i < methSigs.length; i++) {
-                MemberSignature sig = methSigs[i];
-                Set<Modifier> methodModifiers = sig.member.getModifiers();
-                int mods = 0;
-                if (methodModifiers.contains(Modifier.PUBLIC)) {
-                    mods = mods | java.lang.reflect.Modifier.PUBLIC;
-                }
-                if (methodModifiers.contains(Modifier.PRIVATE)) {
-                    mods = mods | java.lang.reflect.Modifier.PRIVATE;
-                }
-                if (methodModifiers.contains(Modifier.PROTECTED)) {
-                    mods = mods | java.lang.reflect.Modifier.PROTECTED;
-                }
-                if (methodModifiers.contains(Modifier.STATIC)) {
-                    mods = mods | java.lang.reflect.Modifier.STATIC;
-                }
-                if (methodModifiers.contains(Modifier.FINAL)) {
-                    mods = mods | java.lang.reflect.Modifier.FINAL;
-                }
-                if (methodModifiers.contains(Modifier.SYNCHRONIZED)) {
-                    mods = mods | java.lang.reflect.Modifier.SYNCHRONIZED;
-                }
-                if (methodModifiers.contains(Modifier.NATIVE)) {
-                    mods = mods | java.lang.reflect.Modifier.NATIVE;
-                }
-                if (methodModifiers.contains(Modifier.ABSTRACT)) {
-                    mods = mods | java.lang.reflect.Modifier.ABSTRACT;
-                }
-                if (methodModifiers.contains(Modifier.STRICTFP)) {
-                    mods = mods | java.lang.reflect.Modifier.STRICT;
-                }
-                if ((mods & java.lang.reflect.Modifier.PRIVATE) == 0) {
-                    dout.writeUTF(sig.name);
-                    dout.writeInt(mods);
-                    dout.writeUTF(sig.signature.replace('/', '.'));
-                }
-            }
-
-            dout.flush();
-
-            MessageDigest md = MessageDigest.getInstance("SHA");
-            byte[] hashBytes = md.digest(bout.toByteArray());
-            long hash = 0;
-            for (int i = Math.min(hashBytes.length, 8) - 1; i >= 0; i--) {
-                hash = (hash << 8) | (hashBytes[i] & 0xFF);
-            }
-            return hash;
-        } catch (IOException ex) {
-            throw new InternalError(ex);
-        } catch (NoSuchAlgorithmException ex) {
-            throw new SecurityException(ex.getMessage());
-        }
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.5.0
-     */
-    private static class MemberSignature {
-
-        public final Element member;
-        public final String name;
-        public final String signature;
-
-        public MemberSignature(VariableElement field) {
-            member = field;
-            name = field.getSimpleName().toString();
-            signature = getClassSignature(field.asType());
-        }
-
-        public MemberSignature(ExecutableElement meth) {
-            member = meth;
-            name = meth.getSimpleName().toString();
-            signature = getMethodSignature(meth);
-        }
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.5.0
-     */
-    private abstract static class SerializationField implements Comparable<SerializationField> {
-
-        public abstract Element getElement();
-
-        public abstract String getName();
-
-        public abstract TypeMirror getTypeMirror();
-
-        public abstract char getTypeCode();
-
-        public abstract String getTypeString();
-
-        public abstract boolean isPrimitive();
-
-        @Override
-        public int compareTo(SerializationField other) {
-            boolean isPrim = isPrimitive();
-            if (isPrim != other.isPrimitive()) {
-                return isPrim ? -1 : 1;
-            }
-            return getName().compareTo(other.getName());
-        }
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.5.0
-     */
-    private static class MetaSerializationField extends SerializationField {
-
-        private final MetaAttribute attribute;
-        private final String signature;
-
-        public MetaSerializationField(MetaAttribute attribute) {
-            this.attribute = attribute;
-            this.signature = getClassSignature(attribute.getTypeMirror());
-        }
-
-        @Override
-        public String getName() {
-            return attribute.getPropertyName();
-        }
-
-        @Override
-        public Element getElement() {
-            return attribute.getElement();
-        }
-
-        @Override
-        public TypeMirror getTypeMirror() {
-            return attribute.getTypeMirror();
-        }
-
-        @Override
-        public char getTypeCode() {
-            return signature.charAt(0);
-        }
-
-        @Override
-        public String getTypeString() {
-            return isPrimitive() ? null : signature;
-        }
-
-        @Override
-        public boolean isPrimitive() {
-            return attribute.isPrimitive();
-        }
-    }
-
-    /**
-     * @author Christian Beikov
-     * @since 1.5.0
-     */
-    private static class FieldSerializationField extends SerializationField {
-
-        private final VariableElement field;
-        private final String signature;
-
-        public FieldSerializationField(VariableElement field) {
-            this.field = field;
-            this.signature = getClassSignature(field.asType());
-        }
-
-        @Override
-        public String getName() {
-            return field.getSimpleName().toString();
-        }
-
-        @Override
-        public Element getElement() {
-            return field;
-        }
-
-        @Override
-        public TypeMirror getTypeMirror() {
-            return field.asType();
-        }
-
-        @Override
-        public char getTypeCode() {
-            return signature.charAt(0);
-        }
-
-        @Override
-        public String getTypeString() {
-            return isPrimitive() ? null : signature;
-        }
-
-        @Override
-        public boolean isPrimitive() {
-            return field.asType().getKind().isPrimitive();
-        }
-    }
-
-    private static String getMethodSignature(ExecutableElement meth) {
-        StringBuilder sb = new StringBuilder();
-        sb.append('(');
-        for (VariableElement parameter : meth.getParameters()) {
-            sb.append(getClassSignature(parameter.asType()));
-        }
-        sb.append(')');
-        sb.append(getClassSignature(meth.getReturnType()));
-        return sb.toString();
-    }
-
-    private static String getClassSignature(TypeMirror typeMirror) {
-        StringBuilder sb = new StringBuilder();
-        while (typeMirror.getKind() == TypeKind.ARRAY) {
-            sb.append('[');
-            typeMirror = ((ArrayType) typeMirror).getComponentType();
-        }
-        if (typeMirror.getKind().isPrimitive()) {
-            switch (typeMirror.getKind()) {
-                case INT:
-                    sb.append('I');
-                    break;
-                case BYTE:
-                    sb.append('B');
-                    break;
-                case LONG:
-                    sb.append('J');
-                    break;
-                case FLOAT:
-                    sb.append('F');
-                    break;
-                case DOUBLE:
-                    sb.append('D');
-                    break;
-                case SHORT:
-                    sb.append('S');
-                    break;
-                case CHAR:
-                    sb.append('C');
-                    break;
-                case BOOLEAN:
-                    sb.append('Z');
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported primitive type: " + typeMirror.toString());
-            }
-        } else {
-            if (typeMirror.getKind() == TypeKind.TYPEVAR) {
-                TypeVariable typeVariable = (TypeVariable) typeMirror;
-                if (typeVariable.getLowerBound().getKind() == TypeKind.NULL) {
-                    typeMirror = typeVariable.getUpperBound();
-                } else {
-                    typeMirror = typeVariable.getLowerBound();
-                }
-            }
-            if (typeMirror.getKind() == TypeKind.VOID) {
-                sb.append('V');
-            } else {
-                String className = typeMirror.toString();
-                sb.ensureCapacity(sb.length() + className.length() + 2);
-                sb.append('L');
-                for (int i = 0; i < className.length(); i++) {
-                    final char c = className.charAt(i);
-                    if (c == '.') {
-                        sb.append('/');
-                    } else {
-                        sb.append(c);
-                    }
-                }
-                sb.append(';');
-            }
-        }
-        return sb.toString();
-    }
-
     private static void appendUnwrap(StringBuilder sb, String type, String field) {
         if ("long".equals(type)) {
             sb.append("((Long) ").append(field).append(").longValue()");
@@ -1181,7 +742,7 @@ public final class ImplementationClassWriter {
     }
 
     private static void appendEqualsHashCodeAndToString(StringBuilder sb, MetaEntityView entity, Context context, Collection<MetaAttribute> members, String entityViewClassName) {
-        boolean generateEqualsHashCode = !hasCustom(context, entity.getTypeElement(), "equals", "java.lang.Object") && !hasCustom(context, entity.getTypeElement(), "hashCode");
+        boolean generateEqualsHashCode = !entity.hasCustomEqualsOrHashCodeMethod();
         if (generateEqualsHashCode) {
             sb.append("    @Override").append(NEW_LINE);
             sb.append("    public boolean equals(Object obj) {").append(NEW_LINE);
@@ -1209,9 +770,9 @@ public final class ImplementationClassWriter {
             if (!baseType.equals(entityViewClassName)) {
                 boolean needsForeignPackageClass = false;
                 for (MetaAttribute equalityMember : equalityMembers) {
-                    Set<Modifier> modifiers = equalityMember.getElement().getModifiers();
+                    Set<Modifier> modifiers = equalityMember.getGetterModifiers();
                     boolean containsProtected = modifiers.contains(Modifier.PROTECTED);
-                    if (!modifiers.contains(Modifier.PUBLIC) && !containsProtected || containsProtected && !TypeUtils.getPackageName(context, entity.getTypeElement()).equals(TypeUtils.getPackageName(context, equalityMember.getElement()))) {
+                    if (!modifiers.contains(Modifier.PUBLIC) && !containsProtected || containsProtected && !entity.getPackageName().equals(equalityMember.getGetterPackageName())) {
                         needsForeignPackageClass = true;
                     }
                 }
@@ -1224,9 +785,9 @@ public final class ImplementationClassWriter {
             for (MetaAttribute member : equalityMembers) {
                 if (!(member instanceof AnnotationMetaVersionAttribute)) {
                     if (member.isPrimitive()) {
-                        sb.append("            if (this.").append(member.getPropertyName()).append(" != other.").append(member.getElement().toString()).append(") {").append(NEW_LINE);
+                        sb.append("            if (this.").append(member.getPropertyName()).append(" != other.").append(member.getGetterName()).append("()) {").append(NEW_LINE);
                     } else {
-                        sb.append("            if (!").append(entity.implementationImportType(Objects.class.getName())).append(".equals(this.").append(member.getPropertyName()).append(", other.").append(member.getElement().toString()).append(")) {").append(NEW_LINE);
+                        sb.append("            if (!").append(entity.implementationImportType(Objects.class.getName())).append(".equals(this.").append(member.getPropertyName()).append(", other.").append(member.getGetterName()).append("())) {").append(NEW_LINE);
                     }
 
                     sb.append("                return false;").append(NEW_LINE);
@@ -1274,7 +835,7 @@ public final class ImplementationClassWriter {
             sb.append("        return hash;").append(NEW_LINE);
             sb.append("    }").append(NEW_LINE);
         }
-        boolean generateToString = !hasCustom(context, entity.getTypeElement(), "toString");
+        boolean generateToString = !entity.hasCustomToStringMethod();
         if (generateToString) {
             sb.append("    @Override").append(NEW_LINE);
             sb.append("    public String toString() {").append(NEW_LINE);
@@ -1310,54 +871,21 @@ public final class ImplementationClassWriter {
         }
     }
 
-    private static boolean hasCustom(Context context, TypeElement typeElement, String methodName, String... argumentTypes) {
-        if (typeElement.getQualifiedName().toString().equals("java.lang.Object")) {
-            return false;
-        }
-        OUTER: for (Element enclosedElement : typeElement.getEnclosedElements()) {
-            if (enclosedElement instanceof ExecutableElement && methodName.equals(enclosedElement.getSimpleName().toString())) {
-                ExecutableElement executableElement = (ExecutableElement) enclosedElement;
-                List<? extends VariableElement> parameters = executableElement.getParameters();
-                if (argumentTypes.length == parameters.size()) {
-                    for (int i = 0; i < argumentTypes.length; i++) {
-                        String argumentType = argumentTypes[i];
-                        if (!argumentType.equals(parameters.get(i).asType().toString())) {
-                            continue OUTER;
-                        }
-                    }
-
-                    return true;
-                }
-            }
-        }
-
-        if (typeElement.getSuperclass().getKind() == TypeKind.NONE) {
-            return false;
-        }
-        TypeElement superClass;
-        if (typeElement.getSuperclass() instanceof DeclaredType) {
-            superClass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
-        } else {
-            superClass = context.getTypeElement(((TypeElement) typeElement.getSuperclass()).getQualifiedName());
-        }
-        return hasCustom(context, superClass, methodName, argumentTypes);
-    }
-
     private static void printClassDeclaration(StringBuilder sb, MetaEntityView entity, Context context) {
         sb.append("public class ").append(entity.getSimpleName()).append(IMPL_CLASS_NAME_SUFFIX);
 
-        List<TypeVariable> typeArguments = (List<TypeVariable>) ((DeclaredType) entity.getTypeElement().asType()).getTypeArguments();
+        List<JavaTypeVariable> typeArguments = entity.getTypeVariables();
         if (!typeArguments.isEmpty()) {
             sb.append("<");
-            printTypeVariable(sb, entity, typeArguments.get(0));
+            typeArguments.get(0).append(entity.getImplementationImportContext(), sb);
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                printTypeVariable(sb, entity, typeArguments.get(i));
+                typeArguments.get(i).append(entity.getImplementationImportContext(), sb);
             }
             sb.append(">");
         }
 
-        if (entity.getTypeElement().getKind() == ElementKind.INTERFACE) {
+        if (entity.getElementKind() == ElementKind.INTERFACE) {
             sb.append(" implements ");
         } else {
             sb.append(" extends ");
@@ -1384,15 +912,15 @@ public final class ImplementationClassWriter {
                 }
                 sb.append(", ");
             }
-            sb.append(typeArguments.get(0));
+            sb.append(typeArguments.get(0).getName());
             for (int i = 1; i < typeArguments.size(); i++) {
                 sb.append(", ");
-                sb.append(typeArguments.get(i));
+                sb.append(typeArguments.get(i).getName());
             }
             sb.append(">");
         }
 
-        if (entity.getTypeElement().getKind() == ElementKind.INTERFACE) {
+        if (entity.getElementKind() == ElementKind.INTERFACE) {
             sb.append(", ");
         } else {
             sb.append(" implements ");
@@ -1404,15 +932,6 @@ public final class ImplementationClassWriter {
 
         sb.append(" {");
         sb.append(NEW_LINE);
-    }
-
-    private static void printTypeVariable(StringBuilder sb, MetaEntityView entity, TypeVariable t) {
-        sb.append(t);
-        if (t.getLowerBound().getKind() == TypeKind.NULL) {
-            sb.append(" extends ").append(entity.implementationImportType(t.getUpperBound().toString()));
-        } else {
-            sb.append(" super ").append(entity.implementationImportType(t.getLowerBound().toString()));
-        }
     }
 
     private static void printConstructors(StringBuilder sb, MetaEntityView entity, Context context) {
@@ -1639,7 +1158,7 @@ public final class ImplementationClassWriter {
                 }
             }
         }
-        boolean possiblyInitialized = constructor.isReal() && member.getSetter() != null;
+        boolean possiblyInitialized = constructor.isReal() && member.getSetterName() != null;
         if (possiblyInitialized) {
             MetaEntityView entity = member.getHostingEntity();
             sb.append("        if (this.").append(member.getPropertyName()).append(" == ");
@@ -1746,19 +1265,18 @@ public final class ImplementationClassWriter {
     }
 
     private static void printCreateConstructor(StringBuilder sb, MetaEntityView entity, Context context) {
+        EntityViewLifecycleMethod postCreate = entity.getPostCreateForReflection();
         boolean postCreateReflection = false;
-        if (entity.getPostCreate() != null) {
-            TypeElement declaringType = (TypeElement) entity.getPostCreate().getEnclosingElement();
-            Set<Modifier> modifiers = entity.getPostCreate().getModifiers();
-            if (!modifiers.contains(Modifier.PUBLIC) && !modifiers.contains(Modifier.PROTECTED)) {
-                postCreateReflection = true;
+        if (postCreate != null) {
+            postCreateReflection = postCreate.needsReflectionCall();
+            if (postCreateReflection) {
                 sb.append("    private static final ").append(entity.implementationImportType(Method.class.getName())).append(" $$_post_create;").append(NEW_LINE);
                 sb.append("    static {").append(NEW_LINE);
                 sb.append("        try {").append(NEW_LINE);
-                sb.append("            Method m = ").append(entity.implementationImportType(declaringType.getQualifiedName().toString())).append(".class.getDeclaredMethod(\"").append(entity.getPostCreate().getSimpleName()).append("\"");
-                if (!entity.getPostCreate().getParameters().isEmpty()) {
-                    for (VariableElement parameter : entity.getPostCreate().getParameters()) {
-                        sb.append(", ").append(entity.implementationImportType(parameter.asType().toString())).append(".class");
+                sb.append("            Method m = ").append(entity.implementationImportType(postCreate.getDeclaringTypeName())).append(".class.getDeclaredMethod(\"").append(postCreate.getName()).append("\"");
+                if (!postCreate.getParameterTypes().isEmpty()) {
+                    for (String parameterType : postCreate.getParameterTypes()) {
+                        sb.append(", ").append(entity.implementationImportType(parameterType)).append(".class");
                     }
                 }
                 sb.append(");").append(NEW_LINE);
@@ -1813,25 +1331,24 @@ public final class ImplementationClassWriter {
         }
 
         printDirtyTrackerRegistration(sb, entity);
-        if (entity.getPostCreate() != null) {
+        if (postCreate != null) {
             if (postCreateReflection) {
                 sb.append("        try {").append(NEW_LINE);
                 sb.append("            $$_post_create.invoke(this");
             } else {
-                sb.append("        ").append(entity.getPostCreate().getSimpleName().toString()).append("(");
+                sb.append("        ").append(postCreate.getName()).append("(");
             }
-            if (!entity.getPostCreate().getParameters().isEmpty()) {
+            if (!postCreate.getParameterTypes().isEmpty()) {
                 if (postCreateReflection) {
                     sb.append(", ");
                 }
-                for (VariableElement parameter : entity.getPostCreate().getParameters()) {
-                    String type = parameter.asType().toString();
-                    switch (type) {
+                for (String parameterType : postCreate.getParameterTypes()) {
+                    switch (parameterType) {
                         case Constants.ENTITY_VIEW_MANAGER:
                             sb.append(SERIALIZABLE_EVM_FIELD_NAME);
                             break;
                         default:
-                            sb.append("(").append(type).append(") null");
+                            sb.append("(").append(parameterType).append(") null");
                             break;
                     }
                     sb.append(", ");
@@ -1865,19 +1382,18 @@ public final class ImplementationClassWriter {
     }
 
     private static boolean preparePostLoad(StringBuilder sb, MetaEntityView entity, Context context) {
+        EntityViewLifecycleMethod postLoad = entity.getPostLoad();
         boolean postLoadReflection = false;
-        if (entity.getPostLoad() != null) {
-            TypeElement declaringType = (TypeElement) entity.getPostLoad().getEnclosingElement();
-            Set<Modifier> modifiers = entity.getPostLoad().getModifiers();
-            if (!modifiers.contains(Modifier.PUBLIC) && !modifiers.contains(Modifier.PROTECTED)) {
-                postLoadReflection = true;
+        if (postLoad != null) {
+            postLoadReflection = postLoad.needsReflectionCall();
+            if (postLoadReflection) {
                 sb.append("    private static final ").append(entity.implementationImportType(Method.class.getName())).append(" $$_post_load;").append(NEW_LINE);
                 sb.append("    static {").append(NEW_LINE);
                 sb.append("        try {").append(NEW_LINE);
-                sb.append("            Method m = ").append(entity.implementationImportType(declaringType.getQualifiedName().toString())).append(".class.getDeclaredMethod(\"").append(entity.getPostLoad().getSimpleName()).append("\"");
-                if (!entity.getPostLoad().getParameters().isEmpty()) {
-                    for (VariableElement parameter : entity.getPostLoad().getParameters()) {
-                        sb.append(", ").append(entity.implementationImportType(parameter.asType().toString())).append(".class");
+                sb.append("            Method m = ").append(entity.implementationImportType(postLoad.getDeclaringTypeName())).append(".class.getDeclaredMethod(\"").append(postLoad.getName()).append("\"");
+                if (!postLoad.getParameterTypes().isEmpty()) {
+                    for (String parameterType : postLoad.getParameterTypes()) {
+                        sb.append(", ").append(entity.implementationImportType(parameterType)).append(".class");
                     }
                 }
                 sb.append(");").append(NEW_LINE);
@@ -1893,25 +1409,25 @@ public final class ImplementationClassWriter {
     }
 
     private static void printPostLoad(StringBuilder sb, MetaEntityView entity, boolean postLoadReflection, Context context) {
-        if (entity.getPostLoad() != null) {
+        EntityViewLifecycleMethod postLoad = entity.getPostLoad();
+        if (postLoad != null) {
             if (postLoadReflection) {
                 sb.append("        try {").append(NEW_LINE);
                 sb.append("            $$_post_load.invoke(this");
             } else {
-                sb.append("        ").append(entity.getPostLoad().getSimpleName().toString()).append("(");
+                sb.append("        ").append(postLoad.getName()).append("(");
             }
-            if (!entity.getPostLoad().getParameters().isEmpty()) {
+            if (!postLoad.getParameterTypes().isEmpty()) {
                 if (postLoadReflection) {
                     sb.append(", ");
                 }
-                for (VariableElement parameter : entity.getPostLoad().getParameters()) {
-                    String type = parameter.asType().toString();
-                    switch (type) {
+                for (String parameterType : postLoad.getParameterTypes()) {
+                    switch (parameterType) {
                         case Constants.ENTITY_VIEW_MANAGER:
                             sb.append(SERIALIZABLE_EVM_FIELD_NAME);
                             break;
                         default:
-                            sb.append("(").append(type).append(") null");
+                            sb.append("(").append(parameterType).append(") null");
                             break;
                     }
                     sb.append(", ");

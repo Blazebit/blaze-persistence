@@ -31,14 +31,13 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -92,6 +91,9 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
         super.init(processingEnvironment);
 
         context = new Context(processingEnvironment);
+        // Pre-load some type elements and initialize them
+        context.getTypeElement("java.lang.Object").getEnclosedElements();
+        context.getTypeElement("java.io.Serializable").getEnclosedElements();
         context.logMessage(Diagnostic.Kind.NOTE, "Blaze-Persistence Entity-View Annotation Processor");
     }
 
@@ -107,67 +109,21 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
 
     private void execute(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
         int threads = context.getThreads();
-        ExecutorService executorService;
-        if (threads == 1) {
-            executorService = new AbstractExecutorService() {
-                @Override
-                public void shutdown() {
-                }
-
-                @Override
-                public List<Runnable> shutdownNow() {
-                    return Collections.emptyList();
-                }
-
-                @Override
-                public boolean isShutdown() {
-                    return false;
-                }
-
-                @Override
-                public boolean isTerminated() {
-                    return false;
-                }
-
-                @Override
-                public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-                    return false;
-                }
-
-                @Override
-                public void execute(Runnable command) {
-                    command.run();
-                }
-            };
-        } else {
-            executorService = Executors.newFixedThreadPool(threads);
-        }
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
         long initTime = System.nanoTime();
         long start = initTime;
         List<TypeElement> entityViews = new ArrayList<>();
         discoverEntityViews(entityViews, roundEnvironment.getRootElements());
         context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor discovery took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
         start = System.nanoTime();
-        List<Future<?>> futures = new ArrayList<>(entityViews.size());
-        start(executorService, entityViews, futures);
-        await(futures);
+        for (TypeElement typeElement : entityViews) {
+            new AnnotationMetaEntityView(typeElement, context);
+        }
         context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor analysis took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
         start = System.nanoTime();
         int views = createMetaModelClasses(executorService);
         context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor generation took " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + "ms");
         context.logMessage(Diagnostic.Kind.NOTE, "Annotation processor processed " + views + " entity views with " + threads + " threads and took overall " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - initTime) + "ms");
-    }
-
-    private void start(ExecutorService executorService, List<TypeElement> typeElements, List<Future<?>> futures) {
-        for (TypeElement typeElement : typeElements) {
-            futures.add(executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    AnnotationMetaEntityView metaEntity = new AnnotationMetaEntityView(typeElement, context);
-                    context.addMetaEntityViewToContext(metaEntity.getQualifiedName(), metaEntity);
-                }
-            }));
-        }
     }
 
     private static void await(List<Future<?>> futures) {
@@ -191,78 +147,49 @@ public class EntityViewAnnotationProcessor extends AbstractProcessor {
     }
 
     private int createMetaModelClasses(ExecutorService executorService) {
-        final ThreadLocal<StringBuilder> threadLocalStringBuilder = new ThreadLocal<StringBuilder>() {
-            @Override
-            protected StringBuilder initialValue() {
-                return new StringBuilder(64 * 1024);
-            }
-        };
         LongAdder relationTime = new LongAdder();
         LongAdder multiRelationTime = new LongAdder();
         LongAdder metamodelTime = new LongAdder();
         LongAdder implementationTime = new LongAdder();
         LongAdder builderTime = new LongAdder();
-        List<Future<?>> futures = new ArrayList<>();
+        LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
         int views = 0;
+        long startTime = System.nanoTime();
         for (MetaEntityView entityView : context.getMetaEntityViews()) {
             if (!entityView.isValid()) {
                 continue;
             }
-            if (entityView.getTypeElement().getModifiers().contains(Modifier.ABSTRACT) || entityView.getTypeElement().getKind().isInterface()) {
+            if (entityView.getModifiers().contains(Modifier.ABSTRACT) || entityView.getElementKind().isInterface()) {
                 views++;
-                futures.add(executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        StringBuilder sb = threadLocalStringBuilder.get();
-                        long start = System.nanoTime();
-                        RelationClassWriter.writeFile(sb, entityView, context);
-                        relationTime.add(System.nanoTime() - start);
-                    }
-                }));
-                futures.add(executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        StringBuilder sb = threadLocalStringBuilder.get();
-                        long start = System.nanoTime();
-                        MultiRelationClassWriter.writeFile(sb, entityView, context);
-                        multiRelationTime.add(System.nanoTime() - start);
-                    }
-                }));
-                futures.add(executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        StringBuilder sb = threadLocalStringBuilder.get();
-                        long start = System.nanoTime();
-                        MetamodelClassWriter.writeFile(sb, entityView, context);
-                        metamodelTime.add(System.nanoTime() - start);
-                    }
-                }));
+                RelationClassWriter.writeFile(entityView, context, executorService, queue, relationTime);
+                MultiRelationClassWriter.writeFile(entityView, context, executorService, queue, multiRelationTime);
+                MetamodelClassWriter.writeFile(entityView, context, executorService, queue, metamodelTime);
                 if (context.isGenerateImplementations()) {
-                    futures.add(executorService.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            StringBuilder sb = threadLocalStringBuilder.get();
-                            long start = System.nanoTime();
-                            ForeignPackageAdapterClassWriter.writeFiles(sb, entityView, context);
-                            ImplementationClassWriter.writeFile(sb, entityView, context);
-                            implementationTime.add(System.nanoTime() - start);
-                        }
-                    }));
+                    ForeignPackageAdapterClassWriter.writeFiles(entityView, context, executorService, queue, implementationTime);
+                    ImplementationClassWriter.writeFile(entityView, context, executorService, queue, implementationTime);
                     if (context.isGenerateBuilders()) {
-                        futures.add(executorService.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                StringBuilder sb = threadLocalStringBuilder.get();
-                                long start = System.nanoTime();
-                                BuilderClassWriter.writeFile(sb, entityView, context);
-                                builderTime.add(System.nanoTime() - start);
-                            }
-                        }));
+                        BuilderClassWriter.writeFile(entityView, context, executorService, queue, builderTime);
                     }
                 }
             }
         }
-        await(futures);
+        executorService.shutdown();
+        long endTime = System.nanoTime();
+        context.logMessage(Diagnostic.Kind.NOTE, "Scheduling tasks took overall " + TimeUnit.NANOSECONDS.toMillis(endTime - startTime) + "ms");
+        do {
+            Runnable runnable;
+            do {
+                try {
+                    runnable = queue.poll(1L, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (runnable != null) {
+                    runnable.run();
+                }
+            } while (!queue.isEmpty());
+        } while (!executorService.isTerminated() || !queue.isEmpty());
+        context.logMessage(Diagnostic.Kind.NOTE, "Processing main thread tasks took overall " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - endTime) + "ms");
         context.logMessage(Diagnostic.Kind.NOTE, "Generating relation classes took overall " + TimeUnit.NANOSECONDS.toMillis(relationTime.sum()) + "ms");
         context.logMessage(Diagnostic.Kind.NOTE, "Generating multi relation classes took overall " + TimeUnit.NANOSECONDS.toMillis(multiRelationTime.sum()) + "ms");
         context.logMessage(Diagnostic.Kind.NOTE, "Generating metamodel classes took overall " + TimeUnit.NANOSECONDS.toMillis(metamodelTime.sum()) + "ms");

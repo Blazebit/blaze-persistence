@@ -18,6 +18,9 @@ package com.blazebit.persistence.view.processor.annotation;
 
 import com.blazebit.persistence.view.processor.Constants;
 import com.blazebit.persistence.view.processor.Context;
+import com.blazebit.persistence.view.processor.TypeUtils;
+
+import javax.lang.model.element.Element;
 
 /**
  * @author Christian Beikov
@@ -25,8 +28,8 @@ import com.blazebit.persistence.view.processor.Context;
  */
 public class AnnotationMetaVersionAttribute extends AnnotationMetaAttribute {
 
-    public AnnotationMetaVersionAttribute(AnnotationMetaEntityView parent, Context context) {
-        super(parent, context);
+    public AnnotationMetaVersionAttribute(AnnotationMetaEntityView parent, Element entityVersionAttribute, Context context) {
+        super(parent, entityVersionAttribute, TypeUtils.getType(entityVersionAttribute, context), TypeUtils.getRealType(entityVersionAttribute, context), null, context, true);
     }
 
     @Override

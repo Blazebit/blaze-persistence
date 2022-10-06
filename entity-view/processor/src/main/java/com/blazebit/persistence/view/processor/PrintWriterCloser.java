@@ -16,32 +16,21 @@
 
 package com.blazebit.persistence.view.processor;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.io.PrintWriter;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.8
  */
-public interface MetaConstructor {
+public class PrintWriterCloser implements Runnable {
+    private final PrintWriter pw;
 
-    Comparator<MetaConstructor> NAME_COMPARATOR = new Comparator<MetaConstructor>() {
-        @Override
-        public int compare(MetaConstructor o1, MetaConstructor o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-    };
+    public PrintWriterCloser(PrintWriter pw) {
+        this.pw = pw;
+    }
 
-    MetaEntityView getHostingEntity();
-
-    String getName();
-
-    boolean isReal();
-
-    boolean hasSelfParameter();
-
-    List<MetaAttribute> getParameters();
-
-    Map<String, String> getOptionalParameters();
+    @Override
+    public void run() {
+        pw.close();
+    }
 }

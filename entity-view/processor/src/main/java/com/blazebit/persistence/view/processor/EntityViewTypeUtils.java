@@ -160,12 +160,12 @@ public final class EntityViewTypeUtils {
         return new SubviewInfo(subviewIdElement, hasEmptyConstructor);
     }
 
-    public static List<Element> getEntityIdAttributes(String realType, Context context) {
-        List<Element> elements = new ArrayList<>();
+    public static List<EntityIdAttribute> getEntityIdAttributes(String realType, Context context) {
+        List<EntityIdAttribute> elements = new ArrayList<>();
         TypeElement typeElement = context.getTypeElement(realType);
         for (Element enclosedElement : typeElement.getEnclosedElements()) {
             if (TypeUtils.containsAnnotation(enclosedElement, Constants.ID, Constants.EMBEDDED_ID)) {
-                elements.add(enclosedElement);
+                elements.add(new EntityIdAttribute(enclosedElement));
             }
         }
         return elements;

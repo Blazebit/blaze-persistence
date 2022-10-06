@@ -16,10 +16,12 @@
 
 package com.blazebit.persistence.view.processor;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
+import com.blazebit.persistence.view.processor.serialization.MetaSerializationField;
+
+import javax.lang.model.element.Modifier;
+import javax.lang.model.type.TypeKind;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -45,11 +47,17 @@ public interface MetaAttribute {
 
     boolean isPrimitive();
 
-    Element getElement();
+    boolean isParameter();
 
-    TypeMirror getTypeMirror();
+    Set<Modifier> getGetterModifiers();
 
-    TypeElement getSubviewElement();
+    String getGetterPackageName();
+
+    TypeKind getTypeKind();
+
+    MetaSerializationField getSerializationField();
+
+    MetaEntityView getSubviewElement();
 
     MappingKind getKind();
 
@@ -63,7 +71,7 @@ public interface MetaAttribute {
 
     void setDirtyStateIndex(int attributeIndex);
 
-    Element getSetter();
+    String getSetterName();
 
     boolean supportsDirtyTracking();
 
@@ -74,6 +82,8 @@ public interface MetaAttribute {
     String getMetaType();
 
     String getPropertyName();
+
+    String getGetterName();
 
     String getModelType();
 

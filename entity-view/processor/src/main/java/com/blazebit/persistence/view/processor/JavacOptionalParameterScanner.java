@@ -31,7 +31,6 @@ import com.sun.source.util.Trees;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +44,7 @@ public final class JavacOptionalParameterScanner {
     private JavacOptionalParameterScanner() {
     }
 
-    public static void scan(Map<String, TypeElement> optionalParameters, ExecutableElement executableElement, Context context) {
+    public static void scan(Map<String, String> optionalParameters, ExecutableElement executableElement, Context context) {
         Trees instance = Trees.instance(context.getProcessingEnvironment());
         TreePath path = instance.getPath(executableElement);
         ClassTree classTree = (ClassTree) path.getParentPath().getLeaf();
@@ -77,13 +76,13 @@ public final class JavacOptionalParameterScanner {
      */
     private static class OptionalParameterCollectingTreeScanner extends TreeScanner<String, String> {
 
-        private final Map<String, TypeElement> optionalParameters;
+        private final Map<String, String> optionalParameters;
         private final Context context;
         private final Map<Name, String> constants;
         private String last;
 
         public OptionalParameterCollectingTreeScanner(
-                Map<String, TypeElement> optionalParameters,
+                Map<String, String> optionalParameters,
                 Context context,
                 Map<Name, String> constants) {
             this.optionalParameters = optionalParameters;

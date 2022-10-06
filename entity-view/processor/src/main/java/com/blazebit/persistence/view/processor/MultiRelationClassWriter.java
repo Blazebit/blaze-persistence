@@ -16,38 +16,41 @@
 
 package com.blazebit.persistence.view.processor;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.tools.FileObject;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Christian Beikov
  * @since 1.5.0
  */
-public final class MultiRelationClassWriter {
+public final class MultiRelationClassWriter extends ClassWriter {
 
     public static final String MULTI_RELATION_CLASS_NAME_SUFFIX = "MultiRelation";
     private static final String NEW_LINE = System.lineSeparator();
 
-    private MultiRelationClassWriter() {
+    private MultiRelationClassWriter(FileObject fileObject, MetaEntityView entity, Context context, Collection<Runnable> mainThreadQueue, LongAdder elapsedTime) {
+        super(fileObject, entity, entity.getMultiRelationImportContext(), context, mainThreadQueue, elapsedTime);
     }
 
-    public static void writeFile(StringBuilder sb, MetaEntityView entity, Context context) {
-        sb.setLength(0);
-        generateBody(sb, entity, context);
-        ClassWriterUtils.writeFile(sb, entity.getPackageName(), entity.getSimpleName() + MULTI_RELATION_CLASS_NAME_SUFFIX, entity.getMultiRelationImportContext(), context, entity.getOriginatingElements());
+    public static void writeFile(MetaEntityView entity, Context context, ExecutorService executorService, Collection<Runnable> mainThreadQueue, LongAdder multiRelationTime) {
+        FileObject fileObject = ClassWriter.createFile(entity.getPackageName(), entity.getSimpleName() + MULTI_RELATION_CLASS_NAME_SUFFIX, context, entity.getOriginatingElements());
+        if (fileObject == null) {
+            return;
+        }
+        executorService.submit(new MultiRelationClassWriter(fileObject, entity, context, mainThreadQueue, multiRelationTime));
     }
 
-    private static void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
+    @Override
+    public void generateBody(StringBuilder sb, MetaEntityView entity, Context context) {
         entity.multiRelationImportType(Constants.COLLECTION);
         if (context.addGeneratedAnnotation()) {
-            ClassWriterUtils.writeGeneratedAnnotation(sb, entity.getMultiRelationImportContext(), context);
+            ClassWriter.writeGeneratedAnnotation(sb, entity.getMultiRelationImportContext(), context);
             sb.append(NEW_LINE);
         }
         if (context.isAddSuppressWarningsAnnotation()) {
-            sb.append(ClassWriterUtils.writeSuppressWarnings());
+            sb.append(ClassWriter.writeSuppressWarnings());
             sb.append(NEW_LINE);
         }
 
@@ -133,26 +136,7 @@ public final class MultiRelationClassWriter {
                 for (AttributeFilter filter : metaMember.getFilters()) {
                     sb.append(NEW_LINE);
                     sb.append("    public ").append(entity.multiRelationImportType(Constants.ATTRIBUTE_FILTER_MAPPING_PATH)).append("<T, ");
-                    if (filter.getFilterValueType().getKind() == TypeKind.TYPEVAR) {
-                        sb.append(entity.multiRelationImportType(metaMember.getDeclaredJavaType()));
-                    } else {
-                        DeclaredType filterValueType = (DeclaredType) filter.getFilterValueType();
-                        TypeElement filterValueTypeElement = (TypeElement) filterValueType.asElement();
-                        sb.append(entity.multiRelationImportType(filterValueTypeElement.getQualifiedName().toString()));
-                        if (!filterValueType.getTypeArguments().isEmpty()) {
-                            sb.append("<");
-                            for (TypeMirror typeArgument : filterValueType.getTypeArguments()) {
-                                if (typeArgument.getKind() == TypeKind.TYPEVAR) {
-                                    sb.append(entity.multiRelationImportType(metaMember.getDeclaredJavaType()));
-                                } else {
-                                    sb.append(entity.multiRelationImportType(typeArgument.toString()));
-                                }
-                                sb.append(", ");
-                            }
-                            sb.setLength(sb.length() - 2);
-                            sb.append(">");
-                        }
-                    }
+                    filter.getFilterValueType().append(entity.getMultiRelationImportContext(), sb);
                     sb.append("> ").append(metaMember.getPropertyName()).append('_');
                     if (filter.getName().isEmpty()) {
                         sb.append("filter");
