@@ -232,6 +232,26 @@ public interface MyEntityView {
 }
 ----
 
+===== Forcing non-null types on fields
+
+The type of a GraphQL field can be forced to be non-null by putting the `@GraphQLNonNull` annotation on a getter method.
+
+Usually, the integration is able to figure out non-null types through its nullability analysis of mapping expressions,
+but for custom methods or cases when the analysis fails, the explicit annotation can be used.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLNonNull
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
+
 For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== Netflix DGS setup
@@ -379,6 +399,26 @@ public interface MyEntityView {
 }
 ----
 
+===== Forcing non-null types on fields
+
+The type of a GraphQL field can be forced to be non-null by putting the `@GraphQLNonNull` annotation on a getter method.
+
+Usually, the integration is able to figure out non-null types through its nullability analysis of mapping expressions,
+but for custom methods or cases when the analysis fails, the explicit annotation can be used.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLNonNull
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
+
 For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
 ==== SPQR setup
@@ -514,6 +554,25 @@ public interface MyEntityView {
     }
 }
 ----
+===== Forcing non-null types on fields
+
+The type of a GraphQL field can be forced to be non-null by putting the `@GraphQLNonNull` annotation on a getter method.
+
+Usually, the integration is able to figure out non-null types through its nullability analysis of mapping expressions,
+but for custom methods or cases when the analysis fails, the explicit annotation can be used.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @GraphQLNonNull
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
 
 For a full example see the following https://github.com/Blazebit/blaze-persistence/blob/main/examples/spring-data-graphql/[example project].
 
@@ -643,6 +702,26 @@ public interface MyEntityView {
     //...
 
     @Ignore
+    default String getAdditionalField() {
+        return "some data";
+    }
+}
+----
+
+===== Forcing non-null types on fields
+
+The type of a GraphQL field can be forced to be non-null by putting the `@NonNull` annotation on a getter method.
+
+Usually, the integration is able to figure out non-null types through its nullability analysis of mapping expressions,
+but for custom methods or cases when the analysis fails, the explicit annotation can be used.
+
+[source,java]
+----
+@EntityView(MyEntity.class)
+public interface MyEntityView {
+    //...
+
+    @NonNull
     default String getAdditionalField() {
         return "some data";
     }
