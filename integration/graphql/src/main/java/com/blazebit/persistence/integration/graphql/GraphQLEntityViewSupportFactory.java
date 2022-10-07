@@ -63,6 +63,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -493,20 +494,44 @@ public class GraphQLEntityViewSupportFactory {
                 Type inputType;
                 if (Map.class.isAssignableFrom(fieldType)) {
                     Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
-                    Class<?> keyType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
-                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
-                    type = getEntryType(typeRegistry, typeName, fieldName, getKeyType(typeRegistry, entityViewManager, keyType), getElementType(typeRegistry, entityViewManager, elementType));
-                    inputType = getInputEntryType(typeRegistry, inputTypeName, fieldName, getInputKeyType(typeRegistry, entityViewManager, keyType), getInputElementType(typeRegistry, entityViewManager, elementType));
+                    Class<?> keyTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    Class<?> elementTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
+                    Type keyType = getKeyType(typeRegistry, entityViewManager, keyTypeClass);
+                    Type inputKeyType = getInputKeyType(typeRegistry, entityViewManager, keyTypeClass);
+                    Type elementType = getElementType(typeRegistry, entityViewManager, elementTypeClass);
+                    Type inputElementType = getInputElementType(typeRegistry, entityViewManager, elementTypeClass);
+                    AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
+                        keyType = new NonNullType(keyType);
+                        inputKeyType = new NonNullType(inputKeyType);
+                    }
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations())) {
+                        elementType = new NonNullType(elementType);
+                        inputElementType = new NonNullType(inputElementType);
+                    }
+                    type = getEntryType(typeRegistry, typeName, fieldName, keyType, elementType);
+                    inputType = getInputEntryType(typeRegistry, inputTypeName, fieldName, inputKeyType, inputElementType);
                 } else if (Collection.class.isAssignableFrom(fieldType)) {
                     Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
-                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
-                    type = new ListType(getElementType(typeRegistry, entityViewManager, elementType));
-                    inputType = new ListType(getInputElementType(typeRegistry, entityViewManager, elementType));
+                    Class<?> elementTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    Type elementType = getElementType(typeRegistry, entityViewManager, elementTypeClass);
+                    Type inputElementType = getInputElementType(typeRegistry, entityViewManager, elementTypeClass);
+                    AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
+                        elementType = new NonNullType(elementType);
+                        inputElementType = new NonNullType(inputElementType);
+                    }
+                    type = new ListType(elementType);
+                    inputType = new ListType(inputElementType);
                 } else {
                     type = getElementType(typeRegistry, entityViewManager, fieldType);
                     inputType = getInputElementType(typeRegistry, entityViewManager, fieldType);
                 }
                 if (type != null) {
+                    if (isNotNull(method)) {
+                        type = new NonNullType(type);
+                        inputType = new NonNullType(inputType);
+                    }
                     FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
                     fieldDefinitions.add(fieldDefinition);
                     valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
@@ -651,20 +676,44 @@ public class GraphQLEntityViewSupportFactory {
                 GraphQLInputType inputType;
                 if (Map.class.isAssignableFrom(fieldType)) {
                     Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
-                    Class<?> keyType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
-                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
-                    type = getEntryType(schemaBuilder, typeName, fieldName, getKeyType(schemaBuilder, entityViewManager, keyType, registeredTypeNames), getElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
-                    inputType = getInputEntryType(schemaBuilder, inputTypeName, fieldName, getInputKeyType(schemaBuilder, entityViewManager, keyType, registeredTypeNames), getInputElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                    Class<?> keyTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    Class<?> elementTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[1]);
+                    GraphQLOutputType keyType = getKeyType(schemaBuilder, entityViewManager, keyTypeClass, registeredTypeNames);
+                    GraphQLInputType inputKeyType = getInputKeyType(schemaBuilder, entityViewManager, keyTypeClass, registeredTypeNames);
+                    GraphQLOutputType elementType = getElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
+                    GraphQLInputType inputElementType = getInputElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
+                    AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
+                        keyType = new GraphQLNonNull(keyType);
+                        inputKeyType = new GraphQLNonNull(inputKeyType);
+                    }
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations())) {
+                        elementType = new GraphQLNonNull(elementType);
+                        inputElementType = new GraphQLNonNull(inputElementType);
+                    }
+                    type = getEntryType(schemaBuilder, typeName, fieldName, keyType, elementType);
+                    inputType = getInputEntryType(schemaBuilder, inputTypeName, fieldName, inputKeyType, inputElementType);
                 } else if (Collection.class.isAssignableFrom(fieldType)) {
                     Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(managedView.getJavaType(), method.getGenericReturnType());
-                    Class<?> elementType = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
-                    type = getListType(getElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
-                    inputType = getListType(getInputElementType(schemaBuilder, entityViewManager, elementType, registeredTypeNames));
+                    Class<?> elementTypeClass = ReflectionUtils.resolveType(managedView.getJavaType(), typeArguments[0]);
+                    GraphQLOutputType elementType = getElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
+                    GraphQLInputType inputElementType = getInputElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
+                    AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
+                        elementType = new GraphQLNonNull(elementType);
+                        inputElementType = new GraphQLNonNull(inputElementType);
+                    }
+                    type = getListType(elementType);
+                    inputType = getListType(inputElementType);
                 } else {
                     type = getElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
                     inputType = getInputElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
                 }
                 if (type != null) {
+                    if (isNotNull(method)) {
+                        type = new GraphQLNonNull(type);
+                        inputType = new GraphQLNonNull(inputType);
+                    }
                     fieldBuilder.type(type);
                     builder.field(fieldBuilder);
                     inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
@@ -1992,6 +2041,13 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLTypeReference(typeName);
     }
 
+    /**
+     * Returns whether the GraphQL type for the singular attribute should be non-null.
+     *
+     * @param attribute The attribute
+     * @param entityMetamodel The entity metamodel
+     * @return Whether the type should be non-null
+     */
     protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
         if (attribute instanceof MappingAttribute<?, ?> && !attribute.isQueryParameter()) {
             AbstractAttribute<?, ?> attr = (AbstractAttribute<?, ?>) attribute;
@@ -2002,7 +2058,44 @@ public class GraphQLEntityViewSupportFactory {
                 rootTypes = new HashMap<>(rootTypes);
                 rootTypes.put("this", attr.getDeclaringType().getJpaManagedType());
             }
-            return !ExpressionUtils.isNullable(entityMetamodel, rootTypes, attr.getMappingExpression());
+            if (!ExpressionUtils.isNullable(entityMetamodel, rootTypes, attr.getMappingExpression())) {
+                return true;
+            }
+        }
+        return isNotNull(((MethodAttribute<?, ?>) attribute).getJavaMethod());
+    }
+
+    /**
+     * Returns whether the GraphQL type for the method should be non-null.
+     *
+     * @param method The method
+     * @return Whether the type should be non-null
+     * @since 1.6.8
+     */
+    protected boolean isNotNull(Method method) {
+        if (method.getReturnType().isPrimitive()) {
+            return true;
+        }
+        return isNotNull(method.getAnnotations());
+    }
+
+    /**
+     * Returns whether the GraphQL type based on a set of annotations should be non-null.
+     *
+     * @param annotations The annotations
+     * @return Whether the type should be non-null
+     * @since 1.6.8
+     */
+    protected boolean isNotNull(Annotation[] annotations) {
+        for (Annotation annotation : annotations) {
+            //CHECKSTYLE:OFF: MissingSwitchDefault
+            switch (annotation.annotationType().getName()) {
+                case "org.eclipse.microprofile.graphql.NonNull":
+                case "com.blazebit.persistence.integration.graphql.GraphQLNonNull":
+                case "io.leangen.graphql.annotations.GraphQLNonNull":
+                    return true;
+            }
+            //CHECKSTYLE:ON: MissingSwitchDefault
         }
         return false;
     }
