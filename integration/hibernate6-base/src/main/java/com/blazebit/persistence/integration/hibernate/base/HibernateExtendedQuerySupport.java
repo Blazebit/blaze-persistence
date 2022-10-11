@@ -352,7 +352,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             List<? extends SqmQueryPart<?>> queryParts = ((SqmQueryGroup<?>) queryPart).getQueryParts();
             int offset = 0;
             for (int i = 0; i < queryParts.size(); i++) {
-                Object result = getQuerySpec(queryParts.get(i), currentNumber + offset + i, queryPartNumber);
+                Object result = getQuerySpec(queryParts.get(i), currentNumber + offset, queryPartNumber);
                 if (result instanceof SqmQuerySpec<?>) {
                     return result;
                 }

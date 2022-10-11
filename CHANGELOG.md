@@ -17,6 +17,7 @@ Changes that happened in releases
 * Rename some annotation processor generated fields to avoid collision with application specific entity view attribute names
 * Make sure that singular collection typed attributes are mapped as list in GraphQL
 * Rewrite entity view annotation processor to avoid concurrency issues
+* Fix CTE inlining in set operands
 
 ### Backwards-incompatible changes
 

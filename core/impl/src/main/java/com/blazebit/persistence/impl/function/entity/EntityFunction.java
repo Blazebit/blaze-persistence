@@ -39,6 +39,9 @@ public class EntityFunction implements JpqlFunction {
     private static final String GROUP_BY_TOKEN = " group by ";
     private static final String HAVING_TOKEN = " having ";
     private static final String ORDER_BY_TOKEN = " order by ";
+    private static final String UNION_TOKEN = " union ";
+    private static final String INTERSECT_TOKEN = " intersect ";
+    private static final String EXCEPT_TOKEN = " except ";
 
     @Override
     public boolean hasArguments() {
@@ -128,6 +131,9 @@ public class EntityFunction implements JpqlFunction {
                                 && (regionMatches(sb, end, GROUP_BY_TOKEN, 0, GROUP_BY_TOKEN.length())
                                 || regionMatches(sb, end, HAVING_TOKEN, 0, HAVING_TOKEN.length())
                                 || regionMatches(sb, end, ORDER_BY_TOKEN, 0, ORDER_BY_TOKEN.length())
+                                || regionMatches(sb, end, UNION_TOKEN, 0, UNION_TOKEN.length())
+                                || regionMatches(sb, end, INTERSECT_TOKEN, 0, INTERSECT_TOKEN.length())
+                                || regionMatches(sb, end, EXCEPT_TOKEN, 0, EXCEPT_TOKEN.length())
                         )
                 ) {
                     syntheticPredicateStart -= WHERE_TOKEN.length();
@@ -153,7 +159,10 @@ public class EntityFunction implements JpqlFunction {
                                     && (regionMatches(sb, end, GROUP_BY_TOKEN, 0, GROUP_BY_TOKEN.length())
                                     || regionMatches(sb, end, HAVING_TOKEN, 0, HAVING_TOKEN.length())
                                     || regionMatches(sb, end, ORDER_BY_TOKEN, 0, ORDER_BY_TOKEN.length())
-                            )
+                                    || regionMatches(sb, end, UNION_TOKEN, 0, UNION_TOKEN.length())
+                                    || regionMatches(sb, end, INTERSECT_TOKEN, 0, INTERSECT_TOKEN.length())
+                                    || regionMatches(sb, end, EXCEPT_TOKEN, 0, EXCEPT_TOKEN.length())
+                                )
                     ) {
                         syntheticPredicateStart -= WHERE_TOKEN.length();
                     }
@@ -201,6 +210,10 @@ public class EntityFunction implements JpqlFunction {
                             && (sqlQuery.regionMatches(range[0], GROUP_BY_TOKEN, 0, GROUP_BY_TOKEN.length())
                             || sqlQuery.regionMatches(range[0], HAVING_TOKEN, 0, HAVING_TOKEN.length())
                             || sqlQuery.regionMatches(range[0], ORDER_BY_TOKEN, 0, ORDER_BY_TOKEN.length())
+                            || sqlQuery.regionMatches(range[0], UNION_TOKEN, 0, UNION_TOKEN.length())
+                            || sqlQuery.regionMatches(range[0], INTERSECT_TOKEN, 0, INTERSECT_TOKEN.length())
+                            || sqlQuery.regionMatches(range[0], EXCEPT_TOKEN, 0, EXCEPT_TOKEN.length())
+                            || range[0] == range[1]
                     )
             ) {
                 sb.setLength(sb.length() - WHERE_TOKEN.length());
@@ -230,6 +243,18 @@ public class EntityFunction implements JpqlFunction {
             subqueryEndIndex--;
         }
         int[] range = removeSyntheticPredicate(sb, subqueryEndIndex, end);
+        if (
+            regionMatches(sb, subqueryEndIndex - WHERE_TOKEN.length(), WHERE_TOKEN, 0, WHERE_TOKEN.length())
+                && (regionMatches(sb, range[0], GROUP_BY_TOKEN, 0, GROUP_BY_TOKEN.length())
+                || regionMatches(sb, range[0], HAVING_TOKEN, 0, HAVING_TOKEN.length())
+                || regionMatches(sb, range[0], ORDER_BY_TOKEN, 0, ORDER_BY_TOKEN.length())
+                || regionMatches(sb, range[0], UNION_TOKEN, 0, UNION_TOKEN.length())
+                || regionMatches(sb, range[0], INTERSECT_TOKEN, 0, INTERSECT_TOKEN.length())
+                || regionMatches(sb, range[0], EXCEPT_TOKEN, 0, EXCEPT_TOKEN.length())
+                || range[0] == range[1])
+        ) {
+            subqueryEndIndex -= WHERE_TOKEN.length();
+        }
         sb.replace(subqueryEndIndex, range[0], "");
     }
 

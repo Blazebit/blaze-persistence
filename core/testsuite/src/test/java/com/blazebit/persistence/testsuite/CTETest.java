@@ -823,4 +823,45 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
     }
 
+    // For issue #1563
+    @Test
+    // NOTE: MySQL doesn't support nesting set operands i.e. `q1 union (q2 union q3)` is illegal, but `q1 union q2 union q3` is fine. Let's ignore that for now
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testInlineInSetOperand() {
+        CriteriaBuilder<Object[]> cb = cbf.create(em, Object[].class);
+        cb.with(TestAdvancedCTE1.class, true)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("NULL")
+            .bind("level").select("0")
+            .bind("parent").select("NULL")
+        .end();
+        cb.with(TestAdvancedCTE2.class, true)
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("embeddable.name").select("e.name")
+            .bind("embeddable.description").select("''")
+            .bind("embeddable.recursiveEntity").select("NULL")
+        .end();
+
+        cb.with(TestCTE.class, true)
+                .from(TestAdvancedCTE1.class, "c1")
+                .bind("id").select("c1.id")
+                .bind("name").select("c1.embeddable.name")
+                .bind("level").select("0")
+            .unionAll()
+                .from(TestAdvancedCTE2.class, "c2")
+                .bind("id").select("c2.id")
+                .bind("name").select("c2.embeddable.name")
+                .bind("level").select("0")
+            .endSet()
+        .end();
+
+        cb.from(TestCTE.class, "t").select("t.id").select("t.name");
+        // Run the query to make sure it works
+        cb.getResultList();
+    }
+
 }
