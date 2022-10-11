@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
+import com.blazebit.persistence.impl.query.SetTypedQuery;
 import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
@@ -379,6 +380,13 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
             parameterManager.collectParameterListNames(q, parameterListNames);
         }
 
+        Query setQuery;
+        if (mainQuery.jpaProvider.supportsSetOperations()) {
+            setQuery = baseQuery;
+        } else {
+            setQuery = new SetTypedQuery<>(baseQuery, setOperands);
+        }
+
         String limit = null;
         String offset = null;
 
@@ -394,7 +402,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
         // Since this builder has no query of it's own, there can be no joins
         List<String> keyRestrictedLeftJoinAliases = Collections.emptyList();
-        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(setQuery, 0);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new SetOperationQuerySpecification(
@@ -459,9 +467,18 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     @Override
     protected int collectEntityFunctionNodes(List<EntityFunctionNode> entityFunctionNodes, Query baseQuery, int queryPartNumber) {
         List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperations = setOperationManager.getSetOperations();
-        int offset = setOperationManager.getStartQueryBuilder().collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber);
-        for (int i = 0; i < setOperations.size(); i++) {
-            offset += setOperations.get(i).collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber + offset + i);
+        int offset;
+        if (baseQuery instanceof SetTypedQuery) {
+            SetTypedQuery<?> setTypedQuery = (SetTypedQuery<?>) baseQuery;
+            offset = setOperationManager.getStartQueryBuilder().collectEntityFunctionNodes(entityFunctionNodes, setTypedQuery.getQueryPart(0), queryPartNumber);
+            for (int i = 0; i < setOperations.size(); i++) {
+                offset += setOperations.get(i).collectEntityFunctionNodes(entityFunctionNodes, setTypedQuery.getQueryPart(i + 1), queryPartNumber + offset + i);
+            }
+        } else {
+            offset = setOperationManager.getStartQueryBuilder().collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber);
+            for (int i = 0; i < setOperations.size(); i++) {
+                offset += setOperations.get(i).collectEntityFunctionNodes(entityFunctionNodes, baseQuery, queryPartNumber + offset + i);
+            }
         }
         return offset;
     }
