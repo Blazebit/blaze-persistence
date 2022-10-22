@@ -63,6 +63,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
+import javassist.CtPrimitiveType;
 import javassist.LoaderClassPath;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.CodeIterator;
@@ -660,8 +661,13 @@ public class AnnotationMappingReader implements MappingReader {
             pool.appendClassPath(new LoaderClassPath(entityViewClass.getClassLoader()));
             CtClass ctClass = pool.get(entityViewClass.getName());
             CtClass[] constructorParams = new CtClass[parameterTypes.length];
+            int parameterStackSlots = parameterTypes.length;
             for (int i = 0; i < parameterTypes.length; i++) {
-                constructorParams[i] = pool.get(parameterTypes[i].getName());
+                CtClass parameterTypeClass = pool.get(parameterTypes[i].getName());
+                constructorParams[i] = parameterTypeClass;
+                if (parameterTypeClass instanceof CtPrimitiveType && ((CtPrimitiveType) parameterTypeClass).getDataSize() == 2) {
+                    parameterStackSlots++;
+                }
             }
 
             CtConstructor constructor = ctClass.getDeclaredConstructor(constructorParams);
@@ -690,11 +696,11 @@ public class AnnotationMappingReader implements MappingReader {
                         }
                         // The targetOrigin must be 0 i.e. the this pointer since we only care about PUTFIELD that happen to our object
                         // The source origin must have an index between 1 and N where N is the number of parameters. Higher indexes are local vars
-                        if (targetOrigin != null && sourceOrigin != null && targetOrigin == 0 && sourceOrigin <= parameterToAccessorMapping.length) {
+                        if (targetOrigin != null && sourceOrigin != null && targetOrigin == 0 && sourceOrigin <= parameterStackSlots) {
                             int cpIndex = ci.u16bitAt(index + 1);
                             AttributeInfo attributeInfo = fieldsToAccessors.get(cp.getFieldrefName(cpIndex));
                             if (attributeInfo != null && attributeInfo.className.equals(cp.getFieldrefClassName(cpIndex))) {
-                                parameterToAccessorMapping[sourceOrigin - 1] = attributeInfo;
+                                parameterToAccessorMapping[stackSlotToParameterIndex(sourceOrigin, constructorParams)] = attributeInfo;
                             }
                         }
                         continue;
@@ -771,6 +777,22 @@ public class AnnotationMappingReader implements MappingReader {
             context.addError(sw.toString());
         }
         return parameterToAccessorMapping;
+    }
+
+    private static int stackSlotToParameterIndex(int stackSlot, CtClass[] methodParameterTypes) {
+        for (int i = 0; i < methodParameterTypes.length; i++) {
+            if (stackSlot == 1) {
+                return i;
+            }
+            CtClass parameterTypeClass = methodParameterTypes[i];
+            if (parameterTypeClass instanceof CtPrimitiveType && ((CtPrimitiveType) parameterTypeClass).getDataSize() == 2) {
+                stackSlot -= 2;
+            } else {
+                stackSlot--;
+            }
+        }
+
+        return -1;
     }
 
     private Map<String, AttributeInfo> findAccessors(Class<?> entityViewClass) {
