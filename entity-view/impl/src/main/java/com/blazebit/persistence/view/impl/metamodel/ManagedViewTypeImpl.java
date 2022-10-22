@@ -19,6 +19,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.FetchBuilder;
+import com.blazebit.persistence.FromBuilder;
+import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
@@ -29,6 +31,7 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
@@ -1409,16 +1412,22 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
 
     @Override
     public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
+        renderSecondaryMappings(viewPath, (FromBuilder<?>) baseQueryBuilder, optionalParameters, renderFetches);
+    }
+
+    @Override
+    public void renderSecondaryMappings(String viewPath, FromBuilder<?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
         if (baseQueryBuilder instanceof CTEBuilder) {
             CTEBuilder<?> cteBuilder = (CTEBuilder<?>) baseQueryBuilder;
             for (CTEProvider cteProvider : getCteProviders()) {
                 cteProvider.applyCtes(cteBuilder, optionalParameters);
             }
         }
+        ExpressionFactory expressionFactory = ((ServiceProvider) baseQueryBuilder).getService(ExpressionFactory.class);
+        ParameterHolder<?> parameterHolder = (ParameterHolder<?>) baseQueryBuilder;
         for (ViewRoot viewRoot : viewRoots) {
             String entityViewRootName = viewRoot.getName();
-            CorrelationProvider correlationProvider = viewRoot.getCorrelationProviderFactory().create(baseQueryBuilder, optionalParameters);
-            ExpressionFactory expressionFactory = baseQueryBuilder.getService(ExpressionFactory.class);
+            CorrelationProvider correlationProvider = viewRoot.getCorrelationProviderFactory().create(parameterHolder, optionalParameters);
             Limiter limiter = createLimiter(expressionFactory, viewPath, viewRoot.getLimitExpression(), viewRoot.getOffsetExpression(), viewRoot.getOrderByItems());
             String correlationAlias;
             if (limiter == null) {
@@ -1426,7 +1435,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
             } else {
                 correlationAlias = "_sub_" + entityViewRootName;
             }
-            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(baseQueryBuilder, optionalParameters, baseQueryBuilder, viewPath, correlationAlias, entityViewRootName, null, viewRoot.getJoinType(), limiter);
+            JoinCorrelationBuilder correlationBuilder = new JoinCorrelationBuilder(parameterHolder, optionalParameters, baseQueryBuilder, viewPath, correlationAlias, entityViewRootName, null, viewRoot.getJoinType(), limiter);
             correlationProvider.applyCorrelation(correlationBuilder, viewPath);
             correlationBuilder.finish();
             if (renderFetches && baseQueryBuilder instanceof FetchBuilder<?>) {

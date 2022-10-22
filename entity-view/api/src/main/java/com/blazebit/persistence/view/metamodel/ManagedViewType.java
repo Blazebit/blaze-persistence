@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.FromBuilder;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.ConvertOption;
 import com.blazebit.persistence.view.FlushMode;
@@ -288,7 +289,20 @@ public interface ManagedViewType<X> extends Type<X> {
      * @param optionalParameters The optional parameters to use for applying secondary mappings
      * @param renderFetches Whether to render fetch joins
      * @since 1.6.0
+     * @deprecated Use {@link #renderSecondaryMappings(String, FromBuilder, Map, boolean)} instead
      */
+    @Deprecated
     public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches);
+
+    /**
+     * Renders secondary mappings like {@link CTEProvider} and {@link ViewRoot}.
+     *
+     * @param viewPath The expression that refers to the root of the view
+     * @param baseQueryBuilder The base query builder to apply secondary mappings on
+     * @param optionalParameters The optional parameters to use for applying secondary mappings
+     * @param renderFetches Whether to render fetch joins
+     * @since 1.6.8
+     */
+    public void renderSecondaryMappings(String viewPath, FromBuilder<?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches);
 
 }
