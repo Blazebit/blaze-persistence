@@ -109,7 +109,7 @@ public final class EntityViewSettingHelper {
             addFetchesForNonMappingAttributes(setting.getAttributeFilterActivations().keySet(), managedView, requestedFetches);
             addFetchesForNonMappingAttributes(setting.getAttributeSorters().keySet(), managedView, requestedFetches);
         }
-        Path root = criteriaBuilder.getPath(entityViewRoot);
+        Path root = criteriaBuilder.getRequiredPath(entityViewRoot);
         entityViewRoot = root.getPath();
         Q queryBuilder = getQueryBuilder(setting, criteriaBuilder, entityViewRoot, managedView, setting.getProperties());
         EntityViewConfiguration configuration = new EntityViewConfiguration(queryBuilder, ef, new MutableViewJpqlMacro(), new MutableEmbeddingViewJpqlMacro(), optionalParameters, setting.getProperties(), requestedFetches, managedView);

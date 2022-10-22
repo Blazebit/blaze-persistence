@@ -1365,7 +1365,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     private static Path getPath(FullQueryBuilder<?, ?> queryBuilder, String entityViewRoot) {
-        return queryBuilder.getPath(entityViewRoot);
+        return queryBuilder.getRequiredPath(entityViewRoot);
     }
 
     @SuppressWarnings("unchecked")

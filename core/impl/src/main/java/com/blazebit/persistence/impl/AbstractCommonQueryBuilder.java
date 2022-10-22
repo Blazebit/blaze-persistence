@@ -1146,12 +1146,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public Path getPath(String path) {
+        return getPath(path, null);
+    }
+
+    public Path getRequiredPath(String path) {
+        return getPath(path, JoinType.INNER);
+    }
+
+    private Path getPath(String path, JoinType joinType) {
         if (path == null || path.isEmpty()) {
             JoinNode node = joinManager.getRootNodeOrFail("No or multiple query roots, can't find single root!");
             return new SimplePathReference(node, null, node.getType());
         }
         PathExpression pathExpression = expressionFactory.createPathExpression(path);
-        joinManager.implicitJoin(pathExpression, true, true, true, null, null, new HashSet<String>(), false, false, true, false);
+        joinManager.implicitJoin(pathExpression, true, true, true, null, null, joinType, null, new HashSet<String>(), false, false, true, false, false, false);
         // If we expose the path to the outside world, we can't remove it if it is a default select node
         if (pathExpression.getPathReference() != null) {
             selectManager.removeDefaultSelectNode((JoinNode) pathExpression.getBaseNode());

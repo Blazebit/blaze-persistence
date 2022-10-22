@@ -20,6 +20,7 @@ Changes that happened in releases
 * Rewrite entity view annotation processor to avoid concurrency issues
 * Fix CTE inlining in set operands
 * Fix custom entity view class bytecode analysis when using 2 stack slot types
+* Applying `EntityViewSetting` to custom path should have inner join semantics
 
 ### Backwards-incompatible changes
 

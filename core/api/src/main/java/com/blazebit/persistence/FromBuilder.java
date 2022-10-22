@@ -64,6 +64,16 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
      */
     public Path getPath(String path);
 
+    /**
+     * Returns the path object for the given path string, creating it if necessary.
+     * This method differs from {@link #getPath(String)} because it forces {@link JoinType#INNER} semantics.
+     *
+     * @param path The path string
+     * @return The path object for this query
+     * @since 1.6.8
+     */
+    public Path getRequiredPath(String path);
+
     /* Declarations to retain binary compatibility */
 
     @Override
