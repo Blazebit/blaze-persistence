@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.FromBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.FlushMode;
@@ -258,6 +259,11 @@ public class ConvertedFlatViewType<X> implements FlatViewTypeImplementor<X> {
 
     @Override
     public void renderSecondaryMappings(String viewPath, BaseQueryBuilder<?, ?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
+        delegate.renderSecondaryMappings(viewPath, baseQueryBuilder, optionalParameters, renderFetches);
+    }
+
+    @Override
+    public void renderSecondaryMappings(String viewPath, FromBuilder<?> baseQueryBuilder, Map<String, Object> optionalParameters, boolean renderFetches) {
         delegate.renderSecondaryMappings(viewPath, baseQueryBuilder, optionalParameters, renderFetches);
     }
 

@@ -17,8 +17,8 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.BaseFromQueryBuilder;
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CorrelationQueryBuilder;
+import com.blazebit.persistence.FromBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -27,6 +27,7 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.LateralStyle;
+import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 
@@ -42,7 +43,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
     private final ParameterHolder<?> parameterHolder;
     private final Map<String, Object> optionalParameters;
-    private final BaseQueryBuilder<?, ?> criteriaBuilder;
+    private final FromBuilder<?> criteriaBuilder;
     private final String joinBase;
     private final String correlationAlias;
     private final String correlationExternalAlias;
@@ -52,7 +53,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
     private boolean correlated;
     private Object correlationBuilder;
 
-    public JoinCorrelationBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, BaseQueryBuilder<?, ?> criteriaBuilder, String joinBase, String correlationAlias, String correlationExternalAlias, String attributePath, JoinType joinType, Limiter limiter) {
+    public JoinCorrelationBuilder(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, FromBuilder<?> criteriaBuilder, String joinBase, String correlationAlias, String correlationExternalAlias, String attributePath, JoinType joinType, Limiter limiter) {
         this.parameterHolder = parameterHolder;
         this.optionalParameters = optionalParameters;
         this.criteriaBuilder = criteriaBuilder;
@@ -66,7 +67,7 @@ public class JoinCorrelationBuilder implements CorrelationBuilder {
 
     @Override
     public <T> T getService(Class<T> serviceClass) {
-        return criteriaBuilder.getService(serviceClass);
+        return ((ServiceProvider) criteriaBuilder).getService(serviceClass);
     }
 
     @Override

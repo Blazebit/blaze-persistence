@@ -8,6 +8,7 @@ Changes that happened in releases
 
 * Support exposing additional (computed) GraphQL fields in Entity Views and support ignoring types and fields
 * Support marking GraphQL fields and field types as non-null in Entity Views
+* Add `ManagedViewType#renderSecondaryMappings` implementation that accepts `FromBuilder`
 
 ### Bug fixes
 
