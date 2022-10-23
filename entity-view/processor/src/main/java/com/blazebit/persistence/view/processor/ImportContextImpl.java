@@ -68,7 +68,8 @@ public class ImportContextImpl implements ImportContext {
         int ltIdx = fqcn.indexOf('<');
         int bracketIdx;
         if (ltIdx != -1) {
-            additionalTypePart = result.substring(ltIdx);
+            int gtIdx = fqcn.lastIndexOf('>');
+            additionalTypePart = importTypeArguments(result, ltIdx, gtIdx) + result.substring(gtIdx + 1);
             result = result.substring(0, ltIdx);
             fqcn = result;
         } else if ((bracketIdx = fqcn.indexOf('[')) != -1) {
@@ -110,6 +111,31 @@ public class ImportContextImpl implements ImportContext {
             result = prefix + result;
         }
         return result;
+    }
+
+    private String importTypeArguments(String typeArguments, int start, int end) {
+        StringBuilder sb = new StringBuilder(end - start);
+        sb.append('<');
+        start++;
+        for (int i = start; i < end; i++) {
+            final char c = typeArguments.charAt(i);
+            //CHECKSTYLE:OFF: MissingSwitchDefault
+            switch (c) {
+                case ',':
+                    sb.append(importType(typeArguments.substring(start, i)));
+                    start = i + 1;
+                    break;
+                case '<':
+                    int gtIdx = typeArguments.lastIndexOf('>', i);
+                    sb.append(importTypeArguments(typeArguments, i, gtIdx));
+                    start = gtIdx + 1;
+                    break;
+            }
+            //CHECKSTYLE:ON: MissingSwitchDefault
+        }
+        sb.append(importType(typeArguments.substring(start, end)));
+        sb.append('>');
+        return sb.toString();
     }
 
     private boolean inDefaultPackage(String className) {

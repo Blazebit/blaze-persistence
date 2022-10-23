@@ -50,7 +50,7 @@ public class AnnotationMetaConstructor implements MetaConstructor {
     private final List<MetaAttribute> parameters;
     private final Map<String, String> optionalParameters;
 
-    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeElement> parentOptionalParameters) {
+    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeMirror> parentOptionalParameters) {
         this.parent = parent;
         this.name = "init";
         this.parameters = Collections.emptyList();
@@ -76,13 +76,13 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         }
         this.isReal = isReal;
         Map<String, String> optionalParameters = new TreeMap<>();
-        for (Map.Entry<String, TypeElement> entry : parentOptionalParameters.entrySet()) {
-            optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+        for (Map.Entry<String, TypeMirror> entry : parentOptionalParameters.entrySet()) {
+            optionalParameters.put(entry.getKey(), entry.getValue().toString());
         }
         this.optionalParameters = optionalParameters;
     }
 
-    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeElement> parentOptionalParameters, Map<String, TypeElement> optionalParameters, ExecutableElement element, MetaAttributeGenerationVisitor visitor, Context context) {
+    public AnnotationMetaConstructor(AnnotationMetaEntityView parent, Map<String, TypeMirror> parentOptionalParameters, Map<String, TypeMirror> optionalParameters, ExecutableElement element, MetaAttributeGenerationVisitor visitor, Context context) {
         this.parent = parent;
         this.isReal = true;
         String name = "init";
@@ -106,10 +106,10 @@ public class AnnotationMetaConstructor implements MetaConstructor {
             AnnotationMetaAttribute result = parameter.asType().accept(visitor, parameter);
             result.setAttributeIndex(i);
             parameters.add(result);
-            for (Map.Entry<String, TypeElement> entry : result.getOptionalParameters().entrySet()) {
-                TypeElement typeElement = entry.getValue();
-                TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
-                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
+            for (Map.Entry<String, TypeMirror> entry : result.getOptionalParameters().entrySet()) {
+                TypeMirror typeElement = entry.getValue();
+                TypeMirror existingTypeElement = optionalParameters.get(entry.getKey());
+                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement, existingTypeElement)) {
                     optionalParameters.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -121,25 +121,25 @@ public class AnnotationMetaConstructor implements MetaConstructor {
         this.optionalParameters = createOrderedOptionalParameters(parentOptionalParameters, context, optionalParameters);
     }
 
-    private static Map<String, String> createOrderedOptionalParameters(Map<String, TypeElement> entityOptionalParameters, Context context, Map<String, TypeElement> elementOptionalParameters) {
+    private static Map<String, String> createOrderedOptionalParameters(Map<String, TypeMirror> entityOptionalParameters, Context context, Map<String, TypeMirror> elementOptionalParameters) {
         Map<String, String> optionalParameters = new TreeMap<>();
-        for (Map.Entry<String, TypeElement> entry : elementOptionalParameters.entrySet()) {
+        for (Map.Entry<String, TypeMirror> entry : elementOptionalParameters.entrySet()) {
             if (!context.getOptionalParameters().containsKey(entry.getKey())) {
-                TypeElement typeElement = entityOptionalParameters.get(entry.getKey());
+                TypeMirror typeElement = entityOptionalParameters.get(entry.getKey());
                 if (typeElement == null) {
-                    optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+                    optionalParameters.put(entry.getKey(), entry.getValue().toString());
                 } else {
-                    if (context.getTypeUtils().isAssignable(typeElement.asType(), entry.getValue().asType())) {
-                        optionalParameters.put(entry.getKey(), typeElement.getQualifiedName().toString());
+                    if (context.getTypeUtils().isAssignable(typeElement, entry.getValue())) {
+                        optionalParameters.put(entry.getKey(), typeElement.toString());
                     } else {
-                        optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+                        optionalParameters.put(entry.getKey(), entry.getValue().toString());
                     }
                 }
             }
         }
-        for (Map.Entry<String, TypeElement> entry : entityOptionalParameters.entrySet()) {
+        for (Map.Entry<String, TypeMirror> entry : entityOptionalParameters.entrySet()) {
             if (!context.getOptionalParameters().containsKey(entry.getKey())) {
-                optionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+                optionalParameters.put(entry.getKey(), entry.getValue().toString());
             }
         }
         return optionalParameters;

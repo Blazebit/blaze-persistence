@@ -31,22 +31,26 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     protected int age;
     protected byte[] bytes;
     protected Integer id;
+    protected List<Object> listMappingParameter;
     protected List<Set<String>> multiNames;
     protected String name;
     protected List<String> names;
     protected BView optionalValue;
     protected List<X> test;
+    protected X test2;
     protected final Map<String, Object> blazePersistenceOptionalParameters;
 
     public AViewBuilder(Map<String, Object> blazePersistenceOptionalParameters) {
         this.age = 0;
         this.bytes = null;
         this.id = null;
+        this.listMappingParameter = (List<Object>) blazePersistenceOptionalParameters.get("listMappingParameter");
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.optionalValue = null;
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
+        this.test2 = null;
         this.blazePersistenceOptionalParameters = blazePersistenceOptionalParameters;
     }
 
@@ -78,6 +82,16 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     }
     public BuilderType withId(Integer id) {
         this.id = id;
+        return (BuilderType) this;
+    }
+    public List<Object> getListMappingParameter() {
+        return listMappingParameter;
+    }
+    public void setListMappingParameter(List<Object> listMappingParameter) {
+        this.listMappingParameter = listMappingParameter;
+    }
+    public BuilderType withListMappingParameter(List<Object> listMappingParameter) {
+        this.listMappingParameter = listMappingParameter;
         return (BuilderType) this;
     }
     public List<Set<String>> getMultiNames() {
@@ -131,6 +145,16 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     }
     public BuilderType withTest(List<X> test) {
         this.test = test;
+        return (BuilderType) this;
+    }
+    public X getTest2() {
+        return test2;
+    }
+    public void setTest2(X test2) {
+        this.test2 = test2;
+    }
+    public BuilderType withTest2(X test2) {
+        this.test2 = test2;
         return (BuilderType) this;
     }
 
@@ -232,6 +256,8 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 return (ElementType) (Object) this.bytes;
             case "id":
                 return (ElementType) (Object) this.id;
+            case "listMappingParameter":
+                return (ElementType) (Object) this.listMappingParameter;
             case "multiNames":
                 return (ElementType) (Object) this.multiNames;
             case "name":
@@ -242,6 +268,8 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 return (ElementType) (Object) this.optionalValue;
             case "test":
                 return (ElementType) (Object) this.test;
+            case "test2":
+                return (ElementType) (Object) this.test2;
         }
         throw new IllegalArgumentException("Unknown attribute: " + attribute);
     }
@@ -268,6 +296,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
             case "id":
                 this.id = value == null ? null : (Integer) value;
                 break;
+            case "listMappingParameter":
+                this.listMappingParameter = value == null ? null : (List<Object>) value;
+                break;
             case "multiNames":
                 this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;
                 break;
@@ -282,6 +313,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 break;
             case "test":
                 this.test = value == null ? (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0) : (List<X>) value;
+                break;
+            case "test2":
+                this.test2 = value == null ? null : (X) value;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown attribute: " + attribute);
@@ -506,11 +540,13 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.id,
                     this.age,
                     this.bytes,
+                    this.listMappingParameter,
                     this.multiNames,
                     this.name,
                     this.names,
-                    (Optional<com.blazebit.persistence.view.processor.model.BView>) AView_.optionalValue.attr().getType().getConverter().convertToViewType(this.optionalValue),
-                    this.test
+                    (Optional<BView>) AView_.optionalValue.attr().getType().getConverter().convertToViewType(this.optionalValue),
+                    this.test,
+                    this.test2
             );
         }
 
@@ -541,6 +577,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
             this.id = id;
             return (Init<X>) this;
         }
+        public Init<X> withListMappingParameter(List<Object> listMappingParameter) {
+            this.listMappingParameter = listMappingParameter;
+            return (Init<X>) this;
+        }
         public Init<X> withMultiNames(List<Set<String>> multiNames) {
             this.multiNames = multiNames;
             return (Init<X>) this;
@@ -564,6 +604,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
             this.test = test;
             return (Init<X>) this;
         }
+        public Init<X> withTest2(X test2) {
+            this.test2 = test2;
+            return (Init<X>) this;
+        }
 
         @Override
         public Init<X> with(String attribute, Object value) {
@@ -576,6 +620,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "id":
                     this.id = value == null ? null : (Integer) value;
+                    break;
+                case "listMappingParameter":
+                    this.listMappingParameter = value == null ? null: (List<Object>) value;
                     break;
                 case "multiNames":
                     this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;
@@ -591,6 +638,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "test":
                     this.test = value == null ? (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0) : (List<X>) value;
+                    break;
+                case "test2":
+                    this.test2 = value == null ? null : (X) value;
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown attribute: " + attribute);
@@ -869,11 +919,13 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.id,
                     this.age,
                     this.bytes,
+                    this.listMappingParameter,
                     this.multiNames,
                     this.name,
                     this.names,
-                    (Optional<com.blazebit.persistence.view.processor.model.BView>) AView_.optionalValue.attr().getType().getConverter().convertToViewType(this.optionalValue),
-                    this.test
+                    (Optional<BView>) AView_.optionalValue.attr().getType().getConverter().convertToViewType(this.optionalValue),
+                    this.test,
+                    this.test2
             ));
             return blazePersistenceResult;
         }
@@ -905,6 +957,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
             this.id = id;
             return (Nested<X, BuilderResult>) this;
         }
+        public Nested<X, BuilderResult> withListMappingParameter(List<Object> listMappingParameter) {
+            this.listMappingParameter = listMappingParameter;
+            return (Nested<X, BuilderResult>) this;
+        }
         public Nested<X, BuilderResult> withMultiNames(List<Set<String>> multiNames) {
             this.multiNames = multiNames;
             return (Nested<X, BuilderResult>) this;
@@ -928,6 +984,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
             this.test = test;
             return (Nested<X, BuilderResult>) this;
         }
+        public Nested<X, BuilderResult> withTest2(X test2) {
+            this.test2 = test2;
+            return (Nested<X, BuilderResult>) this;
+        }
 
         @Override
         public Nested<X, BuilderResult> with(String attribute, Object value) {
@@ -940,6 +1000,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "id":
                     this.id = value == null ? null : (Integer) value;
+                    break;
+                case "listMappingParameter":
+                    this.listMappingParameter = value == null ? null : (List<Object>) value;
                     break;
                 case "multiNames":
                     this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;
@@ -955,6 +1018,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "test":
                     this.test = value == null ? (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0) : (List<X>) value;
+                    break;
+                case "test2":
+                    this.test2 = value == null ? null : (X) value;
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown attribute: " + attribute);

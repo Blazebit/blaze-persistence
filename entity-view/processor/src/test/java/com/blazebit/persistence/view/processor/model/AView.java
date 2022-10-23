@@ -4,6 +4,7 @@ import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
@@ -30,11 +31,16 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
 
     List<X> getTest();
 
+    X getTest2();
+
     EntityViewManager evm();
 
     byte[] getBytes();
 
     List<Set<String>> getMultiNames();
+
+    @MappingParameter("listMappingParameter")
+    List<Object> getListMappingParameter();
 
     class TestFilter extends ViewFilterProvider {
 

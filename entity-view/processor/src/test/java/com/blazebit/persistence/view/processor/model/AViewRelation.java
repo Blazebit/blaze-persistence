@@ -8,6 +8,7 @@ import com.blazebit.persistence.view.metamodel.MethodListAttribute;
 import com.blazebit.persistence.view.metamodel.MethodMultiListAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Generated;
 
@@ -34,6 +35,11 @@ public class AViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
         return attribute == null ? getWrapped().<Integer>get("id") : getWrapped().get(attribute);
     }
 
+    public AttributePath<T, List<Object>, List<Object>> listMappingParameter() {
+        MethodSingularAttribute<AView, List<Object>> attribute = AView_.listMappingParameter;
+        return attribute == null ? getWrapped().<List<Object>>get("listMappingParameter") : getWrapped().get(attribute);
+    }
+
     public AttributePath<T, String, Set<String>> multiNames() {
         MethodMultiListAttribute<AView, String, Set<String>> attribute = AView_.multiNames;
         return attribute == null ? getWrapped().<String, Set<String>>getMulti("multiNames") : getWrapped().get(attribute);
@@ -57,6 +63,11 @@ public class AViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
     public AttributePath<T, Serializable, Serializable> test() {
         MethodListAttribute<AView, Serializable> attribute = AView_.test;
         return attribute == null ? getWrapped().<Serializable>get("test") : getWrapped().get(attribute);
+    }
+
+    public AttributePath<T, Serializable, Serializable> test2() {
+        MethodSingularAttribute<AView, Serializable> attribute = AView_.test2;
+        return attribute == null ? getWrapped().<Serializable>get("test2") : getWrapped().get(attribute);
     }
 
     public A attr() {
