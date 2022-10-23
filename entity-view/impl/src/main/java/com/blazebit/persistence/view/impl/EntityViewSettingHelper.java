@@ -18,9 +18,12 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.HavingBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.Path;
+import com.blazebit.persistence.PredicateBuilder;
+import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.AttributeFilterProvider;
@@ -334,7 +337,7 @@ public final class EntityViewSettingHelper {
                 Class<? extends AttributeFilterProvider> filterClass;
                 Class<?> expectedType;
 
-                MethodAttribute<?, ?> attribute = entry.getValue();
+                AbstractMethodAttribute<?, ?> attribute = entry.getValue();
                 AttributeFilterMapping<?, ?> filterMapping = attribute.getFilter(filterActivation.getAttributeFilterName());
 
                 if (filterMapping == null) {
@@ -360,7 +363,16 @@ public final class EntityViewSettingHelper {
                 }
 
                 AttributeFilterProvider<?> filter = evm.createAttributeFilter(filterClass, expectedType, filterActivation.getFilterValue());
-                filter.apply(cb, attributeExpression);
+                PredicateBuilder predicateBuilder;
+                if (attribute.isAggregate()) {
+                    predicateBuilder = ((HavingBuilder<?>) cb).having();
+                } else {
+                    predicateBuilder = cb.where();
+                }
+                // todo: We are relying on an ugly implementation detail to avoid wrapping builders
+                //  with https://github.com/Blazebit/blaze-persistence/issues/1596 we will switch to using the PredicateBuilder directly
+                //noinspection rawtypes,unchecked
+                filter.apply((WhereBuilder) predicateBuilder, attributeExpression);
             }
         }
     }

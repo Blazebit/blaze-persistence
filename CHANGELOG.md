@@ -22,6 +22,7 @@ Changes that happened in releases
 * Fix CTE inlining in set operands
 * Fix custom entity view class bytecode analysis when using 2 stack slot types
 * Applying `EntityViewSetting` to custom path should have inner join semantics
+* Apply filters for aggregate mappings as `HAVING` predicates
 
 ### Backwards-incompatible changes
 
