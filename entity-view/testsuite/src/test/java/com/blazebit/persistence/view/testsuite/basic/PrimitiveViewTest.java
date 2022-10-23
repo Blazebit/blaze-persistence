@@ -16,6 +16,8 @@
 package com.blazebit.persistence.view.testsuite.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
@@ -27,6 +29,7 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentMultisetView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitivePersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocumentView;
@@ -158,6 +161,28 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         assertEquals("doc1", view.getName());
         assertEquals("pers1", view.getOwner().getName());
         assertEquals("pers1", view.getCorrelatedOwner().getName());
+        assertEquals(Collections.emptyMap(), view.getContacts());
+    }
+
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    public void testEntityViewMultisetSubviewFetches() {
+        EntityViewManager evm = build(
+            PrimitiveSimpleDocumentView.class,
+            PrimitiveDocumentMultisetView.class,
+            PrimitivePersonView.class
+        );
+
+        EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);
+        setting.fetch("name");
+        setting.fetch("partners.name");
+
+        PrimitiveDocumentMultisetView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
+        assertEquals("doc1", view.getName());
+        assertEquals(1, view.getPartners().size());
+        assertEquals("pers1", view.getPartners().iterator().next().getName());
         assertEquals(Collections.emptyMap(), view.getContacts());
     }
 }

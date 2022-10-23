@@ -30,9 +30,9 @@ public class NullTupleTransformer implements TupleTransformer {
     private final int consumeStartIndex;
     private final int consumeEndIndex;
 
-    public NullTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template) {
-        this.consumeStartIndex = template.getTupleOffset() + 1;
-        this.consumeEndIndex = template.getTupleOffset() + template.getMappers().length;
+    public NullTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, int startIndex) {
+        this.consumeStartIndex = startIndex + 1;
+        this.consumeEndIndex = startIndex + template.getMappers().length;
     }
 
     @Override

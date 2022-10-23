@@ -112,8 +112,8 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
     }
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
-    // NOTE: EclipseLink cant' handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus cant' handle multiple subquery select items... Number of result expressions in subquery should be 1
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
     @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
     public void testCollections() {

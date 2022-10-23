@@ -54,9 +54,6 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        if (!entityViewConfiguration.hasSubFetches(attributePath)) {
-            return new NullTupleTransformer(template);
-        }
         ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(parameterHolder, optionalParameters, entityViewConfiguration, 0, true, nullIfEmpty);
         if (updatable) {
             return new UpdatableSubviewTupleTransformer(template, objectBuilder, nullIfEmpty);

@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.NavigableSet;
 
 /**
  *
@@ -45,10 +45,10 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     private final Map<String, Object> optionalParameters;
     private final ViewJpqlMacro viewJpqlMacro;
     private final EmbeddingViewJpqlMacro embeddingViewJpqlMacro;
-    private final Set<String> fetches;
+    private final NavigableSet<String> fetches;
     private final SecondaryMapper[] secondaryMappers;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, Set<String> fetches, boolean nullIfEmpty) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, NavigableSet<String> fetches, boolean nullIfEmpty) {
         this.hasId = template.hasId();
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
@@ -87,7 +87,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
-        if (fetches.isEmpty()) {
+        if (fetches == null || fetches.isEmpty()) {
             if (secondaryMappers.length != 0) {
                 FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
                 for (SecondaryMapper viewRoot : secondaryMappers) {
@@ -101,7 +101,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             if (secondaryMappers.length != 0) {
                 FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
                 for (SecondaryMapper viewRoot : secondaryMappers) {
-                    if (fetches.contains(viewRoot.getAttributePath())) {
+                    if (hasSubFetches(viewRoot.getAttributePath())) {
                         viewRoot.apply(fullQueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro);
                     }
                 }
@@ -109,12 +109,17 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 String attributePath = mapper.getAttributePath();
-                if (attributePath != null && fetches.contains(attributePath)) {
+                if (attributePath != null && hasSubFetches(attributePath)) {
                     mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
                 }
             }
         }
+    }
+
+    private boolean hasSubFetches(String attributePath) {
+        String fetchedPath = fetches.ceiling(attributePath);
+        return fetchedPath != null && (fetchedPath.length() == attributePath.length() || fetchedPath.startsWith(attributePath) && fetchedPath.length() > attributePath.length() && fetchedPath.charAt(attributePath.length()) == '.');
     }
 }

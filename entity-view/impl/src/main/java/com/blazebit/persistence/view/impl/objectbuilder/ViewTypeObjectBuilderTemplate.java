@@ -1423,7 +1423,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         boolean hasOffset = tupleOffset != 0 || suffix != 0;
         ObjectBuilder<T> result;
 
-        result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, entityViewConfiguration == null ? null : entityViewConfiguration.getViewJpqlMacro(), entityViewConfiguration == null ? null : entityViewConfiguration.getEmbeddingViewJpqlMacro(), entityViewConfiguration == null ? Collections.<String>emptySet() : entityViewConfiguration.getFetches(), nullFlatViewIfEmpty);
+        result = new ViewTypeObjectBuilder<T>(this, parameterHolder, optionalParameters, entityViewConfiguration == null ? null : entityViewConfiguration.getViewJpqlMacro(), entityViewConfiguration == null ? null : entityViewConfiguration.getEmbeddingViewJpqlMacro(), entityViewConfiguration == null ? null : entityViewConfiguration.getFetches(), nullFlatViewIfEmpty);
 
         if (hasSubtypes) {
             result = new InheritanceReducerViewTypeObjectBuilder<>((ViewTypeObjectBuilder<T>) result, tupleOffset, suffix, mappers.length, !isSubview && (tupleOffset > 0 || suffix > 0), subtypeInstantiators);

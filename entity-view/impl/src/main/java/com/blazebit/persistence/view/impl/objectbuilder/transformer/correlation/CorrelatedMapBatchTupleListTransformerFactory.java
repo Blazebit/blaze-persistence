@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.objectbuilder.ContainerAccumulator;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.NullListTupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 
 import java.util.Map;
@@ -53,6 +54,9 @@ public class CorrelatedMapBatchTupleListTransformerFactory extends AbstractCorre
 
     @Override
     public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration config) {
+        if (!config.hasSubFetches(attributePath)) {
+            return new NullListTupleTransformer(tupleIndex, correlator.getElementOffset());
+        }
         return new CorrelatedMapBatchTupleListTransformer(config.getExpressionFactory(), correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, correlatesThis,
                 viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, config, recording);
     }
