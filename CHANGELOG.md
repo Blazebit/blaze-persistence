@@ -26,6 +26,7 @@ Changes that happened in releases
 * Apply filters for aggregate mappings as `HAVING` predicates
 * Treat entity view mapping parameters always as singular in annotation processor
 * Import and properly render parameterized type arguments in entity view annotation processor
+* Fix entity view by id remove error on cascade delete of one-to-one mapped by association
 
 ### Backwards-incompatible changes
 

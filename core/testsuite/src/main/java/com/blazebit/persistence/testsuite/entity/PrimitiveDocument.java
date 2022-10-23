@@ -16,6 +16,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -25,6 +26,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import java.io.Serializable;
@@ -56,6 +58,7 @@ public class PrimitiveDocument implements Serializable {
     private List<PrimitivePerson> peopleListBag = new ArrayList<PrimitivePerson>();
     private Collection<PrimitivePerson> peopleCollectionBag = new ArrayList<PrimitivePerson>();
     private PrimitiveDocument parent;
+    private PrimitiveVersion version;
 
     public PrimitiveDocument() {
     }
@@ -160,6 +163,15 @@ public class PrimitiveDocument implements Serializable {
 
     public void setParent(PrimitiveDocument parent) {
         this.parent = parent;
+    }
+
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL)
+    public PrimitiveVersion getVersion() {
+        return version;
+    }
+
+    public void setVersion(PrimitiveVersion version) {
+        this.version = version;
     }
 
     @Override

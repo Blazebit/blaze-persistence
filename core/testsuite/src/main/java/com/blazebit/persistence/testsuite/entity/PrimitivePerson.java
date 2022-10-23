@@ -16,6 +16,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -79,7 +80,7 @@ public class PrimitivePerson implements Serializable {
         this.partnerDocument = partnerDocument;
     }
 
-    @OneToMany(mappedBy = "owner")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     public Set<PrimitiveDocument> getOwnedDocuments() {
         return ownedDocuments;
     }
