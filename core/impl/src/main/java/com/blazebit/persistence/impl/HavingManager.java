@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import java.util.Set;
 
+import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.impl.builder.predicate.HavingOrBuilderImpl;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -28,7 +29,7 @@ import com.blazebit.persistence.parser.expression.ExpressionFactory;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public class HavingManager<T> extends PredicateManager<T> {
+public class HavingManager<T extends WhereBuilder<T>> extends PredicateManager<T> {
 
     private final GroupByExpressionGatheringVisitor groupByExpressionGatheringVisitor;
 

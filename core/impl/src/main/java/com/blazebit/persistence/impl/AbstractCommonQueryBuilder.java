@@ -35,6 +35,7 @@ import com.blazebit.persistence.LeafOngoingFinalSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.Path;
+import com.blazebit.persistence.PredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
@@ -168,8 +169,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     protected final ParameterManager parameterManager;
     protected final SelectManager<QueryResultType> selectManager;
-    protected final WhereManager<BuilderType> whereManager;
-    protected final HavingManager<BuilderType> havingManager;
+    protected final WhereManager whereManager;
+    protected final HavingManager havingManager;
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
@@ -224,8 +225,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
-        this.whereManager = (WhereManager<BuilderType>) builder.whereManager;
-        this.havingManager = (HavingManager<BuilderType>) builder.havingManager;
+        this.whereManager = builder.whereManager;
+        this.havingManager = builder.havingManager;
         this.groupByManager = builder.groupByManager;
         this.keysetManager = builder.keysetManager;
         this.joinManager = builder.joinManager;
@@ -1521,6 +1522,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return whereManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
     }
 
+    public PredicateBuilder where() {
+        return whereManager;
+    }
+
     /*
      * Group by methods
      */
@@ -1759,6 +1764,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return havingManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
     }
 
+    public PredicateBuilder having() {
+        return havingManager;
+    }
+
     /*
      * Order by methods
      */
@@ -1955,7 +1964,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type) {
-        return (Z) bindEntityAttributes(alias, subqueryAlias, joinOnSubquery(base, entityClass, alias, type), false, true);
+        return (Z) (Object) bindEntityAttributes(alias, subqueryAlias, joinOnSubquery(base, entityClass, alias, type), false, true);
     }
 
     @SuppressWarnings("unchecked")
@@ -2011,7 +2020,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinOnEntitySubquery(String base, EntityType<?> entityClass, String alias, String subqueryAlias, JoinType type) {
-        return (Z) bindEntityAttributes(alias, subqueryAlias, joinOnSubquery(base, entityClass, alias, type), false, true);
+        return (Z) (Object) bindEntityAttributes(alias, subqueryAlias, joinOnSubquery(base, entityClass, alias, type), false, true);
     }
 
     @SuppressWarnings("unchecked")
@@ -2056,18 +2065,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type) {
         if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.NONE) {
-            return (Z) joinOn(base, entityClass, alias, type).on(alias).in().from(entityClass, subqueryAlias).select(subqueryAlias);
+            return (Z) (Object) joinOn(base, entityClass, alias, type).on(alias).in().from(entityClass, subqueryAlias).select(subqueryAlias);
         } else {
-            return (Z) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(base, entityClass, alias, type), true, true);
+            return (Z) (Object) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(base, entityClass, alias, type), true, true);
         }
     }
 
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinLateralOnEntitySubquery(String correlationPath, String alias, String subqueryAlias, JoinType type) {
         if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.NONE) {
-            return (Z) joinOnForLateralEmulation(correlationPath, alias, type).on(alias).in().from(correlationPath, subqueryAlias).select(subqueryAlias);
+            return (Z) (Object) joinOnForLateralEmulation(correlationPath, alias, type).on(alias).in().from(correlationPath, subqueryAlias).select(subqueryAlias);
         } else {
-            return (Z) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(correlationPath, alias, subqueryAlias, type), true, false);
+            return (Z) (Object) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(correlationPath, alias, subqueryAlias, type), true, false);
         }
     }
 
@@ -2094,15 +2103,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinLateralOnEntitySubquery(EntityType<?> clazz, String alias, String subqueryAlias, JoinType type) {
-        return (Z) joinLateralOnEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, subqueryAlias, type);
+        return (Z) (Object) joinLateralOnEntitySubquery(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, subqueryAlias, type);
     }
 
     @SuppressWarnings("unchecked")
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<BuilderType>, ? extends Z>> Z joinLateralOnEntitySubquery(String base, EntityType<?> entityClass, String alias, String subqueryAlias, JoinType type) {
         if (mainQuery.dbmsDialect.getLateralStyle() == LateralStyle.NONE) {
-            return (Z) joinOn(base, entityClass, alias, type).on(alias).in().from(entityClass, subqueryAlias).select(subqueryAlias);
+            return (Z) (Object) joinOn(base, entityClass, alias, type).on(alias).in().from(entityClass, subqueryAlias).select(subqueryAlias);
         } else {
-            return (Z) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(base, entityClass, alias, type), true, true);
+            return (Z) (Object) bindEntityAttributes(alias, subqueryAlias, joinLateralOnSubquery(base, entityClass, alias, type), true, true);
         }
     }
 

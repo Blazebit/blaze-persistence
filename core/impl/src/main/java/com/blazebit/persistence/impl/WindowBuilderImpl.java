@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.PredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -375,5 +376,9 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     public MultipleSubqueryInitiator<WindowBuilderImpl<T>> setWhereExpressionSubqueries(String expression) {
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return restrictSetExpressionSubqueries(this, predicate);
+    }
+
+    public PredicateBuilder where() {
+        return this;
     }
 }
