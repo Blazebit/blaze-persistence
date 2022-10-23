@@ -22,7 +22,6 @@ import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Path;
-import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.function.entity.EntityFunction;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;

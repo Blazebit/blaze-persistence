@@ -56,4 +56,12 @@ public interface HavingBuilder<T extends HavingBuilder<T>> extends BaseHavingBui
      * @since 1.2.0
      */
     public MultipleSubqueryInitiator<T> setHavingExpressionSubqueries(String expression);
+
+    /**
+     * Starts a {@link PredicateBuilder} for the having clause.
+     *
+     * @return The predicate builder for the having clause
+     * @since 1.6.8
+     */
+    public PredicateBuilder having();
 }

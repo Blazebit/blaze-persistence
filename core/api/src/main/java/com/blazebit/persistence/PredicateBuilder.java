@@ -20,29 +20,27 @@ package com.blazebit.persistence;
  * An interface for builders that support filtering. This is related to the
  * fact, that a query builder supports where clauses.
  *
- * @param <T> The concrete builder type
  * @author Christian Beikov
- * @since 1.0.0
+ * @since 1.6.8
  */
-public interface WhereBuilder<T extends WhereBuilder<T>> extends BaseWhereBuilder<T> {
+public interface PredicateBuilder extends BasePredicateBuilder<PredicateBuilder> {
 
     /**
-     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of
+     * Starts a {@link PredicateOrBuilder} which is a predicate consisting only of
      * disjunctiv connected predicates. When the builder finishes, the predicate
      * is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The or predicate builder for the where clause
      */
-    public WhereOrBuilder<T> whereOr();
-    
+    public PredicateOrBuilder<PredicateBuilder> or();
+
     /**
      * Sets the given expression as expression for the where clause.
      *  
      * @param expression The where expression
      * @return The builder
-     * @since 1.2.0
      */
-    public T setWhereExpression(String expression);
+    public PredicateBuilder setExpression(String expression);
     
     /**
      * Starts a {@link MultipleSubqueryInitiator} for expression of the where clause.
@@ -54,15 +52,6 @@ public interface WhereBuilder<T extends WhereBuilder<T>> extends BaseWhereBuilde
      *  
      * @param expression The where expression
      * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
-     * @since 1.2.0
      */
-    public MultipleSubqueryInitiator<T> setWhereExpressionSubqueries(String expression);
-
-    /**
-     * Starts a {@link PredicateBuilder} for the where clause.
-     *
-     * @return The predicate builder for the where clause
-     * @since 1.6.8
-     */
-    public PredicateBuilder where();
+    public MultipleSubqueryInitiator<PredicateBuilder> setExpressionSubqueries(String expression);
 }
