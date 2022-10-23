@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.processor;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.util.Map;
 
 /**
@@ -32,12 +33,12 @@ public final class OptionalParameterUtils {
         addOptionalParameters(
             new OptionalParameterConsumer() {
                 @Override
-                public void addOptionalParameter(String name, TypeElement typeElement) {
+                public void addOptionalParameter(String name, TypeMirror typeMirror) {
                     if (!optionalParameters.containsKey(name)) {
-                        if (typeElement == null) {
-                            typeElement = context.getTypeElement("java.lang.Object");
+                        if (typeMirror == null) {
+                            typeMirror = context.getTypeElement("java.lang.Object").asType();
                         }
-                        optionalParameters.put(name, typeElement.getQualifiedName().toString());
+                        optionalParameters.put(name, typeMirror.toString());
                     }
                 }
             },
@@ -46,16 +47,16 @@ public final class OptionalParameterUtils {
         );
     }
 
-    public static void addOptionalParametersTypeElement(Map<String, TypeElement> optionalParameters, String mapping, Context context) {
+    public static void addOptionalParametersTypeElement(Map<String, TypeMirror> optionalParameters, String mapping, Context context) {
         addOptionalParameters(
             new OptionalParameterConsumer() {
                 @Override
-                public void addOptionalParameter(String name, TypeElement typeElement) {
+                public void addOptionalParameter(String name, TypeMirror typeMirror) {
                     if (!optionalParameters.containsKey(name)) {
-                        if (typeElement == null) {
-                            typeElement = context.getTypeElement("java.lang.Object");
+                        if (typeMirror == null) {
+                            typeMirror = context.getTypeElement("java.lang.Object").asType();
                         }
-                        optionalParameters.put(name, typeElement);
+                        optionalParameters.put(name, typeMirror);
                     }
                 }
             },
@@ -87,7 +88,7 @@ public final class OptionalParameterUtils {
             }
             if (sb.length() != 0) {
                 String name = sb.toString();
-                TypeElement existingTypeElement = context.getOptionalParameters().get(name);
+                TypeMirror existingTypeElement = context.getOptionalParameters().get(name);
                 optionalParameters.addOptionalParameter(name, existingTypeElement);
             }
         }
@@ -98,6 +99,6 @@ public final class OptionalParameterUtils {
      * @since 1.6.8
      */
     private static interface OptionalParameterConsumer {
-        void addOptionalParameter(String name, TypeElement typeElement);
+        void addOptionalParameter(String name, TypeMirror typeMirror);
     }
 }

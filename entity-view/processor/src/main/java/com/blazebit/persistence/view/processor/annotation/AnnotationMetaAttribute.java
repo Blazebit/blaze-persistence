@@ -81,7 +81,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
     private final MetaEntityView subviewElement;
     private final Map<String, AttributeFilter> filters;
     // We allow javax.lang.model here because this is cleared after construction and getting rid of it is hard
-    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, TypeMirror> optionalParameters;
     private final List<EntityIdAttribute> entityIdAttributes;
     private final boolean mutable;
     private final boolean updatable;
@@ -111,7 +111,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         boolean self = false;
         boolean createEmptyFlatViews = context.isCreateEmptyFlatViews();
         Map<String, AttributeFilter> filters;
-        Map<String, TypeElement> optionalParameters;
+        Map<String, TypeMirror> optionalParameters;
         if (version) {
             mapping = element.getSimpleName().toString();
             if (element.getKind() == ElementKind.METHOD) {
@@ -175,9 +175,13 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                         kind = MappingKind.PARAMETER;
                         updatable = false;
                         mutable = false;
-                        TypeElement existingTypeElement = context.getOptionalParameters().get(mapping);
+                        TypeMirror existingTypeElement = context.getOptionalParameters().get(mapping);
                         if (existingTypeElement == null) {
-                            optionalParameters.put(mapping, context.getTypeElement(modelType));
+                            if (element.getKind() == ElementKind.METHOD) {
+                                optionalParameters.put(mapping, ((ExecutableElement) element).getReturnType());
+                            } else {
+                                optionalParameters.put(mapping, element.asType());
+                            }
                         } else {
                             optionalParameters.put(mapping, existingTypeElement);
                         }
@@ -413,7 +417,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
                     break;
             }
         }
-        filters.put(name, new AttributeFilter(name, (TypeElement) ((DeclaredType) type).asElement(), attributeType, context));
+        filters.put(name, new AttributeFilter(name, type, attributeType, context));
     }
 
     protected static TypeElement getSubview(String realType, Context context) {
@@ -463,7 +467,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         return createEmptyFlatViews;
     }
 
-    public Map<String, TypeElement> getOptionalParameters() {
+    public Map<String, TypeMirror> getOptionalParameters() {
         return optionalParameters;
     }
 

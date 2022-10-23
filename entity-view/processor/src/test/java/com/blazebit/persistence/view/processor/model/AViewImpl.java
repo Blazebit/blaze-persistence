@@ -23,21 +23,25 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     private final int age;
     private final byte[] bytes;
     private final Integer id;
+    private final List<Object> listMappingParameter;
     private final List<Set<String>> multiNames;
     private String name;
     private final List<String> names;
-    private final Optional<com.blazebit.persistence.view.processor.model.BView> optionalValue;
+    private final Optional<BView> optionalValue;
     private final List<X> test;
+    private final X test2;
 
     public AViewImpl(AViewImpl noop, Map<String, Object> blazePersistenceOptionalParameters) {
         this.age = 0;
         this.bytes = null;
         this.id = null;
+        this.listMappingParameter = (List<Object>) blazePersistenceOptionalParameters.get("listMappingParameter");
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.optionalValue = null;
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
+        this.test2 = null;
     }
 
     public AViewImpl(Integer id) {
@@ -45,23 +49,27 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = 0;
         this.bytes = null;
         this.id = id;
+        this.listMappingParameter = null;
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
         this.optionalValue = null;
         this.test = (List<X>) (java.util.List<?>) AView_.test.getCollectionInstantiator().createCollection(0);
+        this.test2 = null;
     }
 
-    public AViewImpl(Integer id, int age, byte[] bytes, List<Set<String>> multiNames, String name, List<String> names, Optional<com.blazebit.persistence.view.processor.model.BView> optionalValue, List<X> test) {
+    public AViewImpl(Integer id, int age, byte[] bytes, List<Object> listMappingParameter, List<Set<String>> multiNames, String name, List<String> names, Optional<BView> optionalValue, List<X> test, X test2) {
         super();
         this.age = age;
         this.bytes = bytes;
         this.id = id;
+        this.listMappingParameter = listMappingParameter;
         this.multiNames = multiNames;
         this.name = name;
         this.names = names;
         this.optionalValue = optionalValue;
         this.test = test;
+        this.test2 = test2;
     }
 
     public AViewImpl(AViewImpl noop, int offset, Object[] tuple) {
@@ -69,11 +77,13 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + 1];
         this.bytes = (byte[]) tuple[offset + 2];
         this.id = (Integer) tuple[offset + 0];
-        this.multiNames = (List<Set<String>>) tuple[offset + 3];
-        this.name = (String) tuple[offset + 4];
-        this.names = (List<String>) tuple[offset + 5];
-        this.optionalValue = (Optional<com.blazebit.persistence.view.processor.model.BView>) tuple[offset + 6];
-        this.test = (List<X>) tuple[offset + 7];
+        this.listMappingParameter = (List<Object>) tuple[offset + 3];
+        this.multiNames = (List<Set<String>>) tuple[offset + 4];
+        this.name = (String) tuple[offset + 5];
+        this.names = (List<String>) tuple[offset + 6];
+        this.optionalValue = (Optional<BView>) tuple[offset + 7];
+        this.test = (List<X>) tuple[offset + 8];
+        this.test2 = (X) tuple[offset + 9];
     }
 
     public AViewImpl(AViewImpl noop, int offset, int[] assignment, Object[] tuple) {
@@ -81,11 +91,13 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + assignment[1]];
         this.bytes = (byte[]) tuple[offset + assignment[2]];
         this.id = (Integer) tuple[offset + assignment[0]];
-        this.multiNames = (List<Set<String>>) tuple[offset + assignment[3]];
-        this.name = (String) tuple[offset + assignment[4]];
-        this.names = (List<String>) tuple[offset + assignment[5]];
-        this.optionalValue = (Optional<com.blazebit.persistence.view.processor.model.BView>) tuple[offset + assignment[6]];
-        this.test = (List<X>) tuple[offset + assignment[7]];
+        this.listMappingParameter = (List<Object>) tuple[offset + assignment[3]];
+        this.multiNames = (List<Set<String>>) tuple[offset + assignment[4]];
+        this.name = (String) tuple[offset + assignment[5]];
+        this.names = (List<String>) tuple[offset + assignment[6]];
+        this.optionalValue = (Optional<BView>) tuple[offset + assignment[7]];
+        this.test = (List<X>) tuple[offset + assignment[8]];
+        this.test2 = (X) tuple[offset + assignment[9]];
     }
 
     @Override
@@ -101,6 +113,11 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public List<Object> getListMappingParameter() {
+        return listMappingParameter;
     }
 
     @Override
@@ -124,13 +141,18 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     }
 
     @Override
-    public Optional<com.blazebit.persistence.view.processor.model.BView> getOptionalValue() {
+    public Optional<BView> getOptionalValue() {
         return optionalValue;
     }
 
     @Override
     public List<X> getTest() {
         return test;
+    }
+
+    @Override
+    public X getTest2() {
+        return test2;
     }
 
     @Override

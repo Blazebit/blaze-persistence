@@ -83,7 +83,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
         TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement(declaredType);
         String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
         String collection = Constants.COLLECTIONS.get(fqNameOfReturnType);
-        if (collection != null && TypeUtils.getAnnotationMirror(element, Constants.MAPPING_SINGULAR) == null) {
+        if (collection != null && TypeUtils.getAnnotationMirror(element, Constants.MAPPING_SINGULAR) == null && TypeUtils.getAnnotationMirror(element, Constants.MAPPING_PARAMETER) == null) {
             List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
             if (typeArguments.size() == 0) {
                 context.logMessage(Diagnostic.Kind.ERROR, "Unable to determine type arguments for " + declaredType);
@@ -136,6 +136,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
                     modelType = typeConverter.getUnderlyingType(entityDeclaredType, declaredTypeMirror, context);
                     return new AnnotationMetaSingularAttribute(entity, element, modelType, declaredJavaType, convertedModelType, context);
                 }
+            }
+            if (!declaredTypeMirror.getKind().isPrimitive() && declaredTypeMirror.getKind() != TypeKind.TYPEVAR) {
+                modelType = declaredJavaType;
             }
             return new AnnotationMetaSingularAttribute(entity, element, modelType, declaredJavaType, null, context);
         }

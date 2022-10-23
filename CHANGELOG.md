@@ -24,6 +24,8 @@ Changes that happened in releases
 * Fix custom entity view class bytecode analysis when using 2 stack slot types
 * Applying `EntityViewSetting` to custom path should have inner join semantics
 * Apply filters for aggregate mappings as `HAVING` predicates
+* Treat entity view mapping parameters always as singular in annotation processor
+* Import and properly render parameterized type arguments in entity view annotation processor
 
 ### Backwards-incompatible changes
 

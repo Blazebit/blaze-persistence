@@ -59,7 +59,7 @@ public class Context {
     private final Map<String, MetaEntityView> metaEntityViews = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Boolean> generatedModelClasses = new ConcurrentHashMap<>();
     private final ConcurrentMap<CharSequence, Object> typeElements = new ConcurrentHashMap<>();
-    private final Map<String, TypeElement> optionalParameters;
+    private final Map<String, TypeMirror> optionalParameters;
     private final Map<String, Map<String, TypeConverter>> converters;
 
     private final Map<String, Map<String, Element>> initializedViewTypes = new HashMap<>();
@@ -82,7 +82,7 @@ public class Context {
         this.pe = pe;
         this.logDebug = Boolean.parseBoolean(pe.getOptions().get(EntityViewAnnotationProcessor.DEBUG_OPTION));
 
-        Map<String, TypeElement> optionalParameters = new HashMap<>();
+        Map<String, TypeMirror> optionalParameters = new HashMap<>();
         Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
         TypeElement java8AndBelowGeneratedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.Generated");
         if (java8AndBelowGeneratedAnnotation != null) {
@@ -127,7 +127,7 @@ public class Context {
                     name = part.substring(0, idx);
                     type = part.substring(idx + 1);
                 }
-                optionalParameters.put(name, pe.getElementUtils().getTypeElement(type));
+                optionalParameters.put(name, pe.getElementUtils().getTypeElement(type).asType());
             }
         }
         this.optionalParameters = optionalParameters;
@@ -256,7 +256,7 @@ public class Context {
         return generateDeepConstants;
     }
 
-    public Map<String, TypeElement> getOptionalParameters() {
+    public Map<String, TypeMirror> getOptionalParameters() {
         return optionalParameters;
     }
 

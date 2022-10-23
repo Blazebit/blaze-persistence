@@ -202,7 +202,7 @@ public class AnnotationMetaEntityView implements MetaEntityView {
         Map<String, EntityViewSpecialMemberMethod> specialMembers = new TreeMap<>();
         List<MetaConstructor> constructors = new ArrayList<>();
         MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor(this, context);
-        Map<String, TypeElement> optionalParameters = new HashMap<>();
+        Map<String, TypeMirror> optionalParameters = new HashMap<>();
         boolean valid = true;
         boolean hasEmptyConstructor = false;
         boolean hasSelfConstructor = false;
@@ -228,10 +228,10 @@ public class AnnotationMetaEntityView implements MetaEntityView {
                                 versionMember = result;
                             }
                             members.put(result.getPropertyName(), result);
-                            for (Map.Entry<String, TypeElement> entry : result.getOptionalParameters().entrySet()) {
-                                TypeElement typeElement = entry.getValue();
-                                TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
-                                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
+                            for (Map.Entry<String, TypeMirror> entry : result.getOptionalParameters().entrySet()) {
+                                TypeMirror typeElement = entry.getValue();
+                                TypeMirror existingTypeElement = optionalParameters.get(entry.getKey());
+                                if (existingTypeElement == null || context.getTypeUtils().isAssignable(typeElement, existingTypeElement)) {
                                     optionalParameters.put(entry.getKey(), entry.getValue());
                                 }
                             }
@@ -268,20 +268,20 @@ public class AnnotationMetaEntityView implements MetaEntityView {
             }
         }
         Map<String, String> overallOptionalParameters = new TreeMap<>();
-        for (Map.Entry<String, TypeElement> entry : optionalParameters.entrySet()) {
-            overallOptionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+        for (Map.Entry<String, TypeMirror> entry : optionalParameters.entrySet()) {
+            overallOptionalParameters.put(entry.getKey(), entry.getValue().toString());
         }
         for (ExecutableElement constructorElement : constructorElements) {
-            Map<String, TypeElement> constructorOptionalParameters = new HashMap<>();
+            Map<String, TypeMirror> constructorOptionalParameters = new HashMap<>();
             AnnotationMetaConstructor constructor = new AnnotationMetaConstructor(this, optionalParameters, constructorOptionalParameters, constructorElement, visitor, context);
             hasEmptyConstructor = hasEmptyConstructor || constructor.getParameters().isEmpty();
             hasSelfConstructor = hasSelfConstructor || constructor.hasSelfParameter();
             constructors.add(constructor);
-            for (Map.Entry<String, TypeElement> entry : constructorOptionalParameters.entrySet()) {
-                TypeElement existingTypeElement = optionalParameters.get(entry.getKey());
-                TypeElement typeElement = entry.getValue();
-                if (existingTypeElement != null && context.getTypeUtils().isAssignable(typeElement.asType(), existingTypeElement.asType())) {
-                    overallOptionalParameters.put(entry.getKey(), entry.getValue().getQualifiedName().toString());
+            for (Map.Entry<String, TypeMirror> entry : constructorOptionalParameters.entrySet()) {
+                TypeMirror existingTypeElement = optionalParameters.get(entry.getKey());
+                TypeMirror typeElement = entry.getValue();
+                if (existingTypeElement != null && context.getTypeUtils().isAssignable(typeElement, existingTypeElement)) {
+                    overallOptionalParameters.put(entry.getKey(), entry.getValue().toString());
                 }
             }
         }
