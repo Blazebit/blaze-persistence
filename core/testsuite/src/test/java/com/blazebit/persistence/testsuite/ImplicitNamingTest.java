@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
+import com.blazebit.persistence.testsuite.entity.PrimitiveVersion;
 import org.junit.Test;
 
 import java.util.*;
@@ -35,7 +36,8 @@ public class ImplicitNamingTest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return new Class[] {
                 PrimitiveDocument.class,
-                PrimitivePerson.class
+                PrimitivePerson.class,
+                PrimitiveVersion.class
         };
     }
 

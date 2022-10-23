@@ -82,6 +82,7 @@
         com.blazebit.persistence.testsuite.entity.PolymorphicSub2.class,
         com.blazebit.persistence.testsuite.entity.PrimitiveDocument.class,
         com.blazebit.persistence.testsuite.entity.PrimitivePerson.class,
+        com.blazebit.persistence.testsuite.entity.PrimitiveVersion.class,
         com.blazebit.persistence.testsuite.entity.Project.class,
         com.blazebit.persistence.testsuite.entity.ProjectLeader.class,
         // TODO doesn't compile in QueryDSL, file a bug there...

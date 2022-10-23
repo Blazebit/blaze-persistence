@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.testsuite.filter.basic;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
+import com.blazebit.persistence.testsuite.entity.PrimitiveVersion;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -52,7 +53,8 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
                 PrimitiveDocument.class,
-                PrimitivePerson.class
+                PrimitivePerson.class,
+                PrimitiveVersion.class
         };
     }
 
