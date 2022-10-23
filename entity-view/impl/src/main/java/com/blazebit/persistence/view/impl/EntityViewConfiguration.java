@@ -230,7 +230,7 @@ public final class EntityViewConfiguration {
         return optionalParameters;
     }
 
-    public Set<String> getFetches() {
+    public NavigableSet<String> getFetches() {
         return fetches;
     }
 

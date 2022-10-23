@@ -79,7 +79,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         if (!entityViewConfiguration.hasSubFetches(attributePath)) {
-            return new NullTupleTransformer(template);
+            return new NullTupleTransformer(template, template.getTupleOffset());
         }
         // TODO: Fix view conversion for correlated attributes somehow
         // Before, we passed a FullQueryBuilder instead of a ParameterHolder but that doesn't work for view conversion
