@@ -51,6 +51,7 @@ import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
+import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
@@ -272,13 +273,13 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
 
     private String getSingleValuedIdAccessAssociationName(String field, ExtendedAttribute<?, ?> attr) {
         List<Attribute<?, ?>> attributePath = attr.getAttributePath();
-        if (!attr.getAttribute().isAssociation() && attributePath.size() > 1) {
+        if (!JpaMetamodelUtils.isAssociation(attr.getAttribute()) && attributePath.size() > 1) {
             int endIndex = -1;
             for (Attribute<?, ?> attribute : attributePath) {
                 endIndex += attribute.getName().length() + 1;
                 if (attribute.isCollection()) {
                     return null;
-                } else if (attribute.isAssociation()) {
+                } else if (JpaMetamodelUtils.isAssociation(attribute)) {
                     return field.substring(0, endIndex);
                 }
             }
