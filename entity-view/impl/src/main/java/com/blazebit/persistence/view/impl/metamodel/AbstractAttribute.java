@@ -146,6 +146,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Expression correlationResultExpression;
     protected final MappingType mappingType;
     protected final boolean id;
+    protected final boolean isAggregate;
     protected final javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
     private final List<TargetType> possibleTargetTypes;
     private final List<TargetType> possibleIndexTargetTypes;
@@ -229,6 +230,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             id = true;
             updateMappableAttribute = getUpdateMappableAttribute(context, mappingExpression);
             this.mappingType = MappingType.BASIC;
+            this.isAggregate = isAggregate(mappingExpression);
         } else if (mappingAnnotation instanceof Mapping) {
             Mapping m = (Mapping) mappingAnnotation;
             mappingString = m.value();
@@ -237,6 +239,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             fetchStrategy = m.fetch();
             updateMappableAttribute = getUpdateMappableAttribute(context, mappingExpression);
             this.mappingType = MappingType.BASIC;
+            this.isAggregate = isAggregate(mappingExpression);
             if (fetchStrategy != FetchStrategy.JOIN || limitExpression != null) {
                 ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, declaringType.getJpaManagedType());
                 ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(mappingString);
@@ -315,6 +318,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             limitExpression = null;
             offsetExpression = null;
             this.mappingType = MappingType.PARAMETER;
+            this.isAggregate = false;
         } else if (mappingAnnotation instanceof Self) {
             mappingString = "NULL";
             mappingExpression = NullExpression.INSTANCE;
@@ -323,6 +327,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             offsetExpression = null;
             orderByItems = Collections.emptyList();
             this.mappingType = MappingType.PARAMETER;
+            this.isAggregate = false;
         } else if (mappingAnnotation instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mappingAnnotation;
             subqueryProvider = mappingSubquery.value();
@@ -336,6 +341,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             subqueryExpression = mappingSubquery.expression();
             subqueryAlias = mappingSubquery.subqueryAlias();
             subqueryResultExpression = createSimpleExpression(subqueryExpression, mapping, context, ExpressionLocation.SUBQUERY_EXPRESSION);
+            this.isAggregate = isAggregate(subqueryResultExpression);
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 context.addError("The subquery alias is empty although the subquery expression is not " + mapping.getErrorLocation());
@@ -357,6 +363,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             correlationProvider = mappingCorrelated.correlator();
             correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
             correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
+            this.isAggregate = isAggregate(correlationResultExpression);
 
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 context.addError("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + mapping.getErrorLocation());
@@ -382,6 +389,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             correlationBasisExpression = createSimpleExpression(correlationBasis, mapping, context, ExpressionLocation.CORRELATION_BASIS);
             correlationResultExpression = createSimpleExpression(correlationResult, mapping, context, ExpressionLocation.CORRELATION_RESULT);
             correlationProviderFactory = new StaticCorrelationProvider(correlated, correlationKeyAlias, correlationExpression, createPredicate(correlationExpression, mapping, context, ExpressionLocation.CORRELATION_EXPRESSION), declaringType.getEntityViewRootTypes().keySet());
+            this.isAggregate = isAggregate(correlationResultExpression);
 
             if (mappingCorrelated.correlationBasis().isEmpty()) {
                 context.addError("Illegal empty correlation basis in the " + mapping.getErrorLocation());
@@ -395,6 +403,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else {
             context.addError("No mapping annotation could be found " + mapping.getErrorLocation());
             this.mappingType = null;
+            this.isAggregate = false;
         }
 
         if (limitExpression != null && fetchStrategy == FetchStrategy.MULTISET && context.getDbmsDialect().getLateralStyle() == LateralStyle.NONE && !context.getDbmsDialect().supportsWindowFunctions()) {
@@ -425,6 +434,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         this.correlationExpression = correlationExpression;
         this.correlationBasisExpression = correlationBasisExpression;
         this.correlationResultExpression = correlationResultExpression;
+    }
+
+    private static boolean isAggregate(Expression expression) {
+        return expression != null && Boolean.TRUE.equals(expression.accept(AggregateDetectionVisitor.INSTANCE));
     }
 
     public static List<OrderByItem> parseOrderByItems(List<String> orderByItemExpressions) {
@@ -1513,6 +1526,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public Expression getMappingExpression() {
         return mappingExpression;
+    }
+
+    public boolean isAggregate() {
+        return isAggregate;
     }
 
     @Override
