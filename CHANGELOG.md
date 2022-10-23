@@ -10,6 +10,7 @@ Changes that happened in releases
 * Support marking GraphQL fields and field types as non-null in Entity Views
 * Add `ManagedViewType#renderSecondaryMappings` implementation that accepts `FromBuilder`
 * Introduce `PredicateBuilder`, `PredicateAndBuilder` and `PredicateOrBuilder` as abstraction for `WHERE`, `HAVING` and `ON` clauses
+* Respect common annotations on EntityViews for GraphQL type generations
 
 ### Bug fixes
 
