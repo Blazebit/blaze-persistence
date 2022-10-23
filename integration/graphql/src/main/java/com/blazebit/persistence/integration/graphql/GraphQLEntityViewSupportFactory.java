@@ -2093,6 +2093,11 @@ public class GraphQLEntityViewSupportFactory {
                 case "org.eclipse.microprofile.graphql.NonNull":
                 case "com.blazebit.persistence.integration.graphql.GraphQLNonNull":
                 case "io.leangen.graphql.annotations.GraphQLNonNull":
+                // Also respect common NonNull language annotations
+                case "javax.validation.constraints.NotNull":
+                case "jakarta.validation.constraints.NotNull":
+                case "org.springframework.lang.NonNull":
+                case "lombok.NonNull":
                     return true;
             }
             //CHECKSTYLE:ON: MissingSwitchDefault
