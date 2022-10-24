@@ -1085,7 +1085,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
 
             for (int i = 0; i < unmappedPostRemoveCascadeDeleters.length; i++) {
-                unmappedPostRemoveCascadeDeleters[i].removeById(context, returnedValues[i]);
+                if (returnedValues[i] != null) {
+                    unmappedPostRemoveCascadeDeleters[i].removeById(context, returnedValues[i]);
+                }
             }
 
             if (cascadeMappedDeletes) {
@@ -1093,7 +1095,10 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 for (int i = 0; i < flushers.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
                     if (flusher != null && flusher.requiresDeleteCascadeAfterRemove() && flusher.getElementIdAttributeName() != null) {
-                        flusher.remove(context, returnedValues[valueIndex++]);
+                        if (returnedValues[valueIndex] != null) {
+                            flusher.remove(context, returnedValues[valueIndex]);
+                        }
+                        valueIndex++;
                     }
                 }
             }

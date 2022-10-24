@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.update.flush;
 
-import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -49,15 +48,11 @@ public class UnmappedCollectionAttributeCascadeDeleter extends AbstractUnmappedA
         if (elementIdAttributeName != null) {
             this.jpaProviderDeletesCollection = jpaProvider.supportsJoinTableCleanupOnDelete();
             if (cascadeDeleteElement) {
-                String elementOwnerIdAttributeName = null;
-                if (!StringUtils.isEmpty(mappedByAttributeName)) {
-                    elementOwnerIdAttributeName = mappedByAttributeName + "." + ownerIdAttributeName;
-                }
                 this.elementDeleter = new UnmappedBasicAttributeCascadeDeleter(
                         evm,
                         "",
                         attribute,
-                        elementOwnerIdAttributeName,
+                        ownerIdAttributeName,
                         disallowCycle
                 );
             } else {

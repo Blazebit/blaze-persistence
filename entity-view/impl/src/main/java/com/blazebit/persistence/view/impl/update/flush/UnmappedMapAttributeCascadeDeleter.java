@@ -34,6 +34,7 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
 
     private final Class<?> ownerEntityClass;
     private final String ownerIdAttributeName;
+    private final String mappedByAttributeName;
     private final boolean jpaProviderDeletesCollection;
     private final UnmappedBasicAttributeCascadeDeleter elementDeleter;
 
@@ -41,6 +42,7 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
         super(evm, attributeName, attribute);
         this.ownerEntityClass = ownerEntityClass;
         this.ownerIdAttributeName = ownerIdAttributeName;
+        this.mappedByAttributeName = attribute.getMappedBy();
         if (elementIdAttributeName != null) {
             this.jpaProviderDeletesCollection = evm.getJpaProvider().supportsJoinTableCleanupOnDelete();
             if (cascadeDeleteElement) {
@@ -48,7 +50,7 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
                         evm,
                         "",
                         attribute,
-                        null,
+                        ownerIdAttributeName,
                         disallowCycle
                 );
             } else {
@@ -64,6 +66,7 @@ public class UnmappedMapAttributeCascadeDeleter extends AbstractUnmappedAttribut
         super(original);
         this.ownerEntityClass = original.ownerEntityClass;
         this.ownerIdAttributeName = original.ownerIdAttributeName;
+        this.mappedByAttributeName = original.mappedByAttributeName;
         this.jpaProviderDeletesCollection = jpaProviderDeletesCollection;
         this.elementDeleter = original.elementDeleter;
     }

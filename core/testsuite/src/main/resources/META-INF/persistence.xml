@@ -68,6 +68,7 @@
         <class>com.blazebit.persistence.testsuite.entity.PolymorphicSub1</class>
         <class>com.blazebit.persistence.testsuite.entity.PolymorphicSub2</class>
         <class>com.blazebit.persistence.testsuite.entity.PrimitiveDocument</class>
+        <class>com.blazebit.persistence.testsuite.entity.PrimitiveFamily</class>
         <class>com.blazebit.persistence.testsuite.entity.PrimitivePerson</class>
         <class>com.blazebit.persistence.testsuite.entity.PrimitiveVersion</class>
         <class>com.blazebit.persistence.testsuite.entity.Project</class>
