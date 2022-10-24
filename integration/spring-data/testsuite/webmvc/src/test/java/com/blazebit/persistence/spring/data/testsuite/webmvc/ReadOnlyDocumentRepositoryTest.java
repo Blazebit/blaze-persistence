@@ -17,11 +17,11 @@
 package com.blazebit.persistence.spring.data.testsuite.webmvc;
 
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
 import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAccessor;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAccessors;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.config.SystemPropertyBasedActiveProfilesResolver;
@@ -55,7 +55,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -70,7 +69,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Moritz Becker
@@ -847,10 +849,9 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*TestConfig"))
     @ImportResource("classpath:/com/blazebit/persistence/spring/data/testsuite/webmvc/application-config.xml")
     @EnableEntityViews(basePackages = "com.blazebit.persistence.spring.data.testsuite.webmvc.view")
-    @EnableJpaRepositories(
+    @EnableBlazeRepositories(
             basePackages = "com.blazebit.persistence.spring.data.testsuite.webmvc.repository",
-            entityManagerFactoryRef = "myEmf",
-            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class
+            entityManagerFactoryRef = "myEmf"
     )
     static class TestConfig {
     }

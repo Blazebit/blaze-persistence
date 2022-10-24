@@ -30,9 +30,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.*;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SampleTest.TestConfig.class)
@@ -52,9 +51,8 @@ public class SampleTest extends AbstractSampleTest {
     @Configuration
     @ComponentScan("${package}")
     @EnableEntityViews(basePackages = { "${package}.view"})
-    @EnableJpaRepositories(
-            basePackages = "${package}.repository",
-            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+    @EnableBlazeRepositories(
+            basePackages = "${package}.repository")
     static class TestConfig {
     }
 }

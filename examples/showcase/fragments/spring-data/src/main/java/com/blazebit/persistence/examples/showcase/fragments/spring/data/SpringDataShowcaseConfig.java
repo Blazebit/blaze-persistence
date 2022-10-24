@@ -16,18 +16,16 @@
 
 package com.blazebit.persistence.examples.showcase.fragments.spring.data;
 
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * @author Moritz Becker
  * @since 1.2.0
  */
 @Configuration
-@EnableJpaRepositories(
+@EnableBlazeRepositories(
         basePackages = "com.blazebit.persistence.examples.showcase.fragments.spring.data.repository",
-        entityManagerFactoryRef = "myEmf",
-        repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+        entityManagerFactoryRef = "myEmf")
 public class SpringDataShowcaseConfig {
 }

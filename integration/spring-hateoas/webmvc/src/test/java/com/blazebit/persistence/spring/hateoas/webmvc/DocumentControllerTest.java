@@ -17,7 +17,7 @@
 package com.blazebit.persistence.spring.hateoas.webmvc;
 
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import com.blazebit.persistence.spring.hateoas.webmvc.entity.Document;
 import com.blazebit.persistence.spring.hateoas.webmvc.entity.Person;
 import com.blazebit.persistence.spring.hateoas.webmvc.tx.TransactionalWorkService;
@@ -28,7 +28,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -98,10 +97,9 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
     @ImportResource("classpath:/com/blazebit/persistence/spring/hateoas/webmvc/application-config.xml")
     @EnableWebMvc
     @EnableEntityViews(basePackages = "com.blazebit.persistence.spring.hateoas.webmvc.view")
-    @EnableJpaRepositories(
+    @EnableBlazeRepositories(
             basePackages = "com.blazebit.persistence.spring.hateoas.webmvc.repository",
-            entityManagerFactoryRef = "myEmf",
-            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+            entityManagerFactoryRef = "myEmf")
     static class TestConfig {
     }
 }

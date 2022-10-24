@@ -18,7 +18,7 @@ package com.blazebit.persistence.examples.spring.data.webmvc.repository;
 
 import com.blazebit.persistence.examples.spring.data.webmvc.model.Cat;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +27,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.web.config.SpringDataWebConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -53,9 +52,8 @@ public class SampleTest extends AbstractSampleTest {
     @ComponentScan("com.blazebit.persistence.examples.spring.data.webmvc")
     @ImportResource({"/META-INF/test-config.xml"})
     @EnableEntityViews(basePackages = { "com.blazebit.persistence.examples.spring.data.webmvc.view"})
-    @EnableJpaRepositories(
-            basePackages = "com.blazebit.persistence.examples.spring.data.webmvc.repository",
-            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+    @EnableBlazeRepositories(
+            basePackages = "com.blazebit.persistence.examples.spring.data.webmvc.repository")
     static class TestConfig {
     }
 }

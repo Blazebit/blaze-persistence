@@ -46,6 +46,7 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortHandlerMethodArgumentResolver\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortArgumentResolver\.java$"/>
 
+    <suppress checks="." files="[\\/]org[\\/]springframework[\\/]data[\\/]repository[\\/]config[\\/].*\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]integration[\\/]jsonb[\\/]jsonstructure[\\/].*\.java$"/>
 
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->

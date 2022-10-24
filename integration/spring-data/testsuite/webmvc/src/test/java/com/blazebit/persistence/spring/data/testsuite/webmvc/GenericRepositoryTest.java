@@ -17,7 +17,7 @@
 package com.blazebit.persistence.spring.data.testsuite.webmvc;
 
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAccessor;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAccessors;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Document;
@@ -33,7 +33,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -104,10 +103,9 @@ public class GenericRepositoryTest extends AbstractSpringTest {
     @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = ".*TestConfig"))
     @ImportResource("classpath:/com/blazebit/persistence/spring/data/testsuite/webmvc/application-config.xml")
     @EnableEntityViews(basePackages = "com.blazebit.persistence.spring.data.testsuite.webmvc.view")
-    @EnableJpaRepositories(
+    @EnableBlazeRepositories(
             basePackages = "com.blazebit.persistence.spring.data.testsuite.webmvc.repository",
-            entityManagerFactoryRef = "myEmf",
-            repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+            entityManagerFactoryRef = "myEmf")
     static class TestConfig {
     }
 }
