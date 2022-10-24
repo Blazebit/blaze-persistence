@@ -20,7 +20,7 @@ import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
@@ -41,10 +40,9 @@ import java.util.UUID;
  * @since 1.5.0
  */
 @EnableEntityViews(basePackages = "com.blazebit.persistence.spring.data.testsuite.webflux.view")
-@EnableJpaRepositories(
+@EnableBlazeRepositories(
         basePackages = "com.blazebit.persistence.spring.data.testsuite.webflux.repository",
-        entityManagerFactoryRef = "myEmf",
-        repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+        entityManagerFactoryRef = "myEmf")
 @Configuration
 public class BlazePersistenceConfiguration {
 

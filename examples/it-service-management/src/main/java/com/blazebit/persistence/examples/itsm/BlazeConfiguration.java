@@ -20,13 +20,12 @@ import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean;
+import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
@@ -38,8 +37,7 @@ import javax.persistence.PersistenceUnit;
 @Configuration
 @EntityScan("com.blazebit.persistence.examples.itsm")
 @EnableEntityViews("com.blazebit.persistence.examples.itsm")
-@EnableJpaRepositories(basePackages = "com.blazebit.persistence.examples.itsm",
-        repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+@EnableBlazeRepositories(basePackages = "com.blazebit.persistence.examples.itsm")
 public class BlazeConfiguration {
 
     @PersistenceUnit

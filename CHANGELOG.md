@@ -11,6 +11,7 @@ Changes that happened in releases
 * Add `ManagedViewType#renderSecondaryMappings` implementation that accepts `FromBuilder`
 * Introduce `PredicateBuilder`, `PredicateAndBuilder` and `PredicateOrBuilder` as abstraction for `WHERE`, `HAVING` and `ON` clauses
 * Respect common annotations on EntityViews for GraphQL type generations
+* Introduce `@EnableBlazeRepositories` annotation for multi-repository support
 
 ### Bug fixes
 

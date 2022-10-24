@@ -68,12 +68,12 @@ public class BlazePersistenceConfiguration {
 }
 ----
 
-When enabling JPA repositories, make sure you configure `BlazePersistenceRepositoryFactoryBean` as _repositoryFactoryBeanClass_.
+To enabling Blaze JPA repositories, annotate your configuration or application class with `@EnableBlazeRepositories`.
 Optionally specify a custom basePackage for repository class scanning and a custom entityManagerFactoryRef.
 
 [source,java]
 ----
-@EnableJpaRepositories(repositoryFactoryBeanClass = BlazePersistenceRepositoryFactoryBean.class)
+@EnableBlazeRepositories
 ----
 
 ==== Spring Boot Devtools
