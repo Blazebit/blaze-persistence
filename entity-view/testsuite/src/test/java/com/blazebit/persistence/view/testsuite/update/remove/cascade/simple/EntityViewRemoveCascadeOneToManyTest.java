@@ -27,11 +27,14 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.PostRemoveListener;
+import com.blazebit.persistence.view.PreRemoveListener;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.remove.cascade.simple.model.FamilyIdView;
 import com.blazebit.persistence.view.testsuite.update.remove.cascade.simple.model.PersonIdView;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.simple.model.PersonNameView;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -60,6 +63,8 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
     @Override
     protected void registerViewTypes(EntityViewConfiguration cfg) {
         cfg.addEntityView(FamilyIdView.class);
+        cfg.addEntityView(PersonNameView.class);
+        cfg.addEntityViewListener(PersonNameView.class, PrimitivePerson.class, PrimitivePersonPostRemoveListener.class);
     }
 
     @Override
@@ -106,9 +111,13 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
 
         // In the query strategy, we query by owner id
         if (isQueryStrategy()) {
+            // Select for the entity view used in the PrimitivePersonPostRemoveListener
+            builder.select(PrimitivePerson.class);
             builder.select(PrimitiveDocument.class)
                 .select(PrimitiveVersion.class);
         } else {
+            // todo: the following select only happens because we don't convert from the entity to the entity view
+            builder.select(PrimitivePerson.class);
             builder.select(PrimitivePerson.class)
                 .assertSelect()
                 .fetching(PrimitiveDocument.class)
@@ -154,6 +163,8 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
             if (!dbmsDialect.supportsReturningColumns()) {
                 builder.select(PrimitiveFamily.class);
             }
+            // Select for the entity view used in the PrimitivePersonPostRemoveListener
+            builder.select(PrimitivePerson.class);
             builder.select(PrimitiveDocument.class)
                 .select(PrimitiveVersion.class);
         } else {
@@ -215,6 +226,50 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
         Assert.assertNull(family);
     }
 
+    // Test for issue #1520
+    @Test
+    public void testRemoveFamilyByIdPreRemove() {
+        // Given
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                family = new PrimitiveFamily("fam");
+                family.setPerson(em.getReference(PrimitivePerson.class, person.getId()));
+                em.persist(family);
+            }
+        });
+        clearQueries();
+
+        // When
+        try {
+            transactional(new TxVoidWork() {
+                @Override
+                public void work(EntityManager em) {
+                    evm.removeWith(em, FamilyIdView.class, family.getId())
+                        .onPreRemove(FamilyIdView.class, new PreRemoveListener<FamilyIdView>() {
+                            @Override
+                            public boolean preRemove(EntityViewManager entityViewManager, EntityManager entityManager, FamilyIdView view) {
+                                entityViewManager.remove(entityManager, PersonIdView.class, person.getId());
+                                return true;
+                            }
+                        })
+                        .flush();
+                    em.flush();
+                }
+            });
+        } catch (OptimisticLockException e) {
+            if (isQueryStrategy()) {
+                // We expect this to happen with the query flush strategy, because the preRemove listener doesn't propagate the context
+                return;
+            }
+            throw e;
+        }
+
+        // Then
+        clearPersistenceContextAndReload();
+        Assert.assertNull(family);
+    }
+
     @Override
     protected void reload() {
         person = em.find(PrimitivePerson.class, person.getId());
@@ -229,5 +284,12 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
     @Override
     protected AssertStatementBuilder versionUpdate(AssertStatementBuilder builder) {
         return builder;
+    }
+
+    public static class PrimitivePersonPostRemoveListener implements PostRemoveListener<PersonNameView> {
+        @Override
+        public void postRemove(EntityViewManager entityViewManager, EntityManager entityManager, PersonNameView view) {
+
+        }
     }
 }
