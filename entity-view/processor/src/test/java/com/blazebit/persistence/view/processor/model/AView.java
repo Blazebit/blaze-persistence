@@ -27,6 +27,7 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
 
     Optional<BView> getOptionalValue();
 
+    @TypeUseAnnotation
     int getAge();
 
     List<X> getTest();
