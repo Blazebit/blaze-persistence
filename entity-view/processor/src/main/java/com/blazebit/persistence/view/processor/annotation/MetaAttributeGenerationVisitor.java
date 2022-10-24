@@ -55,7 +55,8 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
     @Override
     public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
         String type = TypeUtils.toWrapperTypeString(t);
-        return new AnnotationMetaSingularAttribute(entity, element, type, t.toString(), null, context);
+        String realType = TypeUtils.toTypeString((DeclaredType) entity.getTypeElement().asType(), t, context);
+        return new AnnotationMetaSingularAttribute(entity, element, type, realType, null, context);
     }
 
     @Override

@@ -29,6 +29,7 @@ Changes that happened in releases
 * Import and properly render parameterized type arguments in entity view annotation processor
 * Fix entity view by id remove error on cascade delete of one-to-one mapped by association
 * Fix dynamic fetch support for `MULTISET` fetched mappings
+* Fix annotation processor code generation issue with type use annotations on primitive types
 
 ### Backwards-incompatible changes
 
