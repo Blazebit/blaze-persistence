@@ -44,12 +44,6 @@ public class UnmappedAttributeCascadeDeleterUtil {
 
         for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : attributes.entrySet()) {
             ExtendedAttribute<?, ?> extendedAttribute = entry.getValue();
-            String ownerIdPath;
-            if (extendedAttribute.getMappedBy() == null) {
-                ownerIdPath = ownerIdAttributeName;
-            } else {
-                ownerIdPath = extendedAttribute.getMappedBy() + "." + ownerIdAttributeName;
-            }
             if (extendedAttribute.getAttribute().isCollection()) {
                 if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
                     deleters.add(new UnmappedMapAttributeCascadeDeleter(
@@ -57,7 +51,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
                             entry.getKey(),
                             extendedAttribute,
                             entityClass,
-                            ownerIdPath,
+                            ownerIdAttributeName,
                             true
                     ));
                 } else {
@@ -66,7 +60,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
                             entry.getKey(),
                             extendedAttribute,
                             entityClass,
-                            ownerIdPath,
+                            ownerIdAttributeName,
                             true
                     ));
                 }
@@ -75,7 +69,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
                         evm,
                         entry.getKey(),
                         extendedAttribute,
-                        ownerIdPath,
+                        ownerIdAttributeName,
                         true
                 ));
             }

@@ -20,11 +20,17 @@ import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuil
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
+import com.blazebit.persistence.testsuite.entity.PrimitiveFamily;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
 import com.blazebit.persistence.testsuite.entity.PrimitiveVersion;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
+import com.blazebit.persistence.view.PostRemoveListener;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
+import com.blazebit.persistence.view.testsuite.update.remove.cascade.simple.model.FamilyIdView;
 import com.blazebit.persistence.view.testsuite.update.remove.cascade.simple.model.PersonIdView;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,6 +50,7 @@ import javax.persistence.EntityManager;
 @Category({ NoDatanucleus.class, NoEclipselink.class})
 public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpdateTest<PersonIdView> {
 
+    private PrimitiveFamily family;
     private PrimitivePerson person;
 
     public EntityViewRemoveCascadeOneToManyTest(FlushMode mode, FlushStrategy strategy, boolean version) {
@@ -51,11 +58,17 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
     }
 
     @Override
+    protected void registerViewTypes(EntityViewConfiguration cfg) {
+        cfg.addEntityView(FamilyIdView.class);
+    }
+
+    @Override
     protected Class<?>[] getEntityClasses() {
         return new Class[]{
                 PrimitivePerson.class,
                 PrimitiveDocument.class,
-                PrimitiveVersion.class
+                PrimitiveVersion.class,
+                PrimitiveFamily.class
         };
     }
 
@@ -79,6 +92,7 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
         em.persist(doc1V1);
     }
 
+    // Test for issue #1456
     @Test
     public void testRemoveById() {
         // Given
@@ -115,9 +129,96 @@ public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpda
         Assert.assertNull(person);
     }
 
+    // Test for issue #1520
+    @Test
+    public void testRemoveFamilyById() {
+        // Given
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                family = new PrimitiveFamily("fam");
+                family.setPerson(em.getReference(PrimitivePerson.class, person.getId()));
+                em.persist(family);
+            }
+        });
+        clearQueries();
+
+        // When
+        remove(FamilyIdView.class, family.getId());
+
+        // Then
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        // In the query strategy, we query by owner id
+        if (isQueryStrategy()) {
+            if (!dbmsDialect.supportsReturningColumns()) {
+                builder.select(PrimitiveFamily.class);
+            }
+            builder.select(PrimitiveDocument.class)
+                .select(PrimitiveVersion.class);
+        } else {
+            builder.select(PrimitiveFamily.class)
+                .select(PrimitivePerson.class)
+                .assertSelect()
+                .fetching(PrimitiveDocument.class)
+                .fetching(PrimitiveVersion.class)
+                .and();
+        }
+
+        builder.delete(PrimitiveDocument.class, "contacts")
+            .delete(PrimitiveDocument.class, "people")
+            .delete(PrimitiveDocument.class, "peopleCollectionBag")
+            .delete(PrimitiveDocument.class, "peopleListBag")
+            .delete(PrimitiveVersion.class)
+            .delete(PrimitiveDocument.class)
+            .delete(PrimitivePerson.class)
+            .delete(PrimitiveFamily.class)
+            .validate();
+
+        clearPersistenceContextAndReload();
+        Assert.assertNull(person);
+        Assert.assertNull(family);
+    }
+
+    // Test for issue #1520
+    @Test
+    public void testRemoveFamilyByIdCascadeNull() {
+        // Given
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                family = new PrimitiveFamily("fam");
+                em.persist(family);
+            }
+        });
+        clearQueries();
+
+        // When
+        remove(FamilyIdView.class, family.getId());
+
+        // Then
+        AssertStatementBuilder builder = assertUnorderedQuerySequence();
+
+        // In the query strategy, we query by owner id
+        if (isQueryStrategy()) {
+            if (!dbmsDialect.supportsReturningColumns()) {
+                builder.select(PrimitiveFamily.class);
+            }
+        } else {
+            builder.select(PrimitiveFamily.class);
+        }
+
+        builder.delete(PrimitiveFamily.class)
+            .validate();
+
+        clearPersistenceContextAndReload();
+        Assert.assertNull(family);
+    }
+
     @Override
     protected void reload() {
         person = em.find(PrimitivePerson.class, person.getId());
+        family = family == null ? null : em.find(PrimitiveFamily.class, family.getId());
     }
 
     @Override

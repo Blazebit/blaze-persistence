@@ -55,9 +55,16 @@ public class UnmappedBasicAttributeCascadeDeleter extends AbstractUnmappedAttrib
         ExtendedManagedType extendedManagedType = entityMetamodel.getManagedType(ExtendedManagedType.class, elementEntityClass);
         EntityType<?> entityType = (EntityType<?>) extendedManagedType.getType();
         this.requiresDeleteCascadeAfterRemove = !attribute.isForeignJoinColumn();
-        this.ownerIdAttributeName = ownerIdAttributeName;
+        String ownerIdPath;
+        if (ownerIdAttributeName == null || attribute.getMappedBy() == null) {
+            ownerIdPath = ownerIdAttributeName;
+        } else {
+            ownerIdPath = attribute.getMappedBy() + "." + ownerIdAttributeName;
+        }
+        this.ownerIdAttributeName = ownerIdPath;
+
         this.deleteQuery = "DELETE FROM " + entityType.getName() + " e WHERE e." + elementIdAttributeName + " = :id";
-        this.deleteByOwnerIdQuery = "DELETE FROM " + entityType.getName() + " e WHERE e." + ownerIdAttributeName + " = :ownerId";
+        this.deleteByOwnerIdQuery = "DELETE FROM " + entityType.getName() + " e WHERE e." + ownerIdPath + " = :ownerId";
 
         if (elementIdAttributeName == null) {
             this.requiresDeleteAsEntity = false;

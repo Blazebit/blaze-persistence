@@ -30,6 +30,7 @@ Changes that happened in releases
 * Fix entity view by id remove error on cascade delete of one-to-one mapped by association
 * Fix dynamic fetch support for `MULTISET` fetched mappings
 * Fix annotation processor code generation issue with type use annotations on primitive types
+* Fix NPE on cascade delete of unmapped `null` one-to-one association
 
 ### Backwards-incompatible changes
 
