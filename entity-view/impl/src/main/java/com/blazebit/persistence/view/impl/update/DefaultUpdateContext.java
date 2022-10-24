@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.update;
 
 import com.blazebit.persistence.view.FlushOperationBuilder;
+import com.blazebit.persistence.view.OptimisticLockException;
 import com.blazebit.persistence.view.PostCommitListener;
 import com.blazebit.persistence.view.PostPersistEntityListener;
 import com.blazebit.persistence.view.PostPersistListener;
@@ -175,6 +176,9 @@ public class DefaultUpdateContext implements UpdateContext, FlushOperationBuilde
             return null;
         }
         view = (EntityViewProxy) evm.find(em, viewType, entityId);
+        if (view == null) {
+            throw new OptimisticLockException("Could not fetch view of type [" + viewType.getName() + "] with entity id [" + entityId + "], which is required for an entity view lifecycle listener, because it appears to have been deleted already!", o instanceof EntityViewProxy ? null : o, o instanceof EntityViewProxy ? o : null);
+        }
         cachedViews.add(new ViewCacheEntry(view, prePhase));
         return view;
     }
