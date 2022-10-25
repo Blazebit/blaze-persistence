@@ -24,6 +24,7 @@ import javax.tools.FileObject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -90,6 +91,10 @@ public abstract class ClassWriter implements Runnable {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: " + filerEx.getMessage());
         } catch (IOException ioEx) {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem opening file to write [" + fileObject.getName() + "]: " + ioEx.getMessage());
+        } catch (Exception ex) {
+            StringWriter sw = new StringWriter();
+            ex.printStackTrace(new PrintWriter(sw));
+            context.logMessage(Diagnostic.Kind.ERROR, "Error during file generation [" + fileObject.getName() + "]: " + sw);
         }
         elapsedTime.add(System.nanoTime() - start);
         mainThreadQueue.add(new PrintWriterCloser(pw));

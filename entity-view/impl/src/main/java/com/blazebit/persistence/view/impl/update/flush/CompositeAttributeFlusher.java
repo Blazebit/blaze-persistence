@@ -68,10 +68,10 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         public void run() {
         }
     };
-    private static final int FEATURE_SUPPORTS_QUERY_FLUSH = 0;
-    private static final int FEATURE_HAS_PASS_THROUGH_FLUSHER = 1;
-    private static final int FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED = 2;
-    private static final int FEATURE_LOAD_FOR_ENTITY_FLUSH = 3;
+    private static final int FEATURE_SUPPORTS_QUERY_FLUSH = 1;
+    private static final int FEATURE_HAS_PASS_THROUGH_FLUSHER = 2;
+    private static final int FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED = 4;
+    private static final int FEATURE_LOAD_FOR_ENTITY_FLUSH = 8;
     private static final UnmappedAttributeCascadeDeleter[] EMPTY = new UnmappedAttributeCascadeDeleter[0];
 
     private final Class<?> entityClass;
@@ -98,10 +98,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final String deleteQuery;
     private final String versionedDeleteQuery;
     private final String lockOwner;
-    private final boolean supportsQueryFlush;
-    private final boolean loadForEntityFlush;
-    private final boolean hasPassThroughFlushers;
-    private final boolean optimisticLockProtected;
+    private final int features;
 
     private final Object element;
 
@@ -133,11 +130,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.referenceEntityLoader = new ReferenceEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMappingAttribute, viewIdMapper, entityIdAccessor, false);
         this.deleteQuery = createDeleteQuery(managedType, jpaIdAttribute);
         this.versionedDeleteQuery = createVersionedDeleteQuery(deleteQuery, versionFlusher);
-        boolean[] features = determineFeatures(flushStrategy, flushers);
-        this.supportsQueryFlush = features[FEATURE_SUPPORTS_QUERY_FLUSH];
-        this.loadForEntityFlush = features[FEATURE_LOAD_FOR_ENTITY_FLUSH];
-        this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
-        this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
+        this.features = determineFeatures(flushStrategy, flushers);
         this.element = null;
     }
 
@@ -164,18 +157,15 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         this.entityLoader = new FlusherBasedEntityLoader(evm, entityClass, jpaIdAttribute, viewIdMapper, entityIdAccessor, flushers);
         this.referenceEntityLoader = original.referenceEntityLoader;
         this.deleteQuery = original.deleteQuery;
-        boolean[] features = determineFeatures(flushStrategy, flushers);
-        this.supportsQueryFlush = features[FEATURE_SUPPORTS_QUERY_FLUSH];
-        this.loadForEntityFlush = features[FEATURE_LOAD_FOR_ENTITY_FLUSH];
-        this.hasPassThroughFlushers = features[FEATURE_HAS_PASS_THROUGH_FLUSHER];
+        int features = determineFeatures(flushStrategy, flushers);
         this.element = element;
         // When flushing references that have no version set, we do a normal flush, not a versioned one
         if (original.versionFlusher == null || original.versionFlusher.getViewAttributeAccessor().getValue(element) == null) {
             this.versionedDeleteQuery = null;
-            this.optimisticLockProtected = false;
+            this.features = features & ~FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED;
         } else {
             this.versionedDeleteQuery = original.versionedDeleteQuery;
-            this.optimisticLockProtected = features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED];
+            this.features = features;
         }
         this.versionFlusher = original.versionFlusher;
     }
@@ -255,7 +245,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         return null;
     }
 
-    private static boolean[] determineFeatures(FlushStrategy flushStrategy, DirtyAttributeFlusher[] flushers) {
+    private static int determineFeatures(FlushStrategy flushStrategy, DirtyAttributeFlusher[] flushers) {
         boolean hasPassThroughFlusher = false;
         boolean supportsQueryFlush = flushStrategy != FlushStrategy.ENTITY;
         boolean anyOptimisticLockProtected = false;
@@ -270,11 +260,19 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
         }
 
-        boolean[] features = new boolean[4];
-        features[FEATURE_HAS_PASS_THROUGH_FLUSHER] = hasPassThroughFlusher;
-        features[FEATURE_SUPPORTS_QUERY_FLUSH] = supportsQueryFlush;
-        features[FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED] = anyOptimisticLockProtected;
-        features[FEATURE_LOAD_FOR_ENTITY_FLUSH] = loadForEntityFlush;
+        int features = 0;
+        if (hasPassThroughFlusher) {
+            features |= FEATURE_HAS_PASS_THROUGH_FLUSHER;
+        }
+        if (supportsQueryFlush) {
+            features |= FEATURE_SUPPORTS_QUERY_FLUSH;
+        }
+        if (anyOptimisticLockProtected) {
+            features |= FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED;
+        }
+        if (loadForEntityFlush) {
+            features |= FEATURE_LOAD_FOR_ENTITY_FLUSH;
+        }
         return features;
     }
 
@@ -318,7 +316,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 }
             }
         }
-        if (optimisticLock && optimisticLockProtected && versionFlusher != null) {
+        if (optimisticLock && isOptimisticLockProtected() && versionFlusher != null) {
             versionFlusher.appendUpdateQueryFragment(context, sb, mappingPrefix, parameterPrefix, separator);
             // If something was appended, we also append a comma
             if (clauseEndIndex != sb.length()) {
@@ -336,12 +334,12 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @Override
     public boolean supportsQueryFlush() {
-        return supportsQueryFlush;
+        return (features & FEATURE_SUPPORTS_QUERY_FLUSH) != 0;
     }
 
     @Override
     public boolean loadForEntityFlush() {
-        return loadForEntityFlush;
+        return (features & FEATURE_LOAD_FOR_ENTITY_FLUSH) != 0;
     }
 
     @Override
@@ -494,7 +492,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
         }
 
-        if (optimisticLock && optimisticLockProtected && versionFlusher != null) {
+        if (optimisticLock && isOptimisticLockProtected() && versionFlusher != null) {
             context.getInitialStateResetter().addVersionedView(element, element.$$_getVersion());
             versionFlusher.flushQuery(context, parameterPrefix, queryFactory, query, ownerView, value, element.$$_getVersion(), null, ownerFlusher);
         }
@@ -664,7 +662,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 context.getInitialStateResetter().addUpdatedView(updatableProxy);
             } else {
                 // In case of nested attributes, the entity instance we get is the container of the attribute
-                if ((loadForEntityFlush || viewIdAccessor == null) && !entityClass.isInstance(entity)) {
+                if ((loadForEntityFlush() || viewIdAccessor == null) && !entityClass.isInstance(entity)) {
                     entity = entityLoader.toEntity(context, view, id);
                 }
                 // After Pre-Update the dirtyness could change
@@ -743,7 +741,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     }
                 }
             }
-            if (versionFlusher != null && optimisticLockProtected && optimisticLock) {
+            if (versionFlusher != null && isOptimisticLockProtected() && optimisticLock) {
                 context.getInitialStateResetter().addVersionedView(updatableProxy, updatableProxy.$$_getVersion());
                 // We might have to load the entity for optimistic locking
                 if (!entityClass.isInstance(entity)) {
@@ -1031,7 +1029,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                     if (context.getEntityViewManager().getDbmsDialect().supportsReturningColumns()) {
                         DeleteCriteriaBuilder<?> cb = context.getEntityViewManager().getCriteriaBuilderFactory().delete(context.getEntityManager(), entityClass);
                         cb.where(idFlusher.getMapping()).eq(entityId);
-                        if (version != null && optimisticLockProtected && versionFlusher != null) {
+                        if (version != null && isOptimisticLockProtected() && versionFlusher != null) {
                             cb.where(versionFlusher.getMapping()).eq(version);
                         }
 
@@ -1063,7 +1061,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             }
 
             if (doDelete) {
-                if (version != null && optimisticLockProtected && versionFlusher != null) {
+                if (version != null && isOptimisticLockProtected() && versionFlusher != null) {
                     Query query = context.getEntityManager().createQuery(versionedDeleteQuery);
                     idFlusher.flushQuery(context, EntityViewUpdaterImpl.WHERE_CLAUSE_PREFIX, null, query, ownerView, view, viewId, null, null);
                     versionFlusher.flushQueryInitialVersion(context, EntityViewUpdaterImpl.WHERE_CLAUSE_PREFIX, query, view, version);
@@ -1158,7 +1156,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @Override
     public boolean isOptimisticLockProtected() {
-        return optimisticLockProtected;
+        return (features & FEATURE_IS_ANY_OPTIMISTIC_LOCK_PROTECTED) != 0;
     }
 
     @Override
@@ -1219,8 +1217,9 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
 
     @SuppressWarnings("unchecked")
     public <T extends DirtyAttributeFlusher<T, E, V>, E, V> DirtyAttributeFlusher<T, E, V> getNestedDirtyFlusher(UpdateContext context, MutableStateTrackable updatableProxy) {
+        // Only entities with an id can be persisted. We never consider this a persist operation for embeddables
+        boolean shouldPersist = updatableProxy.$$_isNew() && jpaIdAttribute != null;
         // When we persist, always flush all attributes
-        boolean shouldPersist = updatableProxy.$$_isNew();
         if (context.isForceFull() || flushMode == FlushMode.FULL || shouldPersist || !(updatableProxy instanceof DirtyStateTrackable)) {
             return (DirtyAttributeFlusher<T, E, V>) this;
         }
@@ -1266,7 +1265,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
         }
 
         // If we know something is dirty, we copy over the pass through flushers too
-        if (hasPassThroughFlushers) {
+        if ((features & FEATURE_HAS_PASS_THROUGH_FLUSHER) != 0) {
             for (int i = originalDirtyState.length; i < flushers.length; i++) {
                 DirtyAttributeFlusher flusher = this.flushers[i];
 

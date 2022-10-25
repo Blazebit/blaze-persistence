@@ -623,7 +623,7 @@ public abstract class AbstractPluralAttributeFlusher<X extends AbstractPluralAtt
 
     protected abstract boolean collectionEquals(V initial, V current);
 
-    protected abstract DirtyAttributeFlusher<X, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, R collection);
+    protected abstract DirtyAttributeFlusher<X, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, R collection);
 
     /**
      * @author Christian Beikov

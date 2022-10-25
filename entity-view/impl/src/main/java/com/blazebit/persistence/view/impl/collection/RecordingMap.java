@@ -188,6 +188,10 @@ public class RecordingMap<C extends Map<K, V>, K, V> implements RecordingContain
         return parent != null;
     }
 
+    public BasicDirtyTracker $$_getParent() {
+        return parent;
+    }
+
     @Override
     public void $$_replaceAttribute(Object oldObject, int attributeIndex, Object newObject) {
         if (oldObject instanceof MutableStateTrackable) {

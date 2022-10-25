@@ -2672,9 +2672,9 @@ public class ProxyFactory {
                     if (mutableStateField != null) {
                         sb.append("mutableStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
 
-                        if (initialStateField != null && (kind != ConstructorKind.REFERENCE || methodAttribute instanceof SingularAttribute<?, ?> && ((SingularAttribute) methodAttribute).isCreateEmptyFlatView())) {
-                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
-                        }
+//                        if (initialStateField != null && (kind == ConstructorKind.CREATE && !(methodAttribute instanceof PluralAttribute<?, ?, ?>) || methodAttribute instanceof SingularAttribute<?, ?> && ((SingularAttribute<?, ?>) methodAttribute).isCreateEmptyFlatView())) {
+//                            sb.append("initialStateArr[").append(methodAttribute.getDirtyStateIndex()).append("] = ");
+//                        }
                     }
                     sb.append("\t$0.").append(attributeFields[i].getName()).append(" = ");
                     // init embeddables and collections
