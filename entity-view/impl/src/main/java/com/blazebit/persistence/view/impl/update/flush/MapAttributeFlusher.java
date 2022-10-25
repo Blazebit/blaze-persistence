@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.InsertCriteriaBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -36,6 +37,7 @@ import com.blazebit.persistence.view.impl.collection.RecordingCollection;
 import com.blazebit.persistence.view.impl.collection.RecordingMap;
 import com.blazebit.persistence.view.impl.entity.MapViewToEntityMapper;
 import com.blazebit.persistence.view.impl.entity.ViewToEntityMapper;
+import com.blazebit.persistence.view.spi.type.BasicDirtyTracker;
 import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
@@ -77,6 +79,8 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     private final CollectionRemoveListener keyRemoveListener;
     private final TypeDescriptor keyDescriptor;
     private final BasicDirtyChecker<Object> keyDirtyChecker;
+    private final int embeddableParentCount;
+    private final boolean upsert;
 
     @SuppressWarnings("unchecked")
     public MapAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor attributeMapper, InitialValueAttributeAccessor viewAttributeAccessor,
@@ -95,13 +99,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         this.keyCascadeDeleteListener = keyCascadeDeleteListener;
         this.mapper = mapper;
         this.loadOnlyMapper = loadOnlyMapper;
+        this.embeddableParentCount = countEmbeddableParents(ownerMapping);
+        this.upsert = false;
     }
 
     protected MapAttributeFlusher(MapAttributeFlusher original, boolean fetch) {
-        this(original, fetch, null, null, null);
+        this(original, fetch, false, null, null, null);
     }
 
-    protected MapAttributeFlusher(MapAttributeFlusher original, boolean fetch, PluralFlushOperation flushOperation, List<? extends MapAction<?>> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
+    protected MapAttributeFlusher(MapAttributeFlusher original, boolean fetch, boolean upsert, PluralFlushOperation flushOperation, List<? extends MapAction<?>> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
         super(original, fetch, flushOperation, collectionActions, elementFlushers);
         this.mapInstantiator = original.mapInstantiator;
         this.keyDescriptor = original.keyDescriptor;
@@ -110,6 +116,21 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         this.keyCascadeDeleteListener = original.keyCascadeDeleteListener;
         this.mapper = original.mapper;
         this.loadOnlyMapper = original.loadOnlyMapper;
+        this.embeddableParentCount = original.embeddableParentCount;
+        this.upsert = upsert;
+    }
+
+    private static int countEmbeddableParents(String ownerMapping) {
+        if (ownerMapping == null) {
+            return 0;
+        }
+        int count = 1;
+        for (int i = 0; i < ownerMapping.length(); i++) {
+            if (ownerMapping.charAt(i) == '.') {
+                count++;
+            }
+        }
+        return count;
     }
 
     @SuppressWarnings("unchecked")
@@ -547,6 +568,16 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 insertCb.bind(ownerIdBindFragments[i]).select(ownerIdBindFragments[i + 1]);
             }
             insertCb.bind(mapping).select("val");
+            if (upsert) {
+                SubqueryBuilder<? extends InsertCriteriaBuilder<?>> subqueryBuilder = insertCb.whereNotExists()
+                    .from(ownerEntityClass, "subOwner")
+                    .innerJoin("subOwner." + mapping, "sub");
+                subqueryBuilder.where("KEY(sub)").eqExpression("key");
+                for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                    subqueryBuilder.where("subOwner." + ownerIdBindFragments[i]).eqExpression(ownerIdBindFragments[i + 1]);
+                }
+                subqueryBuilder.end();
+            }
             Query query = insertCb.getQuery();
             ownerIdFlusher.flushQuery(context, null, null, query, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null, null);
 
@@ -558,6 +589,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
             ViewToEntityMapper keyViewToEntityMapper = keyDescriptor.getLoadOnlyViewToEntityMapper();
             ViewToEntityMapper valueViewToEntityMapper = elementDescriptor.getLoadOnlyViewToEntityMapper();
             boolean checkTransient = elementDescriptor.isJpaEntity() && !elementDescriptor.shouldJpaPersist();
+            Query updateQuery = null;
             for (Map.Entry<Object, Object> entry : appends.entrySet()) {
                 Object k = entry.getKey();
                 Object v = entry.getValue();
@@ -580,7 +612,37 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     }
                     query.setParameter("key", singletonKeyList);
                     query.setParameter("val", singletonValueList);
-                    query.executeUpdate();
+                    if (query.executeUpdate() == 0 && upsert) {
+                        if (updateQuery == null) {
+                            UpdateCriteriaBuilder<?> updateCb = context.getEntityViewManager().getCriteriaBuilderFactory().updateCollection(context.getEntityManager(), ownerEntityClass, "sub", mapping);
+
+                            if (keyEntityIdAttributeName == null) {
+                                updateCb.fromValues(ownerEntityClass, "KEY(" + mapping + ")", "key", 1);
+                            } else if (keyEntityIdAttributeName.equals(keyAttributeIdAttributeName)) {
+                                updateCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), "key", 1);
+                            } else {
+                                updateCb.fromIdentifiableValues((Class<Object>) keyDescriptor.getJpaType(), keyAttributeIdAttributeName, "key", 1);
+                            }
+
+                            if (entityIdAttributeName == null) {
+                                updateCb.fromValues(ownerEntityClass, mapping, "val", 1);
+                            } else if (entityIdAttributeName.equals(attributeIdAttributeName)) {
+                                updateCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), "val", 1);
+                            } else {
+                                updateCb.fromIdentifiableValues((Class<Object>) elementDescriptor.getJpaType(), attributeIdAttributeName, "val", 1);
+                            }
+                            updateCb.where("KEY(sub." + mapping + ")").eqExpression("key");
+                            for (int i = 0; i < ownerIdBindFragments.length; i += 2) {
+                                updateCb.where("sub." + ownerIdBindFragments[i]).eqExpression(ownerIdBindFragments[i + 1]);
+                            }
+                            updateCb.setExpression(mapping, "val");
+                            updateQuery = updateCb.getQuery();
+                            ownerIdFlusher.flushQuery(context, null, null, updateQuery, ownerView, view, ownerIdFlusher.getViewAttributeAccessor().getValue(ownerView), null, null);
+                        }
+                        updateQuery.setParameter("key", singletonKeyList);
+                        updateQuery.setParameter("val", singletonValueList);
+                        updateQuery.executeUpdate();
+                    }
                 }
             }
         }
@@ -1512,7 +1574,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                         if (elementDescriptor.shouldFlushMutations()) {
                             if (elementDescriptor.supportsDirtyCheck()) {
                                 if (current instanceof RecordingMap<?, ?, ?>) {
-                                    return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingMap<?, ?, ?>) current);
+                                    return getDirtyFlusherForRecordingCollection(context, (RecordingMap<?, ?, ?>) current);
                                 } else {
                                     // Since we don't know what changed in the map, we do a full fetch and merge
                                     return this;
@@ -1526,18 +1588,18 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                         if (actions == null) {
                                             actions = Collections.emptyList();
                                         }
-                                        return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
+                                        return partialFlusher(true, isUpsert((RecordingMap<?, ?, ?>) current), PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                                     }
                                 }
                                 return this;
                             } else {
                                 // Other types are mutable basic types that aren't known to us like e.g. java.util.Date would be if we hadn't registered it
-                                return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
+                                return partialFlusher(false, isUpsert((RecordingMap<?, ?, ?>) current), PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                             }
                         } else {
                             // Immutable elements in an updatable map
                             if (current instanceof RecordingMap<?, ?, ?>) {
-                                return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingMap<?, ?, ?>) current);
+                                return getDirtyFlusherForRecordingCollection(context, (RecordingMap<?, ?, ?>) current);
                             } else {
                                 // Since we don't know what changed in the map, we do a full fetch and merge
                                 return this;
@@ -1551,7 +1613,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                     if (elementDescriptor.shouldFlushMutations()) {
                         if (elementDescriptor.supportsDirtyCheck()) {
                             if (current instanceof RecordingMap<?, ?, ?>) {
-                                return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingMap<?, ?, ?>) current);
+                                return getDirtyFlusherForRecordingCollection(context, (RecordingMap<?, ?, ?>) current);
                             } else {
                                 // Since we don't know what changed in the map, we do a full fetch and merge
                                 return this;
@@ -1565,18 +1627,18 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                     actions = Collections.emptyList();
                                 }
                                 if (elementDescriptor.isIdentifiable()) {
-                                    return partialFlusher(true, PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
+                                    return partialFlusher(true, isUpsert((RecordingMap<?, ?, ?>) current), PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, getElementFlushers(context, (V) current, actions));
                                 }
                             }
                             return this;
                         } else {
                             // Other types are mutable basic types that aren't known to us like e.g. java.util.Date would be if we hadn't registered it
-                            return partialFlusher(false, PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
+                            return partialFlusher(false, isUpsert((RecordingMap<?, ?, ?>) current), PluralFlushOperation.COLLECTION_REPLACE_ONLY, Collections.EMPTY_LIST, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
                         }
                     } else {
                         // Immutable elements in an updatable map
                         if (current instanceof RecordingMap<?, ?, ?>) {
-                            return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingMap<?, ?, ?>) current);
+                            return getDirtyFlusherForRecordingCollection(context, (RecordingMap<?, ?, ?>) current);
                         } else {
                             // Since we don't know what changed in the map, we do a full fetch and merge
                             return this;
@@ -1602,6 +1664,27 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 return null;
             }
         }
+    }
+
+    private boolean isUpsert(RecordingMap<?, ?, ?> map) {
+        // Can only be an upsert if initial == current, this map was previously empty and the parent is a "reference"
+        if (map.size() == map.getAddedKeys().size()) {
+            BasicDirtyTracker parent = map.$$_getParent();
+            if (parent instanceof EntityViewProxy) {
+                EntityViewProxy parentProxy = (EntityViewProxy) parent;
+                // Since a map can be part of an embeddable and updatable flat views for that type can be "new",
+                // even though they should be "reference", we have to also check the parent of the parent
+                for (int i = 0; i <= embeddableParentCount; i++) {
+                    if (parentProxy.$$_isReference()) {
+                        return true;
+                    } else if (!parentProxy.$$_isNew() || !(parentProxy instanceof MutableStateTrackable)) {
+                        return false;
+                    }
+                    parentProxy = (EntityViewProxy) ((MutableStateTrackable) parentProxy).$$_getParent();
+                }
+            }
+        }
+        return false;
     }
 
     protected DirtyAttributeFlusher<MapAttributeFlusher<E, V>, E, V> determineDirtyFlusherForNewCollection(UpdateContext context, V initial, V current) {
@@ -1815,8 +1898,13 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
         return elementFlushers;
     }
 
+    @Override
     protected MapAttributeFlusher<E, V> partialFlusher(boolean fetch, PluralFlushOperation operation, List<? extends MapAction<?>> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
-        return new MapAttributeFlusher<E, V>(this, fetch, operation, collectionActions, elementFlushers);
+        return new MapAttributeFlusher<E, V>(this, fetch, false, operation, collectionActions, elementFlushers);
+    }
+
+    protected MapAttributeFlusher<E, V> partialFlusher(boolean fetch, boolean upsert, PluralFlushOperation operation, List<? extends MapAction<?>> collectionActions, List<CollectionElementAttributeFlusher<E, V>> elementFlushers) {
+        return new MapAttributeFlusher<E, V>(this, fetch, false, operation, collectionActions, elementFlushers);
     }
 
     @Override
@@ -1829,7 +1917,7 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
     }
 
     @Override
-    protected DirtyAttributeFlusher<MapAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, RecordingMap<?, ?, ?> collection) {
+    protected DirtyAttributeFlusher<MapAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, RecordingMap<?, ?, ?> collection) {
         if (collection.hasActions()) {
             List<? extends MapAction<?>> actions = collection.getActions();
             if (keyDescriptor.shouldFlushMutations() && !keyDescriptor.isIdentifiable()) {
@@ -1848,11 +1936,15 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                 // A "null" element flusher list is given when a fetch and compare is more appropriate
                 if (elementFlushers == null) {
                     return this;
+                } else if (!elementFlushers.isEmpty()) {
+                    // We fetch here, because there is a high probability that elements we update were previously contained in the collection
+                    // and also because we need a fetched collection to actually compute the diff for a proper merge
+                    return partialFlusher(true, isUpsert(collection), PluralFlushOperation.COLLECTION_REPLAY_AND_ELEMENT, actions, elementFlushers);
                 }
-                return getReplayAndElementFlusher(context, initial, (V) collection, actions, elementFlushers);
-            } else {
-                return getReplayOnlyFlusher(context, initial, (V) collection, actions);
             }
+            // Merging always requires figuring out the diff between collections
+            // Maybe at some point we could issue a SQL MERGE statement to implement this, but for now we need to fetch
+            return partialFlusher(true, isUpsert(collection), PluralFlushOperation.COLLECTION_REPLAY_ONLY, actions, Collections.<CollectionElementAttributeFlusher<E, V>>emptyList());
         }
 
         // If the elements are mutable, we always have to check the collection, so we load and compute diffs

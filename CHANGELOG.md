@@ -32,6 +32,7 @@ Changes that happened in releases
 * Fix annotation processor code generation issue with type use annotations on primitive types
 * Fix NPE on cascade delete of unmapped `null` one-to-one association
 * Throw `OptimisticLockException` if view can't be found for entity view lifecycle listener
+* Always treat flat views for embeddable types as updates to support partial flushing
 
 ### Backwards-incompatible changes
 

@@ -1327,7 +1327,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 if (elementDescriptor.shouldFlushMutations()) {
                     if (elementDescriptor.supportsDirtyCheck()) {
                         if (current instanceof RecordingCollection<?, ?>) {
-                            return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current);
+                            return getDirtyFlusherForRecordingCollection(context, (RecordingCollection<?, ?>) current);
                         } else {
                             // Since we don't know what changed in the collection, we do a full fetch and merge
                             return this;
@@ -1353,7 +1353,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                 } else {
                     // Immutable elements in an updatable collection
                     if (current instanceof RecordingCollection<?, ?>) {
-                        return getDirtyFlusherForRecordingCollection(context, (V) initial, (RecordingCollection<?, ?>) current);
+                        return getDirtyFlusherForRecordingCollection(context, (RecordingCollection<?, ?>) current);
                     } else {
                         // Since we don't know what changed in the collection, we do a full fetch and merge
                         return this;
@@ -1868,9 +1868,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     }
 
     @Override
-    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, V initial, RecordingCollection<?, ?> collection) {
+    protected DirtyAttributeFlusher<CollectionAttributeFlusher<E, V>, E, V> getDirtyFlusherForRecordingCollection(UpdateContext context, RecordingCollection<?, ?> collection) {
         if (collection.hasActions()) {
-            List<? extends CollectionAction<?>> actions = ((RecordingCollection<?, ?>) collection).getActions();
+            List<? extends CollectionAction<?>> actions = collection.getActions();
             boolean queueable = areActionsQueueable(collection);
 
             if (queueable) {
@@ -1891,7 +1891,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         return this;
                     }
 
-                    int actionUnrelatedDirtyCount = getActionUnrelatedDirtyObjectCount(initial, elementFlushers, actions);
+                    int actionUnrelatedDirtyCount = getActionUnrelatedDirtyObjectCount((V) collection, elementFlushers, actions);
 
                     // At some point we might want to consider a threshold here instead
                     if (actionUnrelatedDirtyCount == 0) {
@@ -1928,9 +1928,9 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                     if (elementFlushers == null) {
                         return this;
                     }
-                    return getReplayAndElementFlusher(context, initial, (V) collection, actions, elementFlushers);
+                    return getReplayAndElementFlusher(context, (V) collection, (V) collection, actions, elementFlushers);
                 } else {
-                    return getReplayOnlyFlusher(context, initial, (V) collection, actions);
+                    return getReplayOnlyFlusher(context, (V) collection, (V) collection, actions);
                 }
             }
         }

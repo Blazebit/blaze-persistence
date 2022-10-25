@@ -1307,7 +1307,7 @@ public final class ImplementationClassWriter extends ClassWriter {
             sb.append("        this.").append(member.getPropertyName()).append(" = ");
             if (member.getDirtyStateIndex() != -1) {
                 sb.append("(").append(member.getImplementationTypeString()).append(") (mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+//                sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
             }
             if (member.getKind() == MappingKind.PARAMETER) {
                 if (member.isPrimitive()) {
@@ -1468,9 +1468,9 @@ public final class ImplementationClassWriter extends ClassWriter {
                 if (member.getDirtyStateIndex() != -1) {
                     sb.append("(").append(member.getImplementationTypeString()).append(") (mutableStateArr[").append(member.getDirtyStateIndex()).append("] = ");
                     // note that we are not initializing the initial state array on purpose because anything that is "dirty" should be considered for flushing
-                    if (member.isCreateEmptyFlatViews()) {
-                        sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
-                    }
+//                    if (member.isCreateEmptyFlatViews()) {
+//                        sb.append("initialStateArr[").append(member.getDirtyStateIndex()).append("] = ");
+//                    }
                 }
 
                 member.appendDefaultValue(sb, true, false, entity.getImplementationImportContext());

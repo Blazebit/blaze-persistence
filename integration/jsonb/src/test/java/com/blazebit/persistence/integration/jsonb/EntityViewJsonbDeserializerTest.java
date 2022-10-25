@@ -259,7 +259,7 @@ public class EntityViewJsonbDeserializerTest {
         CreatableWithCollection view = mapper.fromJson("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}", CreatableWithCollection.class);
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
         assertEquals("test", view.getName());
-        assertEquals(evm.getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(evm.getChangeModel(view).get("children").getCurrentState(), view.getChildren());
         assertEquals(1, view.getChildren().size());
     }
 
@@ -281,7 +281,7 @@ public class EntityViewJsonbDeserializerTest {
         CreatableWithCollectionWithSetter view = mapper.fromJson("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}", CreatableWithCollectionWithSetter.class);
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
         assertEquals("test", view.getName());
-        assertEquals(evm.getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(evm.getChangeModel(view).get("children").getCurrentState(), view.getChildren());
         assertEquals(1, view.getChildren().size());
     }
 

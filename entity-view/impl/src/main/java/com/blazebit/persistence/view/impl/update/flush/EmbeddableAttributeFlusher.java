@@ -279,10 +279,6 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             return null;
         }
 
-        if (initial != current && (initial == null || !initial.equals(current))) {
-            return this;
-        }
-
         if (current instanceof MutableStateTrackable) {
             MutableStateTrackable mutableStateTrackable = (MutableStateTrackable) current;
             if (!mutableStateTrackable.$$_isDirty()) {
@@ -292,6 +288,8 @@ public class EmbeddableAttributeFlusher<E, V> extends EmbeddableAttributeFetchGr
             if (flusher != null) {
                 return new EmbeddableAttributeFlusher<>(this, flusher);
             }
+        } else if (initial != current && (initial == null || !initial.equals(current))) {
+            return this;
         }
 
         return null;

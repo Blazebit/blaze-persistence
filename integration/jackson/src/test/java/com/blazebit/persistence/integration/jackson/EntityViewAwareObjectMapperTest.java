@@ -255,7 +255,7 @@ public class EntityViewAwareObjectMapperTest {
         CreatableWithCollection view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
         assertEquals("test", view.getName());
-        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getCurrentState(), view.getChildren());
         assertEquals(1, view.getChildren().size());
     }
 
@@ -277,7 +277,7 @@ public class EntityViewAwareObjectMapperTest {
         CreatableWithCollectionWithSetter view = objectReader.readValue("{\"name\": \"test\", \"children\": [{\"name\": \"parent\"}]}");
         Assert.assertTrue(((EntityViewProxy) view).$$_isNew());
         assertEquals("test", view.getName());
-        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getInitialState(), view.getChildren());
+        assertEquals(mapper.getEntityViewManager().getChangeModel(view).get("children").getCurrentState(), view.getChildren());
         assertEquals(1, view.getChildren().size());
     }
 
