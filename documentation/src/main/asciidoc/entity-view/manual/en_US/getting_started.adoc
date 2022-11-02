@@ -586,7 +586,7 @@ public interface PropertyAddressView {
 
 The last feature we are going to cover here are filters and sorters in conjunction with `EntityViewSetting` which
 allows the dynamic configuration of filters and sorters on your entity view and are
-also usable together with pagination. This makes them ideal an ideal fit whenever you need to query data for display
+also usable together with pagination. This makes them an ideal fit whenever you need to query data for display
 in a filterable and/or sortable data table. Following example illustrates how this looks like:
 
 [source,java]
