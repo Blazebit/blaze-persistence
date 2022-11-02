@@ -54,13 +54,13 @@ or if you are using Jakarta JPA
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-api</artifactId>
+    <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
