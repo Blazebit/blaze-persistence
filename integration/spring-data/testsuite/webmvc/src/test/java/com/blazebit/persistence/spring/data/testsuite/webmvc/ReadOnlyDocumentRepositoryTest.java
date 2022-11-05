@@ -859,8 +859,8 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(2, actualIds.size());
-        assertEquals(actualIds.get(0), d1.getId());
-        assertEquals(actualIds.get(1), d2.getId());
+        assertTrue(actualIds.contains(d1.getId()));
+        assertTrue(actualIds.contains(d2.getId()));
     }
 
     private Pageable unpaged() {
