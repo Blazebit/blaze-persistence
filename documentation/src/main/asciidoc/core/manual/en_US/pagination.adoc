@@ -245,19 +245,19 @@ So let's look at the object queries generated
 [.Object query 1]
 [source,sql]
 ----
-SELECT cat, cat.id #<1>
+SELECT cat, cat.birthday, cat.id #<1>
 FROM Cat cat
 ORDER BY cat.birthday ASC NULLS LAST, cat.id ASC NULLS LAST
 --LIMIT 5 OFFSET 5
 ----
-<1> The expression `cat.id` is for constructing the keyset and contains all expressions of the `ORDER BY` clause
+<1> The expressions `cat.birthday` and `cat.id` are for constructing the keyset and represent all expressions of the `ORDER BY` clause
 
-As you can see, nothing fancy, except for the additional select that is used for extracting the keyset.
+As you can see, nothing fancy, except for the additional select items that are used for extracting the keyset.
 
 [.Object query 2]
 [source,sql]
 ----
-SELECT cat, cat.id
+SELECT cat, cat.birthday, cat.id
 FROM Cat cat
 WHERE cat.birthday > :_keysetParameter_0 OR (
     cat.birthday = :_keysetParameter_0 AND
@@ -272,7 +272,7 @@ This time the query made efficient use of the keyset by filtering out elements/r
 [.Object query 3]
 [source,sql]
 ----
-SELECT cat, cat.id
+SELECT cat, cat.birthday, cat.id
 FROM Cat cat
 WHERE cat.birthday < :_keysetParameter_0 OR (
     cat.birthday = :_keysetParameter_0 AND
