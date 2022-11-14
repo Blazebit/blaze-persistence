@@ -8,9 +8,9 @@ Blaze Persistence - Criteria API for JPA backends
 :revnumber:         {version}
 :copyrighttext:     Copyright (C) 2014 - 2021 Blazebit
 :new:               image:images/smallnew.png[]
-:core_jdoc:         http://static.javadoc.io/com.blazebit/blaze-persistence-core-api/{stable_version}/index.html?com/blazebit
-:entity_view_jdoc:  http://static.javadoc.io/com.blazebit/blaze-persistence-entity-view-api/{stable_version}/index.html?com/blazebit
-:jpa_criteria_jdoc: http://static.javadoc.io/com.blazebit/blaze-persistence-jpa-criteria-api/{stable_version}/index.html?com/blazebit
+:core_jdoc:         http://static.javadoc.io/com.blazebit/blaze-persistence-core-api/{stable_version}/com/blazebit
+:entity_view_jdoc:  http://static.javadoc.io/com.blazebit/blaze-persistence-entity-view-api/{stable_version}/com/blazebit
+:jpa_criteria_jdoc: http://static.javadoc.io/com.blazebit/blaze-persistence-jpa-criteria-api/{stable_version}/com/blazebit
 :entity_view_doc:   https://persistence.blazebit.com/documentation/entity-view/manual/en_US/index.html
 :numbered:
 :linkattrs:
