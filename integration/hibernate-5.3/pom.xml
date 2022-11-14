@@ -58,7 +58,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${version.hibernate-5.3}</version>
+            <version>${version.hibernate-5.5}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
