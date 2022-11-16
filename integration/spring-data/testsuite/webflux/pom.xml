@@ -2406,7 +2406,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                    <version>2.9.8</version>
+                    <version>2.12.7.1</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -2432,7 +2432,7 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-databind</artifactId>
-                    <version>2.9.8</version>
+                    <version>2.12.7.1</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
