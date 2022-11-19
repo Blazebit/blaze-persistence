@@ -30,6 +30,7 @@ import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.UpdateModificationQuerySpecification;
 import com.blazebit.persistence.impl.util.SqlUtils;
@@ -377,7 +378,10 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
 
     private <R> QuerySpecification getQuerySpecification(Query baseQuery, Query exampleQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder, Map<DbmsModificationState, String> includedModificationStates) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
 
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
         boolean isEmbedded = this instanceof ReturningBuilder;
         boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(isEmbedded) : Collections.EMPTY_LIST;
@@ -412,6 +416,8 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                 exampleQuery,
                 parameterManager.getParameterImpls(),
                 parameterListNames,
+                keyRestrictedLeftJoinAliases,
+                entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(),
                 ctes,
                 shouldRenderCteNodes,

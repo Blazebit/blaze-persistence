@@ -30,6 +30,7 @@ import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomReturningSQLTypedQuery;
 import com.blazebit.persistence.impl.query.CustomSQLQuery;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.QueryWrapper;
@@ -195,14 +196,18 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         // TODO: Oracle requires everything except the sequence to be wrapped in a derived table
         // see https://github.com/Blazebit/blaze-persistence/issues/306
 
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
+
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
-        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
+        if ( joinManager.hasEntityFunctions() || !keyRestrictedLeftJoins.isEmpty() || hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
 
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
             query = em.createQuery(getBaseQueryStringWithCheck(null, null));
             Set<String> parameterListNames = parameterManager.getParameterListNames(query);
 
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(query, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(query, 0);
             boolean isEmbedded = this instanceof ReturningBuilder;
             String[] returningColumns = getReturningColumns();
             boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
@@ -214,6 +219,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                     getCountExampleQuery(),
                     parameterManager.getParameterImpls(),
                     parameterListNames,
+                    keyRestrictedLeftJoinAliases,
+                    entityFunctionNodes,
                     mainQuery.cteManager.isRecursive(),
                     ctes,
                     shouldRenderCteNodes,
@@ -379,6 +386,10 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     
     protected <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
+
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.<ClauseType>emptySet());
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery, 0);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(false) : Collections.EMPTY_LIST;
         QuerySpecification querySpecification = new ModificationQuerySpecification(
@@ -387,6 +398,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 exampleQuery,
                 parameterManager.getParameterImpls(),
                 parameterListNames,
+                keyRestrictedLeftJoinAliases,
+                entityFunctionNodes,
                 mainQuery.cteManager.isRecursive(),
                 ctes,
                 shouldRenderCteNodes,

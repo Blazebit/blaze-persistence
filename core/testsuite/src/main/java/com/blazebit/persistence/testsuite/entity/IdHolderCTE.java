@@ -35,6 +35,13 @@ public class IdHolderCTE implements Serializable {
     
     private Long id;
 
+    public IdHolderCTE() {
+    }
+
+    public IdHolderCTE(Long id) {
+        this.id = id;
+    }
+
     @Id
     public Long getId() {
         return id;
