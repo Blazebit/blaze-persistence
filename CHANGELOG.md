@@ -12,6 +12,7 @@ Changes that happened in releases
 * Introduce `PredicateBuilder`, `PredicateAndBuilder` and `PredicateOrBuilder` as abstraction for `WHERE`, `HAVING` and `ON` clauses
 * Respect common annotations on EntityViews for GraphQL type generations
 * Introduce `@EnableBlazeRepositories` annotation for multi-repository support
+* Reduce need for `HibernateVersionProvider` by scanning for MANIFEST.MF to determine Hibernate version
 
 ### Bug fixes
 

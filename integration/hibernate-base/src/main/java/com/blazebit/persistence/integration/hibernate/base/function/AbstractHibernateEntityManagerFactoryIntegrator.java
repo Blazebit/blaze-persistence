@@ -30,9 +30,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.sql.Connection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +43,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
 /**
@@ -47,7 +51,6 @@ import java.util.logging.Logger;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@SuppressWarnings("deprecation")
 public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
 
     protected static final int MAJOR;
@@ -76,12 +79,38 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                         Method get = version.getReturnType().getMethod("get");
                         Object module = getModule.invoke(Version.class);
                         Object descriptor = getDescriptor.invoke(module);
-                        Object versionOptional = version.invoke(descriptor);
-                        versionString = get.invoke(versionOptional).toString();
+                        if (descriptor == null) {
+                            versionString = null;
+                        } else {
+                            Object versionOptional = version.invoke(descriptor);
+                            versionString = get.invoke(versionOptional).toString();
+                        }
                     } catch (NoSuchMethodException ex) {
                         throw new IllegalArgumentException("Error while trying to resolve the Hibernate version. This can happen when using an uber-jar deployment. In that case, please provide a service provider implementation of " + HibernateVersionProvider.class.getName());
                     } catch (Exception ex) {
                         throw new IllegalArgumentException("An error happened while trying to resolve the Hibernate version through the module version descriptor", ex);
+                    }
+                }
+                if (versionString == null) {
+                    // Try one last way to resolve the version by scanning for manifest files
+                    try {
+                        String versionClassUrl = Version.class.getClassLoader().getResource("org/hibernate/Version.class").toString();
+                        String baseUrl = versionClassUrl.substring(0, versionClassUrl.length() - "org/hibernate/Version.class".length());
+                        Enumeration<URL> resources = Version.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+                        if (resources != null) {
+                            while (resources.hasMoreElements()) {
+                                URL url = resources.nextElement();
+                                if (url.toString().startsWith(baseUrl)) {
+                                    try (InputStream is = url.openStream()) {
+                                        Manifest manifest = new Manifest(is);
+                                        versionString = manifest.getMainAttributes().getValue("Implementation-Version");
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException("An error happened while trying to resolve the Hibernate version through the MANIFEST.MF file", ex);
                     }
                 }
                 VERSION_STRING = versionString;
