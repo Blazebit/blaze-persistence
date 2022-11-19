@@ -68,7 +68,6 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
     private final InverseFlusher<E> inverseFlusher;
     private final InverseCollectionElementAttributeFlusher.Strategy inverseRemoveStrategy;
 
-    @SuppressWarnings("unchecked")
     public CollectionAttributeFlusher(String attributeName, String mapping, Class<?> ownerEntityClass, String ownerIdAttributeName, String ownerMapping, DirtyAttributeFlusher<?, ?, ?> ownerIdFlusher, DirtyAttributeFlusher<?, ?, ?> elementFlusher, boolean supportsCollectionDml, FlushStrategy flushStrategy, AttributeAccessor entityAttributeAccessor,
                                       InitialValueAttributeAccessor viewAttributeAccessor, boolean optimisticLockProtected, boolean collectionUpdatable, boolean viewOnlyDeleteCascaded, boolean jpaProviderDeletesCollection, CollectionRemoveListener cascadeDeleteListener, CollectionRemoveListener removeListener, CollectionInstantiatorImplementor<?, ?> collectionInstantiator,
                                       TypeDescriptor elementDescriptor, InverseFlusher<E> inverseFlusher, InverseRemoveStrategy inverseRemoveStrategy) {
@@ -697,15 +696,36 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                         // When we know the collection was fetched, we can try to "merge" the changes into the JPA collection
                         // If either of the collections is empty, we simply do the replace logic
                         Collection<Object> jpaCollection = (Collection<Object>) entityAttributeAccessor.getValue(entity);
-                        actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
                         Map<Object, Object> added;
                         Map<Object, Object> removed;
-                        if (!actions.isEmpty()) {
-                            Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(actions);
-                            added = addedAndRemoved[0];
-                            removed = addedAndRemoved[1];
+                        if (jpaCollection == null || jpaCollection.isEmpty()) {
+                            added = new HashMap<>(value.size());
+                            if (elementDescriptor.isIdentifiable()) {
+                                AttributeAccessor idAccessor = elementDescriptor.isJpaEntity() ? elementDescriptor.getLoadOnlyViewToEntityMapper().getEntityIdAccessor()
+                                    : elementDescriptor.getLoadOnlyViewToEntityMapper().getViewIdAccessor();
+
+                                for (Object addedObject : value) {
+                                    Object id = idAccessor.getValue(addedObject);
+                                    if (id == null) {
+                                        id = addedObject;
+                                    }
+                                    added.put(id, addedObject);
+                                }
+                            } else {
+                                for (Object addedObject : value) {
+                                    added.put(addedObject, addedObject);
+                                }
+                            }
+                            removed = Collections.emptyMap();
                         } else {
-                            added = removed = Collections.emptyMap();
+                            actions = determineJpaCollectionActions(context, (V) jpaCollection, value, elementEqualityChecker);
+                            if (!actions.isEmpty()) {
+                                Map<Object, Object>[] addedAndRemoved = getAddedAndRemovedElementsForInverseFlusher(actions);
+                                added = addedAndRemoved[0];
+                                removed = addedAndRemoved[1];
+                            } else {
+                                added = removed = Collections.emptyMap();
+                            }
                         }
 
                         // It could be the case that entity flushing is triggered by a different dirty collection,
@@ -716,9 +736,7 @@ public class CollectionAttributeFlusher<E, V extends Collection<?>> extends Abst
                             visitInverseElementFlushersForActions(context, value, added, removed, new ElementFlusherQueryExecutor(context, entity, null));
                         }
                         return true;
-                    }
-
-                    if (value == null || value.isEmpty()) {
+                    } else if (value == null || value.isEmpty()) {
                         replace = true;
                     } else if (elementDescriptor.shouldFlushMutations()) {
                         if (elementDescriptor.shouldJpaPersistOrMerge()) {
