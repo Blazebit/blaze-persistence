@@ -762,17 +762,22 @@ public class MapAttributeFlusher<E, V extends Map<?, ?>> extends AbstractPluralA
                                 } else {
                                     equalityChecker = new DeepEqualityChecker(elementDescriptor.getBasicUserType());
                                 }
-                                actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
 
-                                if (actions.size() > value.size()) {
-                                    // More collection actions means more statements are issued
-                                    // We'd rather replace in such a case
+                                if (jpaCollection == null || jpaCollection.isEmpty()) {
                                     replace = true;
                                 } else {
-                                    for (MapAction<Map<Object, Object>> action : actions) {
-                                        action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                    actions = determineJpaCollectionActions(context, (V) jpaCollection, value, equalityChecker);
+
+                                    if (actions.size() > value.size()) {
+                                        // More collection actions means more statements are issued
+                                        // We'd rather replace in such a case
+                                        replace = true;
+                                    } else {
+                                        for (MapAction<Map<Object, Object>> action : actions) {
+                                            action.doAction(jpaCollection, context, loadOnlyMapper, keyRemoveListener, removeListener);
+                                        }
+                                        return !actions.isEmpty();
                                     }
-                                    return !actions.isEmpty();
                                 }
                             }
                         } else {
