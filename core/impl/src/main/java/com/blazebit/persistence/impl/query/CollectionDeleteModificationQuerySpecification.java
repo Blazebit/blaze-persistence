@@ -37,10 +37,11 @@ public class CollectionDeleteModificationQuerySpecification<T> extends DeleteMod
 
     private final Map<String, String> columnExpressionRemappings;
 
-    public CollectionDeleteModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded,
+    public CollectionDeleteModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames,
+                                                          List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes, boolean isEmbedded,
                                                           String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled,
                                                           String tableToDelete, String tableAlias, String[] idColumns, boolean innerJoinOnly, Query deleteExampleQuery, Map<String, String> columnExpressionRemappings) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled, tableToDelete, tableAlias, idColumns, innerJoinOnly, deleteExampleQuery);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled, tableToDelete, tableAlias, idColumns, innerJoinOnly, deleteExampleQuery);
         this.columnExpressionRemappings = columnExpressionRemappings;
     }
 

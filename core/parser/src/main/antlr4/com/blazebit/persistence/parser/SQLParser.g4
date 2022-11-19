@@ -165,6 +165,7 @@ expression_elem
 select_list_elem
     : column_elem
     | expression_elem
+    | STAR
     ;
 
 table_sources

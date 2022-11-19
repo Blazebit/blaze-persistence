@@ -46,10 +46,11 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
     private final Map<String, String> aliasMapping;
     private final Query updateExampleQuery;
 
-    public UpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
+    public UpdateModificationQuerySpecification(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> commonQueryBuilder, Query baseQuery, Query exampleQuery, Collection<? extends Parameter<?>> parameters, Set<String> parameterListNames,
+                                                List<String> keyRestrictedLeftJoinAliases, List<EntityFunctionNode> entityFunctionNodes, boolean recursive, List<CTENode> ctes, boolean shouldRenderCteNodes,
                                                 boolean isEmbedded, String[] returningColumns, ReturningObjectBuilder<T> objectBuilder, Map<DbmsModificationState, String> includedModificationStates, Map<String, String> returningAttributeBindingMap, boolean queryPlanCacheEnabled,
                                                 String tableToUpdate, String tableAlias, String[] idColumns, List<String> setColumns, Collection<Query> foreignKeyParticipatingQueries, Map<String, String> aliasMapping, Query updateExampleQuery) {
-        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
+        super(commonQueryBuilder, baseQuery, exampleQuery, parameters, parameterListNames, keyRestrictedLeftJoinAliases, entityFunctionNodes, recursive, ctes, shouldRenderCteNodes, isEmbedded, returningColumns, objectBuilder, includedModificationStates, returningAttributeBindingMap, queryPlanCacheEnabled);
         this.tableToUpdate = tableToUpdate;
         this.tableAlias = tableAlias;
         this.idColumns = idColumns;
@@ -67,7 +68,7 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
             baseQuery.setParameter(entry.getKey(), entry.getValue());
         }
 
-        String sql = extendedQuerySupport.getSql(em, baseQuery);
+        String sql = applySqlTransformations(extendedQuerySupport.getSql(em, baseQuery)).toString();
         StringBuilder sb = new StringBuilder(sql.length());
         String tableToUpdate = this.tableToUpdate;
         if (SqlUtils.indexOfSelect(sql) == -1) {
