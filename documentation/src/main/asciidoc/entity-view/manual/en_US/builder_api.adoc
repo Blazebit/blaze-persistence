@@ -1,7 +1,7 @@
 == Entity View Builder API
 
 The entity view builder API allows to build entity view objects through a builder API.
-You can assign attributes individually by using the various `with` methods on link:{entity_view_jdoc}/persistence/view/EntityViewBuilderBase.html[`EntityViewBuilderBase`]]
+You can assign attributes individually by using the various `with` methods on link:{entity_view_jdoc}/persistence/view/EntityViewBuilderBase.html[`EntityViewBuilderBase`]
 and finally build a fully functional entity view object.
 
 The entity view builder API entry point is

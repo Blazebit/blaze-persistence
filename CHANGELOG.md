@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.8-SNAPSHOT
+## 1.6.9-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.8
+
+21/11/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.8) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.8+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -44,7 +60,7 @@ None yet
 
 ## 1.6.7
 
-19/01/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.7) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.7+is%3Aclosed+sort%3Aupdated-desc)
+28/08/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.7) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.7+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -68,7 +84,7 @@ None yet
 
 ## 1.6.6
 
-19/01/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.6+is%3Aclosed+sort%3Aupdated-desc)
+29/01/2022 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.6) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.6+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 

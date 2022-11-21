@@ -1,0 +1,33 @@
+= Blaze-Persistence 1.6.8 Release
+Christian Beikov
+2022-11-21 0
+:description: Blaze-Persistence version 1.6.8 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the eighth bug fix release of the 1.6 series.
+
+=== GraphQL enhancements
+
+The GraphQL integration was significantly enhanced and now properly interprets various non-null, ignore and naming annotations.
+It also supports exposing getters as GraphQL fields, which are unknown to Entity Views.
+
+=== Spring Data enhancements
+
+After a user report of issues with the Blaze-Persistence integration when using multiple Spring Data repository implementations,
+we had to add a new annotation `@EnableBlazeRepositories` for configuring the integration.
+Since this new way of configuration also allows for+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+isolating which repositories the Blaze-Persistence integration implements,
+we now decided to make this the new default way to set up the integration and adapted the documentation accordingly.
+
+=== Various bug fixes
+
+As always, this release comes with quite a few bug fixes, so we recommend you update soon!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#168[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
