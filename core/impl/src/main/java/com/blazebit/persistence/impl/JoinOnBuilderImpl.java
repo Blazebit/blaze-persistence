@@ -25,6 +25,8 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnOrBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
@@ -39,7 +41,7 @@ import com.blazebit.persistence.parser.predicate.PredicateBuilder;
  * @author Moritz Becker
  * @since 1.0.0
  */
-public class JoinOnBuilderImpl<T> extends PredicateManager<JoinOnBuilderImpl<T>> implements JoinOnBuilder<T>, PredicateBuilder, PredicateBuilderEndedListener, SubqueryBuilderListener<T> {
+public class JoinOnBuilderImpl<T> extends PredicateManager<JoinOnBuilderImpl<T>> implements JoinOnBuilder<T>, PredicateBuilder, PredicateBuilderEndedListener, SubqueryBuilderListener<T>, ExpressionBuilderEndedListener {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
@@ -148,7 +150,7 @@ public class JoinOnBuilderImpl<T> extends PredicateManager<JoinOnBuilderImpl<T>>
     @Override
     public MultipleSubqueryInitiator<T> setOnExpressionSubqueries(String expression) {
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
-        return restrictSetExpressionSubqueries(result, predicate);
+        return restrictSetExpressionSubqueries(result, predicate, this);
     }
 
     @Override
@@ -161,6 +163,11 @@ public class JoinOnBuilderImpl<T> extends PredicateManager<JoinOnBuilderImpl<T>>
         verifyEnded();
         listener.onBuilderEnded(this);
         return result;
+    }
+
+    @Override
+    public void onBuilderEnded(ExpressionBuilder builder) {
+        listener.onBuilderEnded(this);
     }
 
     @Override

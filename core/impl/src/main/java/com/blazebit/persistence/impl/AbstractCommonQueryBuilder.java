@@ -1519,7 +1519,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public MultipleSubqueryInitiator<BuilderType> setWhereExpressionSubqueries(String expression) {
         prepareForModification(ClauseType.WHERE);
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
-        return whereManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
+        return whereManager.restrictSetExpressionSubqueries((BuilderType) this, predicate, null);
     }
 
     public PredicateBuilder where() {
@@ -1761,7 +1761,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalStateException("Having without group by");
         }
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
-        return havingManager.restrictSetExpressionSubqueries((BuilderType) this, predicate);
+        return havingManager.restrictSetExpressionSubqueries((BuilderType) this, predicate, null);
     }
 
     public PredicateBuilder having() {
