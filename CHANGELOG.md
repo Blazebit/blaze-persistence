@@ -36,6 +36,7 @@ Changes that happened in releases
 * Always treat flat views for embeddable types as updates to support partial flushing
 * Fix QUERY flushing issues with MappingSingular attributes
 * Fix support for entity functions in DML statements
+* Fix deployment problems with Hibernate 6 integration on Wildfly 27
 
 ### Backwards-incompatible changes
 
