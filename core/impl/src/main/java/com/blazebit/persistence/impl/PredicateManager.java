@@ -147,11 +147,11 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
         return initiator;
     }
 
-    <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X builder, Predicate predicate) {
+    <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X result, Predicate predicate) {
         rootPredicate.verifyBuilderEnded();
         parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, predicate, new ExpressionBuilderEndedListener() {
             
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {
@@ -164,11 +164,11 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
         return initiator;
     }
 
-    <X> MultipleSubqueryInitiator<X> restrictSetExpressionSubqueries(X builder, Predicate predicate) {
+    <X> MultipleSubqueryInitiator<X> restrictSetExpressionSubqueries(X result, Predicate predicate, final ExpressionBuilderEndedListener listener) {
         rootPredicate.verifyBuilderEnded();
         parameterManager.collectParameterRegistrations(predicate, getClauseType(), subqueryInitFactory.getQueryBuilder());
 
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, predicate, new ExpressionBuilderEndedListener() {
 
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {
@@ -176,6 +176,9 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
                 children.clear();
                 children.add((Predicate) builder.getExpression());
                 currentMultipleSubqueryInitiator = null;
+                if (listener != null) {
+                    listener.onBuilderEnded(builder);
+                }
             }
 
         }, subqueryInitFactory, getClauseType());
@@ -406,7 +409,7 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
     @Override
     public MultipleSubqueryInitiator<PredicateBuilder> setExpressionSubqueries(String expression) {
         Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
-        return restrictSetExpressionSubqueries((PredicateBuilder) this, predicate);
+        return restrictSetExpressionSubqueries((PredicateBuilder) this, predicate, null);
     }
 
     public void verifyEnded() {

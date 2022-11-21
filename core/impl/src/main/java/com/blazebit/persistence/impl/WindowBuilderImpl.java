@@ -375,7 +375,7 @@ public class WindowBuilderImpl<T> extends PredicateManager<WindowBuilderImpl<T>>
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<WindowBuilderImpl<T>> setWhereExpressionSubqueries(String expression) {
         Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
-        return restrictSetExpressionSubqueries(this, predicate);
+        return restrictSetExpressionSubqueries(this, predicate, null);
     }
 
     public PredicateBuilder where() {

@@ -544,6 +544,44 @@ public class WhereTest extends AbstractCoreTest {
         final String expected = "SELECT d.id, d.name FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, d.name HAVING COUNT(DISTINCT versions_1) > 2 AND COUNT(DISTINCT partners_1) < 1";
         assertEquals(expected, crit.getQueryString());
     }
+
+    @Test
+    public void testSetWhereExpressionSubqueries() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.setWhereExpressionSubqueries("a1 + a2 > 0")
+                .with("a1")
+                    .from(Document.class, "dSub")
+                    .select("MAX(dSub.id)")
+                    .end()
+                .with("a2")
+                    .from(Document.class, "dSub")
+                    .select("MIN(dSub.id)")
+                    .end()
+                .end()
+            .select("d.id");
+
+        final String expected = "SELECT d.id FROM Document d WHERE (SELECT MAX(dSub.id) FROM Document dSub) + (SELECT MIN(dSub.id) FROM Document dSub) > 0";
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testWhereExpressionSubqueries() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.whereExpressionSubqueries("a1 + a2 > 0")
+            .with("a1")
+                .from(Document.class, "dSub")
+                .select("MAX(dSub.id)")
+                .end()
+            .with("a2")
+                .from(Document.class, "dSub")
+                .select("MIN(dSub.id)")
+                .end()
+            .end()
+            .select("d.id");
+
+        final String expected = "SELECT d.id FROM Document d WHERE (SELECT MAX(dSub.id) FROM Document dSub) + (SELECT MIN(dSub.id) FROM Document dSub) > 0";
+        assertEquals(expected, crit.getQueryString());
+    }
     
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
         verifyException(crit, BuilderChainingException.class, r -> r.whereCase());

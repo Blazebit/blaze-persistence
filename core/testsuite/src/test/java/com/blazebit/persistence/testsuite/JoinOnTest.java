@@ -191,4 +191,44 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.setParameter("param", "%dld");
         crit.getResultList();
     }
+
+    // For issue #1634
+    @Test
+    public void testSetOnExpressionSubqueries() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.innerJoinOn("d.partners", "p").setOnExpressionSubqueries("a1 + a2 > 0")
+            .with("a1")
+                .from(Document.class, "dSub")
+                .select("MAX(dSub.id)")
+                .end()
+            .with("a2")
+                .from(Document.class, "dSub")
+                .select("MIN(dSub.id)")
+                .end()
+            .end()
+            .select("d.id");
+
+        final String expected = "SELECT d.id FROM Document d JOIN d.partners p" + onClause("(SELECT MAX(dSub.id) FROM Document dSub) + (SELECT MIN(dSub.id) FROM Document dSub) > 0");
+        assertEquals(expected, crit.getQueryString());
+    }
+
+    @Test
+    public void testOnExpressionSubqueries() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.innerJoinOn("d.partners", "p").onExpressionSubqueries("a1 + a2 > 0")
+            .with("a1")
+                .from(Document.class, "dSub")
+                .select("MAX(dSub.id)")
+                .end()
+            .with("a2")
+                .from(Document.class, "dSub")
+                .select("MIN(dSub.id)")
+                .end()
+            .end()
+        .end()
+        .select("d.id");
+
+        final String expected = "SELECT d.id FROM Document d JOIN d.partners p" + onClause("(SELECT MAX(dSub.id) FROM Document dSub) + (SELECT MIN(dSub.id) FROM Document dSub) > 0");
+        assertEquals(expected, crit.getQueryString());
+    }
 }
