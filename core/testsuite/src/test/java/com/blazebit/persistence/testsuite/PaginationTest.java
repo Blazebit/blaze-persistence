@@ -207,16 +207,16 @@ public class PaginationTest extends AbstractCoreTest {
         // do not include joins that are only needed for the select clause
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1"
                 + onClause("KEY(localized_1_1) = 1")
-                + " WHERE UPPER(d.name) LIKE UPPER(" + likePattern(":param_0") + ") AND owner_1.name LIKE " + likePattern(":param_1") + " AND UPPER(" + joinAliasValue("localized_1_1")
-                + ") LIKE UPPER(" + likePattern(":param_2") + ")";
+                + " WHERE UPPER(d.name) LIKE UPPER(:param_0)" + noEscape() + " AND owner_1.name LIKE :param_1" + noEscape() + " AND UPPER(" + joinAliasValue("localized_1_1")
+                + ") LIKE UPPER(:param_2)" + noEscape();
 
         String expectedObjectQuery = "SELECT d.name, CONCAT(owner_1.name,' user'), COALESCE(" + joinAliasValue("localized_1_1")
                 + ",'no item'), partnerDocument_1.name FROM Document d "
                 + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1"
                 + onClause("KEY(localized_1_1) = 1")
                 + " LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
-                + "WHERE UPPER(d.name) LIKE UPPER(" + likePattern(":param_0") + ") AND owner_1.name LIKE " + likePattern(":param_1") + " AND UPPER(" + joinAliasValue("localized_1_1")
-                + ") LIKE UPPER(" + likePattern(":param_2") + ") "
+                + "WHERE UPPER(d.name) LIKE UPPER(:param_0)" + noEscape() + " AND owner_1.name LIKE :param_1" + noEscape() + " AND UPPER(" + joinAliasValue("localized_1_1")
+                + ") LIKE UPPER(:param_2)" + noEscape() + " "
                 + "ORDER BY d.id ASC";
 
         PaginatedCriteriaBuilder<DocumentViewModel> pcb = crit.page(0, 2);
