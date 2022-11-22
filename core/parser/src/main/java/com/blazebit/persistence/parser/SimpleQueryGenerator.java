@@ -163,10 +163,6 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         return Character.toString(character);
     }
 
-    protected void renderLikePattern(LikePredicate predicate) {
-        predicate.getRight().accept(this);
-    }
-
     @Override
     public void visit(final CompoundPredicate predicate) {
         BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PREDICATE);
@@ -285,7 +281,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
-        renderLikePattern(predicate);
+        predicate.getRight().accept(this);
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }

@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Use empty escape character for like predicates when noEscape is used
 
 ### Backwards-incompatible changes
 

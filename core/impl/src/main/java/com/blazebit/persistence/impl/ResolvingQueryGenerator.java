@@ -697,21 +697,41 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         return jpaProvider.escapeCharacter(character);
     }
 
-    protected void renderLikePattern(LikePredicate predicate) {
-        Character defaultEscapeCharacter;
-        if (!externalRepresentation && !jpaProvider.supportsLikePatternEscape() && predicate.getEscapeCharacter() == null && (defaultEscapeCharacter = dbmsDialect.getDefaultEscapeCharacter()) != null) {
-            if (predicate.getRight() instanceof StringLiteral) {
-                TypeUtils.STRING_CONVERTER.appendTo(((StringLiteral) predicate.getRight()).getValue().replace(defaultEscapeCharacter.toString(), defaultEscapeCharacter.toString() + defaultEscapeCharacter), sb);
-            } else {
-                sb.append(jpaProvider.getCustomFunctionInvocation("REPLACE", 1));
-                predicate.getRight().accept(this);
-                sb.append(", ").append("'").append(defaultEscapeCharacter).append(defaultEscapeCharacter).append("'");
-                sb.append(", ").append("'").append(defaultEscapeCharacter).append(defaultEscapeCharacter).append(defaultEscapeCharacter).append(defaultEscapeCharacter).append("'");
-                sb.append(")");
-            }
-        } else {
-            predicate.getRight().accept(this);
+
+    @Override
+    public void visit(final LikePredicate predicate) {
+        // Since like is defined for Strings, we can always infer types
+        ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
+        if (!predicate.isCaseSensitive()) {
+            sb.append("UPPER(");
         }
+        predicate.getLeft().accept(this);
+        if (!predicate.isCaseSensitive()) {
+            sb.append(")");
+        }
+        if (predicate.isNegated()) {
+            sb.append(" NOT LIKE ");
+        } else {
+            sb.append(" LIKE ");
+        }
+        if (!predicate.isCaseSensitive()) {
+            sb.append("UPPER(");
+        }
+        predicate.getRight().accept(this);
+        if (!predicate.isCaseSensitive()) {
+            sb.append(")");
+        }
+        if (predicate.getEscapeCharacter() != null) {
+            sb.append(" ESCAPE ");
+            if (predicate.getEscapeCharacter() instanceof StringLiteral) {
+                TypeUtils.STRING_CONVERTER.appendTo(escapeCharacter(((StringLiteral) predicate.getEscapeCharacter()).getValue().charAt(0)), sb);
+            } else {
+                predicate.getEscapeCharacter().accept(this);
+            }
+        } else if (!externalRepresentation && !jpaProvider.supportsLikePatternEscape() && predicate.getEscapeCharacter() == null && (dbmsDialect.getDefaultEscapeCharacter()) != null) {
+            sb.append(" ESCAPE ''");
+        }
+        setParameterRenderingMode(oldParameterRenderingMode);
     }
 
     @Override
