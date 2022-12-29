@@ -369,4 +369,11 @@ public class TestLiterals extends AbstractParserTest {
         assertEquals(_timestamp(1991, 5, 21, 11, 59, 59, 100), result);
     }
 
+    // Test for #1576
+    @Test
+    public void testNegativeInItemExpression() {
+        NumericLiteral result = (NumericLiteral) parseInItemExpression("-1");
+        assertEquals(new NumericLiteral("-1", NumericType.INTEGER), result);
+    }
+
 }

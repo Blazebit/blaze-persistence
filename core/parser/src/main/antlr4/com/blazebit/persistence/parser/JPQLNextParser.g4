@@ -153,7 +153,7 @@ fromItemElement
     ;
 
 fromItemValuesItem
-    : LP literal (COMMA literal)* RP
+    : LP plainLiteral (COMMA plainLiteral)* RP
     ;
 
 entityName
@@ -391,7 +391,7 @@ keysetClause
 
 parameterOrLiteral
     : parameter
-    | literal
+    | plainLiteral
     ;
 
 entityTypeOrEnumLiteral
@@ -502,6 +502,27 @@ literal
     | timestampLiteral
     | dateLiteral
     | timeLiteral
+    ;
+
+plainLiteral
+    : STRING_LITERAL
+    | CHARACTER_LITERAL
+    | plainNumericLiteral
+    | NULL
+    | TRUE
+    | FALSE
+    | timestampLiteral
+    | dateLiteral
+    | timeLiteral
+    ;
+
+plainNumericLiteral
+    : (PLUS|MINUS)? INTEGER_LITERAL
+    | (PLUS|MINUS)? LONG_LITERAL
+    | (PLUS|MINUS)? BIG_INTEGER_LITERAL
+    | (PLUS|MINUS)? FLOAT_LITERAL
+    | (PLUS|MINUS)? DOUBLE_LITERAL
+    | (PLUS|MINUS)? BIG_DECIMAL_LITERAL
     ;
 
 timestampLiteral

@@ -11,6 +11,7 @@ None yet
 ### Bug fixes
 
 * Use empty escape character for like predicates when noEscape is used
+* Fix issue with negative numeric literals in `inLiterals` and `notInLiterals` APIs
 
 ### Backwards-incompatible changes
 
