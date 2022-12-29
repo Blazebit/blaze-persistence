@@ -6,7 +6,7 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Introduce SelectNewBuilder interface
 
 ### Bug fixes
 
