@@ -283,71 +283,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
                 return NullExpression.INSTANCE;
             case JPQLNextLexer.STRING_LITERAL:
             case JPQLNextLexer.CHARACTER_LITERAL:
-                String text = node.getText();
-                StringBuilder sb = new StringBuilder(text.length());
-                int end = text.length() - 1;
-                char delimiter = text.charAt(0);
-                for (int i = 1; i < end; i++) {
-                    char c = text.charAt(i);
-                    switch (c) {
-                        case '\'':
-                            if (delimiter == '\'') {
-                                i++;
-                            }
-                            break;
-                        case '"':
-                            if (delimiter == '"') {
-                                i++;
-                            }
-                            break;
-                        case '\\':
-                            if ((i + 1) < end) {
-                                char nextChar = text.charAt(++i);
-                                switch (nextChar) {
-                                    case 'b':
-                                        c = '\b';
-                                        break;
-                                    case 't':
-                                        c = '\t';
-                                        break;
-                                    case 'n':
-                                        c = '\n';
-                                        break;
-                                    case 'f':
-                                        c = '\f';
-                                        break;
-                                    case 'r':
-                                        c = '\r';
-                                        break;
-                                    case '\\':
-                                        c = '\\';
-                                        break;
-                                    case '\'':
-                                        c = '\'';
-                                        break;
-                                    case '"':
-                                        c = '"';
-                                        break;
-                                    case '`':
-                                        c = '`';
-                                        break;
-                                    case 'u':
-                                        c = (char) Integer.parseInt(text.substring(i + 1, i + 5), 16);
-                                        i += 4;
-                                        break;
-                                    default:
-                                        sb.append('\\');
-                                        c = nextChar;
-                                        break;
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    sb.append(c);
-                }
-                return new StringLiteral(sb.toString());
+                return createStringLiteral(node);
             case JPQLNextLexer.TRUE:
                 return new BooleanLiteral(true);
             case JPQLNextLexer.FALSE:
@@ -367,6 +303,101 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             default:
                 throw new IllegalStateException("Terminal node '" + node.getText() + "' not handled");
         }
+    }
+
+    @Override
+    public Expression visitPlainNumericLiteral(JPQLNextParser.PlainNumericLiteralContext ctx) {
+        TerminalNode node = (TerminalNode) ctx.getChild(ctx.getChildCount() - 1);
+        String text;
+        if (ctx.getChildCount() == 2 && ctx.getChild(0).getText().equals("-")) {
+            text = "-" + node.getText();
+        } else {
+            text = node.getText();
+        }
+        switch (node.getSymbol().getType()) {
+            case JPQLNextLexer.BIG_INTEGER_LITERAL:
+                return new NumericLiteral(text, NumericType.BIG_INTEGER);
+            case JPQLNextLexer.INTEGER_LITERAL:
+                return new NumericLiteral(text, NumericType.INTEGER);
+            case JPQLNextLexer.LONG_LITERAL:
+                return new NumericLiteral(text, NumericType.LONG);
+            case JPQLNextLexer.FLOAT_LITERAL:
+                return new NumericLiteral(text, NumericType.FLOAT);
+            case JPQLNextLexer.DOUBLE_LITERAL:
+                return new NumericLiteral(text, NumericType.DOUBLE);
+            case JPQLNextLexer.BIG_DECIMAL_LITERAL:
+                return new NumericLiteral(text, NumericType.BIG_DECIMAL);
+            default:
+                throw new IllegalStateException("Terminal node '" + text + "' not handled");
+        }
+    }
+
+    private static StringLiteral createStringLiteral(TerminalNode node) {
+        String text = node.getText();
+        StringBuilder sb = new StringBuilder(text.length());
+        int end = text.length() - 1;
+        char delimiter = text.charAt(0);
+        for (int i = 1; i < end; i++) {
+            char c = text.charAt(i);
+            switch (c) {
+                case '\'':
+                    if (delimiter == '\'') {
+                        i++;
+                    }
+                    break;
+                case '"':
+                    if (delimiter == '"') {
+                        i++;
+                    }
+                    break;
+                case '\\':
+                    if ((i + 1) < end) {
+                        char nextChar = text.charAt(++i);
+                        switch (nextChar) {
+                            case 'b':
+                                c = '\b';
+                                break;
+                            case 't':
+                                c = '\t';
+                                break;
+                            case 'n':
+                                c = '\n';
+                                break;
+                            case 'f':
+                                c = '\f';
+                                break;
+                            case 'r':
+                                c = '\r';
+                                break;
+                            case '\\':
+                                c = '\\';
+                                break;
+                            case '\'':
+                                c = '\'';
+                                break;
+                            case '"':
+                                c = '"';
+                                break;
+                            case '`':
+                                c = '`';
+                                break;
+                            case 'u':
+                                c = (char) Integer.parseInt(text.substring(i + 1, i + 5), 16);
+                                i += 4;
+                                break;
+                            default:
+                                sb.append('\\');
+                                c = nextChar;
+                                break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            sb.append(c);
+        }
+        return new StringLiteral(sb.toString());
     }
 
     @Override

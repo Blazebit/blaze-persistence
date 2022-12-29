@@ -240,6 +240,10 @@ public class AbstractParserTest {
         return (PathExpression) ef().createPathExpression(expr, macroConfiguration, null);
     }
 
+    protected Expression parseInItemExpression(String expr){
+        return ef().createInItemExpression(expr, macroConfiguration, null);
+    }
+
     protected MapKeyExpression keyExpression(String expression) {
         return keyExpression(parsePath(expression));
     }
