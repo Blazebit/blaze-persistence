@@ -209,24 +209,24 @@
     </build>
 
     <profiles>
+        <!-- Use Spring Boot 2.0 as a minimum version because 1.* is no longer compatible with newer versions of graphql-spring-boot-starter -->
         <profile>
             <id>spring-data-1.11.x</id>
             <properties>
-                <!-- For some strange reason this doesn't work with 4.3.9.RELEASE. Since this is old anyway, let's just use 4.3.3.RELEASE here -->
-                <version.spring>4.3.3.RELEASE</version.spring>
-                <version.spring.boot>${version.spring-data-1.x-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.0-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
             </properties>
 
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-1.x}</version>
+                    <version>${version.spring-data-2.0}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
                     <artifactId>aspectjweaver</artifactId>
-                    <version>1.8.9</version>
+                    <version>1.9.4</version>
                 </dependency>
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
@@ -235,7 +235,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
