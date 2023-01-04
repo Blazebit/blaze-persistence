@@ -40,6 +40,7 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
+import graphql.schema.SelectedField;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,11 +48,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -107,28 +106,6 @@ public class GraphQLEntityViewSupport {
 
     // GraphQL defines meta fields that can be used on any type: https://graphql.org/learn/queries/#meta-fields
     private static final Set<String> META_FIELDS = new HashSet<>(Arrays.asList("__typename"));
-
-    private static final Method GET_QUALIFIED_NAME;
-    private static final Method GET_FIELDS;
-
-    static {
-        Method getQualifiedName = null;
-        Method getFields = null;
-        try {
-            getQualifiedName = Class.forName("graphql.schema.SelectedField").getMethod("getQualifiedName");
-            getFields = DataFetchingFieldSelectionSet.class.getMethod("getFields");
-        } catch (Exception e) {
-            try {
-                getFields = DataFetchingFieldSelectionSet.class.getMethod("get");
-            } catch (NoSuchMethodException noSuchMethodException) {
-                RuntimeException runtimeException = new RuntimeException("Could not initialize accessors for graphql-java runtime", noSuchMethodException);
-                runtimeException.addSuppressed(e);
-                throw runtimeException;
-            }
-        }
-        GET_QUALIFIED_NAME = getQualifiedName;
-        GET_FIELDS = getFields;
-    }
 
     private final Map<String, Class<?>> typeNameToClass;
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
@@ -651,73 +628,37 @@ public class GraphQLEntityViewSupport {
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
         GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
         try {
-            if (GET_QUALIFIED_NAME == null) {
-                Collection<String> keys = ((Map<String, ?>) GET_FIELDS.invoke(selectionSet)).keySet();
-                OUTER: for (String key : keys) {
-                    if (key.length() < prefix.length()) {
-                        continue;
-                    }
-                    GraphQLFieldsContainer baseType = rootType;
-                    sb.setLength(0);
-                    int fieldStartIndex = 0;
-                    for (int i = 0; i < key.length(); i++) {
-                        final char c = key.charAt(i);
-                        if (i < prefix.length()) {
-                            if (c != prefix.charAt(i)) {
-                                continue OUTER;
-                            } else {
-                                continue;
-                            }
-                        }
-                        if (c == '/') {
-                            if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
-                                continue OUTER;
-                            }
-                            sb.append('.');
-                            fieldStartIndex = sb.length();
+            OUTER:
+            for (SelectedField field : selectionSet.getFields()) {
+                String key = field.getQualifiedName();
+                if (key.length() < prefix.length()) {
+                    continue;
+                }
+                GraphQLFieldsContainer baseType = rootType;
+                sb.setLength(0);
+                int fieldStartIndex = 0;
+                for (int i = 0; i < key.length(); i++) {
+                    final char c = key.charAt(i);
+                    if (i < prefix.length()) {
+                        if (c != prefix.charAt(i)) {
+                            continue OUTER;
                         } else {
-                            sb.append(c);
+                            continue;
                         }
                     }
-                    if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                        if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
-                            setting.fetch(sb.toString());
+                    if (c == '/') {
+                        if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
+                            continue OUTER;
                         }
+                        sb.append('.');
+                        fieldStartIndex = sb.length();
+                    } else {
+                        sb.append(c);
                     }
                 }
-            } else {
-                Collection<Object> fields = (Collection<Object>) GET_FIELDS.invoke(selectionSet);
-                OUTER: for (Object field : fields) {
-                    String key = (String) GET_QUALIFIED_NAME.invoke(field);
-                    if (key.length() < prefix.length()) {
-                        continue;
-                    }
-                    GraphQLFieldsContainer baseType = rootType;
-                    sb.setLength(0);
-                    int fieldStartIndex = 0;
-                    for (int i = 0; i < key.length(); i++) {
-                        final char c = key.charAt(i);
-                        if (i < prefix.length()) {
-                            if (c != prefix.charAt(i)) {
-                                continue OUTER;
-                            } else {
-                                continue;
-                            }
-                        }
-                        if (c == '/') {
-                            if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
-                                continue OUTER;
-                            }
-                            sb.append('.');
-                            fieldStartIndex = sb.length();
-                        } else {
-                            sb.append(c);
-                        }
-                    }
-                    if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                        if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
-                            setting.fetch(sb.toString());
-                        }
+                if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                    if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
+                        setting.fetch(sb.toString());
                     }
                 }
             }
