@@ -1542,7 +1542,7 @@ class CatRestDTO {
     private final Long id;
     private final String name;
 
-    public MyOldCatDTO(Long id, String name) {
+    public CatRestDTO(Long id, String name) {
         this.id = id;
         this.name = name;
     }
