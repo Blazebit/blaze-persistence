@@ -12,6 +12,7 @@ None yet
 
 * Use empty escape character for like predicates when noEscape is used
 * Fix issue with negative numeric literals in `inLiterals` and `notInLiterals` APIs
+* Fix GraphQL over-fetching issue
 
 ### Backwards-incompatible changes
 

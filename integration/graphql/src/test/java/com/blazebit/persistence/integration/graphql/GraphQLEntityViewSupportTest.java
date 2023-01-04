@@ -51,6 +51,6 @@ public class GraphQLEntityViewSupportTest {
 
         EntityViewSetting<DocumentView, CriteriaBuilder<DocumentView>> setting = graphQLEntityViewSupport.createSetting(dfe);
 
-        Assert.assertEquals(new HashSet<>(Arrays.asList("name", "owner", "owner.name")), setting.getFetches());
+        Assert.assertEquals(new HashSet<>(Arrays.asList("name", "owner.name")), setting.getFetches());
     }
 }

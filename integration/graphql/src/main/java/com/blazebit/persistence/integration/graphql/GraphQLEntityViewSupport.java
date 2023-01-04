@@ -34,6 +34,7 @@ import graphql.relay.Edge;
 import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLCompositeType;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
@@ -657,7 +658,10 @@ public class GraphQLEntityViewSupport {
                     }
                 }
                 if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                    if (applyFieldMapping(sb, baseType, fieldStartIndex) != null) {
+                    // Include only actual leaf types into setting.fetches because intermediate objects types
+                    // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
+                    GraphQLType fieldType = applyFieldMapping(sb, baseType, fieldStartIndex);
+                    if (fieldType != null && !(fieldType instanceof GraphQLCompositeType)) {
                         setting.fetch(sb.toString());
                     }
                 }
