@@ -6,6 +6,7 @@ import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
@@ -54,6 +55,13 @@ public class TestSchemaHelpers {
         objectTypeBuilder.name(name);
         Arrays.stream(fields).forEach(objectTypeBuilder::field);
         return objectTypeBuilder.build();
+    }
+
+    public static GraphQLObjectType makeRelayConnection(GraphQLObjectType rootType) {
+        GraphQLFieldDefinition nodeFieldDefinition = makeFieldDefinition("node", rootType);
+        GraphQLObjectType edgeObjectType = makeObjectType("Edge", nodeFieldDefinition);
+        GraphQLFieldDefinition edgesFieldDefinition = makeFieldDefinition("edges", new GraphQLList(edgeObjectType));
+        return makeObjectType("Connection", edgesFieldDefinition);
     }
 
     public static DataFetchingFieldSelectionSet makeMockSelectionSet(String... fields) {

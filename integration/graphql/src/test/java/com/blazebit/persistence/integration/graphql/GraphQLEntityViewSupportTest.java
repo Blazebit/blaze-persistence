@@ -17,6 +17,7 @@
 package com.blazebit.persistence.integration.graphql;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.integration.graphql.views.DocumentView;
 import com.blazebit.persistence.view.EntityViewSetting;
 import graphql.schema.DataFetchingEnvironment;
@@ -33,6 +34,7 @@ import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.get
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.makeFieldDefinition;
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.makeMockDataFetchingEnvironment;
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.makeMockSelectionSet;
+import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.makeRelayConnection;
 
 /**
  * @author David Kubecka
@@ -40,10 +42,10 @@ import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.mak
  */
 public class GraphQLEntityViewSupportTest {
 
+    GraphQLEntityViewSupport graphQLEntityViewSupport = getGraphQLEntityViewSupport();
+
     @Test
     public void testFetchesInSetting() {
-        GraphQLEntityViewSupport graphQLEntityViewSupport = getGraphQLEntityViewSupport();
-
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", documentObjectType);
         DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("name", "owner", "owner/name");
 
@@ -52,5 +54,18 @@ public class GraphQLEntityViewSupportTest {
         EntityViewSetting<DocumentView, CriteriaBuilder<DocumentView>> setting = graphQLEntityViewSupport.createSetting(dfe);
 
         Assert.assertEquals(new HashSet<>(Arrays.asList("name", "owner.name")), setting.getFetches());
+    }
+
+    @Test
+    public void testFetchesInPaginatedSetting() {
+        GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", makeRelayConnection(documentObjectType));
+        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("edges", "edges/node", "edges/node/owner", "edges/node/owner/name");
+
+        DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
+
+        EntityViewSetting<DocumentView, PaginatedCriteriaBuilder<DocumentView>> paginatedSetting =
+                graphQLEntityViewSupport.createPaginatedSetting(dfe);
+
+        Assert.assertEquals(new HashSet<>(Arrays.asList("owner.name")), paginatedSetting.getFetches());
     }
 }
