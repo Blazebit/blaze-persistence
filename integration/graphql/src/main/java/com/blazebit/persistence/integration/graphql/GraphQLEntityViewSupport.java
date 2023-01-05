@@ -72,7 +72,7 @@ public class GraphQLEntityViewSupport {
      * Default name for the page size field.
      */
     public static final String PAGE_SIZE_NAME = "first";
-    /**w
+    /**
      * Default name for the page size field.
      */
     public static final String RELAY_LAST_NAME = "last";
@@ -154,6 +154,7 @@ public class GraphQLEntityViewSupport {
 
     /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     *
      * @param typeNameToClass The mapping from GraphQL type names to entity view class names
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
      * @param pageSizeName The name of the page size field
@@ -171,6 +172,7 @@ public class GraphQLEntityViewSupport {
 
     /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     *
      * @param typeNameToClass The mapping from GraphQL type names to entity view class names
      * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
