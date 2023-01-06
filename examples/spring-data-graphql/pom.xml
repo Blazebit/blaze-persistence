@@ -85,14 +85,21 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.graphql-java</groupId>
+            <groupId>com.graphql-java-kickstart</groupId>
             <artifactId>graphql-spring-boot-starter</artifactId>
-            <version>5.0.2</version>
+            <version>11.1.0</version>
+            <exclusions>
+                <!--provided actuator version doesn't work with some of the older spring-data profiles-->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-actuator</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.graphql-java</groupId>
+            <groupId>com.graphql-java-kickstart</groupId>
             <artifactId>graphiql-spring-boot-starter</artifactId>
-            <version>5.0.2</version>
+            <version>11.1.0</version>
         </dependency>
 
         <dependency>
