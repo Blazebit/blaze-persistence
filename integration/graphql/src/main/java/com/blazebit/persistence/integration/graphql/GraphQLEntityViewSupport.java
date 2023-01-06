@@ -35,6 +35,7 @@ import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldsContainer;
+import graphql.schema.GraphQLNamedType;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLUnmodifiedType;
 import graphql.schema.SelectedField;
@@ -602,34 +603,30 @@ public class GraphQLEntityViewSupport {
      * @param elementRoot The element root
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
-        StringBuilder sb = new StringBuilder();
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
         GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
         OUTER:
-        for (SelectedField field : selectionSet.getFields(elementRoot + "/**")) {
-            String key = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "");
-            GraphQLFieldsContainer baseType = rootType;
-            sb.setLength(0);
-            int fieldStartIndex = 0;
-            for (int i = 0; i < key.length(); i++) {
-                final char c = key.charAt(i);
-                if (c == '/') {
-                    if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
-                        continue OUTER;
-                    }
-                    sb.append('.');
-                    fieldStartIndex = sb.length();
-                } else {
-                    sb.append(c);
-                }
-            }
-            if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                // Include only actual leaf types into setting.fetches because intermediate objects types
+        for (SelectedField field : selectionSet.getFields()) {
+            if (!isLeaf(field.getType())) {
+                // Skip non-leaf types because these intermediate objects types would
                 // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
-                if (isLeaf(applyFieldMapping(sb, baseType, fieldStartIndex))) {
-                    setting.fetch(sb.toString());
+                continue;
+            }
+            String[] fieldParts = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "").split("/");
+            GraphQLFieldsContainer baseType = rootType;
+            List<String> mappedFields = new ArrayList<>();
+            for (String fieldPart : fieldParts) {
+                String mappedFieldPart = applyFieldMapping(baseType, fieldPart);
+                if (mappedFieldPart == null) {
+                    continue OUTER;
+                }
+                mappedFields.add(mappedFieldPart);
+                GraphQLType fieldType = unwrapAll(baseType.getFieldDefinition(fieldPart).getType());
+                if (!isLeaf(fieldType)) {
+                    baseType = (GraphQLFieldsContainer) fieldType;
                 }
             }
+            setting.fetch(String.join(".", mappedFields));
         }
     }
 
@@ -638,7 +635,7 @@ public class GraphQLEntityViewSupport {
      * for the given GraphQL base type.
      * Will return <code>null</code> if there is no entity view attribute for this path.
      */
-    private GraphQLUnmodifiedType applyFieldMapping(StringBuilder sb, GraphQLFieldsContainer baseType, int fieldStartIndex) {
+    private String applyFieldMapping(GraphQLNamedType baseType, String fieldPart) {
         if (baseType == null) {
             return null;
         }
@@ -647,16 +644,7 @@ public class GraphQLEntityViewSupport {
         if (fieldMapping == null) {
             return null;
         }
-        String fieldName = sb.substring(fieldStartIndex);
-        String mapping = fieldMapping.get(fieldName);
-        if (mapping == null) {
-            return null;
-        }
-        if (!mapping.equals(fieldName)) {
-            sb.setLength(fieldStartIndex);
-            sb.append(mapping);
-        }
-        return unwrapAll(baseType.getFieldDefinition(fieldName).getType());
+        return fieldMapping.get(fieldPart);
     }
 
     /**
