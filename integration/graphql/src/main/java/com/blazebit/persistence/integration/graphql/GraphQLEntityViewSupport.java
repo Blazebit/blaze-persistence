@@ -602,29 +602,18 @@ public class GraphQLEntityViewSupport {
      * @param elementRoot The element root
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
-        String prefix = elementRoot == null || elementRoot.isEmpty() ? "" : elementRoot + "/";
         StringBuilder sb = new StringBuilder();
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
         GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
         try {
             OUTER:
-            for (SelectedField field : selectionSet.getFields()) {
-                String key = field.getQualifiedName();
-                if (key.length() < prefix.length()) {
-                    continue;
-                }
+            for (SelectedField field : selectionSet.getFields(elementRoot + "/**")) {
+                String key = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "");
                 GraphQLFieldsContainer baseType = rootType;
                 sb.setLength(0);
                 int fieldStartIndex = 0;
                 for (int i = 0; i < key.length(); i++) {
                     final char c = key.charAt(i);
-                    if (i < prefix.length()) {
-                        if (c != prefix.charAt(i)) {
-                            continue OUTER;
-                        } else {
-                            continue;
-                        }
-                    }
                     if (c == '/') {
                         if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
                             continue OUTER;

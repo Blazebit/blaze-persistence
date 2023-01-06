@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -89,6 +90,7 @@ public class TestSchemaHelpers {
 
         DataFetchingFieldSelectionSet selectionSet = mock(DataFetchingFieldSelectionSet.class);
         when(selectionSet.getFields()).thenReturn(selectedFields);
+        when(selectionSet.getFields(any())).thenReturn(selectedFields);
         return selectionSet;
     }
 
