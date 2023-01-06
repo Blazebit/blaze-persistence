@@ -24,7 +24,6 @@ import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-import com.google.common.io.Resources;
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -36,13 +35,16 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.schema.idl.TypeRuntimeWiring;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
 import java.util.Collections;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Christian Beikov
@@ -62,8 +64,8 @@ public class GraphQLProvider {
 
     @PostConstruct
     public void init() throws IOException {
-        URL url = Resources.getResource("schema.graphqls");
-        String sdl = Resources.toString(url, StandardCharsets.UTF_8);
+        ClassPathResource resource = new ClassPathResource("schema.graphqls");
+        String sdl = FileCopyUtils.copyToString(new InputStreamReader(resource.getInputStream(), UTF_8));
         this.schema = buildSchema(sdl);
         this.graphQL = GraphQL.newGraphQL(schema).build();
     }
