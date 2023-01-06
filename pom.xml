@@ -340,6 +340,7 @@
                         <inceptionYear>${project.inceptionYear}</inceptionYear>
                         <latestYearOfContribution>${currentYearDynamic}</latestYearOfContribution>
                     </properties>
+                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
