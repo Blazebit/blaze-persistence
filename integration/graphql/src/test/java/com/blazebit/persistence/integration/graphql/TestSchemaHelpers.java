@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLNamedOutputType;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.mockito.ArgumentMatchers.any;
+import static graphql.schema.GraphQLTypeUtil.unwrapAll;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.when;
  * @since 1.6.9
  */
 public class TestSchemaHelpers {
+
+    private static final Map<String, Map<String, GraphQLNamedOutputType>> objectFieldToTypeMapping = new HashMap<>();
 
     static GraphQLFieldDefinition idFieldDefinition = makeFieldDefinition("id", makeScalarType());
     static GraphQLFieldDefinition nameFieldDefinition = makeFieldDefinition("name", makeScalarType());
@@ -54,7 +57,11 @@ public class TestSchemaHelpers {
     public static GraphQLObjectType makeObjectType(String name, GraphQLFieldDefinition... fields) {
         GraphQLObjectType.Builder objectTypeBuilder = new GraphQLObjectType.Builder();
         objectTypeBuilder.name(name);
+        HashMap<String, GraphQLNamedOutputType> fieldToTypeMapping = new HashMap<>();
+        fieldToTypeMapping.put("__typename", makeScalarType());
         Arrays.stream(fields).forEach(objectTypeBuilder::field);
+        Arrays.stream(fields).forEach(field -> fieldToTypeMapping.put(field.getName(), (GraphQLNamedOutputType) unwrapAll(field.getType())));
+        objectFieldToTypeMapping.put(name, fieldToTypeMapping);
         return objectTypeBuilder.build();
     }
 
@@ -65,16 +72,23 @@ public class TestSchemaHelpers {
         return makeObjectType("Connection", edgesFieldDefinition);
     }
 
-    public static DataFetchingFieldSelectionSet makeMockSelectionSet(String... fields) {
+    public static DataFetchingFieldSelectionSet makeMockSelectionSet(String rootType, String... fields) {
         List<SelectedField> selectedFields = Arrays.stream(fields).map(field -> {
+            String[] fieldParts = field.split("/");
+            GraphQLNamedOutputType fieldType = null;
+            String baseType = rootType;
+            for (String fieldPart : fieldParts) {
+                fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
+                baseType = fieldType.getName();
+            }
             SelectedField selectedField = mock(SelectedField.class);
             when(selectedField.getQualifiedName()).thenReturn(field);
+            when(selectedField.getType()).thenReturn(fieldType);
             return selectedField;
         }).collect(Collectors.toList());
 
         DataFetchingFieldSelectionSet selectionSet = mock(DataFetchingFieldSelectionSet.class);
         when(selectionSet.getFields()).thenReturn(selectedFields);
-        when(selectionSet.getFields(any())).thenReturn(selectedFields);
         return selectionSet;
     }
 

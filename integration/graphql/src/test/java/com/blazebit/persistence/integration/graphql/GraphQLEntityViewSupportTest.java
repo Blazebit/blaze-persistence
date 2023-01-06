@@ -47,7 +47,8 @@ public class GraphQLEntityViewSupportTest {
     @Test
     public void testFetchesInSetting() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", documentObjectType);
-        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("name", "owner", "owner/name");
+        DataFetchingFieldSelectionSet selectionSet =
+                makeMockSelectionSet("Document", "name", "owner", "owner/name", "__typename");
 
         DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
 
@@ -59,7 +60,8 @@ public class GraphQLEntityViewSupportTest {
     @Test
     public void testFetchesInPaginatedSetting() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", makeRelayConnection(documentObjectType));
-        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("edges", "edges/node", "edges/node/owner", "edges/node/owner/name");
+        DataFetchingFieldSelectionSet selectionSet =
+                makeMockSelectionSet("Connection", "edges", "edges/node", "edges/node/owner", "edges/node/owner/name");
 
         DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
 
