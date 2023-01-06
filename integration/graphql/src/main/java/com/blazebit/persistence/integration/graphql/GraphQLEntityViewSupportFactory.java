@@ -52,6 +52,7 @@ import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLNamedType;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
@@ -735,10 +736,8 @@ public class GraphQLEntityViewSupportFactory {
         serializableBasicTypes.add(GraphQLCursor.class.getName());
         for (GraphQLType additionalType : additionalTypes) {
             String typeName;
-            if (additionalType instanceof GraphQLObjectType) {
-                typeName = ((GraphQLObjectType) additionalType).getName();
-            } else if (additionalType instanceof GraphQLInterfaceType) {
-                typeName = ((GraphQLInterfaceType) additionalType).getName();
+            if (additionalType instanceof GraphQLNamedType) {
+                typeName = ((GraphQLNamedType) additionalType).getName();
             } else {
                 typeName = null;
             }

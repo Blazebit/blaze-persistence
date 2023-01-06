@@ -682,12 +682,7 @@ public class GraphQLEntityViewSupport {
         if (baseType == null) {
             return null;
         }
-        String typeName;
-        if (baseType instanceof GraphQLObjectType) {
-            typeName = ((GraphQLObjectType) baseType).getName();
-        } else {
-            typeName = ((GraphQLInterfaceType) baseType).getName();
-        }
+        String typeName = baseType.getName();
         Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
         if (fieldMapping == null) {
             return null;
