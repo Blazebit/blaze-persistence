@@ -605,35 +605,31 @@ public class GraphQLEntityViewSupport {
         StringBuilder sb = new StringBuilder();
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
         GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
-        try {
-            OUTER:
-            for (SelectedField field : selectionSet.getFields(elementRoot + "/**")) {
-                String key = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "");
-                GraphQLFieldsContainer baseType = rootType;
-                sb.setLength(0);
-                int fieldStartIndex = 0;
-                for (int i = 0; i < key.length(); i++) {
-                    final char c = key.charAt(i);
-                    if (c == '/') {
-                        if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
-                            continue OUTER;
-                        }
-                        sb.append('.');
-                        fieldStartIndex = sb.length();
-                    } else {
-                        sb.append(c);
+        OUTER:
+        for (SelectedField field : selectionSet.getFields(elementRoot + "/**")) {
+            String key = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "");
+            GraphQLFieldsContainer baseType = rootType;
+            sb.setLength(0);
+            int fieldStartIndex = 0;
+            for (int i = 0; i < key.length(); i++) {
+                final char c = key.charAt(i);
+                if (c == '/') {
+                    if ((baseType = (GraphQLFieldsContainer) applyFieldMapping(sb, baseType, fieldStartIndex)) == null) {
+                        continue OUTER;
                     }
-                }
-                if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
-                    // Include only actual leaf types into setting.fetches because intermediate objects types
-                    // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
-                    if (isLeaf(applyFieldMapping(sb, baseType, fieldStartIndex))) {
-                        setting.fetch(sb.toString());
-                    }
+                    sb.append('.');
+                    fieldStartIndex = sb.length();
+                } else {
+                    sb.append(c);
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Could not apply fetches", e);
+            if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
+                // Include only actual leaf types into setting.fetches because intermediate objects types
+                // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
+                if (isLeaf(applyFieldMapping(sb, baseType, fieldStartIndex))) {
+                    setting.fetch(sb.toString());
+                }
+            }
         }
     }
 
