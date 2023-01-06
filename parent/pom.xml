@@ -49,6 +49,7 @@
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.21</version.blazeutils>
         <version.junit>4.12</version.junit>
+        <version.junit-vintage>5.9.1</version.junit-vintage>
         <version.javassist>3.27.0-GA</version.javassist>
         <querydsl.version>5.0.0</querydsl.version>
         <!-- 1.18 messed up calculation of load index -->
