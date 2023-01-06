@@ -34,7 +34,7 @@ or if you are using Jakarta JPA
 </dependency>
 ----
 
-Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`. At least version 10.0 is required.
+Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`. At least version 17.3 is required.
 
 === Usage
 
