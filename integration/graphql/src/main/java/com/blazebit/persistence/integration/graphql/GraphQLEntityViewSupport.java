@@ -34,13 +34,9 @@ import graphql.relay.Edge;
 import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
-import graphql.schema.GraphQLCompositeType;
 import graphql.schema.GraphQLFieldsContainer;
-import graphql.schema.GraphQLInterfaceType;
-import graphql.schema.GraphQLList;
-import graphql.schema.GraphQLNonNull;
-import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
+import graphql.schema.GraphQLUnmodifiedType;
 import graphql.schema.SelectedField;
 
 import java.io.ByteArrayInputStream;
@@ -59,6 +55,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static graphql.schema.GraphQLTypeUtil.isLeaf;
+import static graphql.schema.GraphQLTypeUtil.unwrapAll;
 
 /**
  * A support class to interact with entity views in a GraphQL environment.
@@ -111,7 +110,7 @@ public class GraphQLEntityViewSupport {
     private final Map<String, Class<?>> typeNameToClass;
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
     private final Set<String> serializableBasicTypes;
-    private final ConcurrentMap<TypeRootCacheKey, GraphQLType> typeReferenceCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<TypeRootCacheKey, GraphQLUnmodifiedType> typeReferenceCache = new ConcurrentHashMap<>();
 
     private final String pageSizeName;
     private final String offsetName;
@@ -389,48 +388,25 @@ public class GraphQLEntityViewSupport {
     }
 
     public String getElementTypeName(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
-        GraphQLType type = getElementType(dataFetchingEnvironment, elementRoot);
-        if (type instanceof GraphQLObjectType) {
-            return ((GraphQLObjectType) type).getName();
-        } else {
-            return ((GraphQLInterfaceType) type).getName();
-        }
+        return getElementType(dataFetchingEnvironment, elementRoot).getName();
     }
 
-    public GraphQLType getElementType(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
-        GraphQLType type = dataFetchingEnvironment.getFieldDefinition().getType();
+    public GraphQLUnmodifiedType getElementType(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
+        GraphQLUnmodifiedType type = unwrapAll(dataFetchingEnvironment.getFieldDefinition().getType());
         TypeRootCacheKey cacheKey = new TypeRootCacheKey(type, elementRoot);
-        GraphQLType cachedType = typeReferenceCache.get(cacheKey);
+        GraphQLUnmodifiedType cachedType = typeReferenceCache.get(cacheKey);
         if (cachedType != null) {
             return cachedType;
         }
-        if (type instanceof GraphQLNonNull) {
-            type = ((GraphQLNonNull) type).getWrappedType();
-        }
-        if (type instanceof GraphQLList) {
-            type = ((GraphQLList) type).getWrappedType();
-            if (type instanceof GraphQLNonNull) {
-                type = ((GraphQLNonNull) type).getWrappedType();
-            }
-        }
 
         String[] parts = elementRoot.split("/");
-        for (int i = 0; i < parts.length; i++) {
+        for (String part : parts) {
             if (type instanceof GraphQLFieldsContainer) {
-                if (parts[i].length() > 0) {
-                    type = ((GraphQLFieldsContainer) type).getFieldDefinition(parts[i]).getType();
-                }
-                if (type instanceof GraphQLNonNull) {
-                    type = ((GraphQLNonNull) type).getWrappedType();
-                }
-                if (type instanceof GraphQLList) {
-                    type = ((GraphQLList) type).getWrappedType();
-                    if (type instanceof GraphQLNonNull) {
-                        type = ((GraphQLNonNull) type).getWrappedType();
-                    }
+                if (part.length() > 0) {
+                    type = unwrapAll(((GraphQLFieldsContainer) type).getFieldDefinition(part).getType());
                 }
             } else {
-                throw new IllegalArgumentException("The element root part '" + parts[i] + "' wasn't found on type: " + type);
+                throw new IllegalArgumentException("The element root part '" + part + "' wasn't found on type: " + type);
             }
         }
         typeReferenceCache.putIfAbsent(cacheKey, type);
@@ -662,8 +638,7 @@ public class GraphQLEntityViewSupport {
                 if (sb.length() > 0 && !META_FIELDS.contains(sb.substring(fieldStartIndex))) {
                     // Include only actual leaf types into setting.fetches because intermediate objects types
                     // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
-                    GraphQLType fieldType = applyFieldMapping(sb, baseType, fieldStartIndex);
-                    if (fieldType != null && !(fieldType instanceof GraphQLCompositeType)) {
+                    if (isLeaf(applyFieldMapping(sb, baseType, fieldStartIndex))) {
                         setting.fetch(sb.toString());
                     }
                 }
@@ -678,7 +653,7 @@ public class GraphQLEntityViewSupport {
      * for the given GraphQL base type.
      * Will return <code>null</code> if there is no entity view attribute for this path.
      */
-    private GraphQLType applyFieldMapping(StringBuilder sb, GraphQLFieldsContainer baseType, int fieldStartIndex) {
+    private GraphQLUnmodifiedType applyFieldMapping(StringBuilder sb, GraphQLFieldsContainer baseType, int fieldStartIndex) {
         if (baseType == null) {
             return null;
         }
@@ -696,17 +671,7 @@ public class GraphQLEntityViewSupport {
             sb.setLength(fieldStartIndex);
             sb.append(mapping);
         }
-        GraphQLType type = baseType.getFieldDefinition(fieldName).getType();
-        if (type instanceof GraphQLNonNull) {
-            type = ((GraphQLNonNull) type).getWrappedType();
-        }
-        if (type instanceof GraphQLList) {
-            type = ((GraphQLList) type).getWrappedType();
-            if (type instanceof GraphQLNonNull) {
-                type = ((GraphQLNonNull) type).getWrappedType();
-            }
-        }
-        return type;
+        return unwrapAll(baseType.getFieldDefinition(fieldName).getType());
     }
 
     /**
