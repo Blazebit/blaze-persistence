@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence.examples.spring.data.spqr;
 
+import com.blazebit.persistence.examples.spring.data.spqr.model.Boy;
 import com.blazebit.persistence.examples.spring.data.spqr.model.Cat;
+import com.blazebit.persistence.examples.spring.data.spqr.model.Girl;
 import com.blazebit.persistence.examples.spring.data.spqr.model.Person;
 import com.blazebit.persistence.examples.spring.data.spqr.repository.CatJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -54,7 +58,11 @@ public class Application {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Person> people = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            Person p = new Person("Person " + i);
+            Boy b = new Boy("Boy " + i);
+            em.persist(b);
+            Girl g = new Girl("Girl " + i);
+            em.persist(g);
+            Person p = new Person("Person " + i, new HashSet<>(Arrays.asList(b, g)));
             people.add(p);
             em.persist(p);
         }

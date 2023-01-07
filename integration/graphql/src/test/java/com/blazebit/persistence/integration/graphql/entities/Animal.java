@@ -16,44 +16,36 @@
 
 package com.blazebit.persistence.integration.graphql.entities;
 
-import javax.persistence.Basic;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.6.4
  */
 @Entity
-public class Person implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private String id;
-    private String name;
-    private Set<Document> documents = new HashSet<>(0);
-    private Animal animal;
-
-    public Person() {
-        id = UUID.randomUUID().toString();
-    }
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public class Animal {
 
     @Id
-    public String getId() {
+    @GeneratedValue
+    private Long id;
+    private String name;
+
+    public Animal() {
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    @Basic(optional = false)
     public String getName() {
         return name;
     }
@@ -61,23 +53,4 @@ public class Person implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-
-    @OneToMany(mappedBy = "owner")
-    public Set<Document> getDocuments() {
-        return documents;
-    }
-
-    public void setDocuments(Set<Document> documents) {
-        this.documents = documents;
-    }
-
-    @OneToOne(mappedBy = "owner")
-    public Animal getAnimal() {
-        return animal;
-    }
-
-    public void setAnimal(Animal animal) {
-        this.animal = animal;
-    }
-
 }
