@@ -48,7 +48,7 @@ public abstract class AbstractSampleTest {
             for (int i = 0; i < 4; i++) {
                 Boy b = new Boy("Boy " + i);
                 em.persist(b);
-                Girl g = new Girl("Girl " + i);
+                Girl g = new Girl("Girl " + i, "Doll " + i);
                 em.persist(g);
                 Person p = new Person("Person " + i, new HashSet<>(Arrays.asList(b, g)));
                 people.add(p);

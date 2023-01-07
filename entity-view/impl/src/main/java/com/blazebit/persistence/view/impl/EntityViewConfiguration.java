@@ -174,6 +174,10 @@ public final class EntityViewConfiguration {
                         // Fetch a specific attribute
                         sb.append(parts[i]);
                         MethodAttribute<?, ?> attribute = viewType.getAttribute(parts[i]);
+                        if (attribute == null) {
+                            // fallback for viewType with @EntityViewInheritance
+                            attribute = viewType.getRecursiveAttributes().get(parts[i]);
+                        }
                         if (attribute instanceof PluralAttribute<?, ?, ?>) {
                             t = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
                         } else {

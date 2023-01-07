@@ -4,10 +4,22 @@ import javax.persistence.Entity;
 
 @Entity
 public class Girl extends Child {
-    public Girl(String name) {
+
+    private String dollName;
+
+    public Girl(String name, String dollName) {
         super(name);
+        this.dollName = dollName;
     }
 
     public Girl() {
+    }
+
+    public String getDollName() {
+        return dollName;
+    }
+
+    public void setDollName(String dollName) {
+        this.dollName = dollName;
     }
 }

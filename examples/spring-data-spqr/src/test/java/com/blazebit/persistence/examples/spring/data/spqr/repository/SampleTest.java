@@ -64,6 +64,7 @@ public class SampleTest extends AbstractSampleTest {
         assertEquals("Person 0", nodes.get(0).get("owner").get("name").asText());
         assertEquals("Boy 0", nodes.get(0).get("owner").get("children").get(0).get("name").asText());
         assertEquals("Girl 0", nodes.get(0).get("owner").get("children").get(1).get("name").asText());
+        assertEquals("Doll 0", nodes.get(0).get("owner").get("children").get(1).get("dollName").asText());
 
         requestGraphQL = request(5, connection.get("pageInfo").get("endCursor").asText());
         response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
@@ -122,7 +123,8 @@ public class SampleTest extends AbstractSampleTest {
                 "          name\n" +
                 "          children {\n" +
                 "            ... on Boy { name }\n" +
-                "            ... on Girl { name }\n" +
+                "            ... on Girl { name dollName }\n" +
+                "            __typename\n" +
                 "          }\n" +
                 "        }\n" +
                 "      }\n" +
