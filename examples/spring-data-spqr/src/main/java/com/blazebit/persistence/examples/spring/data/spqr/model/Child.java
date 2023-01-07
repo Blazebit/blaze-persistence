@@ -17,37 +17,33 @@
 package com.blazebit.persistence.examples.spring.data.spqr.model;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Christian Beikov
  * @since 1.6.4
  */
 @Entity
-public class Person {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public class Child {
 
     @Id
     @GeneratedValue
     private Long id;
     private String name;
-    @OneToMany(mappedBy = "owner")
-    private Set<Cat> kittens = new HashSet<>();
-    @OneToMany(mappedBy = "parent")
-    private Set<Child> children = new HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Person parent;
 
-    public Person() {
+    public Child() {
     }
 
-    public Person(String name, Set<Child> children) {
+    public Child(String name) {
         this.name = name;
-        this.children = children;
-        for (Child child : children) {
-            child.setParent(this);
-        }
     }
 
     public Long getId() {
@@ -66,19 +62,12 @@ public class Person {
         this.name = name;
     }
 
-    public Set<Cat> getKittens() {
-        return kittens;
+    @ManyToOne(fetch = FetchType.LAZY)
+    public Person getParent() {
+        return parent;
     }
 
-    public void setKittens(Set<Cat> kittens) {
-        this.kittens = kittens;
-    }
-
-    public Set<Child> getChildren() {
-        return children;
-    }
-
-    public void setChildren(Set<Child> children) {
-        this.children = children;
+    public void setParent(Person parent) {
+        this.parent = parent;
     }
 }

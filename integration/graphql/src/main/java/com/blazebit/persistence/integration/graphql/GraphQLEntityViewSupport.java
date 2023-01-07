@@ -399,7 +399,7 @@ public class GraphQLEntityViewSupport {
             return cachedType;
         }
 
-        String[] parts = elementRoot.split("/");
+        String[] parts = elementRoot.isEmpty() ? new String[0] : elementRoot.split("/");
         for (String part : parts) {
             if (type instanceof GraphQLFieldsContainer) {
                 if (part.length() > 0) {

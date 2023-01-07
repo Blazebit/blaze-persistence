@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.spqr.view;
+package com.blazebit.persistence.integration.graphql.views;
 
-import com.blazebit.persistence.examples.spring.data.spqr.model.Person;
+import com.blazebit.persistence.integration.graphql.entities.Animal;
 import com.blazebit.persistence.view.EntityView;
-
-import java.util.Set;
+import com.blazebit.persistence.view.EntityViewInheritance;
+import com.blazebit.persistence.view.IdMapping;
 
 /**
  * @author Christian Beikov
  * @since 1.6.4
  */
-@EntityView(Person.class)
-public interface PersonSimpleView extends PersonIdView {
+@EntityView(Animal.class)
+@EntityViewInheritance
+public interface AnimalView {
+
+    @IdMapping
+    Long getId();
 
     String getName();
-
-    Set<ChildView> getChildren();
 }
