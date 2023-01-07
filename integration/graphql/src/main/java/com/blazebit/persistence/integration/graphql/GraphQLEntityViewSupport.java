@@ -35,7 +35,6 @@ import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldsContainer;
-import graphql.schema.GraphQLNamedType;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLUnmodifiedType;
 import graphql.schema.SelectedField;
@@ -604,7 +603,6 @@ public class GraphQLEntityViewSupport {
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
-        GraphQLFieldsContainer rootType = (GraphQLFieldsContainer) getElementType(dataFetchingEnvironment, elementRoot);
         OUTER:
         for (SelectedField field : selectionSet.getFields()) {
             if (!isLeaf(field.getType())) {
@@ -612,19 +610,23 @@ public class GraphQLEntityViewSupport {
                 // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
                 continue;
             }
-            String[] fieldParts = field.getQualifiedName().replaceFirst("^" + elementRoot + "/", "").split("/");
-            GraphQLFieldsContainer baseType = rootType;
+            String[] fieldParts = field.getFullyQualifiedName().split("/");
+            String[] elementRootParts = elementRoot.isEmpty() ? new String[0] : elementRoot.split("/");
             List<String> mappedFields = new ArrayList<>();
-            for (String fieldPart : fieldParts) {
-                String mappedFieldPart = applyFieldMapping(baseType, fieldPart);
+            for (int i = 0; i < fieldParts.length; i++) {
+                String[] fieldPartComponents = fieldParts[i].split("\\.");
+                String typeName = fieldPartComponents[0];
+                String fieldName = fieldPartComponents[1];
+                if (elementRootParts.length > i && elementRootParts[i].equals(fieldName)) {
+                    // ignore the element root prefix
+                    continue;
+                }
+                String mappedFieldPart = applyFieldMapping(typeName, fieldName);
                 if (mappedFieldPart == null) {
+                    // fieldName cannot be mapped to an entity view field -> ignore the whole field
                     continue OUTER;
                 }
                 mappedFields.add(mappedFieldPart);
-                GraphQLType fieldType = unwrapAll(baseType.getFieldDefinition(fieldPart).getType());
-                if (!isLeaf(fieldType)) {
-                    baseType = (GraphQLFieldsContainer) fieldType;
-                }
             }
             setting.fetch(String.join(".", mappedFields));
         }
@@ -635,16 +637,12 @@ public class GraphQLEntityViewSupport {
      * for the given GraphQL base type.
      * Will return <code>null</code> if there is no entity view attribute for this path.
      */
-    private String applyFieldMapping(GraphQLNamedType baseType, String fieldPart) {
-        if (baseType == null) {
-            return null;
-        }
-        String typeName = baseType.getName();
+    private String applyFieldMapping(String typeName, String fieldName) {
         Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
         if (fieldMapping == null) {
             return null;
         }
-        return fieldMapping.get(fieldPart);
+        return fieldMapping.get(fieldName);
     }
 
     /**

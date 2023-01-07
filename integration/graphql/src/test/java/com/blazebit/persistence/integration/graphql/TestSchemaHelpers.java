@@ -29,6 +29,7 @@ import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.SelectedField;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -90,15 +91,17 @@ public class TestSchemaHelpers {
 
     public static DataFetchingFieldSelectionSet makeMockSelectionSet(String rootType, String... fields) {
         List<SelectedField> selectedFields = Arrays.stream(fields).map(field -> {
+            List<String> qualifiedFieldParts = new ArrayList<>();
             String[] fieldParts = field.split("/");
             GraphQLNamedOutputType fieldType = null;
             String baseType = rootType;
             for (String fieldPart : fieldParts) {
+                qualifiedFieldParts.add(baseType + "." + fieldPart);
                 fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
                 baseType = fieldType.getName();
             }
             SelectedField selectedField = mock(SelectedField.class);
-            when(selectedField.getQualifiedName()).thenReturn(field);
+            when(selectedField.getFullyQualifiedName()).thenReturn(String.join("/", qualifiedFieldParts));
             when(selectedField.getType()).thenReturn(fieldType);
             return selectedField;
         }).collect(Collectors.toList());

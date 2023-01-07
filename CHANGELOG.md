@@ -13,6 +13,7 @@ None yet
 * Use empty escape character for like predicates when noEscape is used
 * Fix issue with negative numeric literals in `inLiterals` and `notInLiterals` APIs
 * Fix GraphQL over-fetching issue
+* Fix issue with unions in GraphQL selection set
 
 ### Backwards-incompatible changes
 
