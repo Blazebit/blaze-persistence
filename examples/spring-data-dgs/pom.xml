@@ -95,6 +95,18 @@
             <groupId>com.netflix.graphql.dgs</groupId>
             <artifactId>graphql-dgs-spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.apollographql.federation</groupId>
+            <artifactId>federation-graphql-java-support</artifactId>
+            <version>0.7.0</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- federation-graphql-java-support requires and specifies 17.3 but due to https://issues.apache.org/jira/browse/MNG-5761 we have to specify it explicitly-->
+        <dependency>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java</artifactId>
+            <version>17.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.hibernate</groupId>
