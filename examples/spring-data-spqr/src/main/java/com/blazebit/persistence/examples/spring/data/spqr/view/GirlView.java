@@ -27,4 +27,5 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @GraphQLType(name = "Girl")
 @EntityView(Girl.class)
 public interface GirlView extends ChildView {
+    String getDollName();
 }
