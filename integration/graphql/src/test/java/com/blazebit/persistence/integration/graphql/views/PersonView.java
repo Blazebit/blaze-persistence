@@ -34,4 +34,5 @@ public interface PersonView {
 
     String getName();
 
+    AnimalView getAnimal();
 }

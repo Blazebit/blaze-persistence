@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.integration.graphql;
 
+import com.blazebit.persistence.integration.graphql.views.AnimalView;
+import com.blazebit.persistence.integration.graphql.views.CatView;
 import com.blazebit.persistence.integration.graphql.views.DocumentView;
 import com.blazebit.persistence.integration.graphql.views.PersonView;
+import com.blazebit.persistence.view.EntityViewManager;
 import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
@@ -27,6 +30,7 @@ import graphql.schema.GraphQLNamedOutputType;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
+import graphql.schema.GraphQLUnionType;
 import graphql.schema.SelectedField;
 
 import java.util.ArrayList;
@@ -51,7 +55,13 @@ public class TestSchemaHelpers {
 
     static GraphQLFieldDefinition idFieldDefinition = makeFieldDefinition("id", makeScalarType());
     static GraphQLFieldDefinition nameFieldDefinition = makeFieldDefinition("name", makeScalarType());
-    static GraphQLObjectType personObjectType = makeObjectType("Person", idFieldDefinition, nameFieldDefinition);
+
+    static GraphQLObjectType catObjectType = makeObjectType("Cat", idFieldDefinition, nameFieldDefinition);
+    static GraphQLUnionType animalUnionType = makeUnionType("Animal", catObjectType);
+    static GraphQLFieldDefinition animalFieldDefinition = makeFieldDefinition("animal", animalUnionType);
+
+    static GraphQLObjectType personObjectType =
+            makeObjectType("Person", idFieldDefinition, nameFieldDefinition, animalFieldDefinition);
 
     static GraphQLFieldDefinition ownerFieldDefinition = makeFieldDefinition("owner", personObjectType);
     static GraphQLObjectType documentObjectType =
@@ -69,6 +79,13 @@ public class TestSchemaHelpers {
         scalarTypeBuilder.name("String");
         scalarTypeBuilder.coercing(mock(Coercing.class));
         return scalarTypeBuilder.build();
+    }
+
+    public static GraphQLUnionType makeUnionType(String name, GraphQLObjectType... types) {
+        GraphQLUnionType.Builder builder = new GraphQLUnionType.Builder();
+        builder.name(name);
+        builder.possibleTypes(types);
+        return builder.build();
     }
 
     public static GraphQLObjectType makeObjectType(String name, GraphQLFieldDefinition... fields) {
@@ -96,7 +113,14 @@ public class TestSchemaHelpers {
             GraphQLNamedOutputType fieldType = null;
             String baseType = rootType;
             for (String fieldPart : fieldParts) {
-                qualifiedFieldParts.add(baseType + "." + fieldPart);
+                if (fieldPart.contains(".")) {
+                    // provided fieldPart is already fully qualified
+                    qualifiedFieldParts.add(fieldPart);
+                    baseType = (fieldPart.split("\\."))[0];
+                    fieldPart = (fieldPart.split("\\."))[1];
+                } else {
+                    qualifiedFieldParts.add(baseType + "." + fieldPart);
+                }
                 fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
                 baseType = fieldType.getName();
             }
@@ -113,8 +137,10 @@ public class TestSchemaHelpers {
 
     public static GraphQLEntityViewSupport getGraphQLEntityViewSupport() {
         TypeDef documentTypeDef = new TypeDef("Document", DocumentView.class, Arrays.asList("id", "name", "owner"));
-        TypeDef personTypeDef = new TypeDef("Person", PersonView.class, Arrays.asList("id", "name"));
-        return setupEntityViewSupport(documentTypeDef, personTypeDef);
+        TypeDef personTypeDef = new TypeDef("Person", PersonView.class, Arrays.asList("id", "name", "animal"));
+        TypeDef animalTypeDef = new TypeDef("Animal", AnimalView.class, Arrays.asList("id", "name"));
+        TypeDef catTypeDef = new TypeDef("Cat", CatView.class, Arrays.asList("id", "name"));
+        return setupEntityViewSupport(documentTypeDef, personTypeDef, animalTypeDef, catTypeDef);
     }
 
     public static GraphQLEntityViewSupport setupEntityViewSupport(TypeDef... typeDefs) {

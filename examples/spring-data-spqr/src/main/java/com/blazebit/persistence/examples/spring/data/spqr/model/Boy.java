@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.spqr.view;
+package com.blazebit.persistence.examples.spring.data.spqr.model;
 
-import com.blazebit.persistence.examples.spring.data.spqr.model.Person;
-import com.blazebit.persistence.view.EntityView;
+import javax.persistence.Entity;
 
-import java.util.Set;
+@Entity
+public class Boy extends Child {
+    public Boy(String name) {
+        super(name);
+    }
 
-/**
- * @author Christian Beikov
- * @since 1.6.4
- */
-@EntityView(Person.class)
-public interface PersonSimpleView extends PersonIdView {
-
-    String getName();
-
-    Set<ChildView> getChildren();
+    public Boy() {
+    }
 }

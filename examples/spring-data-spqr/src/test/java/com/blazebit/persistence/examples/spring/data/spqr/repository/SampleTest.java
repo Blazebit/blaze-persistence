@@ -61,6 +61,9 @@ public class SampleTest extends AbstractSampleTest {
 
         assertEquals(5, nodes.size());
         assertEquals("Cat 0", nodes.get(0).get("name").asText());
+        assertEquals("Person 0", nodes.get(0).get("owner").get("name").asText());
+        assertEquals("Boy 0", nodes.get(0).get("owner").get("children").get(0).get("name").asText());
+        assertEquals("Girl 0", nodes.get(0).get("owner").get("children").get(1).get("name").asText());
 
         requestGraphQL = request(5, connection.get("pageInfo").get("endCursor").asText());
         response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
@@ -81,9 +84,10 @@ public class SampleTest extends AbstractSampleTest {
                 "    cat: {\n" +
                 "      name: \"Test\"\n" +
                 "      age: 1\n" +
-                "      owner: {id: 1}\n" +
+                // FIXME: don't rely on DB generated ids
+                "      owner: {id: 3}\n" +
                 "      kittens: [\n" +
-                "        { name: \"Kitten 1\", age: 1, owner: {id: 1}}\n" +
+                "        { name: \"Kitten 1\", age: 1, owner: {id: 3}}\n" +
                 "      ]\n" +
                 "  \t}\n" +
                 "  )\n" +
@@ -114,6 +118,13 @@ public class SampleTest extends AbstractSampleTest {
                 "        nicknames\n" +
                 "        theData\n" +
                 "        sampleData\n" +
+                "        owner {\n" +
+                "          name\n" +
+                "          children {\n" +
+                "            ... on Boy { name }\n" +
+                "            ... on Girl { name }\n" +
+                "          }\n" +
+                "        }\n" +
                 "      }\n" +
                 "    }\n" +
                 "    pageInfo {\n" +
