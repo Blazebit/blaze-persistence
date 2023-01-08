@@ -26,6 +26,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import graphql.relay.Connection;
 import graphql.relay.DefaultConnection;
 import graphql.relay.DefaultConnectionCursor;
@@ -622,6 +623,18 @@ public class GraphQLEntityViewSupport {
                     // ignore the element root prefix
                     continue;
                 }
+                if (META_FIELDS.contains(fieldName)) {
+                    // If this is a GraphQL meta field (e.g. __typename) then there's no EV mapping for it but still
+                    // we must fetch the data from DB to populate it. If the enclosing EV is a standard view then use
+                    // its id field. Otherwise, skip this fieldPart and effectively put the intermediate field path
+                    // into fetches - in reality this wouldn't lead to any unnecessary joins since the EV in that case
+                    // corresponds to an embeddable entity.
+                    ManagedViewType<?> managedViewType = typeNameToViewType.get(typeName);
+                    if (managedViewType instanceof ViewType) {
+                        mappedFields.add(((ViewType<?>) managedViewType).getIdAttribute().getName());
+                    }
+                    continue;
+                }
                 String mappedFieldPart = applyFieldMapping(typeName, fieldName);
                 if (mappedFieldPart == null) {
                     // fieldName cannot be mapped to an entity view field -> ignore the whole field
@@ -629,7 +642,9 @@ public class GraphQLEntityViewSupport {
                 }
                 mappedFields.add(mappedFieldPart);
             }
-            setting.fetch(String.join(".", mappedFields));
+            if (!mappedFields.isEmpty()) {
+                setting.fetch(String.join(".", mappedFields));
+            }
         }
     }
 

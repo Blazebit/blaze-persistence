@@ -21,6 +21,8 @@ import com.blazebit.persistence.integration.graphql.views.CatView;
 import com.blazebit.persistence.integration.graphql.views.DocumentView;
 import com.blazebit.persistence.integration.graphql.views.PersonView;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
@@ -167,15 +169,18 @@ public class TestSchemaHelpers {
 
     static class TypeDef {
         private final String name;
-        private final ManagedViewType<?> viewType;
+        private final ViewType<?> viewType;
         private final List<String> fields;
 
         public TypeDef(String name, Class entityViewClass, List<String> fields) {
             this.name = name;
-            this.viewType = mock(ManagedViewType.class);
+            this.viewType = mock(ViewType.class);
             this.fields = fields;
 
+            MethodAttribute idAttribute = mock(MethodAttribute.class);
+            when(idAttribute.getName()).thenReturn("id");
             when(this.viewType.getJavaType()).thenReturn(entityViewClass);
+            when(this.viewType.getIdAttribute()).thenReturn(idAttribute);
         }
     }
 }
