@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-# Since the compile output is used rather than the shaded JAR when running a full reactor, we must first install the parser to the local maven repo
-mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -pl core/parser -Dversion.quarkus=${QUARKUS_VERSION} -DskipTests
+# Since the compile output is used rather than the shaded JAR when running a Quarkus test, we must first install the parser to the local maven repo
+mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -pl core/parser -am -Dversion.quarkus=${QUARKUS_VERSION} -DskipTests
+# Then delete the target folder so that the Quarkus build doesn't use the output
+rm -Rf core/parser/target
 # In the second execution we exclude the parser from the project list so that it uses the previously installed one, which shades ANTLR
 PROJECT_LIST=integration/quarkus/deployment,examples/quarkus/testsuite/base,examples/quarkus/testsuite/native/h2,!core/parser
 mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus=${QUARKUS_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"spring-data-2.7.x" -P"deltaspike-1.9" --projects $PROJECT_LIST -am
