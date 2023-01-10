@@ -113,6 +113,7 @@ public class GraphQLEntityViewSupport {
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
     private final Set<String> serializableBasicTypes;
     private final ConcurrentMap<TypeRootCacheKey, GraphQLUnmodifiedType> typeReferenceCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String> selectedFieldCache = new ConcurrentHashMap<>();
 
     private final String pageSizeName;
     private final String offsetName;
@@ -607,12 +608,18 @@ public class GraphQLEntityViewSupport {
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
         OUTER:
         for (SelectedField field : selectionSet.getFields()) {
+            String fqFieldName = field.getFullyQualifiedName();
+            String resolvedField = selectedFieldCache.get(fqFieldName);
+            if (resolvedField != null) {
+                setting.fetch(resolvedField);
+                continue;
+            }
             if (!isLeaf(field.getType())) {
                 // Skip non-leaf types because these intermediate objects types would
                 // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
                 continue;
             }
-            String[] fieldParts = field.getFullyQualifiedName().split("/");
+            String[] fieldParts = fqFieldName.split("/");
             String[] elementRootParts = elementRoot.isEmpty() ? new String[0] : elementRoot.split("/");
             List<String> mappedFields = new ArrayList<>();
             for (int i = 0; i < fieldParts.length; i++) {
@@ -643,7 +650,9 @@ public class GraphQLEntityViewSupport {
                 mappedFields.add(mappedFieldPart);
             }
             if (!mappedFields.isEmpty()) {
-                setting.fetch(String.join(".", mappedFields));
+                resolvedField = String.join(".", mappedFields);
+                setting.fetch(resolvedField);
+                selectedFieldCache.putIfAbsent(fqFieldName, resolvedField);
             }
         }
     }
