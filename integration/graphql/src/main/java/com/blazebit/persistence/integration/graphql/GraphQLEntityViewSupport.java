@@ -25,6 +25,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import graphql.relay.Connection;
 import graphql.relay.DefaultConnection;
 import graphql.relay.DefaultConnectionCursor;
@@ -107,7 +108,7 @@ public class GraphQLEntityViewSupport {
     // GraphQL defines meta fields that can be used on any type: https://graphql.org/learn/queries/#meta-fields
     private static final Set<String> META_FIELDS = new HashSet<>(Arrays.asList("__typename"));
 
-    private final Map<String, Class<?>> typeNameToClass;
+    private final Map<String, ManagedViewType<?>> typeNameToViewType;
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
     private final Set<String> serializableBasicTypes;
     private final ConcurrentMap<TypeRootCacheKey, GraphQLUnmodifiedType> typeReferenceCache = new ConcurrentHashMap<>();
@@ -132,29 +133,29 @@ public class GraphQLEntityViewSupport {
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
      * It uses the GraphQL Relay specification names for accessing page info fields for paginated settings.
      *
-     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
      */
-    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Set<String> serializableBasicTypes) {
-        this(typeNameToClass, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Set<String> serializableBasicTypes) {
+        this(typeNameToViewType, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
     }
 
     /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
      * It uses the GraphQL Relay specification names for accessing page info fields for paginated settings.
      *
-     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
      */
-    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes) {
-        this(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes) {
+        this(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
     }
 
     /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
      *
-     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
      * @param pageSizeName The name of the page size field
      * @param offsetName The name of the offset field
@@ -165,14 +166,14 @@ public class GraphQLEntityViewSupport {
      * @param pageElementObjectName The name of the element object field within elements
      * @param elementCursorName The name of the cursor field within elements
      */
-    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
-        this(typeNameToClass, Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
+        this(typeNameToViewType, Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
     }
 
     /**
      * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
      *
-     * @param typeNameToClass The mapping from GraphQL type names to entity view class names
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
      * @param pageSizeName The name of the page size field
@@ -184,14 +185,14 @@ public class GraphQLEntityViewSupport {
      * @param pageElementObjectName The name of the element object field within elements
      * @param elementCursorName The name of the cursor field within elements
      */
-    public GraphQLEntityViewSupport(Map<String, Class<?>> typeNameToClass, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
         this.pageSizeName = pageSizeName;
         this.offsetName = offsetName;
         this.beforeCursorName = beforeCursorName;
         this.afterCursorName = afterCursorName;
         this.totalCountName = totalCountName;
         this.pageElementsName = pageElementsName;
-        this.typeNameToClass = typeNameToClass;
+        this.typeNameToViewType = typeNameToViewType;
         this.typeNameToFieldMapping = typeNameToFieldMapping;
         this.serializableBasicTypes = serializableBasicTypes;
         this.pageElementObjectName = pageElementObjectName;
@@ -243,7 +244,7 @@ public class GraphQLEntityViewSupport {
             objectRoot = elementRoot + "/" + pageElementObjectName;
         }
         String typeName = getElementTypeName(dataFetchingEnvironment, objectRoot);
-        Class<?> entityViewClass = typeNameToClass.get(typeName);
+        Class<?> entityViewClass = typeNameToViewType.get(typeName).getJavaType();
         if (entityViewClass == null) {
             throw new IllegalArgumentException("No entity view type is registered for the name: " + typeName);
         }
@@ -273,7 +274,7 @@ public class GraphQLEntityViewSupport {
             objectRoot = elementRoot + "/" + pageElementObjectName;
         }
         String typeName = getElementTypeName(dataFetchingEnvironment, objectRoot);
-        Class<?> entityViewClass = typeNameToClass.get(typeName);
+        Class<?> entityViewClass = typeNameToViewType.get(typeName).getJavaType();
         if (entityViewClass == null) {
             throw new IllegalArgumentException("No entity view type is registered for the name: " + typeName);
         }
@@ -380,7 +381,7 @@ public class GraphQLEntityViewSupport {
      */
     public <T> EntityViewSetting<T, CriteriaBuilder<T>> createSetting(DataFetchingEnvironment dataFetchingEnvironment, String elementRoot) {
         String typeName = getElementTypeName(dataFetchingEnvironment, elementRoot);
-        Class<?> entityViewClass = typeNameToClass.get(typeName);
+        Class<?> entityViewClass = typeNameToViewType.get(typeName).getJavaType();
         if (entityViewClass == null) {
             throw new IllegalArgumentException("No entity view type is registered for the name: " + typeName);
         }
@@ -689,7 +690,7 @@ public class GraphQLEntityViewSupport {
      * @return the entity view class or <code>null</code>
      */
     public Class<?> getEntityViewClass(String typeName) {
-        return typeNameToClass.get(typeName);
+        return typeNameToViewType.get(typeName).getJavaType();
     }
 
     /**

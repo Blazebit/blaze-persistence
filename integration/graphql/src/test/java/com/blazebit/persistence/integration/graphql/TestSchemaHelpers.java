@@ -20,7 +20,7 @@ import com.blazebit.persistence.integration.graphql.views.AnimalView;
 import com.blazebit.persistence.integration.graphql.views.CatView;
 import com.blazebit.persistence.integration.graphql.views.DocumentView;
 import com.blazebit.persistence.integration.graphql.views.PersonView;
-import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
@@ -144,18 +144,18 @@ public class TestSchemaHelpers {
     }
 
     public static GraphQLEntityViewSupport setupEntityViewSupport(TypeDef... typeDefs) {
-        Map<String, Class<?>> typeNameToClass = new HashMap<>();
+        Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
 
         Arrays.stream(typeDefs).forEach(typeDef -> {
             String name = typeDef.name;
-            typeNameToClass.put(name, typeDef.entityViewClass);
+            typeNameToViewType.put(name, typeDef.viewType);
             Map<String, String> fieldMapping = new HashMap<>();
             typeDef.fields.forEach(field -> fieldMapping.put(field, field));
             typeNameToFieldMapping.put(name, fieldMapping);
         });
 
-        return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, Collections.emptySet());
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, Collections.emptySet());
     }
 
     public static DataFetchingEnvironment makeMockDataFetchingEnvironment(GraphQLFieldDefinition rootFieldDefinition, DataFetchingFieldSelectionSet selectionSet) {
@@ -167,13 +167,15 @@ public class TestSchemaHelpers {
 
     static class TypeDef {
         private final String name;
-        private final Class<?> entityViewClass;
+        private final ManagedViewType<?> viewType;
         private final List<String> fields;
 
-        public TypeDef(String name, Class<?> entityViewClass, List<String> fields) {
+        public TypeDef(String name, Class entityViewClass, List<String> fields) {
             this.name = name;
-            this.entityViewClass = entityViewClass;
+            this.viewType = mock(ManagedViewType.class);
             this.fields = fields;
+
+            when(this.viewType.getJavaType()).thenReturn(entityViewClass);
         }
     }
 }
