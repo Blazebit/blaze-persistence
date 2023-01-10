@@ -435,7 +435,7 @@ public class GraphQLEntityViewSupportFactory {
      */
     public GraphQLEntityViewSupport create(TypeDefinitionRegistry typeRegistry, EntityViewManager entityViewManager) {
         EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
-        Map<String, Class<?>> typeNameToClass = new HashMap<>();
+        Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
             if (typeFilterPattern != null && !typeFilterPattern.matcher(managedView.getJavaType().getName()).matches()
@@ -539,7 +539,7 @@ public class GraphQLEntityViewSupportFactory {
                 }
             }
 
-            addObjectTypeDefinition(typeRegistry, typeNameToClass, managedView, newObjectTypeDefinition(typeName, fieldDefinitions, description), newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
+            addObjectTypeDefinition(typeRegistry, typeNameToViewType, managedView, newObjectTypeDefinition(typeName, fieldDefinitions, description), newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -553,7 +553,7 @@ public class GraphQLEntityViewSupportFactory {
 
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
-        return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes);
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes);
     }
 
     /**
@@ -611,7 +611,7 @@ public class GraphQLEntityViewSupportFactory {
         Set<GraphQLType> additionalTypes = isDefineNormalTypes() ? getAndClearAdditionalTypes(schemaBuilder) : Collections.emptySet();
 
         EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
-        Map<String, Class<?>> typeNameToClass = new HashMap<>();
+        Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
@@ -720,7 +720,7 @@ public class GraphQLEntityViewSupportFactory {
                     inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
                 }
             }
-            addObjectTypeDefinition(schemaBuilder, typeNameToClass, managedView, builder.build(), inputBuilder.build());
+            addObjectTypeDefinition(schemaBuilder, typeNameToViewType, managedView, builder.build(), inputBuilder.build());
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
@@ -741,11 +741,11 @@ public class GraphQLEntityViewSupportFactory {
             } else {
                 typeName = null;
             }
-            if (typeName == null || typeNameToClass.get(typeName) == null) {
+            if (typeName == null || typeNameToViewType.get(typeName) == null) {
                 schemaBuilder.additionalType(additionalType);
             }
         }
-        return new GraphQLEntityViewSupport(typeNameToClass, typeNameToFieldMapping, serializableBasicTypes);
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes);
     }
 
     private GraphQLList getListType(GraphQLType elementType) {
@@ -908,13 +908,13 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition, InputObjectTypeDefinition inputObjectTypeDefinition) {
-        registerManagedViewType(typeRegistry, typeNameToClass, managedView, objectTypeDefinition);
+    protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, ObjectTypeDefinition objectTypeDefinition, InputObjectTypeDefinition inputObjectTypeDefinition) {
+        registerManagedViewType(typeRegistry, typeNameToViewType, managedView, objectTypeDefinition);
         if (isDefineNormalTypes()) {
             addDefinition(typeRegistry, objectTypeDefinition);
         }
         if (inputObjectTypeDefinition != null) {
-            registerManagedViewType(typeRegistry, typeNameToClass, managedView, inputObjectTypeDefinition);
+            registerManagedViewType(typeRegistry, typeNameToViewType, managedView, inputObjectTypeDefinition);
             if (isDefineNormalTypes()) {
                 addDefinition(typeRegistry, inputObjectTypeDefinition);
             }
@@ -951,9 +951,9 @@ public class GraphQLEntityViewSupportFactory {
             addDefinition(typeRegistry, newObjectTypeDefinition("PageInfo", pageInfoFields, null));
         }
 
-        registerManagedViewType(typeRegistry, typeNameToClass, managedView, nodeType);
-        registerManagedViewType(typeRegistry, typeNameToClass, managedView, edgeType);
-        registerManagedViewType(typeRegistry, typeNameToClass, managedView, connectionType);
+        registerManagedViewType(typeRegistry, typeNameToViewType, managedView, nodeType);
+        registerManagedViewType(typeRegistry, typeNameToViewType, managedView, edgeType);
+        registerManagedViewType(typeRegistry, typeNameToViewType, managedView, connectionType);
         if (isDefineRelayTypes()) {
             addDefinition(typeRegistry, nodeType);
             addDefinition(typeRegistry, edgeType);
@@ -961,8 +961,8 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, GraphQLObjectType objectType, GraphQLInputObjectType inputObjectType) {
-        typeNameToClass.put(inputObjectType.getName(), managedView.getJavaType());
+    protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, GraphQLObjectType objectType, GraphQLInputObjectType inputObjectType) {
+        typeNameToViewType.put(inputObjectType.getName(), managedView);
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(inputObjectType);
         }
@@ -984,7 +984,7 @@ public class GraphQLEntityViewSupportFactory {
             nodeType.fields(objectType.getFieldDefinitions());
             if (isImplementRelayNode()) {
                 nodeType.withInterface(new GraphQLTypeReference("Node"));
-                if (!typeNameToClass.containsKey("Node") && isDefineRelayNodeIfNotExist()) {
+                if (!typeNameToViewType.containsKey("Node") && isDefineRelayNodeIfNotExist()) {
                     GraphQLInterfaceType.Builder nodeInterfaceType = GraphQLInterfaceType.newInterface().name("Node")
                             .field(
                                     GraphQLFieldDefinition.newFieldDefinition().name("id")
@@ -992,13 +992,12 @@ public class GraphQLEntityViewSupportFactory {
                                             .build()
                             );
                     schemaBuilder.additionalType(nodeInterfaceType.build());
-                    typeNameToClass.put("Node", Object.class);
                 }
             }
             if (isDefineNormalTypes()) {
                 schemaBuilder.additionalType(nodeType.build());
             }
-            typeNameToClass.put(nodeTypeName, managedView.getJavaType());
+            typeNameToViewType.put(nodeTypeName, managedView);
         } else {
             // We use the presence of the scalar map to detect if we are on SmallRye
             // We have to adapt to their naming convention for generic types
@@ -1027,7 +1026,7 @@ public class GraphQLEntityViewSupportFactory {
                 .type(new GraphQLNonNull(getScalarType("Int")))
                 .build());
 
-        if (!typeNameToClass.containsKey(pageInfoTypeName) && isDefineRelayNodeIfNotExist()) {
+        if (!typeNameToViewType.containsKey(pageInfoTypeName) && isDefineRelayNodeIfNotExist()) {
             GraphQLObjectType.Builder pageInfoType = GraphQLObjectType.newObject().name(pageInfoTypeName);
             pageInfoType.field(GraphQLFieldDefinition.newFieldDefinition().name("hasNextPage")
                     .type(new GraphQLNonNull(getScalarType("Boolean")))
@@ -1042,11 +1041,10 @@ public class GraphQLEntityViewSupportFactory {
                     .type(getScalarType("String"))
                     .build());
             schemaBuilder.additionalType(pageInfoType.build());
-            typeNameToClass.put(pageInfoTypeName, GraphQLRelayPageInfo.class);
         }
-        typeNameToClass.put(edgeTypeName, managedView.getJavaType());
-        typeNameToClass.put(connectionTypeName, managedView.getJavaType());
-        typeNameToClass.put(objectType.getName(), managedView.getJavaType());
+        typeNameToViewType.put(edgeTypeName, managedView);
+        typeNameToViewType.put(connectionTypeName, managedView);
+        typeNameToViewType.put(objectType.getName(), managedView);
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(objectType);
         }
@@ -1065,13 +1063,13 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, Class<?>> typeNameToClass, ManagedViewType<?> managedView, TypeDefinition<?> objectTypeDefinition) {
+    protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, TypeDefinition<?> objectTypeDefinition) {
         if (isDefineNormalTypes()) {
             addDefinition(typeRegistry, objectTypeDefinition);
         }
-        Class<?> old;
-        if ((old = typeNameToClass.put(objectTypeDefinition.getName(), managedView.getJavaType())) != null) {
-            throw new IllegalArgumentException("Type with name '" + objectTypeDefinition.getName() + "' is registered multiple times: [" + old.getName() + ", " + managedView.getJavaType().getName() + "]!");
+        ManagedViewType<?> old;
+        if ((old = typeNameToViewType.put(objectTypeDefinition.getName(), managedView)) != null) {
+            throw new IllegalArgumentException("Type with name '" + objectTypeDefinition.getName() + "' is registered multiple times: [" + old.getEntityClass().getName() + ", " + managedView.getJavaType().getName() + "]!");
         }
     }
 
