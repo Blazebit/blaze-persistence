@@ -52,7 +52,7 @@ public class GraphQLEntityViewSupportTest {
     public void testFetchesInSetting() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", documentObjectType);
         DataFetchingFieldSelectionSet selectionSet =
-                makeMockSelectionSet("Document", "name", "owner", "owner/name", "__typename");
+                makeMockSelectionSet("Document", "name", "owner", "owner/name", "Document.__typename");
 
         DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
 
@@ -78,13 +78,13 @@ public class GraphQLEntityViewSupportTest {
     @Test
     public void testRootUnionInSelectionSet() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getAnimal", animalUnionType);
-        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Cat", "name");
+        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Cat", "name", "[Cat,Animal].__typename");
 
         DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
 
         EntityViewSetting<AnimalView, CriteriaBuilder<AnimalView>> setting = graphQLEntityViewSupport.createSetting(dfe);
 
-        Assert.assertEquals(new HashSet<>(Arrays.asList("name")), setting.getFetches());
+        Assert.assertEquals(new HashSet<>(Arrays.asList("id", "name")), setting.getFetches());
     }
 
     @Test

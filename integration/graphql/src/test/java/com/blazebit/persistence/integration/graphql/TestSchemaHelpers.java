@@ -118,7 +118,7 @@ public class TestSchemaHelpers {
                 if (fieldPart.contains(".")) {
                     // provided fieldPart is already fully qualified
                     qualifiedFieldParts.add(fieldPart);
-                    baseType = (fieldPart.split("\\."))[0];
+                    baseType = getBaseTypes(fieldPart)[0];
                     fieldPart = (fieldPart.split("\\."))[1];
                 } else {
                     qualifiedFieldParts.add(baseType + "." + fieldPart);
@@ -129,12 +129,17 @@ public class TestSchemaHelpers {
             SelectedField selectedField = mock(SelectedField.class);
             when(selectedField.getFullyQualifiedName()).thenReturn(String.join("/", qualifiedFieldParts));
             when(selectedField.getType()).thenReturn(fieldType);
+            when(selectedField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length-1])));
             return selectedField;
         }).collect(Collectors.toList());
 
         DataFetchingFieldSelectionSet selectionSet = mock(DataFetchingFieldSelectionSet.class);
         when(selectionSet.getFields()).thenReturn(selectedFields);
         return selectionSet;
+    }
+
+    private static String[] getBaseTypes(String fieldPart) {
+        return (fieldPart.split("\\."))[0].replaceFirst("^\\[", "").replaceFirst("]$", "").split(",");
     }
 
     public static GraphQLEntityViewSupport getGraphQLEntityViewSupport() {
