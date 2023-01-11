@@ -636,9 +636,14 @@ public class GraphQLEntityViewSupport {
                     // its id field. Otherwise, skip this fieldPart and effectively put the intermediate field path
                     // into fetches - in reality this wouldn't lead to any unnecessary joins since the EV in that case
                     // corresponds to an embeddable entity.
-                    ManagedViewType<?> managedViewType = typeNameToViewType.get(typeName);
-                    if (managedViewType instanceof ViewType) {
-                        mappedFields.add(((ViewType<?>) managedViewType).getIdAttribute().getName());
+                    for (String metaFieldTypeName: field.getObjectTypeNames()) {
+                        // Meta field might have more parent types (in case of a union type). Try to find a first
+                        // ViewType among them and use its id field to ensure the type info can be obtained from DB.
+                        ManagedViewType<?> managedViewType = typeNameToViewType.get(metaFieldTypeName);
+                        if (managedViewType instanceof ViewType) {
+                            mappedFields.add(((ViewType<?>) managedViewType).getIdAttribute().getName());
+                            break;
+                        }
                     }
                     continue;
                 }
