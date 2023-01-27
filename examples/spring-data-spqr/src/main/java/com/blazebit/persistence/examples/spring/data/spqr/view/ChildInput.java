@@ -16,28 +16,30 @@
 
 package com.blazebit.persistence.examples.spring.data.spqr.view;
 
-import com.blazebit.persistence.examples.spring.data.spqr.model.Child;
-import com.blazebit.persistence.view.CreatableEntityView;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewInheritance;
-import com.blazebit.persistence.view.IdMapping;
-import io.leangen.graphql.annotations.types.GraphQLUnion;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * @author Christian Beikov
  * @since 1.6.4
  */
-// Can't use possibleTypeAutoDiscovery=true because of the generated EV implementations
-@GraphQLUnion(name = "Child", possibleTypes = {BoyView.class, GirlView.class})
-@CreatableEntityView
-@EntityView(Child.class)
-@EntityViewInheritance
-public interface ChildView {
+@GraphQLType(name = "ChildInput")
+public class ChildInput {
+    BoyView boy;
+    GirlView girl;
 
-    @IdMapping
-    Long getId();
+    public BoyView getBoy() {
+        return boy;
+    }
 
-    String getName();
+    public void setBoy(BoyView boy) {
+        this.boy = boy;
+    }
 
-    void setName(String name);
+    public GirlView getGirl() {
+        return girl;
+    }
+
+    public void setGirl(GirlView girl) {
+        this.girl = girl;
+    }
 }
