@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.spring.data.dgs.fetcher;
+package com.blazebit.persistence.integration.graphql.dgs.fetcher;
 
-import com.blazebit.persistence.examples.spring.data.dgs.repository.CatViewRepository;
-import com.blazebit.persistence.examples.spring.data.dgs.view.CatCreateView;
-import com.blazebit.persistence.examples.spring.data.dgs.view.CatWithOwnerView;
+import com.blazebit.persistence.integration.graphql.dgs.repository.CatViewRepository;
+import com.blazebit.persistence.integration.graphql.dgs.view.CatCreateView;
+import com.blazebit.persistence.integration.graphql.dgs.view.CatWithOwnerView;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-import com.netflix.graphql.dgs.DgsComponent;
-import com.netflix.graphql.dgs.DgsData;
-import com.netflix.graphql.dgs.DgsMutation;
-import com.netflix.graphql.dgs.DgsQuery;
-import com.netflix.graphql.dgs.InputArgument;
+import com.netflix.graphql.dgs.*;
 import graphql.schema.DataFetchingEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
 

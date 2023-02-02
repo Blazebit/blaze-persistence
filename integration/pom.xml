@@ -59,6 +59,7 @@
         <module>jsonb</module>
         <module>graphql</module>
         <module>graphql-spqr</module>
+        <module>graphql-dgs</module>
         <module>querydsl</module>
         <module>quarkus</module>
 
@@ -115,6 +116,7 @@
                 <module>jsonb</module>
                 <module>graphql</module>
                 <module>graphql-spqr</module>
+                <module>graphql-dgs</module>
                 <module>querydsl</module>
                 <module>quarkus</module>
 
