@@ -6,7 +6,7 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Add Netflix DGS GraphQL integration that supports mutations
 
 ### Bug fixes
 

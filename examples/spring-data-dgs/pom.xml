@@ -36,7 +36,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <version.hibernate>5.0.12.Final</version.hibernate>
-        <start-class>com.blazebit.persistence.examples.spring.data.dgs.Application</start-class>
+        <start-class>com.blazebit.persistence.examples.spring.data.com.blazebit.persistence.integration.graphql.dgs.Application</start-class>
     </properties>
 
     <dependencyManagement>
@@ -51,7 +51,7 @@
             <dependency>
                 <groupId>com.netflix.graphql.dgs</groupId>
                 <artifactId>graphql-dgs-platform-dependencies</artifactId>
-                <version>4.1.0</version>
+                <version>4.9.25</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -88,7 +88,7 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-graphql</artifactId>
+            <artifactId>blaze-persistence-integration-graphql-dgs</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -106,6 +106,10 @@
             <groupId>com.graphql-java</groupId>
             <artifactId>graphql-java</artifactId>
             <version>17.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.graphql.dgs</groupId>
+            <artifactId>graphql-dgs-extended-scalars</artifactId>
         </dependency>
 
         <dependency>

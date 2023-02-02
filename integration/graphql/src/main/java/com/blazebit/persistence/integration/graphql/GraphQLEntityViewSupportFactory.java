@@ -42,6 +42,7 @@ import graphql.language.InterfaceTypeDefinition;
 import graphql.language.ListType;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
+import graphql.language.ScalarTypeDefinition;
 import graphql.language.Type;
 import graphql.language.TypeDefinition;
 import graphql.language.TypeName;
@@ -290,9 +291,10 @@ public class GraphQLEntityViewSupportFactory {
     private boolean defineNormalTypes;
     private boolean defineRelayTypes;
     private Boolean implementRelayNode;
-    private boolean defineRelayNodeIfNotExist = false;
+    private boolean defineRelayNodeIfNotExist;
     private Pattern typeFilterPattern;
     private Map<String, GraphQLScalarType> scalarTypeMap;
+    private Set<String> registeredScalarTypeNames;
 
     /**
      * Creates a new entity view support factory with the given configuration.
@@ -383,6 +385,28 @@ public class GraphQLEntityViewSupportFactory {
      */
     public void setDefineRelayNodeIfNotExist(boolean defineRelayNodeIfNotExist) {
         this.defineRelayNodeIfNotExist = defineRelayNodeIfNotExist;
+    }
+
+    /**
+     * Returns <code>true</code> if the scalar type definition should be created if not found in the type registry.
+     *
+     * @return <code>true</code> if the scalar type definition should be created if not found in the type registry
+     */
+    public boolean isRegisterScalarTypeDefinitions() {
+        return registeredScalarTypeNames != null;
+    }
+
+    /**
+     * Sets whether the scalar type definition should be defined if not found in the type registry.
+     *
+     * @param registerScalarTypeDefinitions Whether the scalar type definition should be defined if not found in the type registry
+     */
+    public void setRegisterScalarTypeDefinitions(boolean registerScalarTypeDefinitions) {
+        if (registerScalarTypeDefinitions) {
+            this.registeredScalarTypeNames = new HashSet<>();
+        } else {
+            this.registeredScalarTypeNames = null;
+        }
     }
 
     /**
@@ -640,8 +664,8 @@ public class GraphQLEntityViewSupportFactory {
                 if (attribute instanceof SingularAttribute<?, ?>) {
                     SingularAttribute<?, ?> singularAttribute = (SingularAttribute<?, ?>) attribute;
                     if (singularAttribute.isId() && !singularAttribute.isSubview()) {
-                        type = getIdType(singularAttribute);
-                        inputType = getInputIdType(singularAttribute);
+                        type = getIdType(schemaBuilder, singularAttribute, registeredTypeNames);
+                        inputType = getInputIdType(schemaBuilder, singularAttribute, registeredTypeNames);
                     } else {
                         type = getElementType(schemaBuilder, singularAttribute, registeredTypeNames, entityMetamodel);
                         inputType = getInputElementType(schemaBuilder, singularAttribute, registeredTypeNames, entityMetamodel);
@@ -1081,7 +1105,8 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getIdType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute) {
-        return new NonNullType(new TypeName("ID"));
+        return new NonNullType(getScalarType(typeRegistry, singularAttribute.getJavaType()));
+//        return new NonNullType(new TypeName("ID"));
     }
 
     /**
@@ -1093,7 +1118,8 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected Type getInputIdType(TypeDefinitionRegistry typeRegistry, SingularAttribute<?, ?> singularAttribute) {
         // Ideally, we would make this only nullable if the value is generated, but that's hard to determine
-        return new TypeName("ID");
+        return getScalarType(typeRegistry, singularAttribute.getJavaType());
+//        return new TypeName("ID");
     }
 
     /**
@@ -1101,6 +1127,36 @@ public class GraphQLEntityViewSupportFactory {
      *
      * @param singularAttribute The singular attribute
      * @return The type
+     */
+    protected GraphQLOutputType getIdType(GraphQLSchema.Builder schemaBuilder, SingularAttribute<?, ?> singularAttribute, Map<Class<?>, String> registeredTypeNames) {
+        return getScalarType(schemaBuilder, singularAttribute.getJavaType(), registeredTypeNames);
+//        if (scalarTypeMap != null) {
+//            return new GraphQLNonNull(scalarTypeMap.get("ID"));
+//        }
+//        return new GraphQLNonNull(new GraphQLTypeReference("ID"));
+    }
+
+    /**
+     * Return the GraphQL id type for the given singular attribute.
+     *
+     * @param singularAttribute The singular attribute
+     * @return The type
+     */
+    protected GraphQLInputType getInputIdType(GraphQLSchema.Builder schemaBuilder, SingularAttribute<?, ?> singularAttribute, Map<Class<?>, String> registeredTypeNames) {
+        return (GraphQLInputType) getScalarType(schemaBuilder, singularAttribute.getJavaType(), registeredTypeNames);
+        // Ideally, we would make this only nullable if the value is generated, but that's hard to determine
+//        if (scalarTypeMap != null) {
+//            return scalarTypeMap.get("ID");
+//        }
+//        return new GraphQLTypeReference("ID");
+    }
+
+    /**
+     * Return the GraphQL id type for the given singular attribute.
+     *
+     * @param singularAttribute The singular attribute
+     * @return The type
+     * @deprecated Use {@link #getIdType(GraphQLSchema.Builder, SingularAttribute, Map)} instead
      */
     protected GraphQLOutputType getIdType(SingularAttribute<?, ?> singularAttribute) {
         if (scalarTypeMap != null) {
@@ -1114,6 +1170,7 @@ public class GraphQLEntityViewSupportFactory {
      *
      * @param singularAttribute The singular attribute
      * @return The type
+     * @deprecated Use {@link #getInputIdType(GraphQLSchema.Builder, SingularAttribute, Map)} instead
      */
     protected GraphQLInputType getInputIdType(SingularAttribute<?, ?> singularAttribute) {
         // Ideally, we would make this only nullable if the value is generated, but that's hard to determine
@@ -1971,6 +2028,9 @@ public class GraphQLEntityViewSupportFactory {
                 typeName = "String";
             }
         }
+        if (!javaType.isEnum() && registeredScalarTypeNames != null && registeredScalarTypeNames.add(typeName)) {
+            typeRegistry.add(new ScalarTypeDefinition(typeName));
+        }
         return new TypeName(typeName);
     }
 
@@ -2034,6 +2094,9 @@ public class GraphQLEntityViewSupportFactory {
             } else {
                 typeName = "String";
             }
+        }
+        if (!javaType.isEnum() && registeredScalarTypeNames != null && registeredScalarTypeNames.add(typeName)) {
+            schemaBuilder.additionalType(GraphQLScalarType.newScalar().name(typeName).build());
         }
         return new GraphQLTypeReference(typeName);
     }
