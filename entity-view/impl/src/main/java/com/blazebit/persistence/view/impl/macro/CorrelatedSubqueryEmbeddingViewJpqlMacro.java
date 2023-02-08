@@ -133,6 +133,17 @@ public class CorrelatedSubqueryEmbeddingViewJpqlMacro extends CorrelatedSubquery
         if (viewRootJpqlMacro.usesViewMacro()) {
             throw new UnsupportedOperationException("It's not yet supported to use the EMBEDDING_VIEW macro along with the VIEW_ROOT macro in correlations!");
         }
-        super.render(context);
+        if (embeddingViewPathSet) {
+            String viewRootExpression = getViewRootExpression();
+            if (context.getArgumentsSize() > 0) {
+                context.addChunk(viewRootExpression);
+                context.addChunk(".");
+                context.addArgument(0);
+            } else {
+                context.addChunk(viewRootExpression);
+            }
+        } else {
+            super.render(context);
+        }
     }
 }

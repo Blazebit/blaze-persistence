@@ -38,6 +38,15 @@ public class LegacyOrderPositionElement extends LongSequenceEntity implements Se
     private Integer position;
     private String text;
 
+    public LegacyOrderPositionElement() {
+    }
+
+    public LegacyOrderPositionElement(Long orderId, Integer position, String text) {
+        this.orderId = orderId;
+        this.position = position;
+        this.text = text;
+    }
+
     @Column(name = "elem_order_id")
     public Long getOrderId() {
         return orderId;

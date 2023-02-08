@@ -14,6 +14,7 @@ Changes that happened in releases
 * Fix issue with negative numeric literals in `inLiterals` and `notInLiterals` APIs
 * Fix GraphQL over-fetching issue
 * Fix issue with unions in GraphQL selection set
+* Fix issue with `EMBEDDING_VIEW` macro when used in subquery within batch loaded mapping
 
 ### Backwards-incompatible changes
 
