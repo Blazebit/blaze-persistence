@@ -193,23 +193,23 @@ Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
 
 See the following table for an overview of supported versions.
 
-Module                           | Minimum version                      | Supported versions
----------------------------------|--------------------------------------|--------------------
-Hibernate integration            | Hibernate 4.2                        | 4.2, 4.3, 5.0+, 6.1+ (not all features are available in older versions)
-EclipseLink integration          | EclipseLink 2.6                      | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
-DataNucleus integration          | DataNucleus 4.1                      | 4.1, 5.0
-OpenJPA integration              | N/A                                  | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
-Entity View CDI integration      | CDI 1.0                              | 1.0, 1.1, 1.2, 2.0, 3.0
-Entity View Spring integration   | Spring 4.3                           | 4.3, 5.0, 5.1, 5.2, 5.3
-DeltaSpike Data integration      | DeltaSpike 1.7                       | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                     | 1.11 - 2.6
-Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3  | Spring Data 1.11 - 2.6, Spring WebMvc 4.3 - 5.3
-Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0  | Spring Data 2.0 - 2.6, Spring WebFlux 5.0 - 5.3
-Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2   | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
-Jackson integration              | 2.8.11                               | 2.8.11+
-GraphQL integration              | 5.2                                  | 5.2+
-JAX-RS integration               | Any JAX-RS version                   | Any JAX-RS version
-Quarkus integration              | 1.4.2                                | 1.4+
+Module                           | Minimum version                     | Supported versions
+---------------------------------|-------------------------------------|--------------------
+Hibernate integration            | Hibernate 4.2                       | 4.2, 4.3, 5.0+, 6.1+ (not all features are available in older versions)
+EclipseLink integration          | EclipseLink 2.6                     | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
+DataNucleus integration          | DataNucleus 4.1                     | 4.1, 5.0
+OpenJPA integration              | N/A                                 | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
+Entity View CDI integration      | CDI 1.0                             | 1.0, 1.1, 1.2, 2.0, 3.0
+Entity View Spring integration   | Spring 4.3                          | 4.3, 5.0, 5.1, 5.2, 5.3
+DeltaSpike Data integration      | DeltaSpike 1.7                      | 1.7, 1.8, 1.9
+Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.6
+Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3 | Spring Data 1.11 - 2.6, Spring WebMvc 4.3 - 5.3
+Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0 | Spring Data 2.0 - 2.6, Spring WebFlux 5.0 - 5.3
+Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2  | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
+Jackson integration              | 2.8.11                              | 2.8.11+
+GraphQL integration              | 17.3                                | 17.3+
+JAX-RS integration               | Any JAX-RS version                  | Any JAX-RS version
+Quarkus integration              | 1.4.2                               | 1.4+
 
 ## Manual setup
 
