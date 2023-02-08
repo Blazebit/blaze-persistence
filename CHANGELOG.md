@@ -17,7 +17,7 @@ None yet
 
 ### Backwards-incompatible changes
 
-None yet
+* The GraphQL integration bumped the graphql-java version to 17.3 and had to do some signature changes to fully support union types
 
 ## 1.6.8
 
