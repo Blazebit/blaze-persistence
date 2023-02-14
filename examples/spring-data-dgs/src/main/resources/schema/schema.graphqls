@@ -6,3 +6,5 @@ type Query {
 type Mutation {
     createCat(cat: CatCreateViewInput): Int
 }
+
+scalar Long
