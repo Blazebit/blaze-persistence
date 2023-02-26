@@ -32,6 +32,7 @@
 
     <modules>
         <module>base</module>
+<!--        <module>base-3.1</module>-->
         <module>1.x</module>
         <module>2.0</module>
         <module>2.1</module>
@@ -41,9 +42,40 @@
         <module>2.5</module>
         <module>2.6</module>
         <module>2.7</module>
+<!--        <module>3.1</module>-->
         <module>webmvc</module>
+<!--        <module>webmvc-jakarta</module>-->
         <module>webflux</module>
         <module>testsuite</module>
         <module>asm-debug-all</module>
     </modules>
+
+    <!-- Spring 6 is compiled with JDK 17, so we can only compile it, if we the build is running on a JDK 17 -->
+    <profiles>
+        <profile>
+            <id>jdk17+</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>base</module>
+                <module>base-3.1</module>
+                <module>1.x</module>
+                <module>2.0</module>
+                <module>2.1</module>
+                <module>2.2</module>
+                <module>2.3</module>
+                <module>2.4</module>
+                <module>2.5</module>
+                <module>2.6</module>
+                <module>2.7</module>
+                <module>3.1</module>
+                <module>webmvc</module>
+                <module>webmvc-jakarta</module>
+                <module>webflux</module>
+                <module>testsuite</module>
+                <module>asm-debug-all</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

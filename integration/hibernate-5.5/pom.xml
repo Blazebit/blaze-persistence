@@ -44,7 +44,7 @@
             <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
             <version>${project.version}</version>
         </dependency>

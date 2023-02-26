@@ -72,15 +72,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
         </dependency>
         <dependency>
@@ -91,22 +91,22 @@
 
         <!-- At runtime the user is going to need all dependencies anyway, so let's just give them through transitively -->
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-base</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>

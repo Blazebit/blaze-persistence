@@ -52,7 +52,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-parser</artifactId>
             <scope>provided</scope>
         </dependency>

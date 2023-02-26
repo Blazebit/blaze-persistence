@@ -20,19 +20,19 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-parser</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

@@ -32,15 +32,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
         </dependency>
         <dependency>
@@ -50,22 +50,22 @@
         </dependency>
 
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
@@ -168,6 +168,16 @@
                                 <source>${project.build.directory}/test-metamodel</source>
                             </sources>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

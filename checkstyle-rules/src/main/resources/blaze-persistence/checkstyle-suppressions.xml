@@ -33,6 +33,9 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]ParameterMetadataProvider\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]FluentQuerySupport\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]FetchableFluentQueryByExample\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]repository[\\/]FluentQuerySupport\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]repository[\\/]FetchableFluentQueryBySpecification\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]repository[\\/]EntityGraphFactory\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]query[\\/]ParameterMetadataProviderImpl\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractCriteriaQueryParameterBinder\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractPartTreeBlazePersistenceQuery\.java$"/>

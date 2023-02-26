@@ -52,41 +52,41 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
             <!-- just to make this explicit -->
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-examples-showcase-spi</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-examples-showcase-base</artifactId>
         </dependency>
 
@@ -128,17 +128,17 @@
 
         <!-- include all showcases -->
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-examples-showcase-fragments-basic</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-examples-showcase-fragments-cte</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-examples-showcase-fragments-spring-data</artifactId>
             <scope>test</scope>
         </dependency>

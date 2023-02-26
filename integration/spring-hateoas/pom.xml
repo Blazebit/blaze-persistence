@@ -32,5 +32,20 @@
 
     <modules>
         <module>webmvc</module>
+<!--        <module>webmvc-jakarta</module>-->
     </modules>
+
+    <!-- Spring 6 is compiled with JDK 17, so we can only compile it, if we the build is running on a JDK 17 -->
+    <profiles>
+        <profile>
+            <id>jdk17+</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>webmvc</module>
+                <module>webmvc-jakarta</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
