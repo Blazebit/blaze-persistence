@@ -20,7 +20,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
@@ -31,7 +31,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-testsuite</artifactId>
             <version>${project.version}</version>
             <exclusions>

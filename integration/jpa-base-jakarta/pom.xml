@@ -54,7 +54,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-parser-jakarta</artifactId>
             <scope>provided</scope>
         </dependency>

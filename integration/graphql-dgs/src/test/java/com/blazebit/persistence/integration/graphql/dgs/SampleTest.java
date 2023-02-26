@@ -16,11 +16,8 @@
 
 package com.blazebit.persistence.integration.graphql.dgs;
 
-import com.blazebit.persistence.integration.graphql.dgs.repository.CatViewRepository;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import javax.persistence.EntityManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SampleTest extends AbstractSampleTest {
+
     @Autowired
     private TestRestTemplate restTemplate;
 

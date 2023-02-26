@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -52,6 +53,66 @@ import java.util.function.Function;
  * @since 1.4.0
  */
 public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
+    private static final Field LOGGER_FIELD;
+    private static final Method IS_LOGGING_SUPPRESSED;
+    private static final Method GET_LOG_PREFIX_METHOD;
+    private static final Method TRACE_DEBUG_METHOD;
+    private static final Method FORMAT_VALUE_METHOD;
+
+    private static final Method DEFER_CONTEXTUAL;
+    private static final Method SUBSCRIBER_CONTEXT;
+
+    private static final Method HAS_KEY;
+    private static final Method GET;
+
+    static {
+        try {
+            Field loggerField = null;
+            Method isLoggingSuppressed = null;
+            Method traceDebugMethod = null;
+            Method formatValueMethod = null;
+            Method getLogPrefixMethod = null;
+            try {
+                loggerField = Jackson2CodecSupport.class.getDeclaredField("logger");
+                Class<?> hintsClass = Class.forName("org.springframework.core.codec.Hints");
+                Class<?> logFormatUtilsClass = Class.forName("org.springframework.core.log.LogFormatUtils");
+                isLoggingSuppressed = hintsClass.getMethod("isLoggingSuppressed", Map.class);
+                traceDebugMethod = logFormatUtilsClass.getMethod("traceDebug", Log.class, Function.class);
+                formatValueMethod = logFormatUtilsClass.getMethod("formatValue", Object.class, boolean.class);
+                getLogPrefixMethod = hintsClass.getMethod("getLogPrefix", Map.class);
+            } catch (NoSuchFieldException ex) {
+                // Ignore
+            }
+            LOGGER_FIELD = loggerField;
+            IS_LOGGING_SUPPRESSED = isLoggingSuppressed;
+            GET_LOG_PREFIX_METHOD = getLogPrefixMethod;
+            TRACE_DEBUG_METHOD = traceDebugMethod;
+            FORMAT_VALUE_METHOD = formatValueMethod;
+            Method deferContextual = null;
+            Method subscriberContext = null;
+            try {
+                deferContextual = Mono.class.getMethod("deferContextual", Function.class);
+            } catch (NoSuchMethodException e) {
+                subscriberContext = Mono.class.getMethod("subscriberContext");
+            }
+            DEFER_CONTEXTUAL = deferContextual;
+            SUBSCRIBER_CONTEXT = subscriberContext;
+            Method hasKey = null;
+            Method get = null;
+            try {
+                Class<?> contextView = Class.forName("reactor.util.context.ContextView");
+                hasKey = contextView.getMethod("hasKey", Object.class);
+                get = contextView.getMethod("get", Object.class);
+            } catch (ClassNotFoundException ex) {
+                hasKey = Context.class.getMethod("hasKey", Object.class);
+                get = Context.class.getMethod("get", Object.class);
+            }
+            HAS_KEY = hasKey;
+            GET = get;
+        } catch (Exception e) {
+            throw new RuntimeException("Couldn't setup the Blaze-Persistence Webflux integration for Jackson. Please report this problem!", e);
+        }
+    }
 
     private final JsonFactory jsonFactory;
     private final EntityViewIdValueAccessorImpl idAttributeAccessor;
@@ -90,14 +151,12 @@ public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
 
         return tokens.flatMap(tokenBuffer -> {
             JsonParser jsonParser = tokenBuffer.asParser(getObjectMapper());
-            return Mono.subscriberContext().map(ctx -> {
+            Function<Object, Mono<?>> function = ctx -> {
                 try {
-                    if (ctx.hasKey(EntityViewIdAwareWebFilter.ENTITY_VIEW_ID_CONTEXT_PARAM)) {
-                        idAttributeAccessor.entityViewIdLookupMap.put(jsonParser, ctx.get(EntityViewIdAwareWebFilter.ENTITY_VIEW_ID_CONTEXT_PARAM));
-                    }
+                    registerParser(jsonParser, ctx);
                     Object value = reader.readValue(jsonParser);
                     logValue(value, hints);
-                    return value;
+                    return Mono.just(value);
                 } catch (InvalidDefinitionException ex) {
                     return Mono.error(new CodecException("Type definition error: " + ex.getType(), ex));
                 } catch (JsonProcessingException ex) {
@@ -107,33 +166,43 @@ public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
                 } finally {
                     idAttributeAccessor.entityViewIdLookupMap.remove(jsonParser);
                 }
-            });
+            };
+            try {
+                if (DEFER_CONTEXTUAL == null) {
+                    return ((Mono<Object>) SUBSCRIBER_CONTEXT.invoke(null)).flatMap(function);
+                } else {
+                    return (Mono<Object>) DEFER_CONTEXTUAL.invoke(null, function);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error while creating contextual mono. Please report this problem!", e);
+            }
         });
+    }
+
+    private void registerParser(JsonParser jsonParser, Object ctx) {
+        try {
+            if ((boolean) HAS_KEY.invoke(ctx, EntityViewIdAwareWebFilter.ENTITY_VIEW_ID_CONTEXT_PARAM)) {
+                idAttributeAccessor.entityViewIdLookupMap.put(jsonParser, GET.invoke(ctx, EntityViewIdAwareWebFilter.ENTITY_VIEW_ID_CONTEXT_PARAM));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error while registering json parser. Please report this problem!", e);
+        }
     }
 
     private void logValue(Object value, Map<String, Object> hints) {
         try {
-            Field loggerField = Jackson2CodecSupport.class.getDeclaredField("logger");
-            Log logger = (Log) loggerField.get(this);
-            Class<?> hintsClass = Class.forName("org.springframework.core.codec.Hints");
-            Method isLoggingSuppressed = hintsClass.getMethod("isLoggingSuppressed", Map.class);
-            if (!(boolean) isLoggingSuppressed.invoke(null, hints)) {
-                Method getLogPrefixMethod = hintsClass.getMethod("getLogPrefix", Map.class);
-                Class<?> logFormatUtilsClass = Class.forName("org.springframework.core.log.LogFormatUtils");
-                Method traceDebugMethod = logFormatUtilsClass.getMethod("traceDebug", Log.class, Function.class);
-                Method formatValueMethod = logFormatUtilsClass.getMethod("formatValue", Object.class, boolean.class);
-                traceDebugMethod.invoke(null, logger, (Function<Boolean, String>) traceOn -> {
+            if (LOGGER_FIELD != null && !(boolean) IS_LOGGING_SUPPRESSED.invoke(null, hints)) {
+                Log logger = (Log) LOGGER_FIELD.get(this);
+                TRACE_DEBUG_METHOD.invoke(null, logger, (Function<Boolean, String>) traceOn -> {
                     try {
-                        String formatted = (String) formatValueMethod.invoke(null, value, !traceOn);
-                        String logPrefix = (String) getLogPrefixMethod.invoke(null, hints);
+                        String formatted = (String) FORMAT_VALUE_METHOD.invoke(null, value, !traceOn);
+                        String logPrefix = (String) GET_LOG_PREFIX_METHOD.invoke(null, hints);
                         return logPrefix + "Decoded [" + formatted + "]";
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
                     }
                 });
             }
-        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException e) {
-            // ignore
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }

@@ -26,6 +26,6 @@ public class ExceptionTranslator {
 
     @ExceptionHandler(OptimisticLockException.class)
     public ResponseEntity<Void> handleUsernameAlreadyUsedException() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        return ResponseEntity.status(HttpStatus.CONFLICT.value()).build();
     }
 }

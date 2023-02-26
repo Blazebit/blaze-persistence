@@ -43,7 +43,6 @@ import java.util.List;
  */
 @Configuration
 public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
-
     protected final ObjectFactory<ConversionService> conversionService;
     protected final ObjectMapper objectMapper;
     private final EntityViewManager entityViewManager;

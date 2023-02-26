@@ -51,11 +51,11 @@
             <classifier>jakarta</classifier>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api-jakarta</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.blazebit</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
             <scope>runtime</scope>
         </dependency>
