@@ -36,6 +36,7 @@
         <blaze-persistence.codename>Lockjaw</blaze-persistence.codename>
 
         <version.servlet>4.0.1</version.servlet>
+        <version.jakarta-servlet>6.0.0</version.jakarta-servlet>
         <version.jaxb-api>2.3.3</version.jaxb-api>
         <version.jakarta-jaxb-api>3.0.1</version.jakarta-jaxb-api>
         <version.jaxb>2.3.3</version.jaxb>
@@ -123,6 +124,9 @@
         <version.spring-data-2.7>2.7.12</version.spring-data-2.7>
         <version.spring-data-2.7-spring>5.3.27</version.spring-data-2.7-spring>
         <version.spring-data-2.7-spring-boot>2.7.12</version.spring-data-2.7-spring-boot>
+        <version.spring-data-3.0>3.0.3</version.spring-data-3.0>
+        <version.spring-data-3.0-spring>6.0.5</version.spring-data-3.0-spring>
+        <version.spring-data-3.0-spring-boot>3.0.4</version.spring-data-3.0-spring-boot>
 
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
@@ -475,8 +479,18 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-entity-view-spring-6.0</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-base-3.0</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -525,8 +539,18 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-3.0</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-webmvc-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -537,6 +561,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-spring-hateoas-webmvc-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -632,6 +661,11 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-dgs-6.0</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -161,6 +161,10 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-base-3.0</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
         </dependency>
         <dependency>
@@ -194,6 +198,10 @@
         <dependency>
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-3.0</artifactId>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>

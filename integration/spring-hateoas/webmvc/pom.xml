@@ -180,7 +180,7 @@
                             <module>
                                 <moduleInfoSource>
                                     module ${module.name} {
-                                        exports com.blazebit.persistence.spring.hateoas;
+                                        exports com.blazebit.persistence.spring.hateoas.webmvc;
                                     }
                                 </moduleInfoSource>
                             </module>
