@@ -35,12 +35,12 @@ import javax.inject.Inject;
  */
 @Configuration
 @ImportResource({
-        "classpath:/com/blazebit/persistence/examples/showcase/runner/spring/application-config.xml",
-        "classpath:/META-INF/spring-beans.xml"})
+    "classpath:/com/blazebit/persistence/examples/showcase/runner/spring/application-config.xml",
+    "classpath:/META-INF/spring-beans.xml"})
 @ComponentScan
 @EnableEntityViews("com.blazebit.persistence.examples")
 @EnableBlazeRepositories(basePackages = "com.blazebit.persistence.examples",
-        entityManagerFactoryRef = "myEmf")
+    entityManagerFactoryRef = "myEmf")
 public class SpringShowcaseRunner implements CommandLineRunner {
 
     @Inject

@@ -50,8 +50,8 @@ public class EmbeddableTestEntityContainer implements Serializable {
     @JoinTable(name = "emb_tst_ent_cont_entities",
         joinColumns = @JoinColumn(name = "tst_ent_cont_id", referencedColumnName = "id"),
         inverseJoinColumns = {
-                @JoinColumn(name = "tst_ent_key", referencedColumnName = "test_key"),
-                @JoinColumn(name = "tst_ent_value", referencedColumnName = "test_value")
+            @JoinColumn(name = "tst_ent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "tst_ent_value", referencedColumnName = "test_value")
         }
     )
     public Set<EmbeddableTestEntity> getEmbeddableTestEntities() {

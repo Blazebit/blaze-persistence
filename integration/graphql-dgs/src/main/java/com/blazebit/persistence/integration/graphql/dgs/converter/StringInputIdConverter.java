@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Converter from {@link String} to {@link String}.

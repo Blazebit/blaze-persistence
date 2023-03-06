@@ -26,9 +26,8 @@ import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTag;
 import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTagInfo;
 import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTags;
 import com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocTypeCheck;
-import com.puppycrawl.tools.checkstyle.utils.CommonUtils;
-import com.puppycrawl.tools.checkstyle.utils.JavadocUtils;
-import com.puppycrawl.tools.checkstyle.utils.ScopeUtils;
+import com.puppycrawl.tools.checkstyle.utils.JavadocUtil;
+import com.puppycrawl.tools.checkstyle.utils.ScopeUtil;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -44,8 +43,7 @@ public class JavadocSinceCheck extends AbstractCheck {
     private Scope scope = Scope.PRIVATE;
     private Scope excludeScope;
 
-    private Pattern sinceFormatPattern;
-    private String sinceFormat;
+    private Pattern sinceFormat;
 
     @Override
     public int[] getDefaultTokens() {
@@ -90,41 +88,36 @@ public class JavadocSinceCheck extends AbstractCheck {
      *
      * @param sinceFormat a {@code String} value
      */
-    public void setSinceFormat(String sinceFormat) {
+    public void setSinceFormat(Pattern sinceFormat) {
         this.sinceFormat = sinceFormat;
-        this.sinceFormatPattern = CommonUtils.createPattern(sinceFormat);
     }
 
     @Override
-    public void visitToken(final DetailAST ast) {
+    public void visitToken(DetailAST ast) {
         if (shouldCheck(ast)) {
             final FileContents contents = getFileContents();
             final int lineNo = ast.getLineNo();
             final TextBlock textBlock = contents.getJavadocBefore(lineNo);
-            if (textBlock == null) {
-                log(lineNo, JavadocTypeCheck.MSG_JAVADOC_MISSING);
-            } else {
+            if (textBlock != null) {
                 final List<JavadocTag> tags = getJavadocTags(textBlock);
-                if (ScopeUtils.isOuterMostType(ast)) {
+                if (ScopeUtil.isOuterMostType(ast)) {
                     // don't check author/version for inner classes
-                    checkTag(lineNo, tags, JavadocTagInfo.SINCE.getName(),
-                            sinceFormatPattern, sinceFormat);
+                    checkTag(ast, tags, JavadocTagInfo.SINCE.getName(),
+                            sinceFormat);
                 }
             }
         }
     }
 
-    private boolean shouldCheck(final DetailAST ast) {
-        final DetailAST mods = ast.findFirstToken(TokenTypes.MODIFIERS);
-        final Scope declaredScope = ScopeUtils.getScopeFromMods(mods);
-        final Scope customScope;
-
-        if (ScopeUtils.isInInterfaceOrAnnotationBlock(ast)) {
-            customScope = Scope.PUBLIC;
-        } else {
-            customScope = declaredScope;
-        }
-        final Scope surroundingScope = ScopeUtils.getSurroundingScope(ast);
+    /**
+     * Whether we should check this node.
+     *
+     * @param ast a given node.
+     * @return whether we should check a given node.
+     */
+    private boolean shouldCheck(DetailAST ast) {
+        final Scope customScope = ScopeUtil.getScope(ast);
+        final Scope surroundingScope = ScopeUtil.getSurroundingScope(ast);
 
         return customScope.isIn(scope)
                 && (surroundingScope == null || surroundingScope.isIn(scope))
@@ -134,28 +127,34 @@ public class JavadocSinceCheck extends AbstractCheck {
                 && !surroundingScope.isIn(excludeScope));
     }
 
+    /**
+     * Gets all standalone tags from a given javadoc.
+     *
+     * @param textBlock the Javadoc comment to process.
+     * @return all standalone tags from the given javadoc.
+     */
     private List<JavadocTag> getJavadocTags(TextBlock textBlock) {
-        final JavadocTags tags = JavadocUtils.getJavadocTags(textBlock,
-                JavadocUtils.JavadocTagType.BLOCK);
+        final JavadocTags tags = JavadocUtil.getJavadocTags(textBlock,
+                JavadocUtil.JavadocTagType.BLOCK);
         return tags.getValidTags();
     }
 
-    private void checkTag(int lineNo, List<JavadocTag> tags, String tagName,
-                          Pattern formatPattern, String format) {
+    private void checkTag(DetailAST ast, Iterable<JavadocTag> tags, String tagName,
+                          Pattern formatPattern) {
         if (formatPattern != null) {
-            int tagCount = 0;
+            boolean hasTag = false;
             final String tagPrefix = "@";
-            for (int i = tags.size() - 1; i >= 0; i--) {
-                final JavadocTag tag = tags.get(i);
+
+            for (final JavadocTag tag :tags) {
                 if (tag.getTagName().equals(tagName)) {
-                    tagCount++;
+                    hasTag = true;
                     if (!formatPattern.matcher(tag.getFirstArg()).find()) {
-                        log(lineNo, JavadocTypeCheck.MSG_TAG_FORMAT, tagPrefix + tagName, format);
+                        log(ast, JavadocTypeCheck.MSG_TAG_FORMAT, tagPrefix + tagName, formatPattern.pattern());
                     }
                 }
             }
-            if (tagCount == 0) {
-                log(lineNo, JavadocTypeCheck.MSG_MISSING_TAG, tagPrefix + tagName);
+            if (!hasTag) {
+                log(ast, JavadocTypeCheck.MSG_MISSING_TAG, tagPrefix + tagName);
             }
         }
     }

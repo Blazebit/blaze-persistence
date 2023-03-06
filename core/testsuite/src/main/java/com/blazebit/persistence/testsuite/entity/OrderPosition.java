@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0.0
@@ -43,7 +42,7 @@ public class OrderPosition implements Serializable {
     private Order order;
     private OrderPositionHead head;
     private Set<OrderPositionElement> elements = new HashSet<>(0);
-    
+
     @EmbeddedId
     public OrderPositionId getId() {
         return id;
@@ -65,16 +64,16 @@ public class OrderPosition implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
-            @JoinColumn(
-                    name = "orderId",
-                    referencedColumnName = "head_order_id",
-                    insertable = false,
-                    updatable = false),
-            @JoinColumn(
-                    name = "position",
-                    referencedColumnName = "head_position",
-                    insertable = false,
-                    updatable = false) })
+        @JoinColumn(
+            name = "orderId",
+            referencedColumnName = "head_order_id",
+            insertable = false,
+            updatable = false),
+        @JoinColumn(
+            name = "position",
+            referencedColumnName = "head_position",
+            insertable = false,
+            updatable = false)})
     public OrderPositionHead getHead() {
         return head;
     }
@@ -86,13 +85,13 @@ public class OrderPosition implements Serializable {
     @OneToMany
     @JoinColumns({
         @JoinColumn(
-                name = "elem_order_id",
-                referencedColumnName = "orderId",
-                updatable = false),
+            name = "elem_order_id",
+            referencedColumnName = "orderId",
+            updatable = false),
         @JoinColumn(
-                name = "elem_position",
-                referencedColumnName = "position",
-                updatable = false)
+            name = "elem_position",
+            referencedColumnName = "position",
+            updatable = false)
     })
     public Set<OrderPositionElement> getElements() {
         return elements;

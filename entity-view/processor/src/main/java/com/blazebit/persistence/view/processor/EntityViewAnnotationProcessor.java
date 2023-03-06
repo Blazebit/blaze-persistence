@@ -46,22 +46,22 @@ import java.util.concurrent.atomic.LongAdder;
  * @since 1.5.0
  */
 @SupportedAnnotationTypes({
-        Constants.ENTITY_VIEW
+    Constants.ENTITY_VIEW
 })
 @SupportedOptions({
-        EntityViewAnnotationProcessor.DEBUG_OPTION,
-        EntityViewAnnotationProcessor.ADD_GENERATION_DATE,
-        EntityViewAnnotationProcessor.ADD_GENERATED_ANNOTATION,
-        EntityViewAnnotationProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
-        EntityViewAnnotationProcessor.STRICT_CASCADING_CHECK,
-        EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_NAME,
-        EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE,
-        EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS,
-        EntityViewAnnotationProcessor.GENERATE_BUILDERS,
-        EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS,
-        EntityViewAnnotationProcessor.GENERATE_DEEP_CONSTANTS,
-        EntityViewAnnotationProcessor.OPTIONAL_PARAMETERS,
-        EntityViewAnnotationProcessor.THREADS,
+    EntityViewAnnotationProcessor.DEBUG_OPTION,
+    EntityViewAnnotationProcessor.ADD_GENERATION_DATE,
+    EntityViewAnnotationProcessor.ADD_GENERATED_ANNOTATION,
+    EntityViewAnnotationProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
+    EntityViewAnnotationProcessor.STRICT_CASCADING_CHECK,
+    EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_NAME,
+    EntityViewAnnotationProcessor.DEFAULT_VERSION_ATTRIBUTE_TYPE,
+    EntityViewAnnotationProcessor.GENERATE_IMPLEMENTATIONS,
+    EntityViewAnnotationProcessor.GENERATE_BUILDERS,
+    EntityViewAnnotationProcessor.CREATE_EMPTY_FLAT_VIEWS,
+    EntityViewAnnotationProcessor.GENERATE_DEEP_CONSTANTS,
+    EntityViewAnnotationProcessor.OPTIONAL_PARAMETERS,
+    EntityViewAnnotationProcessor.THREADS,
 })
 public class EntityViewAnnotationProcessor extends AbstractProcessor {
 

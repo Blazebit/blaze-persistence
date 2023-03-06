@@ -97,10 +97,10 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
     /**
      * Invokes {@link FullQueryBuilder#pageByAndNavigate(Object, int, String, String...)} with the identifiers of the query root entity.
      *
-     * @deprecated This method causes a method resolution ambiguity. Use {{@link #pageAndNavigate(Object, int)}} instead.
      * @param entityId The id of the entity which should be located on the page
      * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
+     * @deprecated This method causes a method resolution ambiguity. Use {{@link #pageAndNavigate(Object, int)}} instead.
      */
     @Deprecated
     public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults);
