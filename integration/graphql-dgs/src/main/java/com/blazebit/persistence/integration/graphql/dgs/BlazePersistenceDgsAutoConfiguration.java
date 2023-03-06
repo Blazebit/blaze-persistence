@@ -18,14 +18,21 @@ package com.blazebit.persistence.integration.graphql.dgs;
 
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupportFactory;
-import com.blazebit.persistence.integration.graphql.dgs.converter.*;
+import com.blazebit.persistence.integration.graphql.dgs.converter.ByteInputIdConverter;
+import com.blazebit.persistence.integration.graphql.dgs.converter.IntegerInputIdConverter;
+import com.blazebit.persistence.integration.graphql.dgs.converter.LongInputIdConverter;
+import com.blazebit.persistence.integration.graphql.dgs.converter.ShortInputIdConverter;
+import com.blazebit.persistence.integration.graphql.dgs.converter.StringInputIdConverter;
+import com.blazebit.persistence.integration.graphql.dgs.converter.UUIDInputIdConverter;
 import com.blazebit.persistence.integration.graphql.dgs.mapper.EntityViewInputObjectMapper;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsTypeDefinitionRegistry;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * The following is a bit against the <a href="https://netflix.github.io/dgs/getting-started/#creating-a-schema">schema first DGS principle</a>
@@ -37,17 +44,16 @@ import org.springframework.context.annotation.*;
 @Configuration
 @DgsComponent
 @Import({
-        EntityViewInputObjectMapper.class,
-        ByteInputIdConverter.class,
-        ShortInputIdConverter.class,
-        IntegerInputIdConverter.class,
-        LongInputIdConverter.class,
-        UUIDInputIdConverter.class,
-        StringInputIdConverter.class
+    EntityViewInputObjectMapper.class,
+    ByteInputIdConverter.class,
+    ShortInputIdConverter.class,
+    IntegerInputIdConverter.class,
+    LongInputIdConverter.class,
+    UUIDInputIdConverter.class,
+    StringInputIdConverter.class
 })
 @ImportAutoConfiguration(GraphQLEntityViewSupportFactoryAutoConfiguration.class)
-public class BlazePersistenceDgsAutoConfiguration
-{
+public class BlazePersistenceDgsAutoConfiguration {
     private GraphQLEntityViewSupport graphQLEntityViewSupport;
     private TypeDefinitionRegistry typeRegistry;
 

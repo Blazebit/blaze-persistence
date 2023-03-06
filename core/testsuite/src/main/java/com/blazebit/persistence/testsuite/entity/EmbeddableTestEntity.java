@@ -74,10 +74,10 @@ public class EmbeddableTestEntity implements Serializable {
     @ElementCollection
     @OrderColumn(name = "emb_ts_ent_elem_coll4_idx", nullable = false)
     @CollectionTable(name = "emb_ts_ent_elem_coll4",
-            joinColumns = {
-                    @JoinColumn(name = "elem_coll4_parent_key", referencedColumnName = "test_key"),
-                    @JoinColumn(name = "elem_coll4_parent_value", referencedColumnName = "test_value")
-            }
+        joinColumns = {
+            @JoinColumn(name = "elem_coll4_parent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "elem_coll4_parent_value", referencedColumnName = "test_value")
+        }
     )
     public List<NameObject> getElementCollection4() {
         return elementCollection4;

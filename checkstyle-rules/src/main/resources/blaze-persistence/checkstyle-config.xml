@@ -45,8 +45,6 @@
 
     <module name="TreeWalker">
 
-        <property name="cacheFile" value="${checkstyle.cache.file}"/>
-
         <module name="SuppressWarningsHolder" />
 
         <!-- Javadoc -->
@@ -56,9 +54,9 @@
             <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
         </module>
         <module name="JavadocMethod">
-            <property name="scope" value="package"/>
-            <property name="allowUndeclaredRTE" value="true"/>
-            <property name="allowThrowsTagsForSubclasses" value="true"/>
+            <property name="accessModifiers" value="package,protected,public"/>
+        </module>
+        <module name="MissingJavadocMethodCheck">
             <property name="allowMissingPropertyJavadoc" value="true"/>
         </module>
         <module name="JavadocStyle">
@@ -107,10 +105,6 @@
         <module name="UnusedImports"/>
 
 
-        <module name="LineLength">
-            <property name="max" value="450"/>
-            <property name="ignorePattern" value="@version|@see"/>
-        </module>
         <module name="MethodLength">
             <property name="max" value="450"/>
         </module>
@@ -173,6 +167,10 @@
             <property name="lineWrappingIndentation" value="0"/>
         </module>
         <module name="ModifierOrder"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="450"/>
+        <property name="ignorePattern" value="@version|@see"/>
     </module>
 
 </module>

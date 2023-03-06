@@ -53,8 +53,8 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     private List<NameObject> elementCollection3 = new ArrayList<>();
 
     @JoinColumns({
-            @JoinColumn(name = "many_to_one_key", referencedColumnName = "test_key"),
-            @JoinColumn(name = "many_to_one_value", referencedColumnName = "test_value")
+        @JoinColumn(name = "many_to_one_key", referencedColumnName = "test_key"),
+        @JoinColumn(name = "many_to_one_value", referencedColumnName = "test_value")
     })
     @ManyToOne(fetch = FetchType.LAZY)
     public EmbeddableTestEntity getManyToOne() {
@@ -85,13 +85,14 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     @OneToMany
     @JoinTable(name = "emb_tst_ent_one_to_many",
-            joinColumns = {
-                    @JoinColumn(name = "one_many_parent_key", referencedColumnName = "test_key"),
-                    @JoinColumn(name = "one_many_parent_value", referencedColumnName = "test_value")
-            }, inverseJoinColumns = {
-                @JoinColumn(name = "one_many_element_key", referencedColumnName = "test_key"),
-                @JoinColumn(name = "one_many_element_value", referencedColumnName = "test_value")
-            }
+        joinColumns = {
+            @JoinColumn(name = "one_many_parent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "one_many_parent_value", referencedColumnName = "test_value")
+        },
+        inverseJoinColumns = {
+            @JoinColumn(name = "one_many_element_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "one_many_element_value", referencedColumnName = "test_value")
+        }
     )
     public Set<EmbeddableTestEntity> getOneToMany2() {
         return oneToMany2;
@@ -120,10 +121,10 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     @ManyToMany
     @JoinTable(name = "emb_tst_ent_many_to_many",
-            joinColumns = {
-                    @JoinColumn(name = "many_many_parent_key", referencedColumnName = "test_key"),
-                    @JoinColumn(name = "many_many_parent_value", referencedColumnName = "test_value")
-            }
+        joinColumns = {
+            @JoinColumn(name = "many_many_parent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "many_many_parent_value", referencedColumnName = "test_value")
+        }
     )
     @MapKeyColumn(name = "many_many_key", nullable = false, length = 20)
     public Map<String, IntIdEntity> getManyToMany() {
@@ -146,10 +147,10 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     @ElementCollection
     @MapKeyColumn(name = "emb_ts_ent_elem_coll2_key", nullable = false, length = 20)
     @CollectionTable(name = "emb_ts_ent_elem_coll2",
-            joinColumns = {
-                    @JoinColumn(name = "elem_coll2_parent_key", referencedColumnName = "test_key"),
-                    @JoinColumn(name = "elem_coll2_parent_value", referencedColumnName = "test_value")
-            }
+        joinColumns = {
+            @JoinColumn(name = "elem_coll2_parent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "elem_coll2_parent_value", referencedColumnName = "test_value")
+        }
     )
     public Map<String, String> getElementCollection2() {
         return elementCollection2;
@@ -162,10 +163,10 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     @ElementCollection
     @OrderColumn(name = "emb_ts_ent_elem_coll3_idx", nullable = false)
     @CollectionTable(name = "emb_ts_ent_elem_coll3",
-            joinColumns = {
-                    @JoinColumn(name = "elem_coll3_parent_key", referencedColumnName = "test_key"),
-                    @JoinColumn(name = "elem_coll3_parent_value", referencedColumnName = "test_value")
-            }
+        joinColumns = {
+            @JoinColumn(name = "elem_coll3_parent_key", referencedColumnName = "test_key"),
+            @JoinColumn(name = "elem_coll3_parent_value", referencedColumnName = "test_value")
+        }
     )
     public List<NameObject> getElementCollection3() {
         return elementCollection3;

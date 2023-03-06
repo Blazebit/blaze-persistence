@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.3.0
  */
@@ -87,11 +86,11 @@ public class IdClassEntity implements Serializable {
 
     @ManyToMany
     @JoinTable(name = "id_class_entity_children", joinColumns = {
-            @JoinColumn(name = "child_key1", nullable = false, referencedColumnName = "key1"),
-            @JoinColumn(name = "child_key2", nullable = false, referencedColumnName = "key2")
+        @JoinColumn(name = "child_key1", nullable = false, referencedColumnName = "key1"),
+        @JoinColumn(name = "child_key2", nullable = false, referencedColumnName = "key2")
     }, inverseJoinColumns = {
-            @JoinColumn(name = "parent_key1", nullable = false, referencedColumnName = "key1"),
-            @JoinColumn(name = "parent_key2", nullable = false, referencedColumnName = "key2")
+        @JoinColumn(name = "parent_key1", nullable = false, referencedColumnName = "key1"),
+        @JoinColumn(name = "parent_key2", nullable = false, referencedColumnName = "key2")
     })
     public Set<IdClassEntity> getChildren() {
         return children;
@@ -103,11 +102,11 @@ public class IdClassEntity implements Serializable {
 
     @ManyToMany
     @JoinTable(name = "id_class_entity_children2", joinColumns = {
-            @JoinColumn(name = "child_key1", nullable = false, referencedColumnName = "key1"),
-            @JoinColumn(name = "child_key2", nullable = false, referencedColumnName = "key2")
+        @JoinColumn(name = "child_key1", nullable = false, referencedColumnName = "key1"),
+        @JoinColumn(name = "child_key2", nullable = false, referencedColumnName = "key2")
     }, inverseJoinColumns = {
-            @JoinColumn(name = "parent_key1", nullable = false, referencedColumnName = "key1"),
-            @JoinColumn(name = "parent_key2", nullable = false, referencedColumnName = "key2")
+        @JoinColumn(name = "parent_key1", nullable = false, referencedColumnName = "key1"),
+        @JoinColumn(name = "parent_key2", nullable = false, referencedColumnName = "key2")
     })
     public Set<IdClassEntity> getChildren2() {
         return children2;

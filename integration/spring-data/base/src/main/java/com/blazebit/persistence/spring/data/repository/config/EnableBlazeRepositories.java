@@ -86,39 +86,29 @@ public @interface EnableBlazeRepositories {
      * Returns the postfix to be used when looking up custom repository implementations. Defaults to {@literal Impl}. So
      * for a repository named {@code PersonRepository} the corresponding implementation class will be looked up scanning
      * for {@code PersonRepositoryImpl}.
-     *
-     * @return
      */
     String repositoryImplementationPostfix() default "Impl";
 
     /**
      * Configures the location of where to find the Spring Data named queries properties file. Will default to
      * {@code META-INF/jpa-named-queries.properties}.
-     *
-     * @return
      */
     String namedQueriesLocation() default "";
 
     /**
      * Returns the key of the {@link QueryLookupStrategy} to be used for lookup queries for query methods. Defaults to
      * {@link QueryLookupStrategy.Key#CREATE_IF_NOT_FOUND}.
-     *
-     * @return
      */
     QueryLookupStrategy.Key queryLookupStrategy() default QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND;
 
     /**
      * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
      * {@code com.blazebit.persistence.spring.data.impl.repository.BlazePersistenceRepositoryFactoryBean}.
-     *
-     * @return
      */
     Class<?> repositoryFactoryBeanClass() default void.class;
 
     /**
      * Configure the repository base class to be used to create repository proxies for this particular configuration.
-     *
-     * @return
      */
     Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
 
@@ -127,16 +117,12 @@ public @interface EnableBlazeRepositories {
     /**
      * Configures the name of the {@link EntityManagerFactory} bean definition to be used to create repositories
      * discovered through this annotation. Defaults to {@code entityManagerFactory}.
-     *
-     * @return
      */
     String entityManagerFactoryRef() default "entityManagerFactory";
 
     /**
      * Configures the name of the {@link PlatformTransactionManager} bean definition to be used to create repositories
      * discovered through this annotation. Defaults to {@code transactionManager}.
-     *
-     * @return
      */
     String transactionManagerRef() default "transactionManager";
 
@@ -163,8 +149,6 @@ public @interface EnableBlazeRepositories {
      * method invocation on it). This means repositories can still be uninitialized when the application context has
      * completed its bootstrap. {@link BootstrapMode#DEFERRED} is fundamentally the same as {@link BootstrapMode#LAZY},
      * but triggers repository initialization when the application context finishes its bootstrap.
-     *
-     * @return
      */
     BootstrapMode bootstrapMode() default BootstrapMode.DEFAULT;
 

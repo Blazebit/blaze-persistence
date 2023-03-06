@@ -29,16 +29,15 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.6.9
  */
 @Configuration
-public class GraphQLEntityViewSupportFactoryAutoConfiguration
-{
-  @Bean
-  @ConditionalOnMissingBean
-  public GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory() {
-    GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(true, true);
-    graphQLEntityViewSupportFactory.setImplementRelayNode(false);
-    graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
-    graphQLEntityViewSupportFactory.setRegisterScalarTypeDefinitions(true);
-    return graphQLEntityViewSupportFactory;
-  }
+public class GraphQLEntityViewSupportFactoryAutoConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    public GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory() {
+        GraphQLEntityViewSupportFactory graphQLEntityViewSupportFactory = new GraphQLEntityViewSupportFactory(true, true);
+        graphQLEntityViewSupportFactory.setImplementRelayNode(false);
+        graphQLEntityViewSupportFactory.setDefineRelayNodeIfNotExist(true);
+        graphQLEntityViewSupportFactory.setRegisterScalarTypeDefinitions(true);
+        return graphQLEntityViewSupportFactory;
+    }
 
 }

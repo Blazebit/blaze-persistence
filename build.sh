@@ -15,9 +15,9 @@ export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli
 # Increase retry count and reduce TTL for connections: https://github.com/actions/virtual-environments/issues/1499#issuecomment-718396233
 export MAVEN_OPTS="$MAVEN_OPTS -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
 if [ "$JDK" != "" ]; then
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m $MAVEN_OPTS"
+  export MAVEN_OPTS="-Xmx1280m -XX:MaxMetaspaceSize=512m $MAVEN_OPTS"
 else
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m $MAVEN_OPTS"
+  export MAVEN_OPTS="-Xmx1280m -XX:MaxPermSize=512m $MAVEN_OPTS"
 fi
 
 $DIR/mvnw -version

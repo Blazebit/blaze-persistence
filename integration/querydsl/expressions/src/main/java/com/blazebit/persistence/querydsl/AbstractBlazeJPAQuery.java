@@ -269,9 +269,9 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
      * Get the projection in {@link QueryResults} form
      *
      * @return results
-     * @deprecated Blaze-Persistence has better ways for paginated result sets, which are also optimized to use a single query.
      * @see #fetchPage(int, int)
      * @see #fetchPage(KeysetPage, int, int)
+     * @deprecated Blaze-Persistence has better ways for paginated result sets, which are also optimized to use a single query.
      */
     @Override
     @Deprecated
