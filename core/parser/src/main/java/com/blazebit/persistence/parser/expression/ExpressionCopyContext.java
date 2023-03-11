@@ -30,6 +30,11 @@ public interface ExpressionCopyContext {
         }
 
         @Override
+        public Expression getExpressionForAlias(String alias) {
+            return null;
+        }
+
+        @Override
         public boolean isCopyResolved() {
             return false;
         }
@@ -42,12 +47,19 @@ public interface ExpressionCopyContext {
         }
 
         @Override
+        public Expression getExpressionForAlias(String alias) {
+            return null;
+        }
+
+        @Override
         public boolean isCopyResolved() {
             return true;
         }
     };
 
     public String getNewParameterName(String oldParameterName);
+
+    public Expression getExpressionForAlias(String alias);
 
     public boolean isCopyResolved();
 }

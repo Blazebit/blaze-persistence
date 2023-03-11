@@ -83,6 +83,7 @@ import com.blazebit.persistence.parser.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
+import com.blazebit.persistence.parser.expression.ExpressionCopyContextForQuery;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContextMap;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
@@ -381,9 +382,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, boolean copyOrderBy, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         if (copyMainQuery) {
-            copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager), false);
+            copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager));
             mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
         }
+        copyContext = new ExpressionCopyContextForQuery(copyContext, builder.aliasManager.getAliasedExpressions());
 
         joinManagerMapping.put(builder.joinManager, joinManager);
         aliasManager.applyFrom(builder.aliasManager);
@@ -622,7 +624,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
 
             prepareForModification(ClauseType.CTE);
-            ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager), false);
+            ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager));
             this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>(), copyContext);
         }
         return (BuilderType) this;

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.parser.expression.Expression;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -141,6 +143,17 @@ public class AliasManager {
     // TODO: rewrite tests for join aliases to be 0-based so we can remove this method
     public String generateJoinAlias(String alias) {
         return generatePostfixedAlias(alias, 1, AliasGenerationMode.CREATE);
+    }
+
+    public Map<String, Expression> getAliasedExpressions() {
+        Map<String, Expression> aliasedExpressions = new HashMap<>(aliasMap.size());
+        for (Map.Entry<String, AliasInfo> entry : aliasMap.entrySet()) {
+            AliasInfo aliasInfo = entry.getValue();
+            if (aliasInfo instanceof SelectInfo) {
+                aliasedExpressions.put(entry.getKey(), ((SelectInfo) aliasInfo).getExpression());
+            }
+        }
+        return aliasedExpressions;
     }
 
     /**

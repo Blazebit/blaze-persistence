@@ -271,7 +271,7 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
                 joinManager.implicitJoin(groupByExpr, true, true, true, null, null, new HashSet<String>(), false, false, false, false);
             }
 
-            PathExpression originalSizeArg = sizeArg.copy(ExpressionCopyContext.EMPTY);
+            PathExpression originalSizeArg = (PathExpression) sizeArg.copy(ExpressionCopyContext.EMPTY);
             originalSizeArg.setPathReference(sizeArg.getPathReference());
 
             sizeArg.setUsedInCollectionFunction(false);

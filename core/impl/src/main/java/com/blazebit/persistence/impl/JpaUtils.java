@@ -188,7 +188,7 @@ public final class JpaUtils {
                     final Collection<String> embeddedPropertyNames = getEmbeddedPropertyPaths(attributeEntries, attributeName, needsElementCollectionIdCutoff, false);
 
                     PathExpression baseExpression = embeddedPropertyNames.size() > 1 ?
-                            ((PathExpression) selectExpression).copy(ExpressionCopyContext.EMPTY) : ((PathExpression) selectExpression);
+                        (PathExpression) selectExpression.copy(ExpressionCopyContext.EMPTY) : ((PathExpression) selectExpression);
 
                     joinManager.implicitJoin(baseExpression, true, true, true, null, ClauseType.SELECT, new HashSet<String>(), false, false, false, false);
 
@@ -211,7 +211,7 @@ public final class JpaUtils {
                         int offset = 0;
                         for (String embeddedPropertyName : embeddedPropertyNames) {
                             PathExpression pathExpression = firstBinding ?
-                                    ((PathExpression) selectExpression) : baseExpression.copy(ExpressionCopyContext.EMPTY);
+                                    ((PathExpression) selectExpression) : (PathExpression) baseExpression.copy(ExpressionCopyContext.EMPTY);
 
                             for (String propertyNamePart : embeddedPropertyName.split("\\.")) {
                                 pathExpression.getExpressions().add(new PropertyExpression(propertyNamePart));

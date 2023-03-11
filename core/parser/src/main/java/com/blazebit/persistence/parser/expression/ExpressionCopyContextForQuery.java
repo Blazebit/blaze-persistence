@@ -21,28 +21,26 @@ import java.util.Map;
 /**
  *
  * @author Christian Beikov
- * @since 1.4.1
+ * @since 1.6.9
  */
-public class ExpressionCopyContextMap implements ExpressionCopyContext {
+public class ExpressionCopyContextForQuery implements ExpressionCopyContext {
 
-    private final Map<String, String> parameterMapping;
+    private final ExpressionCopyContext parent;
+    private final Map<String, Expression> aliasedExpressions;
 
-    public ExpressionCopyContextMap(Map<String, String> parameterMapping) {
-        this.parameterMapping = parameterMapping;
+    public ExpressionCopyContextForQuery(ExpressionCopyContext parent, Map<String, Expression> aliasedExpressions) {
+        this.parent = parent;
+        this.aliasedExpressions = aliasedExpressions;
     }
 
     @Override
     public String getNewParameterName(String oldParameterName) {
-        String newParameterName = parameterMapping.get(oldParameterName);
-        if (newParameterName == null) {
-            return oldParameterName;
-        }
-        return newParameterName;
+        return parent.getNewParameterName(oldParameterName);
     }
 
     @Override
     public Expression getExpressionForAlias(String alias) {
-        return null;
+        return aliasedExpressions.get(alias);
     }
 
     @Override
