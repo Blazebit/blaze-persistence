@@ -63,21 +63,20 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     @Override
-    public PathExpression copy(ExpressionCopyContext copyContext) {
+    public Expression copy(ExpressionCopyContext copyContext) {
+        if (pathProperties.size() == 1 && pathProperties.get(0) instanceof PropertyExpression) {
+            Expression expression = copyContext.getExpressionForAlias(pathProperties.get(0).toString());
+            if (expression != null) {
+                return expression;
+            }
+        }
         int size = pathProperties.size();
-        List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
+        List<PathElementExpression> newPathProperties = new ArrayList<>(size);
 
         for (int i = 0; i < size; i++) {
             newPathProperties.add(pathProperties.get(i).copy(copyContext));
         }
-
-        PathReference pathReference;
-        if (copyContext.isCopyResolved()) {
-            pathReference = this.pathReference;
-        } else {
-            pathReference = null;
-        }
-        return new PathExpression(newPathProperties, pathReference, usedInCollectionFunction, collectionQualifiedPath);
+        return new PathExpression(newPathProperties, copyContext.isCopyResolved() ? pathReference : null, usedInCollectionFunction, collectionQualifiedPath);
     }
 
     @Override

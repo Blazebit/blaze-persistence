@@ -18,6 +18,7 @@ Changes that happened in releases
 * Fix issue with resolving function return types in Hibernate 6 integration
 * Fix fetch determination for relay node types
 * Fix entity binding with column equivalent attributes
+* Fix problem with query copying of paths that refer to select aliases, happening mostly in paginated `SUBSELECT` entity view scenarios
 
 ### Backwards-incompatible changes
 

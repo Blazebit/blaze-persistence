@@ -17,6 +17,8 @@
 package com.blazebit.persistence.view.testsuite.correlation.subselectsubset;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -31,6 +33,7 @@ import com.blazebit.persistence.view.testsuite.correlation.subselectsubset.model
 import com.blazebit.persistence.view.testsuite.correlation.subselectsubset.model.SimplePersonSubView;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
@@ -70,6 +73,25 @@ public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
         EntityViewSetting<DocumentSubselectElementCollectionView, CriteriaBuilder<DocumentSubselectElementCollectionView>> setting =
                 EntityViewSetting.create(DocumentSubselectElementCollectionView.class);
         CriteriaBuilder<DocumentSubselectElementCollectionView> cb = evm.applySetting(setting, criteria);
+        List<DocumentSubselectElementCollectionView> resultList = cb.getResultList();
+        Assert.assertTrue(resultList.get(0).getNames().isEmpty());
+    }
+
+    @Test
+    @Category(NoEclipselink.class)
+    // TODO: report eclipselink does not support subqueries in functions
+    public void testPaginatedSubselectElementCollectionWithFilter() {
+        EntityViewManager evm = build(
+            DocumentSubselectElementCollectionView.class,
+            NameObjectView.class
+        );
+
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
+            .orderByAsc("id");
+        EntityViewSetting<DocumentSubselectElementCollectionView, PaginatedCriteriaBuilder<DocumentSubselectElementCollectionView>> setting =
+            EntityViewSetting.create(DocumentSubselectElementCollectionView.class, 0, 1);
+        setting.addAttributeFilter("name", "doc1");
+        PaginatedCriteriaBuilder<DocumentSubselectElementCollectionView> cb = evm.applySetting(setting, criteria);
         List<DocumentSubselectElementCollectionView> resultList = cb.getResultList();
         Assert.assertTrue(resultList.get(0).getNames().isEmpty());
     }
