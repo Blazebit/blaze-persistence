@@ -90,8 +90,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static com.blazebit.persistence.querydsl.JPQLNextOps.BIND;
@@ -290,8 +292,17 @@ public class BlazeCriteriaBuilderRenderer<T> {
                             ExtendedManagedType<?> managedType = metamodel.getManagedType(ExtendedManagedType.class, pathExpression.getType());
                             Map<String, ? extends ExtendedAttribute<?, ?>> ownedSingularAttributes = managedType.getOwnedSingularAttributes();
                             Collection<String> embeddedPropertyPaths = JpaUtils.getEmbeddedPropertyPaths(ownedSingularAttributes, null, false, false);
+                            Set<ExtendedAttribute<?, ?>> boundAttributes = new LinkedHashSet<>();
 
-                            for (String embeddedPropertyPath : embeddedPropertyPaths) {
+                            OUTER: for (String embeddedPropertyPath : embeddedPropertyPaths) {
+                                ExtendedAttribute<?, ?> extendedAttribute = ownedSingularAttributes.get(embeddedPropertyPath);
+                                for (ExtendedAttribute<?, ?> columnEquivalentAttribute : extendedAttribute.getColumnEquivalentAttributes()) {
+                                    if (boundAttributes.contains(columnEquivalentAttribute)) {
+                                        continue OUTER;
+                                    }
+                                }
+                                boundAttributes.add(extendedAttribute);
+                                
                                 final SelectBuilder<?> bindBuilder = selectBaseCriteriaBuilder.bind(embeddedPropertyPath);
                                 BeanPath<?> beanPath = new BeanPath<>(Object.class, pathExpression, embeddedPropertyPath);
                                 setExpressionSubqueries(beanPath, null,  bindBuilder, SelectBuilderExpressionSetter.INSTANCE);
