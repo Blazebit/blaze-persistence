@@ -17,6 +17,7 @@ Changes that happened in releases
 * Fix issue with `EMBEDDING_VIEW` macro when used in subquery within batch loaded mapping
 * Fix issue with resolving function return types in Hibernate 6 integration
 * Fix fetch determination for relay node types
+* Fix entity binding with column equivalent attributes
 
 ### Backwards-incompatible changes
 

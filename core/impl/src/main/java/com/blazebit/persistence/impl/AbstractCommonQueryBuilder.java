@@ -949,7 +949,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             builder.from(criteriaBuilder.cteType, subqueryAlias == null ? alias : subqueryAlias);
         }
         String prefix = (subqueryAlias == null ? alias : subqueryAlias) + ".";
-        for (String propertyPath : JpaUtils.getEmbeddedPropertyPaths(criteriaBuilder.attributeEntries, null, false, false)) {
+
+        Set<ExtendedAttribute<?, ?>> boundAttributes = new LinkedHashSet<>();
+        OUTER: for (String propertyPath : JpaUtils.getEmbeddedPropertyPaths(criteriaBuilder.attributeEntries, null, false, false)) {
+            ExtendedAttribute<?, ?> extendedAttribute = criteriaBuilder.attributeEntries.get(propertyPath);
+            for (ExtendedAttribute<?, ?> columnEquivalentAttribute : extendedAttribute.getColumnEquivalentAttributes()) {
+                if (boundAttributes.contains(columnEquivalentAttribute)) {
+                    continue OUTER;
+                }
+            }
+            boundAttributes.add(extendedAttribute);
             builder.bind(propertyPath).select(prefix + propertyPath);
         }
         return builder;
