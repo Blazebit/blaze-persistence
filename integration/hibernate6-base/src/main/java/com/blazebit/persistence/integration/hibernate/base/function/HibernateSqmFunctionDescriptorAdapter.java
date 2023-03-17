@@ -24,6 +24,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -93,6 +94,16 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
 
         List<SqmTypedNode<?>> arguments = new ArrayList<>(1);
         arguments.add(new CustomSqmTypedNode<>(type));
+        if ( function instanceof AbstractSqmFunctionDescriptor ) {
+            ReturnableType<?> returnableType = ((AbstractSqmFunctionDescriptor) function).getReturnTypeResolver().resolveFunctionReturnType(
+                null,
+                arguments,
+                sfi.getTypeConfiguration()
+            );
+            if (returnableType != null) {
+                return returnableType.getBindableJavaType();
+            }
+        }
         SqmExpressible<?> expressionType = function.generateSqmExpression(arguments, null, sfi.getQueryEngine(), sfi.getTypeConfiguration())
                 .getNodeType();
 

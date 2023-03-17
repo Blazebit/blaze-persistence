@@ -88,4 +88,17 @@ public class ValidationTest extends AbstractEntityViewTest {
         @Mapping("CASE WHEN partnerDocument.invalid = 1 THEN true ELSE false END")
         public boolean getValid();
     }
+
+    // Test for issue #1700
+    @Test
+    public void testValidationNullIf() {
+        build(PersonNullIfView.class);
+    }
+
+    @EntityView(Person.class)
+    public interface PersonNullIfView extends IdHolderView<Long> {
+
+        @Mapping("NULLIF(name,'')")
+        public String getName();
+    }
 }

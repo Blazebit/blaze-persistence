@@ -15,10 +15,11 @@ Changes that happened in releases
 * Fix GraphQL over-fetching issue
 * Fix issue with unions in GraphQL selection set
 * Fix issue with `EMBEDDING_VIEW` macro when used in subquery within batch loaded mapping
+* Fix issue with resolving function return types in Hibernate 6 integration
 
 ### Backwards-incompatible changes
 
-* The GraphQL integration bumped the graphql-java version to 17.3 and had to do some signature changes to fully support union types
+* The GraphQL integration bumped the graphql-java version to 17.4 and had to do some signature changes to fully support union types
 
 ## 1.6.8
 
