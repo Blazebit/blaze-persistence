@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.integration.graphql.dgs;
 
+import com.blazebit.persistence.integration.graphql.dgs.repository.CatViewRepository;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import javax.persistence.EntityManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -39,7 +43,6 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SampleTest extends AbstractSampleTest {
-
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -51,10 +54,7 @@ public class SampleTest extends AbstractSampleTest {
     @Test
     public void testRequestScope() {
         String requestGraphQL = request(5, null);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("content-type", "application/graphql");
-        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
-
+        ResponseEntity<JsonNode> response = sendGraphQlRequest(requestGraphQL);
         JsonNode connection = response.getBody().get("data").get("findAll");
         ArrayNode arrayNode = (ArrayNode) connection.get("edges");
         List<JsonNode> nodes = arrayNode.findValues("node");
@@ -63,7 +63,7 @@ public class SampleTest extends AbstractSampleTest {
         assertEquals("Cat 0", nodes.get(0).get("name").asText());
 
         requestGraphQL = request(5, connection.get("pageInfo").get("endCursor").asText());
-        response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+        response = sendGraphQlRequest(requestGraphQL);
         connection = response.getBody().get("data").get("findAll");
         arrayNode = (ArrayNode) connection.get("edges");
         nodes = arrayNode.findValues("node");
@@ -86,16 +86,68 @@ public class SampleTest extends AbstractSampleTest {
                 "  \t}\n" +
                 "  )\n" +
                 "}";
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("content-type", "application/graphql");
-        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
-
+        ResponseEntity<JsonNode> response = sendGraphQlRequest(requestGraphQL);
         int id = response.getBody().get("data").get("createCat").asInt();
 
         requestGraphQL = "query { catById(id: " + id + ") { name } }";
-        response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+        response = sendGraphQlRequest(requestGraphQL);
+
         String name = response.getBody().get("data").get("catById").get("name").asText();
         assertEquals("Test", name);
+    }
+
+    @Test
+    public void shouldFindAllWithTypeName() {
+        String requestGraphQL =  "query { "
+          + "  findAll(first: 3) { "
+          + "    edges { "
+          + "      node {  "
+          + "        id,"
+          + "        name,"
+          + "        __typename,"
+          + "      }"
+          + "    }"
+          + "  }"
+          + "}";
+          ResponseEntity<JsonNode> response = sendGraphQlRequest(requestGraphQL);
+          List<JsonNode> nodes = getResponseNodes(response);
+          nodes.forEach(node -> {
+              assertThat(node.get("id")).isNotNull();
+              assertThat(node.get("name").asText()).contains("Cat");
+              assertThat(node.get("__typename").asText()).isEqualTo("CatWithOwnerViewNode");
+          });
+    }
+
+    @Test
+    public void shouldFindAllWithOutTypeName() {
+        String requestGraphQL =  "query { "
+          + "  findAll(first: 3) { "
+          + "    edges { "
+          + "      node {  "
+          + "        id,"
+          + "        name,"
+          + "      }"
+          + "    }"
+          + "  }"
+          + "}";
+        ResponseEntity<JsonNode> response = sendGraphQlRequest(requestGraphQL);
+        List<JsonNode> nodes = getResponseNodes(response);
+        nodes.forEach(node -> {
+          assertThat(node.get("id")).isNotNull();
+          assertThat(node.get("name").asText()).contains("Cat");
+        });
+    }
+
+    private List<JsonNode> getResponseNodes(ResponseEntity<JsonNode> response ) {
+        JsonNode connection = response.getBody().get("data").get("findAll");
+        ArrayNode arrayNode = (ArrayNode) connection.get("edges");
+        return arrayNode.findValues("node");
+    }
+
+    private ResponseEntity<JsonNode> sendGraphQlRequest(String query) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-type", "application/graphql");
+        return this.restTemplate.postForEntity("/graphql", new HttpEntity<>(query, headers), JsonNode.class);
     }
 
     static String request(int first, String after) {

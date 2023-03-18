@@ -502,6 +502,9 @@ public class GraphQLEntityViewSupportFactory {
                     fieldDefinitions.add(fieldDefinition);
                     fieldNames.add(fieldName);
                     addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    if ( isDefineRelayTypes() ) {
+                        addFieldMapping(typeNameToFieldMapping, typeName + "Node", attribute, fieldName);
+                    }
                     valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
                     addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
                 }
@@ -682,6 +685,9 @@ public class GraphQLEntityViewSupportFactory {
                     fieldBuilder.type(type);
                     builder.field(fieldBuilder);
                     addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    if ( isDefineRelayTypes() ) {
+                        addFieldMapping(typeNameToFieldMapping, typeName + "Node", attribute, fieldName);
+                    }
                     inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
                     addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
                 }
