@@ -75,10 +75,11 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
-            builder.select(Person.class)
-                    .select(Person.class)
-                    .select(Document.class)
+            if (!supportsProxyRemoveWithoutLoading()) {
+                builder.select(Person.class)
+                    .select(Person.class);
+            }
+            builder.select(Document.class)
                     .select(Version.class);
         }
 
@@ -121,7 +122,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
+            // cascade of document.versions
             builder.select(Version.class);
             // Hibernate flushes the changes done to the document because Person#1 was deleted => responsiblePerson set to NULL
             builder.update(Document.class);
@@ -160,7 +161,7 @@ public class EntityViewRemoveNestedSubviewMapsTest extends AbstractEntityViewRem
         }
 
         // If possible, the deletion of document.contacts returns document.contacts.friend
-        if (!isQueryStrategy() || !dbmsDialect.supportsReturningColumns()) {
+        if (!isQueryStrategy() && !supportsProxyRemoveWithoutLoading() || isQueryStrategy() && !dbmsDialect.supportsReturningColumns()) {
             builder.select(Person.class);
         }
 

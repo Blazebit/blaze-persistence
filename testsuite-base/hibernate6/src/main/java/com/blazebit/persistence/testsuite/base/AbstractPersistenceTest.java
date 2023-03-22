@@ -140,6 +140,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         // Continue using hibernate_sequence also in Hibernate 6 because InsertTest depends on it
         // If we were to use optimizable sequences, we would require multi-table statements which are unsupported
         properties.put("hibernate.id.db_structure_naming_strategy", "legacy");
+
+        // Don't want to adapt the testsuite yet, so keep on using the legacy config
+        properties.put("hibernate.type.wrapper_array_handling", "legacy");
+
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");
@@ -220,6 +224,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected boolean supportsLazyCollectionElementJoin() {
+        return true;
+    }
+
+    @Override
+    protected boolean supportsProxyRemoveWithoutLoading() {
         return true;
     }
 

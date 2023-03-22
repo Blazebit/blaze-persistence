@@ -614,8 +614,12 @@ public class WindowFunctionTest extends AbstractCoreTest {
 
         String queryString = criteria.getQueryString();
 
-        assertTrue(queryString.contains(function("window_sum", "per.age", "'ORDER BY'", "per.age",
+        if (queryString.contains("window_sum")) {
+            assertTrue(queryString.contains(function("window_sum", "per.age", "'ORDER BY'", "per.age",
                 "'ASC NULLS LAST'", "'ROWS'", "'BETWEEN'", "'UNBOUNDED PRECEDING'", "'AND'", "'CURRENT ROW'")));
+        } else {
+            assertTrue(queryString.contains("sum(per.age) OVER (ORDER BY per.age ASC NULLS LAST ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"));
+        }
 
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);

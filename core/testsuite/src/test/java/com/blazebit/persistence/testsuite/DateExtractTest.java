@@ -529,8 +529,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
         int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
-        assertEquals((int) (c1.getTimeInMillis() / 1000L), (int) actual.get(0) - (offsetInMillis1 / 1000L));
-        assertEquals((int) (c2.getTimeInMillis() / 1000L), (int) actual.get(1) - (offsetInMillis2 / 1000L));
+        assertEquals(c1.getTimeInMillis() / 1000L, actual.get(0, Long.class) - (offsetInMillis1 / 1000L));
+        assertEquals(c2.getTimeInMillis() / 1000L, actual.get(1, Long.class) - (offsetInMillis2 / 1000L));
     }
 
     @Test
@@ -552,8 +552,8 @@ public class DateExtractTest extends AbstractCoreTest {
 
         int offsetInMillis1 = producerTimeZone.getOffset(c1.getTimeInMillis());
         int offsetInMillis2 = producerTimeZone.getOffset(c2.getTimeInMillis());
-        assertEquals((int) (c1.getTimeInMillis() / 1000L), (int) actual.get(0) - (offsetInMillis1 / 1000L));
-        assertEquals((int) (c2.getTimeInMillis() / 1000L), (int) actual.get(1) - (offsetInMillis2 / 1000L));
+        assertEquals(c1.getTimeInMillis() / 1000L, actual.get(0, Long.class) - (offsetInMillis1 / 1000L));
+        assertEquals(c2.getTimeInMillis() / 1000L, actual.get(1, Long.class) - (offsetInMillis2 / 1000L));
     }
 
     @Test

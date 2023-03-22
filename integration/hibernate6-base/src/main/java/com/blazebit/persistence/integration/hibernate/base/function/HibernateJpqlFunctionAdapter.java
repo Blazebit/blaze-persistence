@@ -17,6 +17,7 @@
 package com.blazebit.persistence.integration.hibernate.base.function;
 
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionKind;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -25,6 +26,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -34,6 +36,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.ArrayList;
@@ -49,8 +52,8 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
 
     private final JpqlFunction function;
 
-    public HibernateJpqlFunctionAdapter(SessionFactoryImplementor sfi, JpqlFunction function) {
-        super(null, null, new FunctionReturnTypeResolver() {
+    public HibernateJpqlFunctionAdapter(SessionFactoryImplementor sfi, JpqlFunctionKind kind, JpqlFunction function) {
+        super(null, determineFunctionKind(kind), null, new FunctionReturnTypeResolver() {
             @Override
             public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
                 Class<?> argumentClass = null;
@@ -107,12 +110,30 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
         this.function = function;
     }
 
+    private static FunctionKind determineFunctionKind(JpqlFunctionKind kind) {
+        switch (kind) {
+            case WINDOW:
+                return FunctionKind.WINDOW;
+            case ORDERED_SET_AGGREGATE:
+                return FunctionKind.ORDERED_SET_AGGREGATE;
+            case AGGREGATE:
+                return FunctionKind.AGGREGATE;
+            default:
+                return FunctionKind.NORMAL;
+        }
+    }
+
     public JpqlFunction unwrap() {
         return function;
     }
 
     @Override
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+        render(sqlAppender, sqlAstArguments, null, walker);
+    }
+
+    @Override
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
         // todo: this implementation needs to be improved i.e. don't do intermediate rendering if not required and handle parameter binders specially
         AbstractSqlAstTranslator<?> sqlAstTranslator = (AbstractSqlAstTranslator<?>) walker;
         CustomStandardSqlAstTranslator<?> customStandardSqlAstTranslator = new CustomStandardSqlAstTranslator<>(sqlAstTranslator.getSessionFactory());
@@ -120,6 +141,12 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
         for (SqlAstNode sqlAstArgument : sqlAstArguments) {
             customStandardSqlAstTranslator.getStringBuilder().setLength(0);
             sqlAstArgument.accept(customStandardSqlAstTranslator);
+            sqlArguments.add(customStandardSqlAstTranslator.getSql());
+        }
+        if (filter != null) {
+            sqlArguments.add("'FILTER'");
+            customStandardSqlAstTranslator.getStringBuilder().setLength(0);
+            filter.accept(customStandardSqlAstTranslator);
             sqlArguments.add(customStandardSqlAstTranslator.getSql());
         }
 

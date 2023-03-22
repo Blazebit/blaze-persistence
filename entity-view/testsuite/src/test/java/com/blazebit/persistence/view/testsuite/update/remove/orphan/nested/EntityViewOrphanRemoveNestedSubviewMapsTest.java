@@ -146,13 +146,14 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
                 builder.insert(Document.class, "contacts");
             }
         } else {
-            // Hibernate loads the entities before deleting?
             builder.assertSelect()
-                    .fetching(Document.class)
-                    .fetching(Document.class, "contacts")
-                    .fetching(Person.class)
-                    .and()
-                    .select(Person.class);
+                .fetching(Document.class)
+                .fetching(Document.class, "contacts")
+                .fetching(Person.class)
+                .and();
+            if (!supportsProxyRemoveWithoutLoading()) {
+                builder.select(Person.class);
+            }
         }
 
         if (version || isQueryStrategy() && isFullMode()) {
@@ -185,13 +186,12 @@ public class EntityViewOrphanRemoveNestedSubviewMapsTest extends AbstractEntityV
                         .insert(Document.class, "contacts");
             }
         } else {
-            // Hibernate loads the entities before deleting?
             builder.assertSelect()
                     .fetching(Document.class)
                     .fetching(Document.class, "contacts")
                     .fetching(Person.class)
                     .and();
-            if (!isQueryStrategy()) {
+            if (!supportsProxyRemoveWithoutLoading()) {
                 builder.select(Person.class);
             }
         }

@@ -93,11 +93,11 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -107,14 +107,15 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcDelete;
-import org.hibernate.sql.exec.spi.JdbcInsert;
-import org.hibernate.sql.exec.spi.JdbcMutation;
-import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperationQuery;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcUpdate;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
@@ -193,7 +194,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         SessionFactoryImplementor factory = hqlQuery.getSessionFactory();
         CacheableSqmInterpretation interpretation = buildQueryPlan(query);
         try {
-            return getJdbcOperation(factory, interpretation, hqlQuery).getSql();
+            return getJdbcOperation(factory, interpretation, hqlQuery).getSqlString();
         } finally {
             interpretation.domainParameterXref.clearExpansions();
         }
@@ -289,7 +290,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         primaryTableReference.setPrunedTableExpression(primaryTableReference.getTableId() + "/**/");
         String sql;
         try {
-            sql = getJdbcOperation(sfi, interpretation, hqlQuery).getSql();
+            sql = getJdbcOperation(sfi, interpretation, hqlQuery).getSqlString();
         } finally {
             interpretation.domainParameterXref.clearExpansions();
         }
@@ -369,8 +370,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             Statement sqlAst = interpretation.sqmTranslation.getSqlAst();
             if (sqlAst instanceof SelectStatement) {
                 tableGroup = findTableGroup(((SelectStatement) sqlAst).getQueryPart(), navigablePath);
-            } else if (sqlAst instanceof InsertStatement) {
-                tableGroup = findTableGroup(((InsertStatement) sqlAst).getSourceSelectStatement(), navigablePath);
+            } else if (sqlAst instanceof InsertSelectStatement) {
+                tableGroup = findTableGroup(((InsertSelectStatement) sqlAst).getSourceSelectStatement(), navigablePath);
             } else {
                 tableGroup = null;
             }
@@ -491,10 +492,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperation jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
             if (query == participatingQuery) {
                 // Don't copy over the limit and offset parameters because we need to use the LimitHandler for now
-                JdbcSelect select = (JdbcSelect) jdbcOperation;
+                JdbcOperationQuerySelect select = (JdbcOperationQuerySelect) jdbcOperation;
                 for (JdbcParameterBinder parameterBinder : jdbcOperation.getParameterBinders()) {
                     if (parameterBinder != select.getLimitParameter() && parameterBinder != select.getOffsetParameter()) {
                         parameterBinders.add(parameterBinder);
@@ -505,7 +506,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
                     interpretation.domainParameterXref,
                     interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
             );
@@ -532,9 +533,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         // todo: avoid double translation
         CacheableSqmInterpretation interpretation = buildQueryPlan(query);
-        final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
+        final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
                 .translate(jdbcParameterBindings, executionContext.getQueryOptions());
-        final JdbcSelect realJdbcSelect = new JdbcSelect(
+        final JdbcOperationQuerySelect realJdbcSelect = new JdbcOperationQuerySelect(
                 sqlOverride,
                 parameterBinders,
                 jdbcSelect.getJdbcValuesMappingProducer(),
@@ -615,11 +616,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperation jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
             parameterBinders.addAll(jdbcOperation.getParameterBinders());
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
                     interpretation.domainParameterXref,
                     interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
             );
@@ -645,9 +646,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
 
         CacheableSqmInterpretation interpretation = buildQueryPlan(query);
-        final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
+        final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
                 .translate(jdbcParameterBindings, executionContext.getQueryOptions());
-        final JdbcSelect realJdbcSelect = new JdbcSelect(
+        final JdbcOperationQuerySelect realJdbcSelect = new JdbcOperationQuerySelect(
                 sqlOverride,
                 parameterBinders,
                 jdbcSelect.getJdbcValuesMappingProducer(),
@@ -794,11 +795,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperation jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
             parameterBinders.addAll(jdbcOperation.getParameterBinders());
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
                     interpretation.domainParameterXref,
                     interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
             );
@@ -826,11 +827,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QuerySqmImpl<?> hqlQuery = query.unwrap(QuerySqmImpl.class);
         SqmStatement<?> sqmStatement = hqlQuery.getSqmStatement();
         CacheableSqmInterpretation interpretation = buildQueryPlan(query);
-        final JdbcMutation realJdbcStatement;
+        final JdbcOperationQueryMutation realJdbcStatement;
         if (sqmStatement instanceof SqmUpdateStatement<?>) {
 //            final JdbcUpdate jdbcUpdate = sqlAstTranslatorFactory.buildUpdateTranslator(sessionFactory, (UpdateStatement) interpretation.getSqmTranslation().getSqlAst())
 //                    .translate(jdbcParameterBindings, executionContext.getQueryOptions());
-            realJdbcStatement = new JdbcUpdate(
+            realJdbcStatement = new JdbcOperationQueryUpdate(
                     finalSql,
                     parameterBinders,
                     affectedTableNames,
@@ -838,7 +839,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     Collections.emptyMap()
             );
         } else if (sqmStatement instanceof SqmDeleteStatement<?>) {
-            realJdbcStatement = new JdbcDelete(
+            realJdbcStatement = new JdbcOperationQueryUpdate(
                     finalSql,
                     parameterBinders,
                     affectedTableNames,
@@ -846,7 +847,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     Collections.emptyMap()
             );
         } else if (sqmStatement instanceof SqmInsertSelectStatement<?>) {
-            realJdbcStatement = new JdbcInsert(
+            realJdbcStatement = new JdbcOperationQueryUpdate(
                     finalSql,
                     parameterBinders,
                     affectedTableNames,
@@ -902,14 +903,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperation jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
             // Exclude limit/offset parameters from example query
             if (participatingQuery != exampleQuery) {
                 parameterBinders.addAll(jdbcOperation.getParameterBinders());
             }
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
                     interpretation.domainParameterXref,
                     interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
             );
@@ -941,14 +942,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         //        QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         // Create plan for example query
-        JdbcSelect exampleQueryJdbcOperation = (JdbcSelect) getJdbcOperation(exampleQuery);
+        JdbcOperationQuerySelect exampleQueryJdbcOperation = (JdbcOperationQuerySelect) getJdbcOperation(exampleQuery);
 
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
 
         int[] returningColumnTypes = dbmsDialect.needsReturningSqlTypes() ? getReturningColumnTypes(exampleQueryJdbcOperation, sessionFactory) : null;
         boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE));
-        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQueryJdbcOperation.getSql());
+        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQueryJdbcOperation.getSqlString());
         String finalSql = sqlSb.toString();
 
         try {
@@ -990,20 +991,19 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             // todo: avoid double translation
             CacheableSqmInterpretation interpretation = buildQueryPlan(exampleQuery);
             DomainQueryExecutionContext domainQueryExecutionContext = exampleQuery.unwrap(DomainQueryExecutionContext.class);
-            final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
+            final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
                     .translate(jdbcParameterBindings, domainQueryExecutionContext.getQueryOptions());
-            final JdbcSelect realJdbcSelect = new JdbcSelect(
+            final JdbcOperationQuerySelect realJdbcSelect = new JdbcOperationQuerySelect(
                     sqlOverride,
                     parameterBinders,
                     jdbcSelect.getJdbcValuesMappingProducer(),
                     affectedTableNames,
-                    filterJdbcParameters
-                                    ,jdbcSelect.getRowsToSkip(),
-                                    jdbcSelect.getMaxRows(),
-                                    jdbcSelect.getAppliedParameters(),
-                                    jdbcSelect.getLockStrategy(),
-                                    jdbcSelect.getOffsetParameter(),
-                                    jdbcSelect.getLimitParameter()
+                    jdbcSelect.getRowsToSkip(),
+                    jdbcSelect.getMaxRows(),
+                    getField(jdbcSelect, "appliedParameters"),
+                    jdbcSelect.getLockStrategy(),
+                    jdbcSelect.getOffsetParameter(),
+                    jdbcSelect.getLimitParameter()
             );
             ExecutionContext executionContext = new SqmJdbcExecutionContextAdapter(domainQueryExecutionContext, realJdbcSelect) {
                 @Override
@@ -1072,7 +1072,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
                         session.getPersistenceContext().getBatchFetchQueue(),
                         (SelectStatement) interpretation.sqmTranslation.getSqlAst(),
-                        Collections.emptyList(),
+                        JdbcParametersList.empty(),
                         jdbcParameterBindings
                 );
 
@@ -1207,8 +1207,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     //    }
     //
 
-    private static int[] getReturningColumnTypes(JdbcSelect queryPlan, SessionFactoryImplementor sfi) {
-        JdbcValuesMapping jdbcValuesMapping = queryPlan.getJdbcValuesMappingProducer().resolve(null, null);
+    private static int[] getReturningColumnTypes(JdbcOperationQuerySelect queryPlan, SessionFactoryImplementor sfi) {
+        JdbcValuesMapping jdbcValuesMapping = queryPlan.getJdbcValuesMappingProducer().resolve(null, null, sfi);
         List<SqlSelection> sqlSelections = jdbcValuesMapping.getSqlSelections();
         List<Integer> sqlTypes = new ArrayList<>(sqlSelections.size());
 
@@ -1225,7 +1225,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return returningColumnTypes;
     }
 
-    private JdbcOperation getJdbcOperation(Query query) {
+    private JdbcOperationQuery getJdbcOperation(Query query) {
         QuerySqmImpl hqlQuery = query.unwrap(QuerySqmImpl.class);
         SessionFactoryImplementor factory = hqlQuery.getSessionFactory();
 //        if (hqlQuery.getSqmStatement() instanceof SqmSelectStatement<?>) {
@@ -1243,12 +1243,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return getJdbcOperation(factory, buildQueryPlan(query), hqlQuery);
     }
 
-    private JdbcOperation getJdbcOperation(SessionFactoryImplementor factory, CacheableSqmInterpretation interpretation, QuerySqmImpl<?> query) {
+    private JdbcOperationQuery getJdbcOperation(SessionFactoryImplementor factory, CacheableSqmInterpretation interpretation, QuerySqmImpl<?> query) {
         JdbcEnvironment jdbcEnvironment = factory.getJdbcServices().getJdbcEnvironment();
         SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
         SqmTranslation<?> sqmTranslation = interpretation.getSqmTranslation();
         Statement sqlAst = sqmTranslation.getSqlAst();
-        final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+        final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
                 interpretation.domainParameterXref,
                 interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
         );
@@ -1270,16 +1270,16 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         );
 
         if (sqlAst instanceof SelectStatement) {
-            SqlAstTranslator<JdbcSelect> translator = sqlAstTranslatorFactory.buildSelectTranslator(factory, (SelectStatement) sqlAst);
+            SqlAstTranslator<JdbcOperationQuerySelect> translator = sqlAstTranslatorFactory.buildSelectTranslator(factory, (SelectStatement) sqlAst);
             return translator.translate(jdbcParameterBindings, query.getQueryOptions());
         } else if (sqlAst instanceof DeleteStatement) {
-            SqlAstTranslator<JdbcDelete> translator = sqlAstTranslatorFactory.buildDeleteTranslator(factory, (DeleteStatement) sqlAst);
+            SqlAstTranslator<JdbcOperationQueryDelete> translator = sqlAstTranslatorFactory.buildDeleteTranslator(factory, (DeleteStatement) sqlAst);
             return translator.translate(jdbcParameterBindings, query.getQueryOptions());
         } else if (sqlAst instanceof UpdateStatement) {
-            SqlAstTranslator<JdbcUpdate> translator = sqlAstTranslatorFactory.buildUpdateTranslator(factory, (UpdateStatement) sqlAst);
+            SqlAstTranslator<JdbcOperationQueryUpdate> translator = sqlAstTranslatorFactory.buildUpdateTranslator(factory, (UpdateStatement) sqlAst);
             return translator.translate(jdbcParameterBindings, query.getQueryOptions());
         } else if (sqlAst instanceof InsertStatement) {
-            SqlAstTranslator<JdbcInsert> translator = sqlAstTranslatorFactory.buildInsertTranslator(factory, (InsertStatement) sqlAst);
+            SqlAstTranslator<JdbcOperationQueryInsert> translator = sqlAstTranslatorFactory.buildInsertTranslator(factory, (InsertStatement) sqlAst);
             return translator.translate(jdbcParameterBindings, query.getQueryOptions());
         }
         throw new UnsupportedOperationException();

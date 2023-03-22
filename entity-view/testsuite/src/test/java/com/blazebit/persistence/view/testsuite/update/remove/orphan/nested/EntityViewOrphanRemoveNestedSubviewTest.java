@@ -168,17 +168,20 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
             if (isFullMode()) {
                 builder.assertSelect()
-                            .fetching(Document.class)
-                            .fetching(Person.class)
-                        .and()
-                        .select(Person.class);
+                    .fetching(Document.class)
+                    .fetching(Person.class)
+                    .and();
+                if (!supportsProxyRemoveWithoutLoading()) {
+                    builder.select(Person.class);
+                }
             } else {
-                builder.select(Document.class)
-                        .select(Person.class)
+                builder.select(Document.class);
+                if (!supportsProxyRemoveWithoutLoading()) {
+                    builder.select(Person.class)
                         .select(Person.class);
+                }
             }
         }
 
@@ -201,12 +204,13 @@ public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewO
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
             builder.assertSelect()
-                        .fetching(Document.class)
-                        .fetching(Person.class)
-                    .and()
-                    .select(Person.class);
+                .fetching(Document.class)
+                .fetching(Person.class)
+                .and();
+            if (!supportsProxyRemoveWithoutLoading()) {
+                builder.select(Person.class);
+            }
         }
 
         if (version || isQueryStrategy() && isFullMode()) {

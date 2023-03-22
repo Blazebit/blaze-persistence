@@ -174,9 +174,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jboss.jandex</groupId>
+                <groupId>io.smallrye</groupId>
                 <artifactId>jandex-maven-plugin</artifactId>
-                <version>1.0.8</version>
+                <version>${version.jandex.plugin}</version>
                 <executions>
                     <execution>
                         <id>make-index</id>

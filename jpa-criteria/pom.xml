@@ -46,7 +46,7 @@
 
     <profiles>
         <profile>
-            <id>hibernate-6.0</id>
+            <id>hibernate-6.2</id>
             <modules>
                 <module>api</module>
                 <module>impl</module>

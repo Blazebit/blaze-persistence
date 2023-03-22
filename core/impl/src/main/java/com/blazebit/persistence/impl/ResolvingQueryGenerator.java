@@ -311,67 +311,70 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     protected void renderFunctionFunction(String functionName, boolean distinct, List<Expression> arguments, List<OrderByItem> withinGroup, WindowDefinition windowDefinition) {
         ParameterRenderingMode oldParameterRenderingMode = setParameterRenderingMode(ParameterRenderingMode.PLACEHOLDER);
         int size = arguments.size();
-        if ("listagg".equals(functionName) && jpaProvider.supportsListagg()) {
-            sb.append("listagg(");
-
-            if (distinct) {
-                sb.append("DISTINCT ");
-            }
-
-            arguments.get(0).accept(this);
-            for (int i = 1; i < size; i++) {
-                sb.append(",");
-                arguments.get(i).accept(this);
-            }
-            sb.append(')');
-
-            if (withinGroup != null && !withinGroup.isEmpty()) {
-                sb.append(" WITHIN GROUP (");
-                sb.append("ORDER BY ");
-                for (int i = 0; i < withinGroup.size(); i++) {
-                    OrderByItem orderByItem = withinGroup.get(i);
-                    orderByItem.getExpression().accept(this);
-                    sb.append(" ");
-                    sb.append(orderByItem.isAscending() ? "ASC" : "DESC");
-                    sb.append(orderByItem.isNullFirst() ? " NULLS FIRST" : " NULLS LAST");
-                    sb.append(", ");
+        JpqlFunction jpqlFunction = registeredFunctions.get(functionName);
+        if (jpqlFunction != null) {
+            if (jpaProvider.supportsListagg()) {
+                if (functionName.startsWith("window_")) {
+                    sb.append(functionName, "window_".length(), functionName.length());
+                } else {
+                    sb.append(functionName);
                 }
-                sb.setLength(sb.length() - 1);
-                sb.setCharAt(sb.length() - 1, ')');
-            }
+                sb.append('(');
 
-            super.visitWindowDefinition(windowDefinition);
-        } else if (registeredFunctions.containsKey(functionName)) {
-            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null || windowDefinition.isEmpty() ? size : size + 1));
-            if (size == 0) {
+                if (distinct) {
+                    sb.append("DISTINCT ");
+                }
+
+                if (size == 0) {
+                    if ("window_count".equals(functionName)) {
+                        sb.append('*');
+                    }
+                    sb.append(')');
+                } else {
+                    for (int i = 0; i < size; i++) {
+                        arguments.get(i).accept(this);
+                        sb.append(',');
+                    }
+                    sb.setCharAt(sb.length() - 1, ')');
+                }
+
                 if (withinGroup != null && !withinGroup.isEmpty()) {
-                    visitWithinGroup(withinGroup);
-                    if (windowDefinition != null && !windowDefinition.isEmpty()) {
-                        sb.append(",");
+                    visitNativeWithinGroup(withinGroup);
+                }
+
+                super.visitWindowDefinition(windowDefinition);
+            } else {
+                sb.append(jpaProvider.getCustomFunctionInvocation(functionName, windowDefinition == null || windowDefinition.isEmpty() ? size : size + 1));
+                if (size == 0) {
+                    if (withinGroup != null && !withinGroup.isEmpty()) {
+                        visitWithinGroup(withinGroup);
+                        if (windowDefinition != null && !windowDefinition.isEmpty()) {
+                            sb.append(',');
+                            visitWindowDefinition(windowDefinition);
+                        }
+                    } else {
                         visitWindowDefinition(windowDefinition);
                     }
                 } else {
-                    visitWindowDefinition(windowDefinition);
+                    if (distinct) {
+                        sb.append("'DISTINCT',");
+                    }
+                    arguments.get(0).accept(this);
+                    for (int i = 1; i < size; i++) {
+                        sb.append(',');
+                        arguments.get(i).accept(this);
+                    }
+                    if (withinGroup != null && !withinGroup.isEmpty()) {
+                        sb.append(',');
+                        visitWithinGroup(withinGroup);
+                    }
+                    if (windowDefinition != null && !windowDefinition.isEmpty()) {
+                        sb.append(',');
+                        visitWindowDefinition(windowDefinition);
+                    }
                 }
-            } else {
-                if (distinct) {
-                    sb.append("'DISTINCT',");
-                }
-                arguments.get(0).accept(this);
-                for (int i = 1; i < size; i++) {
-                    sb.append(",");
-                    arguments.get(i).accept(this);
-                }
-                if (withinGroup != null && !withinGroup.isEmpty()) {
-                    sb.append(",");
-                    visitWithinGroup(withinGroup);
-                }
-                if (windowDefinition != null && !windowDefinition.isEmpty()) {
-                    sb.append(",");
-                    visitWindowDefinition(windowDefinition);
-                }
+                sb.append(')');
             }
-            sb.append(')');
         } else if (jpaProvider.supportsJpa21()) {
             // Add the JPA 2.1 Function style function
             sb.append("FUNCTION('");
@@ -385,20 +388,46 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 sb.append(',');
                 arguments.get(i).accept(this);
             }
-            if (withinGroup != null && !withinGroup.isEmpty()) {
-                sb.append(",");
-                visitWithinGroup(withinGroup);
-            }
-            if (windowDefinition != null && !windowDefinition.isEmpty()) {
-                sb.append(",");
-                visitWindowDefinition(windowDefinition);
-            }
 
-            sb.append(')');
+            if (jpaProvider.supportsListagg()) {
+                sb.append(')');
+                if (withinGroup != null && !withinGroup.isEmpty()) {
+                    visitNativeWithinGroup(withinGroup);
+                }
+                if (windowDefinition != null && !windowDefinition.isEmpty()) {
+                    super.visitWindowDefinition(windowDefinition);
+                }
+            } else {
+                if (withinGroup != null && !withinGroup.isEmpty()) {
+                    sb.append(",");
+                    visitWithinGroup(withinGroup);
+                }
+                if (windowDefinition != null && !windowDefinition.isEmpty()) {
+                    sb.append(",");
+                    visitWindowDefinition(windowDefinition);
+                }
+
+                sb.append(')');
+            }
         } else {
             throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
         }
         setParameterRenderingMode(oldParameterRenderingMode);
+    }
+
+    private void visitNativeWithinGroup(List<OrderByItem> withinGroup) {
+        sb.append(" WITHIN GROUP (");
+        sb.append("ORDER BY ");
+        for (int i = 0; i < withinGroup.size(); i++) {
+            OrderByItem orderByItem = withinGroup.get(i);
+            orderByItem.getExpression().accept(this);
+            sb.append(" ");
+            sb.append(orderByItem.isAscending() ? "ASC" : "DESC");
+            sb.append(orderByItem.isNullFirst() ? " NULLS FIRST" : " NULLS LAST");
+            sb.append(", ");
+        }
+        sb.setLength(sb.length() - 1);
+        sb.setCharAt(sb.length() - 1, ')');
     }
 
     protected void visitWithinGroup(List<OrderByItem> withinGroup) {

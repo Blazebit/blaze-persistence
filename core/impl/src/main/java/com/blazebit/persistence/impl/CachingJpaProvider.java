@@ -453,6 +453,16 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsProxyRemove() {
+        return jpaProvider.supportsProxyRemove();
+    }
+
+    @Override
+    public void initialize(Object entity) {
+        jpaProvider.initialize(entity);
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return jpaProvider.getIdentifier(entity);
     }

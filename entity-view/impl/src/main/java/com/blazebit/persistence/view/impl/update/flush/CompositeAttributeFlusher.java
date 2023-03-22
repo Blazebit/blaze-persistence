@@ -254,7 +254,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
             final DirtyAttributeFlusher<?, ?, ?> f = flushers[i];
             if (f != null) {
                 hasPassThroughFlusher = hasPassThroughFlusher || f.isPassThrough();
-                supportsQueryFlush = supportsQueryFlush && f.supportsQueryFlush();
+                supportsQueryFlush = supportsQueryFlush && f.supportsQueryFlush();// todo: supportsQueryFlush can only be true if we have one non-collection flusher
                 anyOptimisticLockProtected = anyOptimisticLockProtected || f.isOptimisticLockProtected();
                 loadForEntityFlush = loadForEntityFlush || f.loadForEntityFlush() && (flushStrategy == FlushStrategy.ENTITY || !f.supportsQueryFlush());
             }
@@ -957,15 +957,24 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
                 versionFlusher.remove(context, entity, null, version);
             }
 
+            boolean hasAfterRemoveFlusher = false;
             if (cascadeMappedDeletes) {
                 for (int i = 0; i < flushers.length; i++) {
                     final DirtyAttributeFlusher<?, Object, Object> flusher = flushers[i];
-                    if (flusher != null && !flusher.requiresDeleteCascadeAfterRemove()) {
-                        flusher.removeFromEntity(context, entity);
+                    if (flusher != null) {
+                        if (flusher.requiresDeleteCascadeAfterRemove()) {
+                            hasAfterRemoveFlusher = true;
+                        } else {
+                            flusher.removeFromEntity(context, entity);
+                        }
                     }
                 }
             }
 
+            if (hasAfterRemoveFlusher && context.getEntityViewManager().getJpaProvider().supportsProxyRemove() ) {
+                // We need to initialize the entity before invoking remove, otherwise the after remove flushers can't access the state they need
+                context.getEntityViewManager().getJpaProvider().initialize(entity);
+            }
             context.getEntityManager().remove(entity);
             context.invokePostRemove((EntityViewProxy) view);
 

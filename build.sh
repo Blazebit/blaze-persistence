@@ -28,7 +28,7 @@ if [ "$BUILD_JDK" != "" ]; then
   if [[ "$BUILD_JDK" == *-ea ]]; then
     export BUILD_JDK=${BUILD_JDK::-3}
   fi
-  PROPERTIES="$PROPERTIES -Djava.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
+  PROPERTIES="$PROPERTIES -Dmain.java.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
 #  if [ "$BUILD_JDK" == "16" ]; then
 #    # Until Deltaspike releases a version with ASM 9, we have to exclude these parts from the build
 #    PROPERTIES="-pl !integration/deltaspike-data/testsuite,!examples/deltaspike-data-rest,!integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"

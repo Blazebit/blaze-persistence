@@ -13,7 +13,7 @@
     <name>Blazebit Persistence Integration JSONB</name>
 
     <properties>
-        <java.version>1.8</java.version>
+        <main.java.version>1.8</main.java.version>
         <test.java.version>1.8</test.java.version>
         <module.name>com.blazebit.persistence.integration.jsonb</module.name>
     </properties>

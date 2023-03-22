@@ -239,10 +239,10 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 </dependency>
 
 
-<!-- Hibernate 6.0+ integration module -->
+<!-- Hibernate 6.2+ integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

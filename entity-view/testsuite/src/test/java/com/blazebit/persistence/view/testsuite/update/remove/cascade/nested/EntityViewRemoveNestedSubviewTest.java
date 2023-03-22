@@ -75,10 +75,11 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
-            builder.select(Person.class)
-                    .select(Person.class)
-                    .select(Document.class)
+            if (!supportsProxyRemoveWithoutLoading()) {
+                builder.select(Person.class)
+                    .select(Person.class);
+            }
+            builder.select(Document.class)
                     .select(Version.class);
         }
 
@@ -121,10 +122,10 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         AssertStatementBuilder builder = assertUnorderedQuerySequence();
 
         if (!isQueryStrategy()) {
-            // Hibernate loads the entities before deleting?
-            builder.select(Version.class)
-                    // document.responsiblePerson.friend
-                    .select(Person.class);
+            // cascade of document.versions
+            builder.select(Version.class);
+            // document.responsiblePerson.friend
+            builder.select(Person.class);
         }
 
         deleteDocumentOwned(builder, false);
@@ -135,8 +136,10 @@ public class EntityViewRemoveNestedSubviewTest extends AbstractEntityViewRemoveD
         if (!isQueryStrategy() || !dbmsDialect.supportsReturningColumns()) {
             // document.responsiblePerson.id
             builder.select(Document.class);
-            // responsiblePerson.friend
-            builder.select(Person.class);
+            if (!isQueryStrategy() && !supportsProxyRemoveWithoutLoading() || isQueryStrategy() && !dbmsDialect.supportsReturningColumns()) {
+                // responsiblePerson.friend
+                builder.select(Person.class);
+            }
         }
 
         if (isQueryStrategy()) {

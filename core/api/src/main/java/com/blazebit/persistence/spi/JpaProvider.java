@@ -711,6 +711,22 @@ public interface JpaProvider {
     public boolean supportsProxyParameterForNonPkAssociation();
 
     /**
+     * Whether the JPA provider supports the removal of uninitialized proxies.
+     *
+     * @return <code>true</code> if supported, <code>false</code> otherwise
+     * @since 1.6.9
+     */
+    public boolean supportsProxyRemove();
+
+    /**
+     * Ensures that the given entity is initialized.
+     *
+     * @param entity The entity
+     * @since 1.6.9
+     */
+    public void initialize(Object entity);
+
+    /**
      * Returns the identifier of the entity object.
      *
      * @param entity The entity

@@ -42,10 +42,17 @@ import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -55,6 +62,23 @@ import java.util.logging.Logger;
 public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
 
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
+    private static final Set<String> NATIVE_WINDOW_FUNCTIONS = new HashSet<>(Arrays.asList(
+        "listagg",
+        "every",
+        "row_number",
+        "rank",
+        "dense_rank",
+        "percentile_cont",
+        "percentile_disc",
+        "percent_rank",
+        "lag",
+        "lead",
+        "last_value",
+        "first_value",
+        "nth_value",
+        "mode",
+        "cume_dist"
+    ));
 
     protected String getDbmsName(Dialect dialect) {
         if (dialect instanceof MariaDBDialect) {
@@ -115,19 +139,26 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             em = entityManagerFactory.createEntityManager();
             Session s = em.unwrap(Session.class);
             SessionFactoryImplementor sfi = (SessionFactoryImplementor) s.getSessionFactory();
-            Map<String, SqmFunctionDescriptor> originalFunctions = getFunctions(s);
-            Map<String, SqmFunctionDescriptor> functions = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            functions.putAll(originalFunctions);
+            SqmFunctionRegistry sqmFunctionRegistry = sfi.getQueryEngine().getSqmFunctionRegistry();
             Dialect dialect = getDialect(s);
             String dbms = getDbmsName(dialect);
 
             for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
                 String functionName = functionEntry.getKey();
-                if ("listagg".equals(functionName)) {
-                    // In Hibernate 6 we have to skip this function, as it is provided with special HQL syntax
+                JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
+                if (NATIVE_WINDOW_FUNCTIONS.contains(functionName)) {
+                    // In Hibernate 6 we have to skip some functions as they are provided with special HQL syntax
                     continue;
                 }
-                JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
+                if ("ntile".equals(functionName)) {
+                    // Special case for window function
+                    sqmFunctionRegistry.namedWindowDescriptorBuilder("ntile")
+                        .setReturnTypeResolver(StandardFunctionReturnTypeResolvers.invariant(sfi.getTypeConfiguration().getBasicTypeForJavaType(Integer.class)))
+                        .setArgumentTypeResolver(StandardFunctionArgumentTypeResolvers.invariant(FunctionParameterType.INTEGER))
+                        .setArgumentsValidator(new ArgumentTypesValidator(StandardArgumentsValidators.exactly(1), FunctionParameterType.INTEGER))
+                        .register();
+                    continue;
+                }
                 JpqlFunction function = dbmsFunctionMap.get(dbms);
 
                 if (function == null && !dbmsFunctionMap.contains(dbms)) {
@@ -136,11 +167,9 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                 if (function == null) {
                     LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
                 } else {
-                    functions.put(functionName, new HibernateJpqlFunctionAdapter(sfi, function));
+                    sqmFunctionRegistry.register(functionName, new HibernateJpqlFunctionAdapter(sfi, dbmsFunctionMap.getKind(), function));
                 }
             }
-
-            replaceFunctions(s, functions);
 
             return entityManagerFactory;
         } finally {
@@ -173,11 +202,6 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                 em.close();
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, SqmFunctionDescriptor> getFunctions(Session s) {
-        return ((SessionFactoryImplementor) s.getSessionFactory()).getQueryEngine().getSqmFunctionRegistry().getFunctions();
     }
 
     private void replaceFunctions(Session s, Map<String, SqmFunctionDescriptor> newFunctions) {

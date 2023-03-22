@@ -22,6 +22,7 @@ Changes that happened in releases
 
 * The GraphQL integration bumped the graphql-java version to 17.4 and had to do some signature changes to fully support union types
 * Default for `GraphQLEntityViewSupportFactory.setDefineDedicatedRelayNodeTypes` changed to `false` to reuse object types for relay edge
+* The hibernate-6.0 integration module was replaced with the hibernate-6.2 integration module because only version 6.2 is maintained anymore
 
 ## 1.6.8
 
