@@ -33,7 +33,7 @@
     <properties>
         <!-- We use Java 8 for a few tests -->
         <test.java.version>1.8</test.java.version>
-        <java.version>${test.java.version}</java.version>
+        <main.java.version>${test.java.version}</main.java.version>
         <module.name>com.blazebit.persistence.core.testsuite</module.name>
         <testBasePackage>com.blazebit.persistence.testsuite</testBasePackage>
         <surefireForkCount>2</surefireForkCount>
@@ -406,7 +406,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>CoreTestsuite</test>
+                            <test>${test}</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlite:test.db</jdbc.url>
                                 <jdbc.user />
@@ -524,7 +524,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>CoreTestsuite</test>
+                            <test>${test}</test>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:firebirdsql:localhost:/tmp/test.fdb</jdbc.url>
                                 <jdbc.user>SYSDBA</jdbc.user>
@@ -1914,7 +1914,7 @@
             </build>
         </profile>
         <profile>
-            <id>hibernate-6.0</id>
+            <id>hibernate-6.2</id>
             <!-- Note that we compile the test suite against Hibernate 5.6 because this testsuite will be jakarta-transformed -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
@@ -1963,7 +1963,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>

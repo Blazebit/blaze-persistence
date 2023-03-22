@@ -44,7 +44,7 @@ public abstract class EpochFunction implements JpqlFunction {
 
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return Integer.class;
+        return Long.class;
     }
 
     @Override

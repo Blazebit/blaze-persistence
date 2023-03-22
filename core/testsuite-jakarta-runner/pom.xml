@@ -31,7 +31,8 @@
     <properties>
         <!-- We use Java 8 for a few tests -->
         <test.java.version>1.8</test.java.version>
-        <java.version>${test.java.version}</java.version>
+        <main.java.version>${test.java.version}</main.java.version>
+        <jpa-api-version>${version.jakarta-jpa-api}</jpa-api-version>
         <testBasePackage>com.blazebit.persistence.testsuite</testBasePackage>
         <surefireForkCount>2</surefireForkCount>
         <test>CoreTestsuite*</test>
@@ -54,7 +55,7 @@
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-api}</version>
+            <version>${jpa-api-version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -113,25 +114,26 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hibernate-6.0</id>
+            <id>hibernate-6.2</id>
             <properties>
+                <jpa-api-version>${version.jakarta-jpa-3.1-api}</jpa-api-version>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <version>${version.hibernate-6.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-envers</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <version>${version.hibernate-6.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-testing</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <version>${version.hibernate-6.2}</version>
                 </dependency>
                 <dependency>
                     <groupId>jakarta.xml.bind</groupId>
@@ -155,7 +157,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -168,7 +170,7 @@
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>${version.hibernate-6.0}</version>
+                    <version>${version.hibernate-6.2}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

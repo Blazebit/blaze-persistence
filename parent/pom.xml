@@ -70,7 +70,7 @@
         <version.hibernate-5.4>5.4.10.Final</version.hibernate-5.4>
         <version.hibernate-5.5>5.5.0.Final</version.hibernate-5.5>
         <version.hibernate-5.6>5.6.10.Final</version.hibernate-5.6>
-        <version.hibernate-6.0>6.1.1.Final</version.hibernate-6.0>
+        <version.hibernate-6.2>6.2.4.Final</version.hibernate-6.2>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
@@ -127,23 +127,27 @@
 
         <version.jpa-api>2.2.3</version.jpa-api>
         <version.jakarta-jpa-api>3.0.0</version.jakarta-jpa-api>
+        <version.jakarta-jpa-3.1-api>3.1.0</version.jakarta-jpa-3.1-api>
 
         <version.weld>3.1.9.Final</version.weld>
         <version.quarkus>1.11.7.Final</version.quarkus>
+        <version.quarkus-3>3.1.0.Final</version.quarkus-3>
         <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
         <!-- Plugin versions -->
         <version.antrun.plugin>3.1.0</version.antrun.plugin>
-        <version.checkstyle.plugin>3.2.1</version.checkstyle.plugin>
+        <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
+        <version.compiler.plugin>3.11.0</version.compiler.plugin>
+        <version.jandex.plugin>3.1.1</version.jandex.plugin>
         <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.exec.plugin>1.6.0</version.exec.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
         <version.moditect.plugin>1.0.0.RC1</version.moditect.plugin>
-        <version.release.plugin>2.5.1</version.release.plugin>
-        <version.shade.plugin>3.2.4</version.shade.plugin>
-        <version.surefire.plugin>3.0.0-M5</version.surefire.plugin>
-        <version.failsafe.plugin>3.0.0-M5</version.failsafe.plugin>
+        <version.release.plugin>3.0.0</version.release.plugin>
+        <version.shade.plugin>3.3.0</version.shade.plugin>
+        <version.surefire.plugin>3.1.0</version.surefire.plugin>
+        <version.failsafe.plugin>3.1.0</version.failsafe.plugin>
         <asmVersion>9.3</asmVersion>
 
         <h2.version>1.4.200</h2.version>
@@ -384,7 +388,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+                <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -21,6 +21,7 @@ import com.blazebit.persistence.integration.jpa.JpaMetamodelAccessorImpl;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
+import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.query.spi.ParameterMetadata;
@@ -1813,6 +1814,16 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean supportsProxyParameterForNonPkAssociation() {
         // Not yet implemented in Hibernate, see https://hibernate.atlassian.net/browse/HHH-14017
         return false;
+    }
+
+    @Override
+    public boolean supportsProxyRemove() {
+        return false;
+    }
+
+    @Override
+    public void initialize(Object entity) {
+        Hibernate.initialize(entity);
     }
 
     @Override

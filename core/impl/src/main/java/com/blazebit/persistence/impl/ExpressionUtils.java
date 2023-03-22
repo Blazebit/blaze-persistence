@@ -44,6 +44,7 @@ import com.blazebit.persistence.parser.expression.TemporalLiteral;
 import com.blazebit.persistence.parser.expression.WhenClauseExpression;
 import com.blazebit.persistence.parser.predicate.BooleanLiteral;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
+import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
 import javax.persistence.Basic;
@@ -272,19 +273,33 @@ public class ExpressionUtils {
                 return false;
             }
             ManagedType<?> managedType = baseNode.getManagedType();
-            ExtendedManagedType extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(managedType));
-            Attribute<?, ?> attr = extendedManagedType.getAttribute(expr.getField()).getAttribute();
-
-            if (JpaMetamodelUtils.isNullable(attr)) {
+            ExtendedManagedType<?> extendedManagedType = metamodel.getManagedType(ExtendedManagedType.class, JpaMetamodelUtils.getTypeName(managedType));
+            ExtendedAttribute<?, ?> attribute = extendedManagedType.getAttribute(expr.getField());
+            List<Attribute<?, ?>> attributePath = attribute.getAttributePath();
+            if (attributePath.size() == 1 && JpaMetamodelUtils.isNullable(attribute.getAttribute())) {
                 return true;
             }
-            // Check if we have a single valued id access
-            int dotIndex = expr.getField().lastIndexOf('.');
-            if (dotIndex != -1) {
-                // A single valued id path is nullable if the parent association is nullable
-                String associationName = expr.getField().substring(0, dotIndex);
-                Attribute<?, ?> associationAttribute = extendedManagedType.getAttribute(associationName).getAttribute();
-                if (JpaMetamodelUtils.isNullable(associationAttribute)) {
+            Attribute<?, ?> firstAttribute = attributePath.get(0);
+            // If the first attribute is the id, we don't have to check further, as that is not nullable
+            if (!(firstAttribute instanceof SingularAttribute<?, ?>) || !((SingularAttribute<?, ?>) firstAttribute).isId()) {
+                Attribute<?, ?> firstNonEmbeddableAttribute = null;
+                int dotIndex = 0;
+                for (Attribute<?, ?> attr : attributePath) {
+                    dotIndex += attr.getName().length() + 1;
+                    if (attr.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED) {
+                        firstNonEmbeddableAttribute = attr;
+                        break;
+                    }
+                }
+                if (firstNonEmbeddableAttribute == null || firstNonEmbeddableAttribute.isCollection()) {
+                    return true;
+                }
+                // Check if we have a single valued id access
+                if ((!JpaMetamodelUtils.isAssociation(firstNonEmbeddableAttribute) || dotIndex > expr.getField().length()) && JpaMetamodelUtils.isNullable(attribute.getAttribute())) {
+                    return true;
+                }
+                if (JpaMetamodelUtils.isNullable(firstNonEmbeddableAttribute)) {
+                    String associationName = expr.getField().substring(0, dotIndex - 1);
                     // Finally check if the association might have been inner joined
                     JoinTreeNode associationNode = baseNode.getNodes().get(associationName);
                     if (associationNode == null || associationNode.getDefaultNode().getJoinType() != JoinType.INNER) {

@@ -42,7 +42,7 @@
         <module>hibernate-5.4</module>
         <module>hibernate-5.5</module>
         <module>hibernate-5.6</module>
-<!--        <module>hibernate-6.0</module>-->
+<!--        <module>hibernate-6.2</module>-->
         <module>datanucleus</module>
         <module>datanucleus-5.1</module>
         <module>eclipselink</module>
@@ -62,6 +62,7 @@
         <module>graphql-dgs</module>
         <module>querydsl</module>
         <module>quarkus</module>
+<!--        <module>quarkus-3</module>-->
 
         <module>jpa-base-jar</module>
         <module>openjpa-jar</module>
@@ -99,7 +100,7 @@
                 <module>hibernate-5.4</module>
                 <module>hibernate-5.5</module>
                 <module>hibernate-5.6</module>
-                <module>hibernate-6.0</module>
+                <module>hibernate-6.2</module>
                 <module>datanucleus</module>
                 <module>datanucleus-5.1</module>
                 <module>eclipselink</module>
@@ -119,6 +120,7 @@
                 <module>graphql-dgs</module>
                 <module>querydsl</module>
                 <module>quarkus</module>
+                <module>quarkus-3</module>
 
                 <module>jpa-base-jar</module>
                 <module>openjpa-jar</module>

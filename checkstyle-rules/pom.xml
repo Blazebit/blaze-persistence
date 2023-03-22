@@ -31,7 +31,7 @@
     <name>Blazebit Persistence Checkstyle Rules</name>
     <properties>
         <module.name>com.blazebit.persistence.checkstyle.rules</module.name>
-        <java.version>1.8</java.version>
+        <main.java.version>1.8</main.java.version>
     </properties>
     
     <dependencies>

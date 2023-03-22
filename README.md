@@ -195,7 +195,7 @@ See the following table for an overview of supported versions.
 
 Module                           | Minimum version                     | Supported versions
 ---------------------------------|-------------------------------------|--------------------
-Hibernate integration            | Hibernate 4.2                       | 4.2, 4.3, 5.0+, 6.1+ (not all features are available in older versions)
+Hibernate integration            | Hibernate 4.2                       | 4.2, 4.3, 5.0+, 6.2+ (not all features are available in older versions)
 EclipseLink integration          | EclipseLink 2.6                     | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
 DataNucleus integration          | DataNucleus 4.1                     | 4.1, 5.0
 OpenJPA integration              | N/A                                 | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
@@ -452,7 +452,7 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
-  * `hibernate-6.0`
+  * `hibernate-6.2`
   * `hibernate-5.6`
   * `hibernate-5.5`
   * `hibernate-5.4`
@@ -503,8 +503,8 @@ The values are defined in e.g. `core/testsuite/pom.xml` in the respective DBMS p
 
 ## Testing with Jakarta Persistence provider
 
-To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.0,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
-and to run tests use ` mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.0,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
+To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
+and to run tests use ` mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
 
 ## Switching JPA provider profiles in IntelliJ
 

@@ -42,6 +42,7 @@
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
             <version>${version.jakarta-jpa-api}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -129,6 +130,32 @@
                             </target>
                         </configuration>
                     </execution>
+                    <!-- IntelliJ needs the source to be available to not complain about implementations, so we provide that... -->
+                    <execution>
+                        <id>unpack-sources</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <unzip src="${project.build.directory}/${project.build.finalName}-sources.jar" dest="${project.build.directory}/java/" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <!-- Unpack JAR because Quarkus relies on the directory contents for class loading -->
+                    <execution>
+                        <id>unpack-classes</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${project.build.directory}/classes/" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
@@ -170,31 +197,6 @@
                             </artifacts>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <!-- IntelliJ needs the source to be available to not complain about implementations, so we provide that... -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>prepare</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <unzip src="${project.build.directory}/${project.build.finalName}-sources.jar" dest="${project.build.directory}/java/" />
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
                     <execution>
                         <id>intellij-fake-attach-source</id>
                         <phase>package</phase>

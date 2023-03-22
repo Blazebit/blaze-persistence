@@ -361,6 +361,14 @@ public class SubviewAttributeFlusher<E, V> extends AttributeFetchGraphNode<Subvi
                     inverseFlusher.flushEntitySetElement(context, oldValue, entity, null, null);
                 } else {
                     inverseFlusher.removeElement(context, entity, oldValue);
+                    if ( flushOperation != null || update && finalValue != null ) {
+                        // This is a one-to-one with REMOVE strategy, so we must flush at this point,
+                        // because Hibernate is unable to handle the operation order properly.
+                        // Hibernate does inserts before deletes, which is usually fine, but a one-to-one has a unique constraint on the FK column,
+                        // which will fail if we don't remove the old row first
+                        entityAttributeAccessor.setValue(entity, null);
+                        context.getEntityManager().flush();
+                    }
                 }
             }
         }

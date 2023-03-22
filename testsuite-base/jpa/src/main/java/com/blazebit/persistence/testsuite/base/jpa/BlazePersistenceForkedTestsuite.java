@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * We use dynamic test suites to group test executions by the used entity classes in order to minimize schema dropping
@@ -67,50 +66,87 @@ public abstract class BlazePersistenceForkedTestsuite extends BlazePersistenceTe
                                 .filter(Objects::nonNull)
                                 .collect(Collectors.toList())
                     ).filter(collection -> !collection.isEmpty())
-                    .collect(Collectors.toList());
-
-            double numTestCases = jpaPersistenceTestInstanceGroups.stream()
-                    .mapToInt(group -> group.stream().mapToInt(JUnit4TestAdapter::countTestCases).sum()).sum();
-
-            jpaPersistenceTestInstanceGroups = jpaPersistenceTestInstanceGroups.stream()
-                    .flatMap(group -> {
-                        int numTestCasesInGroup = group.stream().mapToInt(JUnit4TestAdapter::countTestCases).sum();
-                        if (numTestCasesInGroup / numTestCases > GROUP_SPLIT_THRESHOLD) {
-                            int splitFactor = Math.min(forkCount, (int) Math.ceil(numTestCasesInGroup / (numTestCases * GROUP_SPLIT_THRESHOLD)));
-                            if (splitFactor > 1) {
-                                return splitGroup(group, splitFactor).stream();
-                            }
-                        }
-                        return Stream.of(group);
-                    })
                     .sorted(Comparator.comparingInt(List<JUnit4TestAdapter>::size).reversed())
                     .collect(Collectors.toList());
 
-            for (int testIdx = 0; testIdx < jpaPersistenceTestInstanceGroups.size(); testIdx++) {
-                if (testIdx % forkCount == fork - 1) {
-                    jpaPersistenceTestInstanceGroups.get(testIdx).forEach(suite::addTest);
+            int jpaTestCases = jpaPersistenceTestInstanceGroups.stream()
+                    .mapToInt(group -> group.stream().mapToInt(JUnit4TestAdapter::countTestCases).sum()).sum();
+            int jpaTestCasesPerFork = jpaTestCases / forkCount;
+            int processedTestCases = 0;
+
+            for (List<JUnit4TestAdapter> group : jpaPersistenceTestInstanceGroups) {
+                boolean partOfFork = (processedTestCases / jpaTestCasesPerFork) + 1 == fork;
+                for (JUnit4TestAdapter jUnit4TestAdapter : group) {
+                    processedTestCases += jUnit4TestAdapter.countTestCases();
+                    if (partOfFork) {
+                        suite.addTest(jUnit4TestAdapter);
+                    }
                 }
             }
 
             List<JUnit4TestAdapter> nonJpaPersistenceTestInstances = testClasses.nonJpaPersistenceTests.stream()
-                    .sorted(Comparator.comparing(Class::getCanonicalName))
-                    .map(testClass -> {
-                        JUnit4TestAdapter jUnit4TestAdapter = new JUnit4TestAdapter(testClass);
-                        try {
-                            jUnit4TestAdapter.filter(Categories.CategoryFilter.exclude(excludedGroups));
-                            return jUnit4TestAdapter;
-                        } catch (NoTestsRemainException e) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                .sorted(Comparator.comparing(Class::getCanonicalName))
+                .map(testClass -> {
+                    JUnit4TestAdapter jUnit4TestAdapter = new JUnit4TestAdapter(testClass);
+                    try {
+                        jUnit4TestAdapter.filter(Categories.CategoryFilter.exclude(excludedGroups));
+                        return jUnit4TestAdapter;
+                    } catch (NoTestsRemainException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+            int nonJpaTestCasesPerFork = nonJpaPersistenceTestInstances.stream().mapToInt(JUnit4TestAdapter::countTestCases).sum() / forkCount;
 
-            for (int testIdx = 0; testIdx < nonJpaPersistenceTestInstances.size(); testIdx++) {
-                if (testIdx % forkCount == fork - 1) {
-                    suite.addTest(nonJpaPersistenceTestInstances.get(testIdx));
+            processedTestCases = 0;
+
+            for (JUnit4TestAdapter jUnit4TestAdapter : nonJpaPersistenceTestInstances) {
+                if ((processedTestCases / nonJpaTestCasesPerFork) + 1 == fork) {
+                    suite.addTest(jUnit4TestAdapter);
                 }
+                processedTestCases += jUnit4TestAdapter.countTestCases();
             }
+
+//            jpaPersistenceTestInstanceGroups = jpaPersistenceTestInstanceGroups.stream()
+//                    .flatMap(group -> {
+//                        int numTestCasesInGroup = group.stream().mapToInt(JUnit4TestAdapter::countTestCases).sum();
+//                        if (numTestCasesInGroup / jpaTestCases > GROUP_SPLIT_THRESHOLD) {
+//                            int splitFactor = Math.min(forkCount, (int) Math.ceil(numTestCasesInGroup / (jpaTestCases * GROUP_SPLIT_THRESHOLD)));
+//                            if (splitFactor > 1) {
+//                                return splitGroup(group, splitFactor).stream();
+//                            }
+//                        }
+//                        return Stream.of(group);
+//                    })
+//                    .sorted(Comparator.comparingInt(List<JUnit4TestAdapter>::size).reversed())
+//                    .collect(Collectors.toList());
+//
+//            for (int testIdx = 0; testIdx < jpaPersistenceTestInstanceGroups.size(); testIdx++) {
+//                if (testIdx % forkCount == fork - 1) {
+//                    jpaPersistenceTestInstanceGroups.get(testIdx).forEach(suite::addTest);
+//                }
+//            }
+//
+//            List<JUnit4TestAdapter> nonJpaPersistenceTestInstances = testClasses.nonJpaPersistenceTests.stream()
+//                    .sorted(Comparator.comparing(Class::getCanonicalName))
+//                    .map(testClass -> {
+//                        JUnit4TestAdapter jUnit4TestAdapter = new JUnit4TestAdapter(testClass);
+//                        try {
+//                            jUnit4TestAdapter.filter(Categories.CategoryFilter.exclude(excludedGroups));
+//                            return jUnit4TestAdapter;
+//                        } catch (NoTestsRemainException e) {
+//                            return null;
+//                        }
+//                    })
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//
+//            for (int testIdx = 0; testIdx < nonJpaPersistenceTestInstances.size(); testIdx++) {
+//                if (testIdx % forkCount == fork - 1) {
+//                    suite.addTest(nonJpaPersistenceTestInstances.get(testIdx));
+//                }
+//            }
 
             LOG.info("Fork " + fork + "/" + forkCount + " is running " + suite.countTestCases() + " test cases");
         }

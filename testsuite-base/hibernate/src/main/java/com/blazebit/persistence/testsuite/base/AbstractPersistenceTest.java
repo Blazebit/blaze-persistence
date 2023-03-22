@@ -298,10 +298,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected boolean supportsInverseSetCorrelationJoinsSubtypesWhenJoined() {
         // Apparently this got fixed in Hibernate 5
-        String version = org.hibernate.Version.getVersionString();
-        String[] versionParts = version.split("[\\.-]");
-        int major = Integer.parseInt(versionParts[0]);
-        return major >= 5;
+        return getJpaProviderMajorVersion() >= 5;
     }
 
     private boolean isHibernate4() {

@@ -42,6 +42,7 @@
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
             <version>${version.jakarta-jpa-api}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -128,6 +129,19 @@
                                 </java>
                             </target>
                         </configuration>
+                    </execution>
+                    <!-- Unpack JAR because Quarkus relies on the directory contents for class loading -->
+                    <execution>
+                        <id>unpack-classes</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${project.build.directory}/classes/" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
                 <dependencies>

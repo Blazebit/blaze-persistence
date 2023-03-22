@@ -30,6 +30,7 @@ import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.jdbc.Size;
@@ -41,6 +42,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -58,13 +65,10 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
-import org.hibernate.usertype.EnhancedUserType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -76,15 +80,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
  * @since 1.6.7
  */
 public class HibernateJpaProvider implements JpaProvider {
-
-    private static final Logger LOG = Logger.getLogger(HibernateJpaProvider.class.getName());
 
     protected final PersistenceUnitUtil persistenceUnitUtil;
     protected final DB db;
@@ -451,24 +452,43 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean isForeignJoinColumn(EntityType<?> ownerType, String attributeName) {
         AbstractEntityPersister persister = getEntityPersister(ownerType);
-        Type propertyType = getPropertyType(persister, attributeName);
-
-        if (propertyType instanceof org.hibernate.type.EntityType) {
-            org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
-            // As of Hibernate 5.4 we noticed that we have to treat nullable associations as "foreign" as well
-            if (entityType.isNullable()) {
+        int nextStart = 0;
+        int dotIndex;
+        ModelPartContainer modelPartContainer = persister;
+        while ( ( dotIndex = attributeName.indexOf( '.', nextStart ) ) != -1 ) {
+            modelPartContainer = (ModelPartContainer) modelPartContainer.findSubPart(
+                attributeName.substring( nextStart, dotIndex ),
+                null
+            );
+            if (modelPartContainer instanceof PluralAttributeMapping) {
                 return true;
             }
-
-            // OneToOnes can't have JoinTables as per spec
-            // ManyToOnes can have JoinTables, which can be treated as non-foreign
-            // if table group joins are supported.
-            return false;
+            if (modelPartContainer instanceof EntityAssociationMapping && ((EntityAssociationMapping) modelPartContainer).getSideNature() == ForeignKeyDescriptor.Nature.TARGET) {
+                return true;
+            }
+            nextStart = dotIndex + 1;
         }
+        ModelPart modelPart = modelPartContainer.findSubPart(attributeName.substring(nextStart), null);
 
-        // Every entity persister has "owned" properties on table number 0, others have higher numbers
-        int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
-        return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
+        return modelPart instanceof PluralAttributeMapping || modelPart instanceof EntityAssociationMapping && ((EntityAssociationMapping) modelPart).getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
+//        Type propertyType = getPropertyType(persister, attributeName);
+//
+//        if (propertyType instanceof org.hibernate.type.EntityType) {
+//            org.hibernate.type.EntityType entityType = (org.hibernate.type.EntityType) propertyType;
+//            // As of Hibernate 5.4 we noticed that we have to treat nullable associations as "foreign" as well
+//            if (entityType.isNullable()) {
+//                return true;
+//            }
+//
+//            // OneToOnes can't have JoinTables as per spec
+//            // ManyToOnes can have JoinTables, which can be treated as non-foreign
+//            // if table group joins are supported.
+//            return false;
+//        }
+//
+//        // Every entity persister has "owned" properties on table number 0, others have higher numbers
+//        int tableNumber = persister.getSubclassPropertyTableNumber(attributeName);
+//        return tableNumber >= persister.getEntityMetamodel().getSubclassEntityNames().size();
     }
 
     @Override
@@ -494,18 +514,6 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public ConstraintType requiresTreatFilter(EntityType<?> ownerType, String attributeName, JoinType joinType) {
         return ConstraintType.NONE;
-    }
-
-    protected boolean isForeignKeyDirectionToParent(org.hibernate.type.EntityType entityType) {
-        ForeignKeyDirection direction = entityType.getForeignKeyDirection();
-        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
-        return direction.toString().regionMatches(true, 0, "to", 0, 2);
-    }
-
-    protected boolean isForeignKeyDirectionToParent(CollectionType collectionType) {
-        ForeignKeyDirection direction = collectionType.getForeignKeyDirection();
-        // Types changed between 4 and 5 so we check it like this. Essentially we check if the TO_PARENT direction is used
-        return direction.toString().regionMatches(true, 0, "to", 0, 2);
     }
 
     private boolean isColumnShared(AbstractEntityPersister persister, String rootName, Set<String> subclassNames, String attributeName) {
@@ -1119,7 +1127,11 @@ public class HibernateJpaProvider implements JpaProvider {
 
             primaryKeyColumnMetaData = columnNames.toArray(new String[columnNames.size()]);
         } else {
-            primaryKeyColumnMetaData = ownerEntityPersister.getKeyColumnNames();
+            ValuedModelPart targetPart = queryableCollection.getAttributeMapping().getKeyDescriptor().getTargetPart();
+            primaryKeyColumnMetaData = new String[targetPart.getJdbcTypeCount()];
+            for (int i = 0; i < primaryKeyColumnMetaData.length; i++) {
+                primaryKeyColumnMetaData[i] = targetPart.getSelectable(i).getSelectionExpression();
+            }
         }
         String[] foreignKeyColumnMetaData = queryableCollection.getKeyColumnNames();
         Map<String, String> idColumnMapping = new LinkedHashMap<>(primaryKeyColumnMetaData.length);
@@ -1423,8 +1435,8 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsUpdateSetEmbeddable() {
-        // Tried it, but the SQL generation seems to mess up...
         return false;
+//        return true;
     }
 
     @Override
@@ -1593,29 +1605,12 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsEnumLiteral(ManagedType<?> ownerType, String attributeName, boolean key) {
-        if (ownerType instanceof EntityType<?>) {
-            AbstractEntityPersister entityPersister = getEntityPersister(ownerType);
-            Type propertyType;
-            propertyType = getPropertyType(entityPersister, attributeName);
-            if (propertyType instanceof CollectionType) {
-                CollectionPersister collectionPersister = mappingMetamodel.findCollectionDescriptor(((CollectionType) propertyType).getRole());
-                if (key) {
-                    propertyType = collectionPersister.getIndexType();
-                } else {
-                    propertyType = collectionPersister.getElementType();
-                }
-            }
-            if (propertyType instanceof CustomType) {
-                return ((CustomType) propertyType).getUserType() instanceof EnhancedUserType;
-            }
-            return false;
-        }
         return true;
     }
 
     @Override
     public boolean supportsTemporalLiteral() {
-        return false;
+        return true;
     }
 
     @Override
@@ -1633,6 +1628,16 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean supportsProxyParameterForNonPkAssociation() {
         // Not yet implemented in Hibernate, see https://hibernate.atlassian.net/browse/HHH-14017
         return false;
+    }
+
+    @Override
+    public boolean supportsProxyRemove() {
+        return true;
+    }
+
+    @Override
+    public void initialize(Object entity) {
+        Hibernate.initialize(entity);
     }
 
     @Override

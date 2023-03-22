@@ -131,10 +131,10 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
     public void entityJoinTreat() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
-        criteria.innerJoinOn("TREAT(p AS PolymorphicSub1).relation1", PolymorphicSub1.class, "r")
-                    .on("r").eqExpression("TREAT(p AS PolymorphicSub1).relation1")
+        criteria.innerJoinOn("TREAT(p AS PolymorphicSub1).parent1", PolymorphicSub1.class, "r")
+                    .on("r").eqExpression("TREAT(p AS PolymorphicSub1).parent1")
                 .end();
-        assertEquals("SELECT p FROM PolymorphicBase p JOIN PolymorphicSub1 r" + onClause("r = " + treatRoot("p", PolymorphicSub1.class, "relation1", true)), criteria.getQueryString());
+        assertEquals("SELECT p FROM PolymorphicBase p JOIN PolymorphicSub1 r" + onClause("r = " + treatRoot("p", PolymorphicSub1.class, "parent1", true)), criteria.getQueryString());
         criteria.getResultList();
     }
 }

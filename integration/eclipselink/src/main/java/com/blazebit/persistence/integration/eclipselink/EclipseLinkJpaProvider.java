@@ -765,6 +765,17 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsProxyRemove() {
+        return false;
+    }
+
+    @Override
+    public void initialize(Object entity) {
+        // Just call a method on the entity to trigger possible lazy initialization
+        entity.hashCode();
+    }
+
+    @Override
     public Object getIdentifier(Object entity) {
         return persistenceUnitUtil.getIdentifier(entity);
     }

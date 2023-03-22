@@ -629,10 +629,10 @@ public class SimpleQueryGenerator implements Expression.Visitor {
             List<Expression> partitionExpressions = windowDefinition.getPartitionExpressions();
             List<OrderByItem> orderByExpressions = windowDefinition.getOrderByExpressions();
             boolean hasPartitionOrderByOrFrameClause = partitionExpressions.size() != 0 || orderByExpressions.size() != 0 || windowDefinition.getFrameMode() != null || windowDefinition.getFrameExclusionType() != null;
-            boolean needsOverClause = hasPartitionOrderByOrFrameClause || windowDefinition.getWindowName() != null;
+            boolean needsOverClause = hasPartitionOrderByOrFrameClause || windowDefinition.getWindowName() != null || filterPredicate == null;
             if (needsOverClause) {
                 sb.append(" OVER ");
-                if (hasPartitionOrderByOrFrameClause) {
+                if (hasPartitionOrderByOrFrameClause || windowDefinition.getWindowName() == null && filterPredicate == null) {
                     sb.append('(');
                 }
 
@@ -671,6 +671,8 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                     sb.append(windowDefinition.getFrameMode().name());
                     if (windowDefinition.getFrameEndType() != null) {
                         sb.append(" BETWEEN ");
+                    } else {
+                        sb.append(' ');
                     }
 
                     if (windowDefinition.getFrameStartExpression() != null) {
@@ -696,7 +698,7 @@ public class SimpleQueryGenerator implements Expression.Visitor {
                     }
                 }
 
-                if (hasPartitionOrderByOrFrameClause) {
+                if (hasPartitionOrderByOrFrameClause || windowDefinition.getWindowName() == null && filterPredicate == null) {
                     sb.append(')');
                 }
             }

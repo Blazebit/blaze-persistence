@@ -538,6 +538,11 @@ public abstract class AbstractJpaPersistenceTest {
         return false;
     }
 
+    // Hibernate before 6 always initialized a proxy for the remove operation
+    protected boolean supportsProxyRemoveWithoutLoading() {
+        return false;
+    }
+
     protected boolean supportsIndexedInplaceUpdate() {
         return false;
     }
