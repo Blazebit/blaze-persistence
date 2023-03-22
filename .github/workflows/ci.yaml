@@ -583,21 +583,21 @@ jobs:
 ################################################
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 18
+            jdk: 20
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 18
-            build-jdk: 18
+            jdk: 20
+            build-jdk: 20
 ################################################
 # Early access JDKs
 ################################################
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 19-ea
+            jdk: 21-ea
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 19-ea
-            build-jdk: 19-ea
+            jdk: 21-ea
+            build-jdk: 21-ea
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
@@ -617,10 +617,16 @@ jobs:
           targets: JDK8_HOME;JAVA_HOME
       - name: Set up Requested JDK
         uses: actions/setup-java@v3
-        if: ${{ matrix.jdk != 8 }}
+        if: ${{ matrix.jdk != 8 && !endsWith(matrix.jdk, '-ea') }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
+      - name: Set up EA JDK
+        uses: actions/setup-java@v3
+        if: ${{ matrix.jdk != 8 && endsWith(matrix.jdk, '-ea') }}
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: 'zulu'
 
       - name: Get year/month for cache key
         id: get-date

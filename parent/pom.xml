@@ -54,7 +54,7 @@
         <querydsl.version>5.0.0</querydsl.version>
         <!-- 1.18 messed up calculation of load index -->
         <version.bridge-injector>1.17</version.bridge-injector>
-        <version.bridge-injector-asm>9.3</version.bridge-injector-asm>
+        <version.bridge-injector-asm>9.5</version.bridge-injector-asm>
         <version.bridge-injector-indexer>1.12</version.bridge-injector-indexer>
 
         <!-- Minimum version is 4.2.8.Final -->
@@ -148,7 +148,7 @@
         <version.shade.plugin>3.3.0</version.shade.plugin>
         <version.surefire.plugin>3.1.0</version.surefire.plugin>
         <version.failsafe.plugin>3.1.0</version.failsafe.plugin>
-        <asmVersion>9.3</asmVersion>
+        <asmVersion>9.5</asmVersion>
 
         <h2.version>1.4.200</h2.version>
         <mssql.version>7.2.2.jre8</mssql.version>

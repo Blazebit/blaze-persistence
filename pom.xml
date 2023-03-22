@@ -174,17 +174,19 @@
             </build>
         </profile>
         <profile>
+            <id>jdk20+</id>
+            <activation>
+                <jdk>[20,)</jdk>
+            </activation>
+            <properties>
+                <!-- JDK20 dropped support for compiling to the target version 7 -->
+                <main.java.version>1.8</main.java.version>
+                <maven.compiler.target>${main.java.version}</maven.compiler.target>
+                <maven.compiler.source>${main.java.version}</maven.compiler.source>
+            </properties>
+        </profile>
+        <profile>
             <id>blazebit-release</id>
-<!--            <dependencies>-->
-<!--                <dependencies>-->
-<!--                    <dependency>-->
-<!--                        <groupId>org.codehaus.groovy</groupId>-->
-<!--                        <artifactId>groovy-all</artifactId>-->
-<!--                        <version>3.0.2</version>-->
-<!--                        <scope>provided</scope>-->
-<!--                    </dependency>-->
-<!--                </dependencies>-->
-<!--            </dependencies>-->
             <build>
                 <plugins>
                     <plugin>
