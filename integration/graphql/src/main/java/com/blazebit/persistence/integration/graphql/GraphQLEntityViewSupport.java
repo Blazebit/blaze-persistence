@@ -602,7 +602,7 @@ public class GraphQLEntityViewSupport {
      *
      * @param dataFetchingEnvironment The GraphQL data fetching environment
      * @param setting The entity view setting
-     * @param elementRoot The element root
+     * @param elementRoot The field at which to find the elements for fetch extraction
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
@@ -617,6 +617,10 @@ public class GraphQLEntityViewSupport {
             if (!isLeaf(field.getType())) {
                 // Skip non-leaf types because these intermediate objects types would
                 // lead to fetching the whole subtree in EntityViewConfiguration#getFetches
+                continue;
+            }
+            if (!field.getQualifiedName().startsWith(elementRoot)) {
+                // ignore fields not under the elementRoot
                 continue;
             }
             String[] fieldParts = fqFieldName.split("/");

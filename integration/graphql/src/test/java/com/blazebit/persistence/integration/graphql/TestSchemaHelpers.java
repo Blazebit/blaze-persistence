@@ -128,6 +128,7 @@ public class TestSchemaHelpers {
             }
             SelectedField selectedField = mock(SelectedField.class);
             when(selectedField.getFullyQualifiedName()).thenReturn(String.join("/", qualifiedFieldParts));
+            when(selectedField.getQualifiedName()).thenReturn(String.join("/", fieldParts));
             when(selectedField.getType()).thenReturn(fieldType);
             when(selectedField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length-1])));
             return selectedField;
