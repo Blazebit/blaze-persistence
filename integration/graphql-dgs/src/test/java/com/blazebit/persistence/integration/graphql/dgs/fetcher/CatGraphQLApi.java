@@ -43,7 +43,7 @@ public class CatGraphQLApi {
 
     @DgsQuery
     public CatWithOwnerView catById(@InputArgument("id") Long id, DataFetchingEnvironment dataFetchingEnvironment) {
-        return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), dataFetchingEnvironment.getArgument("id"));
+        return repository.findById(graphQLEntityViewSupport.createSetting(dataFetchingEnvironment), id);
     }
 
     @DgsQuery
@@ -68,15 +68,6 @@ public class CatGraphQLApi {
 
     @DgsData(parentType = "CatWithOwnerView", field = "theData")
     public String getData(DataFetchingEnvironment dataFetchingEnvironment) {
-        Object source = dataFetchingEnvironment.getSource();
-        if (source instanceof CatWithOwnerView) {
-            return ((CatWithOwnerView) source).abc();
-        }
-        return null;
-    }
-
-    @DgsData(parentType = "CatWithOwnerViewNode", field = "theData")
-    public String getNodeData(DataFetchingEnvironment dataFetchingEnvironment) {
         Object source = dataFetchingEnvironment.getSource();
         if (source instanceof CatWithOwnerView) {
             return ((CatWithOwnerView) source).abc();
