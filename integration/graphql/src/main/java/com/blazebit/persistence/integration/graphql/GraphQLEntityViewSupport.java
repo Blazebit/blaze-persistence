@@ -640,7 +640,7 @@ public class GraphQLEntityViewSupport {
                     // its id field. Otherwise, skip this fieldPart and effectively put the intermediate field path
                     // into fetches - in reality this wouldn't lead to any unnecessary joins since the EV in that case
                     // corresponds to an embeddable entity.
-                    for (String metaFieldTypeName: field.getObjectTypeNames()) {
+                    for (String metaFieldTypeName : field.getObjectTypeNames()) {
                         // Meta field might have more parent types (in case of a union type). Try to find a first
                         // ViewType among them and use its id field to ensure the type info can be obtained from DB.
                         ManagedViewType<?> managedViewType = typeNameToViewType.get(metaFieldTypeName);
@@ -651,9 +651,9 @@ public class GraphQLEntityViewSupport {
                     }
                     continue;
                 }
-                String mappedFieldPart = applyFieldMapping(typeName, fieldName);
+                String mappedFieldPart = typeNameToFieldMapping.get(typeName).get(fieldName);
                 if (mappedFieldPart == null) {
-                    // fieldName cannot be mapped to an entity view field -> ignore the whole field
+                    // fieldName cannot be mapped to an entity view field, probably because it's a non-DB field with a default -> ignore the whole field
                     continue OUTER;
                 }
                 mappedFields.add(mappedFieldPart);
@@ -664,19 +664,6 @@ public class GraphQLEntityViewSupport {
                 selectedFieldCache.putIfAbsent(fqFieldName, resolvedField);
             }
         }
-    }
-
-    /**
-     * Returns the entity view path for the GraphQL field path contained in the given string builder,
-     * for the given GraphQL base type.
-     * Will return <code>null</code> if there is no entity view attribute for this path.
-     */
-    private String applyFieldMapping(String typeName, String fieldName) {
-        Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
-        if (fieldMapping == null) {
-            return null;
-        }
-        return fieldMapping.get(fieldName);
     }
 
     /**
