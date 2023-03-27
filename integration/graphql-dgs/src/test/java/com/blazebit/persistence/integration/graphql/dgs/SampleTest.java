@@ -114,7 +114,7 @@ public class SampleTest extends AbstractSampleTest {
           nodes.forEach(node -> {
               assertThat(node.get("id")).isNotNull();
               assertThat(node.get("name").asText()).contains("Cat");
-              assertThat(node.get("__typename").asText()).isEqualTo("CatWithOwnerViewNode");
+              assertThat(node.get("__typename").asText()).isEqualTo("CatWithOwnerView");
           });
     }
 

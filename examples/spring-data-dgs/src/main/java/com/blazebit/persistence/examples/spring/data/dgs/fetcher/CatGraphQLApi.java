@@ -78,13 +78,4 @@ public class CatGraphQLApi {
         }
         return null;
     }
-
-    @DgsData(parentType = "CatWithOwnerViewNode", field = "theData")
-    public String getNodeData(DataFetchingEnvironment dataFetchingEnvironment) {
-        Object source = dataFetchingEnvironment.getSource();
-        if (source instanceof CatWithOwnerView) {
-            return ((CatWithOwnerView) source).abc();
-        }
-        return null;
-    }
 }
