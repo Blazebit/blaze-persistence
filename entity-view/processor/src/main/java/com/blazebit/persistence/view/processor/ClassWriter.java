@@ -162,6 +162,6 @@ public abstract class ClassWriter implements Runnable {
     }
 
     public static String writeSuppressWarnings() {
-        return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
+        return "@SuppressWarnings({ \"deprecation\", \"rawtypes\", \"unchecked\" })";
     }
 }
