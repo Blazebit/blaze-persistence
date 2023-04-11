@@ -132,7 +132,9 @@ public class TupleTransformatorFactory {
 
         @Override
         public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tuple[classMappingIndex]).intValue()) >= 0) {
+            Number index = (Number) tuple[classMappingIndex];
+            // FIXME: The null check is just a crude fix for https://github.com/Blazebit/blaze-persistence/issues/1722
+            if (index != null && Arrays.binarySearch(subtypeIndexes, index.intValue()) >= 0) {
                 return delegate.transform(tuple, updatableViewMap);
             } else {
                 return tuple;
