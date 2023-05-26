@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.examples.itsm.model;
 
-import java.io.Serializable;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+
+import java.io.Serializable;
 
 /**
  * @author Giovanni Lovato
@@ -156,4 +156,8 @@ public final class OffsetBasedPageRequest implements Pageable, Serializable {
         return this.offset > this.limit;
     }
 
+    @Override
+    public Pageable withPage(int pageNumber) {
+        return new OffsetBasedPageRequest((long) (pageNumber - 1) * this.getPageSize(), this.getPageSize(), this.getSort());
+    }
 }

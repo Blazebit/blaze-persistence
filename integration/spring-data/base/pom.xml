@@ -245,8 +245,7 @@
             <id>spring-data-2.1.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.1-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -261,8 +260,7 @@
             <id>spring-data-2.2.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -277,8 +275,7 @@
             <id>spring-data-2.3.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -293,8 +290,7 @@
             <id>spring-data-2.4.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.4-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -309,8 +305,7 @@
             <id>spring-data-2.5.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.5-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -347,8 +342,7 @@
             <id>spring-data-2.6.x</id>
             <properties>
                 <version.spring>${version.spring-data-2.6-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>
@@ -388,8 +382,7 @@
             </activation>
             <properties>
                 <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <maven.compiler.target>1.8</maven.compiler.target>
-                <maven.compiler.source>1.8</maven.compiler.source>
+                <main.java.version>1.8</main.java.version>
             </properties>
             <dependencies>
                 <dependency>

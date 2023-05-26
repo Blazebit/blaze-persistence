@@ -84,7 +84,6 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>3.6.28</version>
         </dependency>
 
         <!-- Preparation for Java 9+, include a dependency on the JAXB APIs -->
