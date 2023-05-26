@@ -181,8 +181,6 @@
             <properties>
                 <!-- JDK20 dropped support for compiling to the target version 7 -->
                 <main.java.version>1.8</main.java.version>
-                <maven.compiler.target>${main.java.version}</maven.compiler.target>
-                <maven.compiler.source>${main.java.version}</maven.compiler.source>
             </properties>
         </profile>
         <profile>

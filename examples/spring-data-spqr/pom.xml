@@ -31,9 +31,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.spring.data.spqr</module.name>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <main.java.version>1.8</main.java.version>
         <version.spring>${version.spring-data-2.7-spring}</version.spring>
         <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
         <version.hibernate>${version.hibernate-5.6}</version.hibernate>

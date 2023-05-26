@@ -31,7 +31,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.deltaspike.data.rest</module.name>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Don't test compiling to newer classfile versions to avoid having to deal with Deltaspike updates -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 

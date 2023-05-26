@@ -14,11 +14,11 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.graphql.dgs</module.name>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <version.spring>${version.spring-data-2.3-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-        <version.hibernate>${version.hibernate-5.4}</version.hibernate>
+        <main.java.version>1.8</main.java.version>
+        <version.spring>${version.spring-data-2.7-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
+        <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+        <version.dgs>5.5.3</version.dgs>
     </properties>
 
     <dependencies>
@@ -37,19 +37,19 @@
         <dependency>
             <groupId>com.graphql-java</groupId>
             <artifactId>graphql-java</artifactId>
-            <version>17.4</version>
+            <version>19.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.netflix.graphql.dgs</groupId>
             <artifactId>graphql-dgs-spring-boot-starter</artifactId>
-            <version>4.9.25</version>
+            <version>${version.dgs}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.netflix.graphql.dgs</groupId>
             <artifactId>graphql-dgs-extended-scalars</artifactId>
-            <version>4.9.25</version>
+            <version>${version.dgs}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -117,7 +117,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.3}</version>
+            <version>${version.spring-data-2.7}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -128,12 +128,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

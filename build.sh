@@ -14,7 +14,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 export MAVEN_OPTS="$MAVEN_OPTS -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 # Increase retry count and reduce TTL for connections: https://github.com/actions/virtual-environments/issues/1499#issuecomment-718396233
 export MAVEN_OPTS="$MAVEN_OPTS -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
-if [ "$JDK" != "" ]; then
+if [[ "$JDK" != "" ]]; then
   export MAVEN_OPTS="-Xmx1280m -XX:MaxMetaspaceSize=512m $MAVEN_OPTS"
 else
   export MAVEN_OPTS="-Xmx1280m -XX:MaxPermSize=512m $MAVEN_OPTS"
@@ -24,18 +24,19 @@ $DIR/mvnw -version
 
 PROPERTIES="$PROPERTIES -Duser.country=US -Duser.language=en -Dmaven.javadoc.skip"
 
-if [ "$BUILD_JDK" != "" ]; then
+if [[ "$BUILD_JDK" != "" ]]; then
   if [[ "$BUILD_JDK" == *-ea ]]; then
     export BUILD_JDK=${BUILD_JDK::-3}
   fi
   PROPERTIES="$PROPERTIES -Dmain.java.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
-#  if [ "$BUILD_JDK" == "16" ]; then
-#    # Until Deltaspike releases a version with ASM 9, we have to exclude these parts from the build
+  if [[ "$BUILD_JDK" == "20" ]] || [[ "$BUILD_JDK" == "21" ]]; then
+    # Until Deltaspike releases a version with ASM 9.5, we have to exclude these parts from the build
+    PROPERTIES="-pl !integration/deltaspike-data/testsuite $PROPERTIES"
 #    PROPERTIES="-pl !integration/deltaspike-data/testsuite,!examples/deltaspike-data-rest,!integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
 #  else
     # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
   #PROPERTIES="-pl !integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
-#  fi
+  fi
 #else
   #if [ "$JPAPROVIDER" == "hibernate-5.2" ] && [ "$JDK" != "8" ]; then
     # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
@@ -43,14 +44,14 @@ if [ "$BUILD_JDK" != "" ]; then
   #fi
 fi
 
-if [ "$JDK" != "" ]; then
+if [[ "$JDK" != "" ]]; then
   if [[ "$JDK" == *-ea ]]; then
     export JDK=${JDK::-3}
   fi
   PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
 fi
 
-if [ "$NATIVE" == "true" ]; then
+if [[ "$NATIVE" == "true" ]]; then
   exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9},native clean install -am -V $PROPERTIES
 else
   exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9} clean install -am -V $PROPERTIES
