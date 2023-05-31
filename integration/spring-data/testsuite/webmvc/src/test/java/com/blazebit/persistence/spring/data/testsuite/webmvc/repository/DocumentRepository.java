@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.spring.data.testsuite.webmvc.repository;
 
+import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentCreateOrUpdateView;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentUpdateView;
 import com.blazebit.persistence.view.EntityViewManager;
+import javax.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
 
 /**
  * @author Moritz Becker
@@ -41,5 +41,9 @@ public class DocumentRepository {
 
     public void updateDocument(DocumentUpdateView documentUpdateView) {
         evm.save(em, documentUpdateView);
+    }
+
+    public void createDocument(DocumentCreateOrUpdateView documentCreateView) {
+        evm.save(em, documentCreateView);
     }
 }
