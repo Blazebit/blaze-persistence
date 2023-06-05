@@ -26,7 +26,7 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-server-common-deployment</artifactId>
-            <version>${version.quarkus}</version>
+            <version>${version.quarkus-3}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
