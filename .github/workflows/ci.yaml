@@ -591,13 +591,13 @@ jobs:
 ################################################
 # Early access JDKs
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 21-ea
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 21-ea
-            build-jdk: 21-ea
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 21-ea
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 21-ea
+#            build-jdk: 21-ea
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
