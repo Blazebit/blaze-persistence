@@ -16,12 +16,12 @@
 package com.blazebit.persistence.examples.quarkus.testsuite.db2;
 
 import com.blazebit.persistence.examples.quarkus.testsuite.base.AbstractQuarkusExampleTest;
-import io.quarkus.test.junit.NativeImageTest;
+import io.quarkus.test.junit.QuarkusIntegrationTest;
 
 /**
  * @author Christian Beikov
  * @since 1.6.0
  */
-@NativeImageTest
+@QuarkusIntegrationTest
 public class QuarkusExampleIT extends AbstractQuarkusExampleTest {
 }
