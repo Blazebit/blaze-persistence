@@ -31,7 +31,7 @@ import java.util.Objects;
 public interface VersionStaticKeyView {
 
     // Good job Datanucleus.. https://github.com/datanucleus/datanucleus-core/issues/356
-    @Mapping("idx - idx")
+    @Mapping("versionIdx - versionIdx")
     public Integer getIdx();
 
     public static VersionStaticKeyView of(Integer idx) {

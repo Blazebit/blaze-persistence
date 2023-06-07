@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.testsuite.collections.index.model;
 
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
 
 import java.util.Objects;
 
@@ -30,12 +29,12 @@ import java.util.Objects;
 @EntityView(Version.class)
 public interface VersionKeyView {
     
-    public Integer getIdx();
+    public Integer getVersionIdx();
 
     public static VersionKeyView of(Integer idx) {
         return new VersionKeyView() {
             @Override
-            public Integer getIdx() {
+            public Integer getVersionIdx() {
                 return idx;
             }
 
@@ -51,7 +50,7 @@ public interface VersionKeyView {
                 if (obj == this) {
                     return true;
                 }
-                return obj instanceof VersionKeyView && Objects.equals(idx, ((VersionKeyView) obj).getIdx());
+                return obj instanceof VersionKeyView && Objects.equals(idx, ((VersionKeyView) obj).getVersionIdx());
             }
         };
     }

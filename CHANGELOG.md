@@ -19,6 +19,7 @@ Changes that happened in releases
 * Fix fetch determination for relay node types
 * Fix entity binding with column equivalent attributes
 * Fix problem with query copying of paths that refer to select aliases, happening mostly in paginated `SUBSELECT` entity view scenarios
+* Fix type validation for MappingIndex
 
 ### Backwards-incompatible changes
 

@@ -394,7 +394,7 @@ public abstract class AttributeMapping implements EntityViewAttributeMapping {
             if (possibleTargetTypes.isEmpty()) {
                 return possibleIndexTargets = Collections.emptyList();
             }
-            return possibleIndexTargets = context.getPossibleTargetTypes(viewMapping.getEntityClass(), possibleTargetTypes.get(0).getLeafMethod(), mappingIndex, viewMapping.getViewRootTypes(context));
+            return possibleIndexTargets = context.getPossibleTargetTypes(elementViewMapping.getEntityClass(), possibleTargetTypes.get(0).getLeafMethod(), mappingIndex, elementViewMapping.getViewRootTypes(context));
         } catch (RuntimeException ex) {
             StringWriter sw = new StringWriter();
             sw.append("Exception while resolving index type for ").append(getErrorLocation()).append(":\n");
