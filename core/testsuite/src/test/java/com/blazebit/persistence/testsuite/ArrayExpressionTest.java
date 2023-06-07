@@ -100,12 +100,12 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     @Test
     public void testArrayIndexImplicitJoin() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.contacts[d.versions.idx]");
+        criteria.select("d.contacts[d.versions.versionIdx]");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_d_versions_idx_1") + " FROM Document d" +
+        assertEquals("SELECT " + joinAliasValue("contacts_d_versions_versionIdx_1") + " FROM Document d" +
                 " LEFT JOIN d.versions versions_1" +
-                " LEFT JOIN d.contacts contacts_d_versions_idx_1"
-                + onClause("KEY(contacts_d_versions_idx_1) = versions_1.idx"), criteria.getQueryString());
+                " LEFT JOIN d.contacts contacts_d_versions_versionIdx_1"
+                + onClause("KEY(contacts_d_versions_versionIdx_1) = versions_1.versionIdx"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -131,12 +131,12 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     @Test
     public void testArrayIndexExplicitJoinAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.contacts[v.idx]").leftJoinDefault("d.versions", "v");
+        criteria.select("d.contacts[v.versionIdx]").leftJoinDefault("d.versions", "v");
 
-        assertEquals("SELECT " + joinAliasValue("contacts_v_idx_1") + " FROM Document d" +
+        assertEquals("SELECT " + joinAliasValue("contacts_v_versionIdx_1") + " FROM Document d" +
                 " LEFT JOIN d.versions v" +
-                " LEFT JOIN d.contacts contacts_v_idx_1"
-                + onClause("KEY(contacts_v_idx_1) = v.idx"), criteria.getQueryString());
+                " LEFT JOIN d.contacts contacts_v_versionIdx_1"
+                + onClause("KEY(contacts_v_versionIdx_1) = v.versionIdx"), criteria.getQueryString());
         criteria.getResultList();
     }
 

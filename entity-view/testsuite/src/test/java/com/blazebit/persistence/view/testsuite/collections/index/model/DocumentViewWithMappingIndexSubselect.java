@@ -36,11 +36,11 @@ import java.util.SortedSet;
 public interface DocumentViewWithMappingIndexSubselect extends DocumentViewWithMappingIndex {
     
     @Mapping(value = "versions", fetch = FetchStrategy.SUBSELECT)
-    @MappingIndex("idx - 1")
+    @MappingIndex("versionIdx - 1")
     public List<VersionViewWithMappingIndex> getVersions();
 
     @Mapping(value = "versions", fetch = FetchStrategy.SUBSELECT)
-    @MappingIndex("idx")
+    @MappingIndex("versionIdx")
     public Map<Integer, VersionViewWithMappingIndex> getVersionMap();
 
     @Mapping(value = "versions", fetch = FetchStrategy.SUBSELECT)
@@ -49,13 +49,13 @@ public interface DocumentViewWithMappingIndexSubselect extends DocumentViewWithM
 
     @Mapping(value = "versions", fetch = FetchStrategy.SUBSELECT)
     // Good job Datanucleus.. https://github.com/datanucleus/datanucleus-core/issues/356
-    @MappingIndex("idx - idx")
+    @MappingIndex("versionIdx - versionIdx")
     @MultiCollectionMapping(comparator = VersionViewWithMappingIndex.DefaultComparator.class)
     public List<SortedSet<VersionViewWithMappingIndex>> getMultiVersions();
 
     @Mapping(value = "versions", fetch = FetchStrategy.SUBSELECT)
     // Good job Datanucleus.. https://github.com/datanucleus/datanucleus-core/issues/356
-    @MappingIndex("idx - idx")
+    @MappingIndex("versionIdx - versionIdx")
     @MultiCollectionMapping(comparator = VersionViewWithMappingIndex.DefaultComparator.class)
     public Map<Integer, SortedSet<VersionViewWithMappingIndex>> getMultiVersionMap();
 

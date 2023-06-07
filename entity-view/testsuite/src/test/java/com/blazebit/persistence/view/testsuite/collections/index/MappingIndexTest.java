@@ -135,7 +135,7 @@ public class MappingIndexTest extends AbstractEntityViewTest {
         List<T> results = cb.getResultList();
 
         List<Version> versions = new ArrayList<>(doc1.getVersions());
-        versions.sort(Comparator.comparing(Version::getIdx));
+        versions.sort(Comparator.comparing(Version::getVersionIdx));
         List<Version> versionsIdSorted = new ArrayList<>(doc1.getVersions());
         versionsIdSorted.sort(Comparator.comparing(Version::getId));
 

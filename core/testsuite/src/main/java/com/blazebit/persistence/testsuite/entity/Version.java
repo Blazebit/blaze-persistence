@@ -45,15 +45,15 @@ public class Version extends LongSequenceEntity {
 
     private Document document;
     private Calendar date;
-    private int idx;
+    private int versionIdx;
     private String url;
     private Map<Integer, String> localized = new HashMap<Integer, String>();
 
     public Version() {
     }
 
-    public Version(int idx) {
-        this.idx = idx;
+    public Version(int versionIdx) {
+        this.versionIdx = versionIdx;
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -77,12 +77,12 @@ public class Version extends LongSequenceEntity {
 
     // EclipseLink... https://github.com/eclipse-ee4j/eclipselink/issues/884
     // and DataNucleus... https://github.com/datanucleus/datanucleus-core/issues/355
-    public Integer getIdx() {
-        return idx;
+    public Integer getVersionIdx() {
+        return versionIdx;
     }
 
-    public void setIdx(Integer index) {
-        this.idx = index;
+    public void setVersionIdx(Integer index) {
+        this.versionIdx = index;
     }
 
     @Column(length = 30)
