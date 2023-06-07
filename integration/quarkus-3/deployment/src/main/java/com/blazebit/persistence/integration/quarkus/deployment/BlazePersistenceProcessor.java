@@ -358,58 +358,51 @@ class BlazePersistenceProcessor {
     }
 
     @BuildStep
-    ServiceProviderBuildItem hibernateMetadataContributor() {
-        return new ServiceProviderBuildItem("org.hibernate.boot.spi.MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate5MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate56MetadataContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor");
-    }
-
-    @BuildStep
-    ServiceProviderBuildItem hibernateTypeContributor() {
-        return new ServiceProviderBuildItem("org.hibernate.metamodel.spi.TypeContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53Integrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate56Integrator");
-    }
-
-    @BuildStep
-    ServiceProviderBuildItem hibernateAccess() {
-        return new ServiceProviderBuildItem("com.blazebit.persistence.integration.hibernate.base.HibernateAccess",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53Access",
-                "com.blazebit.persistence.integration.hibernate.Hibernate56Access");
-    }
-
-    @BuildStep
-    ServiceProviderBuildItem entityManagerFactoryIntegrator() {
-        return new ServiceProviderBuildItem("com.blazebit.persistence.spi.EntityManagerFactoryIntegrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate53EntityManagerFactoryIntegrator",
-                "com.blazebit.persistence.integration.hibernate.Hibernate56EntityManagerFactoryIntegrator");
-    }
-
-    @BuildStep
-    ServiceProviderBuildItem transactionAccessFactory() {
-        return new ServiceProviderBuildItem("com.blazebit.persistence.view.spi.TransactionAccessFactory",
-                "com.blazebit.persistence.integration.hibernate.Hibernate4TransactionAccessFactory",
-                "com.blazebit.persistence.integration.hibernate.Hibernate5TransactionAccessFactory");
-    }
-
-    @BuildStep
-    ServiceProviderBuildItem extendedQuerySupport() {
-        return new ServiceProviderBuildItem("com.blazebit.persistence.spi.ExtendedQuerySupport",
-                "com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport");
+    ServiceProviderBuildItem entityViewConfigurationProvider() {
+        return new ServiceProviderBuildItem("com.blazebit.persistence.view.spi.EntityViewConfigurationProvider",
+            "com.blazebit.persistence.view.impl.EntityViewConfigurationProviderImpl");
     }
 
     @BuildStep
     ServiceProviderBuildItem blazeCriteriaBuilderFactory() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.criteria.spi.BlazeCriteriaBuilderFactory",
-                "com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderFactoryImpl");
+            "com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderFactoryImpl");
     }
 
     @BuildStep
-    ServiceProviderBuildItem entityViewConfigurationProvider() {
-        return new ServiceProviderBuildItem("com.blazebit.persistence.view.spi.EntityViewConfigurationProvider",
-                "com.blazebit.persistence.view.impl.EntityViewConfigurationProviderImpl");
+    ServiceProviderBuildItem extendedQuerySupport() {
+        return new ServiceProviderBuildItem("com.blazebit.persistence.spi.ExtendedQuerySupport",
+            "com.blazebit.persistence.integration.hibernate.base.HibernateExtendedQuerySupport");
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem hibernateAccess() {
+        return new ServiceProviderBuildItem("com.blazebit.persistence.integration.hibernate.base.HibernateAccess",
+            "com.blazebit.persistence.integration.hibernate.Hibernate62Access");
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem entityManagerFactoryIntegrator() {
+        return new ServiceProviderBuildItem("com.blazebit.persistence.spi.EntityManagerFactoryIntegrator",
+            "com.blazebit.persistence.integration.hibernate.Hibernate62EntityManagerFactoryIntegrator");
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem transactionAccessFactory() {
+        return new ServiceProviderBuildItem("com.blazebit.persistence.view.spi.TransactionAccessFactory",
+            "com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory");
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem hibernateAdditionalMappingContributor() {
+        return new ServiceProviderBuildItem("org.hibernate.boot.spi.AdditionalMappingContributor",
+                "com.blazebit.persistence.integration.hibernate.Hibernate62AdditionalMappingContributor");
+    }
+
+    @BuildStep
+    ServiceProviderBuildItem hibernateTypeContributor() {
+        return new ServiceProviderBuildItem("org.hibernate.metamodel.spi.TypeContributor",
+                "com.blazebit.persistence.integration.hibernate.Hibernate62Integrator");
     }
 
     private static Map<String, Set<String>> buildClassesToBlazePersistenceInstanceMapping(Map<String, Set<String>> blazePersistenceInstanceToPackageMapping,
