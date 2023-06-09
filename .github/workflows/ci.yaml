@@ -2,6 +2,14 @@ name: "Blaze-Persistence CI"
 on: [push, pull_request]
 env:
   MAVEN_SKIP_RC: true
+# See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
+concurrency:
+  # Consider that two builds are in the same concurrency group (cannot run concurrently)
+  # if they use the same workflow and are about the same branch ("ref") or pull request.
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
+  # Cancel previous builds in the same concurrency group even if they are in process
+  # for pull requests or pushes to forks (not the upstream repository).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'Blazebit/blaze-persistence' }}
 jobs:
   build:
     name: Test
@@ -13,7 +21,7 @@ jobs:
       matrix:
         include:
 ################################################
-# hibernate-5.2
+# hibernate-5.6
 ################################################
           - rdbms: h2
             provider: hibernate-5.6
@@ -583,21 +591,21 @@ jobs:
 ################################################
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 20
+            jdk: 21
           - rdbms: h2
             provider: hibernate-5.6
-            jdk: 20
-            build-jdk: 20
+            jdk: 21
+            build-jdk: 21
 ################################################
 # Early access JDKs
 ################################################
 #          - rdbms: h2
 #            provider: hibernate-5.6
-#            jdk: 21-ea
+#            jdk: 22-ea
 #          - rdbms: h2
 #            provider: hibernate-5.6
-#            jdk: 21-ea
-#            build-jdk: 21-ea
+#            jdk: 22-ea
+#            build-jdk: 22-ea
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
@@ -617,13 +625,13 @@ jobs:
           targets: JDK8_HOME;JAVA_HOME
       - name: Set up Requested JDK
         uses: actions/setup-java@v3
-        if: ${{ matrix.jdk != 8 && !endsWith(matrix.jdk, '-ea') }}
+        if: ${{ matrix.jdk != 8 && !endsWith(matrix.jdk, '-ea') && matrix.jdk != '21' }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
       - name: Set up EA JDK
         uses: actions/setup-java@v3
-        if: ${{ matrix.jdk != 8 && endsWith(matrix.jdk, '-ea') }}
+        if: ${{ matrix.jdk != 8 && (endsWith(matrix.jdk, '-ea') || matrix.jdk == '21') }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'zulu'

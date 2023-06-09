@@ -29,7 +29,7 @@ if [[ "$BUILD_JDK" != "" ]]; then
     export BUILD_JDK=${BUILD_JDK::-3}
   fi
   PROPERTIES="$PROPERTIES -Dmain.java.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
-  if [[ "$BUILD_JDK" == "20" ]] || [[ "$BUILD_JDK" == "21" ]]; then
+  if [[ "$BUILD_JDK" == "21" ]] || [[ "$BUILD_JDK" == "22" ]]; then
     # Until Deltaspike releases a version with ASM 9.5, we have to exclude these parts from the build
     PROPERTIES="-pl !integration/deltaspike-data/testsuite $PROPERTIES"
 #    PROPERTIES="-pl !integration/deltaspike-data/testsuite,!examples/deltaspike-data-rest,!integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
@@ -47,6 +47,10 @@ fi
 if [[ "$JDK" != "" ]]; then
   if [[ "$JDK" == *-ea ]]; then
     export JDK=${JDK::-3}
+  fi
+  if [[ "$JDK" == "21" ]] || [[ "$JDK" == "22" ]]; then
+    # As of JDK 21 Javac produces parameter attributes with a null name that old BND versions can't read
+    PROPERTIES="$PROPERTIES -Dversion.bnd=7.0.0-SNAPSHOT"
   fi
   PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
 fi

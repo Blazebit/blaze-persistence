@@ -113,16 +113,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        boolean isMySql = properties.get("javax.persistence.jdbc.url").toString().contains("mysql");
+        boolean isMySql = properties.get("jakarta.persistence.jdbc.url").toString().contains("mysql");
         if (System.getProperty("hibernate.dialect") != null) {
             properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
         } else if (isMySql) {
             // Since MySQL has no sequences, the native strategy is needed for batch inserts
             properties.put("hibernate.id.new_generator_mappings", "false");
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("h2")) {
+        } else if (properties.get("jakarta.persistence.jdbc.url").toString().contains("h2")) {
             // Hibernate 5 uses sequences by default but h2 seems to have a bug with sequences in a limited query
             properties.put("hibernate.id.new_generator_mappings", "false");
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("sqlserver")) {
+        } else if (properties.get("jakarta.persistence.jdbc.url").toString().contains("sqlserver")) {
             // Not sure what is happening, but when the sequence is tried to be fetched, it doesn't exist in SQL Server
             properties.put("hibernate.id.new_generator_mappings", "false");
         }

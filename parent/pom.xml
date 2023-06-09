@@ -146,7 +146,7 @@
         <version.antrun.plugin>3.1.0</version.antrun.plugin>
         <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
         <version.compiler.plugin>3.11.0</version.compiler.plugin>
-        <version.jandex.plugin>3.1.1</version.jandex.plugin>
+        <version.jandex.plugin>3.1.2</version.jandex.plugin>
         <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.exec.plugin>1.6.0</version.exec.plugin>
         <version.injection.plugin>1.0.2</version.injection.plugin>
@@ -156,6 +156,8 @@
         <version.surefire.plugin>3.1.0</version.surefire.plugin>
         <version.failsafe.plugin>3.1.0</version.failsafe.plugin>
         <asmVersion>9.5</asmVersion>
+        <version.bnd>6.4.1</version.bnd>
+<!--        <version.bnd>7.0.0-SNAPSHOT</version.bnd>-->
 
         <h2.version>1.4.200</h2.version>
         <mssql.version>7.2.2.jre8</mssql.version>
@@ -167,6 +169,16 @@
         <!-- Hibernate user types used for testing -->
         <version.hibernate-types>2.12.1</version.hibernate-types>
     </properties>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>bnd-snapshots</id>
+            <url>https://bndtools.jfrog.io/bndtools/libs-snapshot/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencyManagement>
         <dependencies>
