@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.dialect.CockroachSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
+import com.blazebit.persistence.impl.dialect.MariaDBDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQL8DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
@@ -585,6 +586,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(LimitFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new LimitFunction(dbmsDialects.get(null)));
+        jpqlFunctionGroup.add("mariadb", new LimitFunction(dbmsDialects.get("mariadb")));
         jpqlFunctionGroup.add("mysql", new LimitFunction(dbmsDialects.get("mysql")));
         jpqlFunctionGroup.add("mysql8", new LimitFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("oracle", new LimitFunction(dbmsDialects.get("oracle")));
@@ -597,6 +599,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(PagePositionFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new PagePositionFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLPagePositionFunction());
         jpqlFunctionGroup.add("mysql", new MySQLPagePositionFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLPagePositionFunction());
         jpqlFunctionGroup.add("oracle", new OraclePagePositionFunction());
@@ -625,6 +628,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // chr
         jpqlFunctionGroup = new JpqlFunctionGroup(ChrFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new ChrFunction());
+        jpqlFunctionGroup.add("mariadb", new CharChrFunction());
         jpqlFunctionGroup.add("mysql", new CharChrFunction());
         jpqlFunctionGroup.add("mysql8", new CharChrFunction());
         jpqlFunctionGroup.add("microsoft", new CharChrFunction());
@@ -749,6 +753,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(ConcatFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, PipeBasedConcatFunction.INSTANCE);
+        jpqlFunctionGroup.add("mariadb", ConcatFunction.INSTANCE);
         jpqlFunctionGroup.add("mysql", ConcatFunction.INSTANCE);
         jpqlFunctionGroup.add("mysql8", ConcatFunction.INSTANCE);
         jpqlFunctionGroup.add("microsoft", PlusBasedConcatFunction.INSTANCE);
@@ -761,6 +766,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatFunction());
         jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLGroupConcatFunction());
@@ -773,6 +779,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2GroupConcatWindowFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
+        jpqlFunctionGroup.add("mariadb", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mariadb")));
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("microsoft", new MSSQLGroupConcatFunction());
@@ -785,6 +792,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2GroupConcatWindowFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("oracle", new OracleListaggGroupConcatWindowFunction(dbmsDialects.get("oracle")));
         jpqlFunctionGroup.add("h2", new H2GroupConcatWindowFunction(dbmsDialects.get("h2")));
+        jpqlFunctionGroup.add("mariadb", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mariadb")));
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
@@ -808,6 +816,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLYearOfWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2YearOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLYearOfWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLYearOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearOfWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLYearOfWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleYearOfWeekFunction());
@@ -815,6 +824,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year_week", false);
         jpqlFunctionGroup.add(null, new YearWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLYearWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLYearWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2YearWeekFunction());
@@ -844,6 +854,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLIsoWeekFunction());
         jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
         jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
@@ -859,6 +870,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLIsoWeekFunction());
         jpqlFunctionGroup.add("sybase", new SybaseIsoWeekFunction());
         jpqlFunctionGroup.add("sqlite", new SqliteIsoWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLIsoWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleIsoWeekFunction());
@@ -870,6 +882,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekInYearFunction());
         jpqlFunctionGroup.add("db2", new DB2WeekInYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLWeekInYearFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLWeekInYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLWeekInYearFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLWeekInYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleWeekInYearFunction());
@@ -903,6 +916,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDayOfYearFunction());
         jpqlFunctionGroup.add("access", new AccessDayOfYearFunction());
         jpqlFunctionGroup.add("db2", new DB2DayOfYearFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLDayOfYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayOfYearFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLDayOfYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLDayOfYearFunction());
@@ -916,6 +930,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDayOfWeekFunction());
         jpqlFunctionGroup.add("access", new AccessDayOfWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2DayOfWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLDayOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayOfWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLDayOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLDayOfWeekFunction());
@@ -929,6 +944,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLIsoDayOfWeekFunction());
         jpqlFunctionGroup.add("access", new AccessIsoDayOfWeekFunction());
         jpqlFunctionGroup.add("db2", new DB2IsoDayOfWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLIsoDayOfWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLIsoDayOfWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLIsoDayOfWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLIsoDayOfWeekFunction());
@@ -977,6 +993,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new MillisecondFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondFunction());
         jpqlFunctionGroup.add("db2", new DB2MillisecondFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMillisecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMillisecondFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMillisecondFunction());
@@ -988,6 +1005,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new MicrosecondFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMicrosecondFunction());
         jpqlFunctionGroup.add("db2", new DB2MicrosecondFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMicrosecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMicrosecondFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMicrosecondFunction());
@@ -1000,6 +1018,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLEpochFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1009,6 +1028,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLEpochFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1018,6 +1038,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLEpochDayFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochDayFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochDayFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLEpochDayFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochDayFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochDayFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1028,6 +1049,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLEpochMillisecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochMillisecondFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochMillisecondFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLEpochMillisecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochMillisecondFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochMillisecondFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1038,6 +1060,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new MSSQLEpochMicrosecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleEpochMicrosecondFunction());
         jpqlFunctionGroup.add("db2", new DB2EpochMicrosecondFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLEpochMicrosecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLEpochMicrosecondFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLEpochMicrosecondFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1049,6 +1072,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2DayAddFunction());
         jpqlFunctionGroup.add("h2", new H2DayAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLDayAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLDayAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLDayAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDayAddFunction());
@@ -1060,6 +1084,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2HourAddFunction());
         jpqlFunctionGroup.add("h2", new H2HourAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLHourAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLHourAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLHourAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLHourAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLHourAddFunction());
@@ -1071,6 +1096,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MicrosecondsAddFunction());
         jpqlFunctionGroup.add("h2", new H2MicrosecondsAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMicrosecondsAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMicrosecondsAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMicrosecondsAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondsAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMicrosecondsAddFunction());
@@ -1082,6 +1108,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MillisecondsAddFunction());
         jpqlFunctionGroup.add("h2", new H2MillisecondsAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMillisecondsAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMillisecondsAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondsAddFunction());
@@ -1093,6 +1120,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MinuteAddFunction());
         jpqlFunctionGroup.add("h2", new H2MinuteAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMinuteAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMinuteAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMinuteAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMinuteAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteAddFunction());
@@ -1104,6 +1132,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MonthAddFunction());
         jpqlFunctionGroup.add("h2", new H2MonthAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMonthAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMonthAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMonthAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMonthAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthAddFunction());
@@ -1115,6 +1144,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2QuarterAddFunction());
         jpqlFunctionGroup.add("h2", new H2QuarterAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLQuarterAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLQuarterAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLQuarterAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLQuarterAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLQuarterAddFunction());
@@ -1126,6 +1156,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2SecondAddFunction());
         jpqlFunctionGroup.add("h2", new H2SecondAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLSecondAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLSecondAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLSecondAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLSecondAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondAddFunction());
@@ -1137,6 +1168,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2WeekAddFunction());
         jpqlFunctionGroup.add("h2", new H2WeekAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLWeekAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLWeekAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLWeekAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLWeekAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekAddFunction());
@@ -1148,6 +1180,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2YearAddFunction());
         jpqlFunctionGroup.add("h2", new H2YearAddFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLYearAddFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLYearAddFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearAddFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLYearAddFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLYearAddFunction());
@@ -1161,6 +1194,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2YearDiffFunction());
         jpqlFunctionGroup.add("h2", new DefaultYearDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultYearDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLYearDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLYearDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLYearDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultYearDiffFunction());
@@ -1173,6 +1207,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MonthDiffFunction());
         jpqlFunctionGroup.add("h2", new DefaultMonthDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultMonthDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMonthDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMonthDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMonthDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMonthDiffFunction());
@@ -1185,6 +1220,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2DayDiffFunction());
         jpqlFunctionGroup.add("h2", new DefaultDayDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultDayDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLDayDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDayDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLDayDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultDayDiffFunction());
@@ -1197,6 +1233,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2HourDiffFunction());
         jpqlFunctionGroup.add("h2", new DefaultHourDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultHourDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLHourDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLHourDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLHourDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultHourDiffFunction());
@@ -1209,6 +1246,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2MinuteDiffFunction());
         jpqlFunctionGroup.add("h2", new DefaultMinuteDiffFunction());
         jpqlFunctionGroup.add("microsoft", new DefaultMinuteDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMinuteDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMinuteDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMinuteDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultMinuteDiffFunction());
@@ -1221,6 +1259,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessSecondDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2SecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLSecondDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
@@ -1232,6 +1271,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessSecondDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2SecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLSecondDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
@@ -1243,6 +1283,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessMillisecondDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2MillisecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMillisecondDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMillisecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLMillisecondDiffFunction());
@@ -1253,6 +1294,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new DefaultMicrosecondDiffFunction());
         jpqlFunctionGroup.add("access", new AccessMicrosecondDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2MicrosecondDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLMicrosecondDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLMicrosecondDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLMicrosecondDiffFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLMicrosecondDiffFunction());
@@ -1264,6 +1306,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, new DefaultWeekDiffFunction());
         jpqlFunctionGroup.add("h2", new H2WeekDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2WeekDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLWeekDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLWeekDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLWeekDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLWeekDiffFunction());
@@ -1276,6 +1319,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("access", new AccessQuarterDiffFunction());
         jpqlFunctionGroup.add("h2", new H2QuarterDiffFunction());
         jpqlFunctionGroup.add("db2", new DB2QuarterDiffFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLQuarterDiffFunction());
         jpqlFunctionGroup.add("mysql", new MySQLQuarterDiffFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLQuarterDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLQuarterDiffFunction());
@@ -1290,6 +1334,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncDayFunction());
         jpqlFunctionGroup.add("h2", new H2TruncDayFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncDayFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncDayFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncDayFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncDayFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncDayFunction());
@@ -1301,6 +1346,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncHourFunction());
         jpqlFunctionGroup.add("h2", new H2TruncHourFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncHourFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncHourFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncHourFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncHourFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncHourFunction());
@@ -1312,6 +1358,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncMicrosecondsFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMicrosecondsFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMicrosecondsFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncMicrosecondsFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMicrosecondsFunction());
@@ -1323,6 +1370,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncMillisecondsFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMillisecondsFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMillisecondsFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncMillisecondsFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMillisecondsFunction());
@@ -1334,6 +1382,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncMinuteFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMinuteFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMinuteFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncMinuteFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMinuteFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncMinuteFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMinuteFunction());
@@ -1345,6 +1394,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncMonthFunction());
         jpqlFunctionGroup.add("h2", new H2TruncMonthFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncMonthFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncMonthFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncMonthFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncMonthFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncMonthFunction());
@@ -1356,6 +1406,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncQuarterFunction());
         jpqlFunctionGroup.add("h2", new H2TruncQuarterFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncQuarterFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncQuarterFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncQuarterFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncQuarterFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncQuarterFunction());
@@ -1367,6 +1418,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncSecondFunction());
         jpqlFunctionGroup.add("h2", new H2TruncSecondFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncSecondFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncSecondFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncSecondFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncSecondFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncSecondFunction());
@@ -1376,6 +1428,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(TruncWeekFunction.NAME, false);
         jpqlFunctionGroup.add(null, new TruncWeekFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncWeekFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncWeekFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncWeekFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncWeekFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncWeekFunction());
@@ -1386,6 +1439,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2TruncYearFunction());
         jpqlFunctionGroup.add("h2", new H2TruncYearFunction());
         jpqlFunctionGroup.add("microsoft", new MSSQLTruncYearFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTruncYearFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTruncYearFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTruncYearFunction());
         jpqlFunctionGroup.add("oracle", new OracleTruncYearFunction());
@@ -1396,6 +1450,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractCountFunction.FUNCTION_NAME, true);
         jpqlFunctionGroup.add(null, new CountTupleFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("mysql", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLCountTupleFunction());
         jpqlFunctionGroup.add("db2", new CountTupleEmulationFunction());
@@ -1541,6 +1596,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         jpqlFunctionGroup.add("postgresql", new PostgreSQLStringJsonAggFunction());
         jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("mariadb", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLStringJsonAggFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1600,6 +1656,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
                 (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"),
                 (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")
         ));
+        jpqlFunctionGroup.add("mariadb", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
         registerFunction(jpqlFunctionGroup);
@@ -1812,6 +1869,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // JSON_GET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonGetFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQL8JsonGetFunction());
         jpqlFunctionGroup.add("mysql8", new MySQL8JsonGetFunction());
         jpqlFunctionGroup.add("oracle", new OracleJsonGetFunction());
         jpqlFunctionGroup.add("db2", new DB2JsonGetFunction());
@@ -1821,6 +1879,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // JSON_SET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonSetFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonSetFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQL8JsonSetFunction());
         jpqlFunctionGroup.add("mysql8", new MySQL8JsonSetFunction());
         jpqlFunctionGroup.add("oracle", new OracleJsonSetFunction());
         jpqlFunctionGroup.add("db2", new DB2JsonSetFunction());
@@ -1877,6 +1936,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     private void loadDbmsDialects() {
         registerDialect(null, new DefaultDbmsDialect());
+        registerDialect("mariadb", new MariaDBDbmsDialect());
         registerDialect("mysql", new MySQLDbmsDialect());
         registerDialect("mysql8", new MySQL8DbmsDialect());
         registerDialect("h2", new H2DbmsDialect());

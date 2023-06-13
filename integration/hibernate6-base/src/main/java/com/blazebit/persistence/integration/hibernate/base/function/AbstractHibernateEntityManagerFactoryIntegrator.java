@@ -79,6 +79,9 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
         "mode",
         "cume_dist"
     ));
+    private static final Set<String> FUNCTIONS_TO_SKIP = new HashSet<>(Arrays.asList(
+        "concat"
+    ));
 
     protected String getDbmsName(Dialect dialect) {
         if (dialect instanceof MariaDBDialect) {
@@ -146,7 +149,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
                 String functionName = functionEntry.getKey();
                 JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
-                if (NATIVE_WINDOW_FUNCTIONS.contains(functionName)) {
+                if (NATIVE_WINDOW_FUNCTIONS.contains(functionName) || FUNCTIONS_TO_SKIP.contains(functionName)) {
                     // In Hibernate 6 we have to skip some functions as they are provided with special HQL syntax
                     continue;
                 }
