@@ -504,6 +504,32 @@ public class InsertTest extends AbstractCoreTest {
             }
         });
     }
+
+    // Test for #1737
+    // NOTE: hibernate 4.2 does not support using parameters in the select clause
+    @Test
+    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class })
+    public void testAssociationParameter() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
+                cb.from(Person.class, "p");
+                cb.bind("name").select("CONCAT(p.name,'s document')");
+                cb.bind("age").select("p.age");
+                cb.bind("idx").select("1");
+                cb.bind("owner").select(":pers");
+                cb.orderByAsc("p.id");
+                String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+                    + "SELECT p.age, 1, CONCAT(p.name,'s document'), :pers FROM Person p ORDER BY p.id ASC";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.setParameter("pers", p1).executeUpdate();
+                assertEquals(2, updateCount);
+            }
+        });
+    }
     
     private Document byOwner(Person p) {
         return cbf.create(em, Document.class).where("owner").eq(p).getSingleResult();
