@@ -7,6 +7,7 @@ Changes that happened in releases
 ### New features
 
 * Add Netflix DGS GraphQL integration that supports mutations
+* Add `MariaDBDbmsDialect` for MariaDB support
 
 ### Bug fixes
 
