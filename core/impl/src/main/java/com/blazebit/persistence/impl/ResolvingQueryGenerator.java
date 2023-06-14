@@ -259,7 +259,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     public void visit(SubqueryExpression expression) {
         if (!externalRepresentation && expression.getSubquery() instanceof SubqueryInternalBuilder) {
             final AbstractCommonQueryBuilder<?, ?, ?, ?, ?> subquery = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
-            subquery.prepareAndCheck();
+            subquery.prepareAndCheck(null);
             final boolean hasFirstResult = subquery.getFirstResult() != 0;
             final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
             final boolean hasLimit = hasFirstResult || hasMaxResults;

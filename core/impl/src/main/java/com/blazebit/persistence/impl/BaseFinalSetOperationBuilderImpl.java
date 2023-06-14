@@ -97,7 +97,7 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
     
     @SuppressWarnings("unchecked")
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         AbstractCommonQueryBuilder<?, ?, ?, ?, ?> leftMostQuery = getLeftMost(setOperationManager.getStartQueryBuilder());
 
         int position;
@@ -182,12 +182,12 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     public T endSet() {
         this.setOperationEnded = true;
-        prepareAndCheck();
+        prepareAndCheck(null);
         return endSetResult;
     }
 
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         // nothing to do here
     }
 

@@ -58,7 +58,7 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         finalSetOperationBuilder.setOperationEnded = true;
@@ -72,7 +72,7 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationSubqueryBuilder<Z>) (OngoingFinalSetOperationSubqueryBuilder) finalSetOperationBuilder;

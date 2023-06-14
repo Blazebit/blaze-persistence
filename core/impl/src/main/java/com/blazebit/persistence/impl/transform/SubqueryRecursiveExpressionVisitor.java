@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl.transform;
 
-import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.parser.expression.SubqueryExpression;
 import com.blazebit.persistence.parser.expression.VisitorAdapter;
@@ -38,9 +37,9 @@ public class SubqueryRecursiveExpressionVisitor extends VisitorAdapter implement
     public void visit(SubqueryExpression expression) {
         // TODO: this is ugly
         // IMO this should be part of JoinVisitor
-        if (expression.getSubquery() instanceof AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) {
-            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyExpressionTransformersAndBuildGroupByClauses(null);
-        }
+//        if (expression.getSubquery() instanceof AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) {
+//            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyExpressionTransformersAndBuildGroupByClauses(null);
+//        }
     }
 
 }

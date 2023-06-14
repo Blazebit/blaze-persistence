@@ -57,7 +57,7 @@ public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCrite
                 finalSetOperationBuilder.setOperationManager.removeOperand(this);
             }
         } else {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         // This final set operation builder is the exception that is already marked as ended here

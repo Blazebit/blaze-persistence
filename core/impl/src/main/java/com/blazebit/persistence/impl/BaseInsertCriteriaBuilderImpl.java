@@ -97,7 +97,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
     }
     
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (!needsCheck) {
             return;
         }
@@ -116,7 +116,7 @@ public abstract class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCrite
             attributeEntry.setValue(newPosition);
         }
         expandBindings();
-        super.prepareAndCheck();
+        super.prepareAndCheck(parentVisitor);
     }
 
     @Override

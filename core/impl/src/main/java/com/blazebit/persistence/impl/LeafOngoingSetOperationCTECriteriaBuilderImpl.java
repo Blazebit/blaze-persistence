@@ -59,7 +59,7 @@ public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCT
                 finalSetOperationBuilder.setOperationManager.removeOperand(this);
             }
         } else {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         return (FinalSetOperationCTECriteriaBuilder<T>) (FinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;
