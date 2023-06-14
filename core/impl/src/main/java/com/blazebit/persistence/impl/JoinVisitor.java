@@ -357,7 +357,8 @@ public class JoinVisitor extends VisitorAdapter implements SelectInfoVisitor, Jo
     @Override
     public void visit(SubqueryExpression expression) {
         if (expression.getSubquery() instanceof AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) {
-            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyImplicitJoins(this);
+            // We must eagerly initialize the subquery to avoid re-entrance issues like #1697 and #1698
+            ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).prepareAndCheck(this);
         }
     }
 

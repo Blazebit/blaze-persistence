@@ -1320,4 +1320,21 @@ public class PaginationTest extends AbstractCoreTest {
         assertTrue(resultList.isEmpty());
         assertEquals(7L, resultList.getTotalSize());
     }
+
+    // Test for #1697 and #1698
+    @Test
+    public void testPaginateSubquery() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+            .select("d.partners")
+            .selectSubquery("sub")
+                .from(Person.class, "p")
+                .select("1")
+                .where("p.id").eqExpression("OUTER(owner.id)")
+            .end()
+            .orderByAsc("id")
+            .page(7, 1);
+        PagedList<Tuple> resultList = cb.getResultList();
+        assertTrue(resultList.isEmpty());
+        assertEquals(7L, resultList.getTotalSize());
+    }
 }

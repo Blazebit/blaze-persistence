@@ -96,7 +96,7 @@ public abstract class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCrite
 
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         JoinNode rootNode = joinManager.getRoots().get(0);
         if (joinManager.getRoots().size() > 1 || rootNode.hasChildNodes()) {
             // Prefer an exists subquery instead of MERGE

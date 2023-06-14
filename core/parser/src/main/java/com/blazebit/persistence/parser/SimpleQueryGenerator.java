@@ -86,6 +86,7 @@ import java.util.Set;
 public class SimpleQueryGenerator implements Expression.Visitor {
 
     private static final ThreadLocal<WeakReference<SimpleQueryGenerator>> INSTANCE_CACHE = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> SHARED_USAGE = new ThreadLocal<>();
 
     protected StringBuilder sb;
 
@@ -107,14 +108,39 @@ public class SimpleQueryGenerator implements Expression.Visitor {
      *
      * @return the thread local instance
      */
-    public static SimpleQueryGenerator getThreadLocalInstance() {
+    public static String toString(Expression expression) {
+        assert acquireSharedUse();
         WeakReference<SimpleQueryGenerator> weakReference = INSTANCE_CACHE.get();
         SimpleQueryGenerator simpleQueryGenerator;
         if (weakReference == null || (simpleQueryGenerator = weakReference.get()) == null) {
             simpleQueryGenerator = new SimpleQueryGenerator(new StringBuilder());
             INSTANCE_CACHE.set(new WeakReference<>(simpleQueryGenerator));
         }
-        return simpleQueryGenerator;
+        try {
+            expression.accept(simpleQueryGenerator);
+            return simpleQueryGenerator.getQueryBuffer().toString();
+        } finally {
+            simpleQueryGenerator.clear();
+            assert releaseSharedUse();
+        }
+    }
+
+    private static boolean acquireSharedUse() {
+        Boolean used = SHARED_USAGE.get();
+        if (used == Boolean.TRUE) {
+            return false;
+        }
+        SHARED_USAGE.set(Boolean.TRUE);
+        return true;
+    }
+
+    private static boolean releaseSharedUse() {
+        Boolean used = SHARED_USAGE.get();
+        if (used != Boolean.TRUE) {
+            return false;
+        }
+        SHARED_USAGE.set(Boolean.FALSE);
+        return true;
     }
 
     public void generate(Expression expression) {

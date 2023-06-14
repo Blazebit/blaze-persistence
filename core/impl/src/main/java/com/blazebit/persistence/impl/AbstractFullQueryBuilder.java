@@ -154,7 +154,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         if (createdPaginatedBuilder) {
             throw new IllegalStateException("Calling copy() on a CriteriaBuilder that was transformed to a PaginatedCriteriaBuilder is not allowed.");
         }
-        prepareAndCheck();
+        prepareAndCheck(null);
         MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
         mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Y> newBuilder = new CriteriaBuilderImpl<Y>(mainQuery, true, resultClass, null);
@@ -195,7 +195,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
     }
 
     protected CriteriaBuilder<Object[]> createPageIdQuery(KeysetPage keysetPage, int firstResult, int maxResults, ResolvedExpression[] identifierExpressionsToUse) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         MainQuery mainQuery = cbf.createMainQuery(getEntityManager());
         mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
@@ -626,25 +626,25 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
     @Override
     public String getCountQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalCountQueryString(Long.MAX_VALUE);
     }
 
     @Override
     public String getCountQueryString(long maximumCount) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalCountQueryString(maximumCount);
     }
 
     @Override
     public TypedQuery<Long> getCountQuery() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getCountQuery(getCountQueryStringWithoutCheck(Long.MAX_VALUE), useCountWrapper(true));
     }
 
     @Override
     public TypedQuery<Long> getCountQuery(long maximumCount) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getCountQuery(getCountQueryStringWithoutCheck(maximumCount), useCountWrapper(true));
     }
 

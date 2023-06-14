@@ -55,12 +55,12 @@ public abstract class BaseFinalSetOperationCriteriaBuilderImpl<T, X extends Base
     }
 
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (isMainQuery) {
             subListener.verifyBuilderEnded();
         }
         
-        super.prepareAndCheck();
+        super.prepareAndCheck(parentVisitor);
     }
 
 }

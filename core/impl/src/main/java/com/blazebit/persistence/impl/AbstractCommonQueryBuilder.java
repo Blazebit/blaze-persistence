@@ -737,7 +737,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.setOperationEnded = true;
         // We only check non-empty queries since empty ones will be replaced
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         FinalSetReturn finalSetOperationBuilder = this.finalSetOperationBuilder;
         
@@ -770,7 +770,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.setOperationEnded = true;
         // We only check non-empty queries since empty ones will be replaced
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         FinalSetReturn parentFinalSetOperationBuilder = this.finalSetOperationBuilder;
         
@@ -2834,12 +2834,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public String getQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalQueryString();
     }
     
     protected String getBaseQueryStringWithCheck(StringBuilder lateralSb, JoinNode lateralJoinNode) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getBaseQueryString(lateralSb, lateralJoinNode);
     }
 
@@ -3650,7 +3650,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         selectManager.wrapPlainParameters();
     }
 
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (checkSetBuilderEnded) {
             verifySetBuilderEnded();
         }
@@ -3670,7 +3670,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // so where("b.c").join("a.b") but also
         // join("a.b", "b").where("b.c")
         // in the first case
-        JoinVisitor joinVisitor = applyImplicitJoins(null);
+        JoinVisitor joinVisitor = applyImplicitJoins(parentVisitor);
         applyExpressionTransformersAndBuildGroupByClauses(joinVisitor);
         analyzeConstantifiedJoinNodes();
         hasCollections = joinManager.hasCollections();

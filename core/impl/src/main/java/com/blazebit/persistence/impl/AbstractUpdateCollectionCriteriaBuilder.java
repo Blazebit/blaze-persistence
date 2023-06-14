@@ -312,13 +312,13 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
     }
 
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (!needsCheck) {
             return;
         }
         boolean enableElementCollectionIdCutoff = collectionAttribute.getJoinTable() != null && !mainQuery.jpaProvider.needsAssociationToIdRewriteInOnClause();
         JpaUtils.expandBindings(setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this, keyFunctionExpression, enableElementCollectionIdCutoff);
-        super.prepareAndCheck();
+        super.prepareAndCheck(parentVisitor);
     }
 
     @Override

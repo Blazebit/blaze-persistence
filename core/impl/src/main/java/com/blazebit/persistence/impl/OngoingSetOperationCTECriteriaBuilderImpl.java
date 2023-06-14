@@ -73,7 +73,7 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z extends AbstractComm
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
 
@@ -92,7 +92,7 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z extends AbstractComm
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationCTECriteriaBuilder<Z>) (OngoingFinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;

@@ -53,25 +53,25 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
 
     @Override
     public TypedQuery<Long> getQueryRootCountQuery() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getCountQuery(getCountQueryRootQueryStringWithoutCheck(Long.MAX_VALUE), isComplexCountQuery());
     }
 
     @Override
     public TypedQuery<Long> getQueryRootCountQuery(long maximumCount) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getCountQuery(getCountQueryRootQueryStringWithoutCheck(maximumCount), isComplexCountQuery());
     }
 
     @Override
     public String getQueryRootCountQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalQueryRootCountQueryString(Long.MAX_VALUE);
     }
 
     @Override
     public String getQueryRootCountQueryString(long maximumCount) {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalQueryRootCountQueryString(maximumCount);
     }
 

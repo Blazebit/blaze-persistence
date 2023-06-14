@@ -1723,7 +1723,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 queryGenerator.setClauseType(ClauseType.SET);
                 queryGenerator.setQueryBuffer(sb);
                 try {
-                    rootNode.getInlineCte().nonRecursiveCriteriaBuilder.prepareAndCheck();
+                    rootNode.getInlineCte().nonRecursiveCriteriaBuilder.prepareAndCheck(null);
                     rootNode.getInlineCte().nonRecursiveCriteriaBuilder.asExpression(false, false).accept(queryGenerator);
                 } finally {
                     queryGenerator.setClauseType(null);

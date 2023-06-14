@@ -99,7 +99,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     @Override
     protected Query getQuery() {
         // NOTE: This must happen first because it generates implicit joins
-        prepareAndCheck();
+        prepareAndCheck(null);
         String baseQueryString = buildBaseQueryString(false);
         return getQuery(baseQueryString);
     }
@@ -191,14 +191,14 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (!needsCheck) {
             return;
         }
         try {
             List<String> attributes = prepareAndGetAttributes();
             List<String> columns = prepareAndGetColumnNames();
-            super.prepareAndCheck();
+            super.prepareAndCheck(parentVisitor);
             info = new CTEInfo(cteKey.getName(), cteKey.getOwner(), inline, cteType, attributes, columns, false, false, this, null);
         } catch (RuntimeException ex) {
             needsCheck = true;
@@ -207,7 +207,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     public CTEInfo createCTEInfo() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return info;
     }
 

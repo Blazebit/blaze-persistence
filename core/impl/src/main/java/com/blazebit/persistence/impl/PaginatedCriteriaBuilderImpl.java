@@ -518,7 +518,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public PaginatedTypedQueryImpl<T> getQuery() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
@@ -620,7 +620,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public TypedQuery<Long> getCountQuery() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = getKeyRestrictedLeftJoins();
         Set<JoinNode> alwaysIncludedNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
@@ -632,7 +632,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public String getPageCountQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalPageCountQueryString();
     }
 
@@ -654,7 +654,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public String getPageIdQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalPageIdQueryString();
     }
 
@@ -676,7 +676,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @Override
     public String getQueryString() {
-        prepareAndCheck();
+        prepareAndCheck(null);
         return getExternalQueryString();
     }
 
@@ -713,7 +713,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected void prepareAndCheck() {
+    protected void prepareAndCheck(JoinVisitor parentVisitor) {
         if (!needsCheck) {
             return;
         }

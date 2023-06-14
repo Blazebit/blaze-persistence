@@ -74,7 +74,7 @@ public class StartOngoingSetOperationCTECriteriaBuilderImpl<T, Z extends Abstrac
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
 
@@ -93,7 +93,7 @@ public class StartOngoingSetOperationCTECriteriaBuilderImpl<T, Z extends Abstrac
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationCTECriteriaBuilder<Z>) (OngoingFinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;

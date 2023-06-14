@@ -56,7 +56,7 @@ public class StartOngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractC
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         finalSetOperationBuilder.setOperationEnded = true;
@@ -70,7 +70,7 @@ public class StartOngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractC
         this.setOperationEnded = true;
         // Only check the query if it's not empty
         if (!isEmpty()) {
-            prepareAndCheck();
+            prepareAndCheck(null);
         }
         listener.onBuilderEnded(this);
         return (OngoingFinalSetOperationCriteriaBuilder<Z>) (OngoingFinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
