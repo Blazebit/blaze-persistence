@@ -23,5 +23,5 @@
     <logger name="org.springframework.web" level="error" />
     <logger name="org.springframework.test" level="error" />
     <logger name="org.hibernate" level="error" />
-    <logger name="org.hibernate.SQL" level="debug" />
+<!--    <logger name="org.hibernate.SQL" level="debug" />-->
 </configuration>
