@@ -47,7 +47,14 @@ public class CollectionJoinTest extends AbstractCoreTest {
             IndexedNode.class,
             KeyedNode.class,
             KeyedEmbeddable.class,
-            IndexedEmbeddable.class
+            IndexedEmbeddable.class,
+            Parent.class,
+            Sub1.class,
+            Sub2.class,
+            Sub1Sub1.class,
+            Sub1Sub2.class,
+            Sub2Sub1.class,
+            Sub2Sub2.class
         };
     }
 

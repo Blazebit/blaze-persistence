@@ -28,7 +28,14 @@ import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.KeyedNode;
+import com.blazebit.persistence.testsuite.entity.Parent;
 import com.blazebit.persistence.testsuite.entity.Root;
+import com.blazebit.persistence.testsuite.entity.Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +60,7 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
 
     private static final Integer I2_ID = 4;
     private static final Integer K2_ID = 5;
+    private Long p1Id;
 
     @Before
     public void setUp() {
@@ -84,6 +92,11 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
                 em.persist(i2);
                 KeyedNode k2 = new KeyedNode(K2_ID);
                 em.persist(k2);
+                Sub1 sub1 = new Sub1();
+                sub1.setNumber(123);
+                sub1.setSub1Value(456);
+                em.persist(sub1);
+                p1Id = sub1.getId();
             }
         });
     }
@@ -95,12 +108,20 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
             IndexedNode.class,
             KeyedNode.class,
             KeyedEmbeddable.class,
-            IndexedEmbeddable.class
+            IndexedEmbeddable.class,
+            Parent.class,
+            Sub1.class,
+            Sub2.class,
+            Sub1Sub1.class,
+            Sub1Sub2.class,
+            Sub2Sub1.class,
+            Sub2Sub2.class
         };
     }
 
     private Root getRoot(EntityManager em) {
         return cbf.create(em, Root.class)
+                .fetch("nodes")
                 .fetch("indexedNodes", "indexedNodesMany", "indexedNodesManyDuplicate", "indexedNodesElementCollection")
                 .fetch("keyedNodes", "keyedNodesMany", "keyedNodesManyDuplicate", "keyedNodesElementCollection")
                 .where("id").eq(1)
@@ -116,6 +137,31 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
         } catch (IllegalArgumentException ex) {
             assertTrue(ex.getMessage().contains("The attribute [name] does not exist or can't be bound"));
         }
+    }
+
+    @Test
+    public void insertNormal() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "nodes");
+                criteria.fromIdentifiableValues(Sub1.class, "valuesAlias", 1);
+                criteria.bind("id").select("1");
+                criteria.bind("nodes.id").select("valuesAlias.id");
+                criteria.setParameter("valuesAlias", Collections.singletonList(em.getReference(Sub1.class, p1Id)));
+
+                assertEquals("INSERT INTO Root.nodes(id, nodes.id)\n"
+                    + "SELECT 1, valuesAlias.id"
+                    + " FROM Sub1(1 ID VALUES) valuesAlias", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getNodes().size());
+
+                assertEquals(p1Id, r.getNodes().iterator().next().getId());
+            }
+        });
     }
 
     @Test
