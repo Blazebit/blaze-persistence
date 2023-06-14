@@ -45,6 +45,20 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <scope>runtime</scope>
 </dependency>
 
+<!-- If you use Jakarta APIs -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+
 <!-- optional -->
 
 <!-- Entity View module -->
@@ -61,10 +75,31 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <scope>runtime</scope>
 </dependency>
 
+<!-- Entity View Jakarta module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+
 <!-- Entity View CDI integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+<!-- Entity View CDI Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-cdi-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -73,6 +108,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Entity View Spring 6+ integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-spring-6.0</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 
@@ -98,6 +140,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.7</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
+</dependency>
+
+<!-- Spring Data 3.1 integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+    <version>${blaze-persistence.version}</version>
 </dependency>
 
 <!-- Spring Data 2.7 integration module -->
@@ -170,6 +219,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <version>${blaze-persistence.version}</version>
 </dependency>
 
+<!-- Spring Data WebMvc Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-webmvc-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
 <!-- Spring Data WebFlux integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
@@ -181,6 +237,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Spring HATEOAS WebMvc Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 
@@ -202,11 +265,58 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <artifactId>blaze-persistence-integration-jaxrs-jsonb</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
+<!-- Use this if you want to use Jackson for JSON serialization/deserialization with Jakarta REST -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+<!-- Use this if you want to use JSONB for JSON serialization/deserialization with Jakarta REST -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jaxrs-jsonb-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
 
 <!-- GraphQL integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-graphql</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- GraphQL Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Netflix DGS 7+ integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-dgs-7.0</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Netflix DGS integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-dgs</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- SPQR integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-spqr</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- SPQR Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 
@@ -217,10 +327,31 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
     <version>${blaze-persistence.version}</version>
 </dependency>
 
+<!-- Jackson Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
 <!-- JSONB integration module -->
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-jsonb</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- JSONB Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-jsonb-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Quarkus 3 integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 
@@ -235,6 +366,13 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+
+<!-- Querydsl Jakarta integration module -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 
@@ -370,6 +508,20 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
+</dependency>
+
+<!-- Blaze-Persistence JPA-Criteria module dependencies -->
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

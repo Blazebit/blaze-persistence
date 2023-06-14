@@ -510,7 +510,7 @@ The following table outlines the supported library versions for the integrations
 |Hibernate integration
 |com.blazebit.persistence.integration.hibernate
 |Hibernate 4.2
-|4.2, 4.3, 5.0+, 6.1+ (not all features are available in older versions)
+|4.2, 4.3, 5.0+, 6.2+ (not all features are available in older versions)
 
 |EclipseLink integration
 |com.blazebit.persistence.integration.eclipselink

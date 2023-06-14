@@ -133,6 +133,18 @@ or if you are using Jakarta JPA
 </dependency>
 ----
 
+or if you are using Jakarta APIs and Spring 6+
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-spring-6.0</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
 [[maven-setup-spring-data-integration]]
 ===== Spring Data integration
 
@@ -149,6 +161,18 @@ When you work with Spring Data you can additionally have first class integration
 ----
 
 For Spring-Data version 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.6`, `2.5`, `2.4`, `2.3`, `2.2`, `2.1`, `2.0`, `1.x`.
+
+If you are using Jakarta APIs and Spring Framework 6+ / Spring Boot 3+, use this
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
 
 NOTE: The Spring Data integration depends on the _jpa-criteria_ module
 
@@ -211,6 +235,18 @@ When you work with Spring HATEOAS you can additionally have first class support 
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
+</dependency>
+----
+
+or if you are using Jakarta APIs and Spring Framework 6+ / Spring Boot 3+ use
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -429,27 +465,27 @@ The following table outlines the supported library versions for the integrations
 |CDI integration
 |com.blazebit.persistence.integration.view.cdi
 |CDI 1.0
-|1.0, 1.1, 1.2
+|1.0 - 1.2, 2.0, 3.0
 
 |Spring integration
 |com.blazebit.persistence.integration.view.spring
 |Spring 4.3
-|4.3, 5.0
+|4.3, 5.0 - 5.3, 6.0
 
 |DeltaSpike Data integration
 |com.blazebit.persistence.integration.deltaspike.data
 |DeltaSpike 1.7
-|1.7, 1.8
+|1.7 - 1.9
 
 |Spring Data integration
 |com.blazebit.persistence.integration.spring.data
 |Spring Data 1.11
-|1.11, 2.0
+|1.11, 2.0 - 2.7, 3.1
 
 |Spring Data Rest integration
 |com.blazebit.persistence.integration.spring.data.rest
 |Spring Data 1.11, Spring MVC 4.3
-|Spring Data 1.11 + Spring MVC 4.3, Spring Data 2.0 + Spring MVC 5.0
+|Spring Data 1.11 + Spring MVC 4.3, Spring Data 2.0 - 2.7 + Spring MVC 5.0 - 5.3, Spring Data 3.1 + Spring MVC 6.0
 |===
 
 === First entity view query
