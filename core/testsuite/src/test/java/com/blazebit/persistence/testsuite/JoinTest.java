@@ -521,7 +521,7 @@ public class JoinTest extends AbstractCoreTest {
             .where("partner.name").eqExpression("'Joe'");
     
         // Then
-        final String expected = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1.id") + " FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.partners partner WHERE partner.name = 'Joe' GROUP BY d.id";
+        final String expected = "SELECT " + countDistinct("partners_1.id") + " FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.partners partner WHERE partner.name = 'Joe' GROUP BY d.id";
         assertEquals(expected, crit.getQueryString());
         List<Long> results = crit.getResultList();
         assertEquals(1, results.size());

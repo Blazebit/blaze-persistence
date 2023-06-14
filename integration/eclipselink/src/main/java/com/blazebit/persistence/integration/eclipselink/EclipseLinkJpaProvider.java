@@ -264,6 +264,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return false;
+    }
+
+    @Override
     public boolean supportsCustomFunctions() {
         return true;
     }

@@ -66,7 +66,7 @@ public class GroupByTest extends AbstractCoreTest {
                 .select("SIZE(d.versions)")
                 .selectCase().when("d.age").lt(2L).thenExpression("'a'").otherwiseExpression("'b'");
 
-        final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1.id") + ", CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END";
+        final String expected = "SELECT " + count("versions_1.id") + ", CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < 2L THEN 'a' ELSE 'b' END";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -103,7 +103,7 @@ public class GroupByTest extends AbstractCoreTest {
                 .select("SIZE(d.people)")
                 .select("''");
 
-        assertEquals("SELECT d.id, " + function("count_tuple", "INDEX(people_1)") + ", '' FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id", cb.getQueryString());
+        assertEquals("SELECT d.id, " + count("INDEX(people_1)") + ", '' FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id", cb.getQueryString());
         cb.getResultList();
     }
 

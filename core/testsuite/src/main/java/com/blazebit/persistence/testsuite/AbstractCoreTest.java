@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
@@ -222,7 +223,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected String countPaginated(String string, boolean distinct) {
         StringBuilder sb = new StringBuilder(20 + string.length());
-        sb.append(function("COUNT_TUPLE", "'DISTINCT'", string));
+        sb.append(countTupleDistinct(string));
 
         if (!distinct) {
             String countStar = countStar();
@@ -450,6 +451,54 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             return sb.toString();
         } else {
             throw new IllegalArgumentException("Invalid JPA provider which does not support function syntax!");
+        }
+    }
+
+    protected static String count(String... args) {
+        return count(false, false, args);
+    }
+
+    protected static String countDistinct(String... args) {
+        return count(false, true, args);
+    }
+
+    protected static String countTuple(String... args) {
+        return count(true, false, args);
+    }
+
+    protected static String countTupleDistinct(String... args) {
+        return count(true, true, args);
+    }
+
+    private static String count(boolean tuple, boolean distinct, String... args) {
+        if (jpaProvider.supportsCountTuple()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("COUNT(");
+            if (distinct) {
+                sb.append("DISTINCT ");
+            }
+            if (tuple) {
+                sb.append('(');
+            }
+            sb.append(args[0]);
+            for (int i = 1; i < args.length; i++) {
+                sb.append(", ");
+                sb.append(args[i]);
+            }
+            if (tuple) {
+                sb.append(')');
+            }
+            sb.append(')');
+            return sb.toString();
+        } else {
+            if (distinct) {
+                String[] newArgs = new String[args.length + 1];
+                newArgs[0] = "'DISTINCT'";
+                System.arraycopy(args, 0, newArgs, 1, args.length);
+                return function(AbstractCountFunction.FUNCTION_NAME, newArgs);
+            } else {
+                return function(AbstractCountFunction.FUNCTION_NAME, args);
+            }
         }
     }
 

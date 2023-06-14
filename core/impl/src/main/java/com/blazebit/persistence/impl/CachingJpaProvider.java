@@ -290,6 +290,11 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return jpaProvider.supportsCountTuple();
+    }
+
+    @Override
     public boolean supportsCustomFunctions() {
         return jpaProvider.supportsCustomFunctions();
     }

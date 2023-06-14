@@ -253,6 +253,13 @@ public interface JpaProvider {
     public boolean supportsCountStar();
 
     /**
+     * Whether the <code>COUNT((a,b)))</code> syntax is supported.
+     *
+     * @return True if <code>COUNT((a,b))</code> syntax is supported, false otherwise
+     */
+    public boolean supportsCountTuple();
+
+    /**
      * Whether the custom functions are supported.
      *
      * @return True if custom functions are supported, false otherwise

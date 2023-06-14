@@ -360,6 +360,9 @@ public class SizeTransformationVisitor extends ExpressionModifierCollectingResul
     }
 
     private AggregateExpression createCountFunction(boolean distinct, List<Expression> countTupleArguments) {
+        if (jpaProvider.supportsCountTuple()) {
+            return new AggregateExpression(distinct, "COUNT", countTupleArguments);
+        }
         countTupleArguments.add(0, new StringLiteral(AbstractCountFunction.FUNCTION_NAME.toUpperCase()));
         if (distinct) {
             countTupleArguments.add(1, new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));

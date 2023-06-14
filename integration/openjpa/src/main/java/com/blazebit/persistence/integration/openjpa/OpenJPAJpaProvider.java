@@ -211,6 +211,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsCountTuple() {
+        return false;
+    }
+
+    @Override
     public boolean supportsCustomFunctions() {
         return false;
     }

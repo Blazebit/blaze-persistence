@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.parser.AliasReplacementVisitor;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.expression.AbortableVisitorAdapter;
@@ -196,15 +197,21 @@ public class ExpressionUtils {
     }
 
     private static boolean isNullable(EntityMetamodel metamodel, ConstantifiedJoinNodeAttributeCollector constantifiedJoinNodeAttributeCollector, Map<String, Type<?>> rootTypes, FunctionExpression expr) {
-        if ("NULLIF".equalsIgnoreCase(expr.getFunctionName())) {
+        String functionName = expr.getFunctionName();
+        int argumentStartIndex = 0;
+        if ("FUNCTION".equalsIgnoreCase(functionName)) {
+            functionName = ((StringLiteral) expr.getExpressions().get(0)).getValue();
+            argumentStartIndex++;
+        }
+        if ("NULLIF".equalsIgnoreCase(functionName)) {
             return true;
-        } else if (com.blazebit.persistence.parser.util.ExpressionUtils.isCountFunction(expr)) {
+        } else if ("COUNT".equalsIgnoreCase(expr.getFunctionName()) || AbstractCountFunction.FUNCTION_NAME.equalsIgnoreCase(functionName)) {
             return false;
-        } else if ("COALESCE".equalsIgnoreCase(expr.getFunctionName())) {
+        } else if ("COALESCE".equalsIgnoreCase(functionName)) {
             boolean nullable;
             List<Expression> expressions = expr.getExpressions();
             int size = expressions.size();
-            for (int i = 0; i < size; i++) {
+            for (int i = argumentStartIndex; i < size; i++) {
                 nullable = isNullable(metamodel, constantifiedJoinNodeAttributeCollector, rootTypes, expressions.get(i));
 
                 if (!nullable) {
@@ -218,7 +225,7 @@ public class ExpressionUtils {
             boolean nullable;
             List<Expression> expressions = expr.getExpressions();
             int size = expressions.size();
-            for (int i = 0; i < size; i++) {
+            for (int i = argumentStartIndex; i < size; i++) {
                 nullable = isNullable(metamodel, constantifiedJoinNodeAttributeCollector, rootTypes, expressions.get(i));
 
                 if (nullable) {

@@ -698,4 +698,19 @@ public class WindowFunctionTest extends AbstractCoreTest {
         List<Tuple> resultList = criteria.getResultList();
         assertNotNull(resultList);
     }
+
+    @Test
+    public void testWindowFunctionInCustomFunction() {
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+            .from(Person.class, "per")
+            .selectSubquery()
+                .from(Person.class, "p2")
+                .where("p2").eqExpression("per")
+                .select("alias(COUNT(*) OVER (ORDER BY p2.age),'test')")
+            .end()
+            ;
+
+        List<Tuple> resultList = criteria.getResultList();
+        assertNotNull(resultList);
+    }
 }

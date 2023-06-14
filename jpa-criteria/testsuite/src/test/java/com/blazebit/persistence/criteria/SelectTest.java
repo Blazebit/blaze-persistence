@@ -458,7 +458,7 @@ public class SelectTest extends AbstractCoreTest {
         cq.select(cb.tuple(cb.size(root.get(Document_.partners))));
 
         CriteriaBuilder<Tuple> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT " + function("COUNT_TUPLE", "partners_1.id") + " FROM Document document LEFT JOIN document.partners partners_1 GROUP BY document.id", criteriaBuilder.getQueryString());
+        assertEquals("SELECT " + count("partners_1.id") + " FROM Document document LEFT JOIN document.partners partners_1 GROUP BY document.id", criteriaBuilder.getQueryString());
     }
 
     @Test

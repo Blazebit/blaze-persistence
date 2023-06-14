@@ -230,7 +230,7 @@ public class CaseWhenTest extends AbstractCoreTest {
                     .otherwiseExpression("0")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END " +
+        String expected = "SELECT CASE WHEN " + countDistinct("KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END " +
                 "FROM Document d LEFT JOIN d.contacts contacts_1 " +
                 "LEFT JOIN d.partners partners_1 " +
                 "WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
@@ -248,7 +248,7 @@ public class CaseWhenTest extends AbstractCoreTest {
                     .otherwise(0)
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 1 ELSE 0 END " +
+        String expected = "SELECT CASE WHEN " + countDistinct("KEY(contacts_1)") + " > 2 THEN 1 ELSE 0 END " +
                 "FROM Document d " +
                 "LEFT JOIN d.contacts contacts_1 " +
                 "LEFT JOIN d.partners partners_1 " +
@@ -310,7 +310,7 @@ public class CaseWhenTest extends AbstractCoreTest {
                 .otherwiseExpression("''")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN d.name ELSE '' END " +
+        String expected = "SELECT CASE WHEN " + countDistinct("KEY(contacts_1)") + " > 2 THEN d.name ELSE '' END " +
                 "FROM Document d LEFT JOIN d.contacts contacts_1 " +
                 "LEFT JOIN d.partners partners_1 " +
                 "WHERE partners_1.name LIKE '%onny' " +
