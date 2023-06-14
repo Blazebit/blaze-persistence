@@ -868,7 +868,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 1);
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
-        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 "
+        String expectedObjectQuery = "SELECT " + count("KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 "
                 + "GROUP BY " + groupBy("d.id")
                 + " ORDER BY contactCount ASC, d.id ASC";
 
@@ -887,15 +887,15 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("contactCount")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, strings_1, " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 "
+        String expectedIdQuery = "SELECT d.id, strings_1, " + countDistinct("KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
-        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, strings_1 FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
+        String expectedObjectQuery = "SELECT " + countDistinct("KEY(contacts_1)") + " AS contactCount, strings_1 FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
                 "WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0) "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
-        String expectedInlineObjectQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT',KEY(contacts_1)") + " AS contactCount, strings_1, (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
+        String expectedInlineObjectQuery = "SELECT " + countDistinct("KEY(contacts_1)") + " AS contactCount, strings_1, (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
                 "WHERE (d.id, strings_1) IN (" + expectedIdQuery + " LIMIT 1) "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";

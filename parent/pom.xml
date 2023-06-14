@@ -72,7 +72,7 @@
         <version.hibernate-5.4>5.4.10.Final</version.hibernate-5.4>
         <version.hibernate-5.5>5.5.0.Final</version.hibernate-5.5>
         <version.hibernate-5.6>5.6.10.Final</version.hibernate-5.6>
-        <version.hibernate-6.2>6.2.4.Final</version.hibernate-6.2>
+        <version.hibernate-6.2>6.2.5.Final</version.hibernate-6.2>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
@@ -133,7 +133,7 @@
 
         <version.weld>3.1.9.Final</version.weld>
         <version.quarkus>1.11.7.Final</version.quarkus>
-        <version.quarkus-3>3.1.0.Final</version.quarkus-3>
+        <version.quarkus-3>3.1.1.Final</version.quarkus-3>
         <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 

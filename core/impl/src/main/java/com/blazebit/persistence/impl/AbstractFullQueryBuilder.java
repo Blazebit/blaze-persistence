@@ -427,7 +427,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 }
                 countEndIdx = sbSelectFrom.length() - 1;
                 isResultUnique = true;
-            } else if (mainQuery.jpaProvider.supportsCustomFunctions()) {
+            } else if (mainQuery.jpaProvider.supportsCustomFunctions() && !mainQuery.jpaProvider.supportsCountTuple()) {
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AbstractCountFunction.FUNCTION_NAME, 1));
                 sbSelectFrom.append("'DISTINCT',");
 
@@ -444,7 +444,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                 appendPageCountQueryStringExtensions(sbSelectFrom);
             } else {
                 sbSelectFrom.append("COUNT(");
-                sbSelectFrom.append("DISTINCT ");
+                sbSelectFrom.append("DISTINCT (");
 
                 if (selectManager.isDistinct()) {
                     selectManager.buildSelectItems(sbSelectFrom, false, externalRepresentation, false);
@@ -453,7 +453,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
                     isResultUnique = appendIdentifierExpressions(sbSelectFrom, false);
                 }
 
-                sbSelectFrom.append(")");
+                sbSelectFrom.append("))");
                 countEndIdx = sbSelectFrom.length() - 1;
 
                 appendPageCountQueryStringExtensions(sbSelectFrom);

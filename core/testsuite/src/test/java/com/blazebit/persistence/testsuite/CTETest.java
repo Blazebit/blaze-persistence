@@ -817,7 +817,7 @@ public class CTETest extends AbstractCoreTest {
                 .select("level");
 
         String expected = "WITH TestCTE(id, level, name) AS(\n" +
-                "SELECT r.id, " + function("greatest", function("count_tuple", "children_1.id"), "1") + " * r.id, '' FROM RecursiveEntity r LEFT JOIN r.children children_1 GROUP BY r.id\n" +
+                "SELECT r.id, " + function("greatest", count("children_1.id"), "1") + " * r.id, '' FROM RecursiveEntity r LEFT JOIN r.children children_1 GROUP BY r.id\n" +
                 ")\n" +
                 "SELECT testCTE.level FROM TestCTE testCTE";
         assertEquals(expected, cb.getQueryString());

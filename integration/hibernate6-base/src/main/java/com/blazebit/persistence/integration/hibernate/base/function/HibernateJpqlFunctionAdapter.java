@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -134,23 +135,24 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
 
     @Override
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
-        // todo: this implementation needs to be improved i.e. don't do intermediate rendering if not required and handle parameter binders specially
         AbstractSqlAstTranslator<?> sqlAstTranslator = (AbstractSqlAstTranslator<?>) walker;
-        CustomStandardSqlAstTranslator<?> customStandardSqlAstTranslator = new CustomStandardSqlAstTranslator<>(sqlAstTranslator.getSessionFactory());
+        final StringBuilder sqlBuffer = sqlAstTranslator.getSqlBuffer();
         List<String> sqlArguments = new ArrayList<>(sqlAstArguments.size());
+        int startLength = sqlBuffer.length();
         for (SqlAstNode sqlAstArgument : sqlAstArguments) {
-            customStandardSqlAstTranslator.getStringBuilder().setLength(0);
-            sqlAstArgument.accept(customStandardSqlAstTranslator);
-            sqlArguments.add(customStandardSqlAstTranslator.getSql());
+            sqlBuffer.setLength(startLength);
+            sqlAstTranslator.render(sqlAstArgument, SqlAstNodeRenderingMode.DEFAULT);
+            sqlArguments.add(sqlBuffer.substring(startLength));
         }
         if (filter != null) {
             sqlArguments.add("'FILTER'");
-            customStandardSqlAstTranslator.getStringBuilder().setLength(0);
-            filter.accept(customStandardSqlAstTranslator);
-            sqlArguments.add(customStandardSqlAstTranslator.getSql());
+            sqlBuffer.setLength(startLength);
+            sqlAstTranslator.render(filter, SqlAstNodeRenderingMode.DEFAULT);
+            sqlArguments.add(sqlBuffer.substring(startLength));
         }
 
-        sqlAstTranslator.getParameterBinders().addAll(customStandardSqlAstTranslator.getParameterBinders());
+        sqlBuffer.setLength(startLength);
+
         HibernateFunctionRenderContext context = new HibernateFunctionRenderContext(sqlArguments);
         function.render(context);
         sqlAppender.appendSql(context.renderToString());
