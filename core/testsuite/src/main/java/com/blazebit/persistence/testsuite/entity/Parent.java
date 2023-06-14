@@ -35,7 +35,7 @@ import java.io.Serializable;
  */
 @Entity
 @Table(name = "PARENT_TBL")
-@DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.INTEGER)
+@DiscriminatorColumn(name = "DTYPE", discriminatorType = DiscriminatorType.INTEGER, length = 0)
 @DiscriminatorValue("0")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public class Parent implements Serializable {

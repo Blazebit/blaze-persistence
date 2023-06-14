@@ -31,8 +31,15 @@ import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.KeyedNode;
+import com.blazebit.persistence.testsuite.entity.Parent;
 import com.blazebit.persistence.testsuite.entity.Root;
 import com.blazebit.persistence.testsuite.entity.StringIdCTE;
+import com.blazebit.persistence.testsuite.entity.Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Assert;
 import org.junit.Before;
@@ -99,7 +106,14 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
             KeyedNode.class,
             KeyedEmbeddable.class,
             IndexedEmbeddable.class,
-            StringIdCTE.class
+            StringIdCTE.class,
+            Parent.class,
+            Sub1.class,
+            Sub2.class,
+            Sub1Sub1.class,
+            Sub1Sub2.class,
+            Sub2Sub1.class,
+            Sub2Sub2.class
         };
     }
 

@@ -27,7 +27,14 @@ import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.KeyedNode;
+import com.blazebit.persistence.testsuite.entity.Parent;
 import com.blazebit.persistence.testsuite.entity.Root;
+import com.blazebit.persistence.testsuite.entity.Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub1Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
+import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -85,7 +92,14 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
             IndexedNode.class,
             KeyedNode.class,
             KeyedEmbeddable.class,
-            IndexedEmbeddable.class
+            IndexedEmbeddable.class,
+            Parent.class,
+            Sub1.class,
+            Sub2.class,
+            Sub1Sub1.class,
+            Sub1Sub2.class,
+            Sub2Sub1.class,
+            Sub2Sub2.class
         };
     }
 

@@ -27,8 +27,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -41,6 +43,10 @@ public class Root {
     @Id
     private Integer id;
     private String name;
+
+    @OneToMany
+    @JoinTable(name = "list_one_to_many_set")
+    private Set<Parent> nodes = new HashSet<>();
 
     @OneToMany
     @JoinTable(name = "list_one_to_many")
@@ -104,6 +110,14 @@ public class Root {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Set<Parent> getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(Set<Parent> nodes) {
+        this.nodes = nodes;
     }
 
     public List<IndexedNode> getIndexedNodes() {

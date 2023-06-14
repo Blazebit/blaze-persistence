@@ -197,7 +197,7 @@ public class EntityFunction implements JpqlFunction {
             } else if (sqlQuery.charAt(subqueryEndIndex - 1) == '(' && sqlQuery.charAt(subqueryEndIndex + NULL_IS_NULL.length()) == ')') {
                 subqueryEndIndex--;
             }
-            int[] range = removeSyntheticPredicate(sqlQuery, markerIndex, sqlQuery.length());
+            int[] range = removeSyntheticPredicate(sqlQuery, subqueryEndIndex, sqlQuery.length());
             // Remove a possible leftover connector predicate
             if (range[0] < sqlQuery.length() && sqlQuery.charAt(range[0]) == ')'
                     && sqlQuery.regionMatches(subqueryEndIndex - AND_PARENTHESIS_TOKEN.length(), AND_PARENTHESIS_TOKEN, 0, AND_PARENTHESIS_TOKEN.length())) {
@@ -260,7 +260,7 @@ public class EntityFunction implements JpqlFunction {
 
     private static int[] removeSyntheticPredicate(StringBuilder sqlQuery, int markerIndex, int end) {
         // When inlining e.g. a VALUES clause we need to remove the synthetic predicate
-        int idPredicateIndex = sqlQuery.indexOf(" and ", markerIndex + AND_MARKER.length());
+        int idPredicateIndex = sqlQuery.indexOf(AND_TOKEN, markerIndex + AND_MARKER.length());
         if (idPredicateIndex == -1) {
             return new int[]{ markerIndex + AND_MARKER.length(), end };
         } else {
@@ -271,8 +271,8 @@ public class EntityFunction implements JpqlFunction {
                     newSubqueryPartStart++;
                 }
             }
-            if (regionMatches(sqlQuery, newSubqueryPartStart, " and ", 0, " and ".length())) {
-                return new int[]{ newSubqueryPartStart + " and ".length(), end };
+            if (regionMatches(sqlQuery, newSubqueryPartStart, AND_TOKEN, 0, AND_TOKEN.length())) {
+                return new int[]{ newSubqueryPartStart + AND_TOKEN.length(), end };
             }
             return new int[]{ newSubqueryPartStart, end };
         }
@@ -280,7 +280,7 @@ public class EntityFunction implements JpqlFunction {
 
     private static int[] removeSyntheticPredicate(String sqlQuery, int markerIndex, int end) {
         // When inlining e.g. a VALUES clause we need to remove the synthetic predicate
-        int idPredicateIndex = sqlQuery.indexOf(" and ", markerIndex + AND_MARKER.length());
+        int idPredicateIndex = sqlQuery.indexOf(AND_TOKEN, markerIndex + AND_MARKER.length());
         if (idPredicateIndex == -1) {
             return new int[]{ markerIndex + AND_MARKER.length(), end };
         } else {
@@ -291,8 +291,10 @@ public class EntityFunction implements JpqlFunction {
                     newSubqueryPartStart++;
                 }
             }
-            if (regionMatches(sqlQuery, newSubqueryPartStart, " and ", 0, " and ".length())) {
-                return new int[]{ newSubqueryPartStart + " and ".length(), end };
+            // Cut off an AND token only when we find the WHERE token before the marker index
+            if ((sqlQuery.regionMatches(markerIndex - WHERE_TOKEN.length(), WHERE_TOKEN, 0, WHERE_TOKEN.length()) || sqlQuery.regionMatches(markerIndex - AND_TOKEN.length(), AND_TOKEN, 0, AND_TOKEN.length())  || sqlQuery.charAt(markerIndex - 1) == '(')
+                && regionMatches(sqlQuery, newSubqueryPartStart, AND_TOKEN, 0, AND_TOKEN.length())) {
+                return new int[]{ newSubqueryPartStart + AND_TOKEN.length(), end };
             }
             return new int[]{ newSubqueryPartStart, end };
         }
