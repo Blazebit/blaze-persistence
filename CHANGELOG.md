@@ -8,6 +8,9 @@ Changes that happened in releases
 
 * Add Netflix DGS GraphQL integration that supports mutations
 * Add `MariaDBDbmsDialect` for MariaDB support
+* Add support for Hibernate 6.2.5+
+* Add support for Quarkus 3.1
+* Add support for Spring Framework 6 / Boot 3.1 as well as Spring Data/WebMvc/WebFlux/HATEOAS 3.1
 
 ### Bug fixes
 
