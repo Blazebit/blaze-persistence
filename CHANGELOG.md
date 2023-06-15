@@ -25,12 +25,14 @@ Changes that happened in releases
 * Fix problem with query copying of paths that refer to select aliases, happening mostly in paginated `SUBSELECT` entity view scenarios
 * Fix type validation for MappingIndex
 * Fix syntax error when using multiple likes with escape
+* Fix parsing of path expressions that coincide with entity names
 
 ### Backwards-incompatible changes
 
 * The GraphQL integration bumped the graphql-java version to 17.4 and had to do some signature changes to fully support union types
 * Default for `GraphQLEntityViewSupportFactory.setDefineDedicatedRelayNodeTypes` changed to `false` to reuse object types for relay edge
 * The hibernate-6.0 integration module was replaced with the hibernate-6.2 integration module because only version 6.2 is maintained anymore
+* Expression parsing defaults to paths instead of entity literals. Uses of `eqExpression("MyEntity")` should be changed to `eqLiteral(MyEntity.class)` 
 
 ## 1.6.8
 

@@ -16,6 +16,9 @@
 
 package com.blazebit.persistence.parser.util;
 
+import com.blazebit.persistence.parser.EntityMetamodel;
+
+import javax.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -876,10 +879,31 @@ public class TypeUtils {
         TEMPORAL_CONVERTERS = temporalConverters;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     public static String asLiteral(Object value, Set<String> supportedEnumTypes) {
         TypeConverter<Object> converter = (TypeConverter<Object>) getConverter(value.getClass(), supportedEnumTypes);
         if (converter == null) {
+            return null;
+        }
+        return converter.toString(value);
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    public static String asLiteral(Object value, EntityMetamodel entityMetamodel) {
+        TypeConverter<Object> converter = (TypeConverter<Object>) getConverter(value.getClass(), entityMetamodel.getEnumTypes().keySet());
+        if (converter == null) {
+            if (value instanceof Class<?>) {
+                EntityType<?> entity = entityMetamodel.getEntity((Class<Object>) value);
+                if (entity != null) {
+                    return entity.getName();
+                }
+            }
+            if (value instanceof String) {
+                EntityType<?> entity = entityMetamodel.getEntity((String) value);
+                if (entity != null) {
+                    return entity.getName();
+                }
+            }
             return null;
         }
         return converter.toString(value);

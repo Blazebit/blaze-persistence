@@ -846,16 +846,10 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
     public Expression visitSimpleSubpath(JPQLNextParser.SimpleSubpathContext ctx) {
         int size = (ctx.getChildCount() + 1) >> 1;
 
-        // handle entity and enum literals
+        // handle enum literals
         if (size >= minEnumSegmentCount) {
             String literalStr = ctx.getText();
             Expression literalExpression = createEnumLiteral(literalStr);
-            if (literalExpression != null) {
-                return literalExpression;
-            }
-        } else if (size >= minEntitySegmentCount || size == 1) {
-            String literalStr = ctx.getText();
-            Expression literalExpression = createEntityTypeLiteral(literalStr);
             if (literalExpression != null) {
                 return literalExpression;
             }
@@ -869,9 +863,28 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         return new PathExpression(pathElementExpressions);
     }
 
+    private Expression convertToEntityLiteralIfPossible(Expression expression, ParseTree ctx) {
+        int size;
+        if (expression instanceof PathExpression) {
+            size = ((PathExpression) expression).getExpressions().size();
+        } else if (expression instanceof PropertyExpression) {
+            size = 1;
+        } else {
+            return expression;
+        }
+        if (size >= minEntitySegmentCount || size == 1) {
+            String literalStr = ctx.getText();
+            Expression literalExpression = createEntityTypeLiteral(literalStr);
+            if (literalExpression != null) {
+                return literalExpression;
+            }
+        }
+        return expression;
+    }
+
     public Expression visitGeneralSubpath(JPQLNextParser.GeneralSubpathContext ctx, PathElementExpression initialPathElement) {
         List<ParseTree> identifierContexts = ctx.simpleSubpath().children;
-        JPQLNextParser.PredicateOrExpressionContext expression = ctx.predicateOrExpression();
+        JPQLNextParser.PredicateOrExpressionContext arrayIndexExpression = ctx.predicateOrExpression();
 
         boolean literalPossible = true;
         int size = (identifierContexts.size() + 1) >> 1;
@@ -883,38 +896,29 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
         }
 
         do {
-            boolean processPathElements = true;
-            // handle entity and enum literals
-            if (literalPossible) {
+            // handle enum literals
+            if (literalPossible && arrayIndexExpression == null) {
                 if (size >= minEnumSegmentCount) {
                     String literalStr = ctx.simpleSubpath().getText();
                     Expression literalExpression = createEnumLiteral(literalStr);
                     if (literalExpression != null) {
                         return literalExpression;
                     }
-                } else if (size >= minEntitySegmentCount || size == 1) {
-                    String literalStr = ctx.simpleSubpath().getText();
-                    Expression literalExpression = createEntityTypeLiteral(literalStr);
-                    if (literalExpression != null) {
-                        if (expression == null) {
-                            return literalExpression;
-                        } else {
-                            pathElementExpressions.add(new ArrayExpression(literalExpression, expression.accept(this)));
-                            processPathElements = false;
-                        }
-                    }
                 }
             }
 
-            if (processPathElements) {
-                for (int i = 0; i < identifierContexts.size(); i += 2) {
-                    pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
-                }
-                if (expression != null) {
-                    int index = initialSize - 1;
-                    pathElementExpressions.set(index, new ArrayExpression(pathElementExpressions.get(index), expression.accept(this)));
-                }
+            for (int i = 0; i < identifierContexts.size(); i += 2) {
+                pathElementExpressions.add(new PropertyExpression(identifierContexts.get(i).getText()));
             }
+            if (arrayIndexExpression != null) {
+                int index = initialSize - 1;
+                Expression arrayBase = pathElementExpressions.get(index);
+                if (literalPossible) {
+                    arrayBase = convertToEntityLiteralIfPossible(arrayBase, ctx.simpleSubpath());
+                }
+                pathElementExpressions.set(index, new ArrayExpression(arrayBase, arrayIndexExpression.accept(this)));
+            }
+
             ctx = ctx.generalSubpath();
             if (ctx == null) {
                 break;
@@ -922,7 +926,7 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
             literalPossible = false;
             identifierContexts = ctx.simpleSubpath().children;
-            expression = ctx.predicateOrExpression();
+            arrayIndexExpression = ctx.predicateOrExpression();
 
             size = (identifierContexts.size() + 1) >> 1;
             initialSize += size;
@@ -1041,7 +1045,15 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     @Override
     public Expression visitInequalityPredicate(JPQLNextParser.InequalityPredicateContext ctx) {
-        return new EqPredicate(ctx.lhs.accept(this), ctx.rhs.accept(this), PredicateQuantifier.ONE, true);
+        Expression lhs = ctx.lhs.accept(this);
+        Expression rhs = ctx.rhs.accept(this);
+        if (lhs instanceof TypeFunctionExpression) {
+            rhs = convertToEntityLiteralIfPossible(rhs, ctx.rhs);
+        }
+        if (rhs instanceof TypeFunctionExpression) {
+            lhs = convertToEntityLiteralIfPossible(lhs, ctx.lhs);
+        }
+        return new EqPredicate(lhs, rhs, PredicateQuantifier.ONE, true);
     }
 
     @Override
@@ -1051,7 +1063,15 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
 
     @Override
     public Expression visitEqualityPredicate(JPQLNextParser.EqualityPredicateContext ctx) {
-        return new EqPredicate(ctx.lhs.accept(this), ctx.rhs.accept(this), PredicateQuantifier.ONE, false);
+        Expression lhs = ctx.lhs.accept(this);
+        Expression rhs = ctx.rhs.accept(this);
+        if (lhs instanceof TypeFunctionExpression) {
+            rhs = convertToEntityLiteralIfPossible(rhs, ctx.rhs);
+        }
+        if (rhs instanceof TypeFunctionExpression) {
+            lhs = convertToEntityLiteralIfPossible(lhs, ctx.lhs);
+        }
+        return new EqPredicate(lhs, rhs, PredicateQuantifier.ONE, false);
     }
 
     @Override
@@ -1095,6 +1115,11 @@ public class JPQLNextExpressionVisitorImpl extends JPQLNextParserBaseVisitor<Exp
             }
         }
 
+        if (left instanceof TypeFunctionExpression) {
+            for (int i = 0; i < right.size(); i++) {
+                right.set(i, convertToEntityLiteralIfPossible(right.get(i), expressions.get(i)));
+            }
+        }
         return new InPredicate(ctx.NOT() != null, left, right);
     }
 

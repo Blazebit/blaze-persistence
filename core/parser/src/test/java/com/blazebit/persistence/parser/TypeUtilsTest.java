@@ -20,6 +20,7 @@ import com.blazebit.persistence.parser.util.TypeUtils;
 import org.junit.Test;
 
 import java.lang.annotation.RetentionPolicy;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,7 +32,7 @@ public class TypeUtilsTest {
 
     @Test
     public void testEnumAsLiteral() {
-        assertEquals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name(), TypeUtils.asLiteral(RetentionPolicy.RUNTIME, null));
+        assertEquals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name(), TypeUtils.asLiteral(RetentionPolicy.RUNTIME, (Set<String>) null));
     }
 
 }

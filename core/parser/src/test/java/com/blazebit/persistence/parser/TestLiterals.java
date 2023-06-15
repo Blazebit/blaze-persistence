@@ -23,6 +23,7 @@ import com.blazebit.persistence.parser.expression.NullExpression;
 import com.blazebit.persistence.parser.expression.NumericLiteral;
 import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.ParameterExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.parser.expression.TimeLiteral;
@@ -108,12 +109,28 @@ public class TestLiterals extends AbstractParserTest {
         ABC,
         DEF;
     }
+
+    @Test
+    public void testPathLikeEntityLiteral1(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        PathExpression result = (PathExpression) parse("Entity");
+        assertEquals(path("Entity"), result);
+    }
+
+    @Test
+    public void testPathLikeEntityLiteral2(){
+        entityTypes.put("Entity", Entity.class);
+        entityTypes.put(Entity.class.getName(), Entity.class);
+        PathExpression result = (PathExpression) parse(Entity.class.getName());
+        assertEquals(path(Entity.class.getName().split("\\.")), result);
+    }
     
     @Test
     public void testEntityLiteral1(){
         entityTypes.put("Entity", Entity.class);
         entityTypes.put(Entity.class.getName(), Entity.class);
-        EntityLiteral result = (EntityLiteral) parse("Entity");
+        EntityLiteral result = (EntityLiteral) parseInItemExpression("Entity");
         assertEquals(_entity(Entity.class), result);
     }
 
@@ -121,7 +138,7 @@ public class TestLiterals extends AbstractParserTest {
     public void testEntityLiteral2(){
         entityTypes.put("Entity", Entity.class);
         entityTypes.put(Entity.class.getName(), Entity.class);
-        EntityLiteral result = (EntityLiteral) parse(Entity.class.getName());
+        EntityLiteral result = (EntityLiteral) parseInItemExpression(Entity.class.getName());
         assertEquals(_entity(Entity.class), result);
     }
 
