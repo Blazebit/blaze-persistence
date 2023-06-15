@@ -673,12 +673,22 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-graphql-dgs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-graphql-dgs-7.0</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-hateoas-webmvc-jakarta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
