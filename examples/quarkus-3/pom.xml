@@ -36,6 +36,11 @@
                 <version>${version.jakarta-jpa-3.1-api}</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${version.hibernate-6.2}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
