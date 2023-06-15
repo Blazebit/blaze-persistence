@@ -450,16 +450,16 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
             Specification<E> specToUse = spec;
 
-            if (scrollPosition instanceof KeysetScrollPosition keyset) {
-                KeysetScrollSpecification<E> keysetSpec = new KeysetScrollSpecification<>(keyset, sort, entityInformation);
+            if (scrollPosition instanceof KeysetScrollPosition) {
+                KeysetScrollSpecification<E> keysetSpec = new KeysetScrollSpecification<>((KeysetScrollPosition) scrollPosition, sort, entityInformation);
                 sort = keysetSpec.sort();
                 specToUse = specToUse.and(keysetSpec);
             }
 
             TypedQuery<E> query = getQuery(specToUse, domainClass, sort);
 
-            if (scrollPosition instanceof OffsetScrollPosition offset) {
-                query.setFirstResult(Math.toIntExact(offset.getOffset()));
+            if (scrollPosition instanceof OffsetScrollPosition) {
+                query.setFirstResult(Math.toIntExact(((OffsetScrollPosition) scrollPosition).getOffset()));
             }
 
             return query;

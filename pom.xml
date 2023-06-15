@@ -38,6 +38,7 @@
         <maven.compiler.target>${main.java.version}</maven.compiler.target>
         <maven.compiler.source>${main.java.version}</maven.compiler.source>
         <version.checkstyle>9.3</version.checkstyle>
+        <version.javadoc.plugin>3.5.0</version.javadoc.plugin>
         <maven.min.version>3.3.1</maven.min.version>
         <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
         <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
@@ -138,8 +139,10 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>3.2.0</version>
+                            <version>${version.javadoc.plugin}</version>
                             <configuration>
+                                <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+<!--                                <source>${main.java.version}</source>-->
                                 <additionalJOption>-Xdoclint:none</additionalJOption>
                             </configuration>
                         </plugin>
@@ -163,7 +166,7 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>3.2.0</version>
+                            <version>${version.javadoc.plugin}</version>
                             <configuration>
                                 <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                                 <additionalJOption>-Xdoclint:none</additionalJOption>

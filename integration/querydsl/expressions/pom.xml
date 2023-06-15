@@ -54,7 +54,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
                 <configuration>
                     <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
                     <isOffline>true</isOffline>
@@ -99,7 +98,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.2.0</version>
                         <configuration>
                             <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                             <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
