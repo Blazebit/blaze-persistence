@@ -1,0 +1,55 @@
+= Blaze-Persistence 1.6.9 Release
+Christian Beikov
+2023-06-15 0
+:description: Blaze-Persistence version 1.6.9 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the ninth bug fix release of the 1.6 series.
+
+=== Hibernate 6.2 support
+
+Hibernate 6.2 was not really backwards compatible to 6.1 with respect to our integration, so we had the need for a new integration.
+We uncovered quite a few bugs during testing of Hibernate 6 and only as of Hibernate 6.2.5.Final,
+enough bugs were fixed so that we could comfortably call our integration production ready.
+This and the fact that only Hibernate 6.2+ is maintained at this point drove us to the decision to drop the old hibernate-6 integration module
+and instead create a new module `blaze-persistence-integration-hibernate-6.2`.
+When updating to Blaze-Persistence 1.6.9 and replacing the integration dependency, don't forget to also update your Hibernate version to at least 6.2.5.Final.
+
+=== Spring Framework 6 / Boot 3.1 support
+
+A big thank you goes out to https://github.com/EugenMayer[Eugen Mayer, window="_blank"] who worked hard on the new Spring integration.
+Why no support for Spring Boot 3.0 you ask? Because +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++that still depends on Hibernate 6.1 and we do not want to publish an integration for that version.
+Everyone is encouraged to update to 3.1 directly which supports Hibernate 6.2, though at this point you also have to bump the Hibernate version to at least 6.2.5.Final.
+At the time of writing, there is no Spring release yet that includes the new Hibernate version.
+
+Note that there are new integration artifacts:
+
+* `blaze-persistence-integration-entity-view-spring-6.0` - Scanning support for Spring Framework 6+
+* `blaze-persistence-integration-spring-data-3.1` - Support for Spring Data 3.1+
+* `blaze-persistence-integration-spring-data-webmvc-jakarta` - Support for Spring WebMvc 3.1+
+* `blaze-persistence-integration-spring-hateoas-webmvc-jakarta` - Support for Spring HATEOAS 2+
+
+=== Quarkus 3.1 support
+
+This release introduces a new integration `blaze-persistence-integration-quarkus-3` which supports Quarkus 3.1.1+.
+Quarkus 3.1.2+ will ship with Hibernate 6.2.5+, but if you want to work with Quarkus 3.1.1 for now,
+you will have to manually update the Hibernate version to 6.2.5.Final in you dependencies.
+
+=== GraphQL enhancements
+
+Two new Netflix DGS integrations have been added. One for DGS version 5.5 - 6.x (`blaze-persistence-integration-graphql-dgs`) and one for version 7.x+ (`blaze-persistence-integration-graphql-dgs-7.0`).
+DGS 7.x+ is for Spring Boot 3.x+ only, so we had to create separate integrations, due to the Jakarta namespace rename that happened in Spring Boot 3.
+It is important to note though that the DGS integration now comes with support for updatable entity views as mutations out of the box!
+
+=== Various bug fixes
+
+As always, this release comes with quite a few bug fixes, so we recommend you update soon!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#169[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

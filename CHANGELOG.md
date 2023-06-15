@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.9-SNAPSHOT
+## 1.6.10-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.9
+
+15/06/2023 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.9) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.9+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
