@@ -73,8 +73,8 @@ CHARACTER_LITERAL
     ;
 
 STRING_LITERAL
-    : '"' ( '""' | ~('"') | ESCAPE_SEQUENCE )* '"'
-    | ('\'' ( '\'\'' | ~('\'') | ESCAPE_SEQUENCE )* '\'')+
+    : ('\'' ( '\'\'' | ~('\'') )* '\'')+
+    | '"' ( ESCAPE_SEQUENCE | ~('"') )* '"'
     ;
 
 AFTER               : [aA] [fF] [tT] [eE] [rR];

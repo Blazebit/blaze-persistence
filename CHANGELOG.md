@@ -24,6 +24,7 @@ Changes that happened in releases
 * Fix entity binding with column equivalent attributes
 * Fix problem with query copying of paths that refer to select aliases, happening mostly in paginated `SUBSELECT` entity view scenarios
 * Fix type validation for MappingIndex
+* Fix syntax error when using multiple likes with escape
 
 ### Backwards-incompatible changes
 
