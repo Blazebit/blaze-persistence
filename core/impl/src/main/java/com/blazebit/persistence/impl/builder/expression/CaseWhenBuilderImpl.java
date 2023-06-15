@@ -167,7 +167,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if (thenExpression != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
-        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel());
         if (literal == null) {
             return then(value);
         }
@@ -219,7 +219,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if (expression != null) {
             throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
         }
-        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel());
         if (literal == null) {
             return otherwise(value);
         }

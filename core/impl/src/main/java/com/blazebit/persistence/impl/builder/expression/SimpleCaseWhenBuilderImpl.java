@@ -70,7 +70,7 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, E
         if (whenExpressions.isEmpty()) {
             throw new IllegalStateException("No when clauses specified");
         }
-        String literal = TypeUtils.asLiteral(elseValue, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
+        String literal = TypeUtils.asLiteral(elseValue, subqueryInitFactory.getQueryBuilder().getMetamodel());
         if (literal == null) {
             return otherwiseValue(elseValue);
         }

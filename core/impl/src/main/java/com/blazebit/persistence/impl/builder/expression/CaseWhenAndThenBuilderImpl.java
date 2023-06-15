@@ -175,7 +175,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
         if (whenClause != null) {
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
-        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel().getEnumTypes().keySet());
+        String literal = TypeUtils.asLiteral(value, subqueryInitFactory.getQueryBuilder().getMetamodel());
         if (literal == null) {
             return then(value);
         }

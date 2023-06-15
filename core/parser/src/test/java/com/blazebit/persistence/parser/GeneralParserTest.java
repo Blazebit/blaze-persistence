@@ -1091,4 +1091,10 @@ public class GeneralParserTest extends AbstractParserTest {
         PathExpression result = (PathExpression) parseJoinBasePath("TREAT(x as Y)");
         assertEquals(path(treat(path("x"), "Y")), result);
     }
+
+    @Test
+    public void testPathExpressionLikeEntityName() {
+        PathExpression result = (PathExpression) parse("TestEntity");
+        assertEquals(path("TestEntity"), result);
+    }
 }
