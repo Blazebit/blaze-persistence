@@ -582,6 +582,17 @@ public class WhereTest extends AbstractCoreTest {
         final String expected = "SELECT d.id FROM Document d WHERE (SELECT MAX(dSub.id) FROM Document dSub) + (SELECT MIN(dSub.id) FROM Document dSub) > 0";
         assertEquals(expected, crit.getQueryString());
     }
+
+    // Test for issue #1691
+    @Test
+    public void testWhereExpressionParsingTest() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.setWhereExpression("d.name like :param_1 escape '\\' or d.nameObject.primaryName like :param_1 escape '\\'")
+            .select("d.id");
+
+        final String expected = "SELECT d.id FROM Document d WHERE d.name LIKE :param_1 ESCAPE '" + escapeCharacter('\\') + "' OR d.nameObject.primaryName LIKE :param_1 ESCAPE '" + escapeCharacter('\\') + "'";
+        assertEquals(expected, crit.getQueryString());
+    }
     
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
         verifyException(crit, BuilderChainingException.class, r -> r.whereCase());
