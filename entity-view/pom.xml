@@ -45,7 +45,7 @@
     </modules>
     <profiles>
         <profile>
-            <id>hibernate-6.2</id>
+            <id>jakarta</id>
             <modules>
                 <module>api</module>
                 <module>impl</module>

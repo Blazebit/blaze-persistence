@@ -828,7 +828,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     return viewAttributeElementType == entityAttributeType;
                 } else {
                     // Mapping a singular entity attribute to a singular view attribute
-                    return viewAttributeType == entityAttributeType;
+                    return viewAttributeType.isAssignableFrom(entityAttributeType);
                 }
             }
         } else {

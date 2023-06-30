@@ -23,7 +23,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
@@ -60,7 +60,9 @@ import static org.junit.Assert.*;
 @RunWith(Parameterized.class)
 // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
 // NOTE: No Datanucleus support yet
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class})
+//@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class})
+// NOTE: Hibernate 6 bug: https://hibernate.atlassian.net/browse/HHH-17383
+@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate60.class})
 public class EntityViewUpdateMutableNestedEmbeddableMapsTest extends AbstractEntityViewUpdateNestedEmbeddableMapsTest<UpdatableEmbeddableEntityWithMapsView> {
 
     public EntityViewUpdateMutableNestedEmbeddableMapsTest(FlushMode mode, FlushStrategy strategy, boolean version) {

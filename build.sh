@@ -50,13 +50,17 @@ if [[ "$JDK" != "" ]]; then
   fi
   if [[ "$JDK" == "21" ]] || [[ "$JDK" == "22" ]]; then
     # As of JDK 21 Javac produces parameter attributes with a null name that old BND versions can't read
-    PROPERTIES="$PROPERTIES -Dversion.bnd=7.0.0-SNAPSHOT"
+    PROPERTIES="$PROPERTIES -Dversion.bnd=7.0.0"
   fi
   PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
 fi
 
+if [[ "$JPAPROVIDER" == hibernate-6* ]]; then
+  ADDITIONAL_PROFILES=,jakarta
+fi
+
 if [[ "$NATIVE" == "true" ]]; then
-  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9},native clean install -am -V $PROPERTIES
+  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9},native${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
 else
-  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9} clean install -am -V $PROPERTIES
+  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9}${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
 fi

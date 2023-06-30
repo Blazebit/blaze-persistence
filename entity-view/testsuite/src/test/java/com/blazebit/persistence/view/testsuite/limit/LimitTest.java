@@ -23,6 +23,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -79,9 +80,11 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+//    @Category({ NoH2.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // H2 and the MySQL before 8 didn't support lateral joins which are required here
     // EclipseLink, Datanucleus and OpenJPA don't support extended SQL
+    // NOTE: Hibernate 6.3 bug: https://hibernate.atlassian.net/browse/HHH-17386
+    @Category({ NoH2.class, NoMySQLOld.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class, NoHibernate60.class })
     public void testLimitMultiset() {
         test(PersonLimitMultisetView.class, null);
     }
@@ -98,12 +101,14 @@ public class LimitTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+//    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
     // We need a left entity join for this so Hibernate < 5.1 can't be used
     // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
     // Datanucleus fails because of a NPE?
     // OpenJPA has no function support
+    // NOTE: Hibernate 6.3 bug: https://hibernate.atlassian.net/browse/HHH-17386
+    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class, NoHibernate60.class })
     public void testLimitJoinExpression() {
         test(PersonLimitJoinExpressionView.class, null);
     }

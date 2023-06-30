@@ -44,9 +44,7 @@ public class SimpleDatabase implements Database {
             if (t.getSubselect() != null) {
                 map.put("( " + t.getSubselect() + " )", t);
             }
-            Iterator<Column> columnIter = t.getColumnIterator();
-            while (columnIter.hasNext()) {
-                final Column column = columnIter.next();
+            for (Column column : t.getColumns()) {
                 column.getSqlType(typeConfiguration, dialect, mapping);
             }
         }

@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.entity;
 
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -74,6 +75,7 @@ public class LegacyOrderPositionDefault implements Serializable {
         this.orderPosition = orderPosition;
     }
 
+    @Column(name = "val")
     public String getValue() {
         return value;
     }

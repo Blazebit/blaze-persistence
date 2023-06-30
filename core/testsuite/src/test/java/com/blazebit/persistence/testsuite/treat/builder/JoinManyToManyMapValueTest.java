@@ -16,14 +16,18 @@
 
 package com.blazebit.persistence.testsuite.treat.builder;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.List;
 
+// NOTE: Bug in ORM 6.3: https://hibernate.atlassian.net/browse/HHH-17385
 @RunWith(Parameterized.class)
+@Category({ NoHibernate60.class })
 public class JoinManyToManyMapValueTest extends AbstractTreatVariationsTest {
 
     public JoinManyToManyMapValueTest(String strategy, String objectPrefix) {

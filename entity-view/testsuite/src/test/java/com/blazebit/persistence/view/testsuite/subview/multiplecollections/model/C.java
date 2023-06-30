@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.testsuite.subview.multiplecollections.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -33,6 +34,7 @@ public class C {
     private Long id1;
     @Id
     private Long id2;
+    @Column(name = "val")
     private String value;
 
     public C() { }

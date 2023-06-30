@@ -452,7 +452,9 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
-  * `hibernate-6.2`
+  * `hibernate-6.4` + the `jakarta` profile
+  * `hibernate-6.3` + the `jakarta` profile
+  * `hibernate-6.2` + the `jakarta` profile
   * `hibernate-5.6`
   * `hibernate-5.5`
   * `hibernate-5.4`
@@ -505,8 +507,8 @@ For executing tests against a database on a dedicated host you might want to spe
 
 ## Testing with Jakarta Persistence provider
 
-To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
-and to run tests use ` mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
+To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
+and to run tests use ` mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
 
 ## Switching JPA provider profiles in IntelliJ
 

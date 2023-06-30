@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.testsuite.basic;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
@@ -58,7 +59,9 @@ import static org.junit.Assert.*;
  * @since 1.0.6
  */
 // NOTE: Only Hibernate supports this mapping
-@Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+//@Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+// NOTE: Hibernate 6.3.1 bug
+@Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate60.class})
 public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
     protected EntityViewManager evm;

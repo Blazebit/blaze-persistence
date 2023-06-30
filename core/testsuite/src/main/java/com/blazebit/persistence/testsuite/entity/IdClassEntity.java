@@ -75,7 +75,7 @@ public class IdClassEntity implements Serializable {
     }
 
     @Basic(optional = false)
-    @Column(name = "value", nullable = false)
+    @Column(name = "val", nullable = false)
     public Integer getValue() {
         return value;
     }

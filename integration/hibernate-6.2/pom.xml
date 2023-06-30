@@ -63,9 +63,9 @@
         </dependency>
         
         <dependency>
-            <groupId>org.hibernate</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${version.hibernate-6.2}</version>
+            <version>${version.hibernate}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -170,4 +170,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Profiles for various Hibernate 6 versions -->
+        <profile>
+            <id>hibernate-6.2</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.3</id>
+            <properties>
+                <version.hibernate>${version.hibernate-6.3}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.4</id>
+            <properties>
+                <version.hibernate>${version.hibernate-6.4}</version.hibernate>
+            </properties>
+        </profile>
+    </profiles>
 </project>

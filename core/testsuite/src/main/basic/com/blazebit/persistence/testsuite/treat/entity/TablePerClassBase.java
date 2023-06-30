@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -75,6 +76,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     }
 
     @Override
+    @Column(name = "val")
     public Integer getValue() {
         return value;
     }

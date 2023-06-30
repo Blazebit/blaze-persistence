@@ -53,8 +53,46 @@ public class GroupConcatBasedToStringXmlFunction extends AbstractToStringXmlFunc
             groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
             context.addChunk(subquery.substring(fromIndex));
         } else {
+            String limit = null;
+            String offset = null;
             int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
+            int orderByEndIndex;
             if (limitIndex == -1) {
+                int offsetIndex = subquery.indexOf(" offset ", orderByIndex);
+                int fetchFirstIndex = SqlUtils.indexOfFetchFirst(subquery, orderByIndex);
+                int endIndex = subquery.length() - 1;
+                if (offsetIndex != -1) {
+                    if (fetchFirstIndex == -1) {
+                        offset = subquery.substring(offsetIndex + " offset ".length(), endIndex);
+                    } else {
+                        offset = subquery.substring(offsetIndex + " offset ".length(), fetchFirstIndex);
+                    }
+                    endIndex = Math.min(endIndex, offsetIndex);
+                }
+                if (fetchFirstIndex != -1) {
+                    int rowsOnlyIndex = subquery.indexOf(" rows only", fetchFirstIndex + SqlUtils.FETCH_FIRST.length() + 1);
+                    limit = subquery.substring(fetchFirstIndex + SqlUtils.FETCH_FIRST.length(), rowsOnlyIndex);
+                    endIndex = Math.min(endIndex, fetchFirstIndex);
+                }
+                orderByEndIndex = endIndex;
+            } else {
+                orderByEndIndex = limitIndex;
+                int offsetIndex = subquery.indexOf(" offset ", limitIndex);
+                if (offsetIndex == -1) {
+                    int commaIndex = subquery.indexOf(',', limitIndex);
+                    if (commaIndex == -1) {
+                        limit = subquery.substring(limitIndex + SqlUtils.LIMIT.length(), subquery.length() - 1);
+                    } else {
+                        offset = subquery.substring(limitIndex + SqlUtils.LIMIT.length(), commaIndex);
+                        limit = subquery.substring(commaIndex + 1, subquery.length() - 1);
+                    }
+                } else {
+                    limit = subquery.substring(limitIndex + SqlUtils.LIMIT.length(), offsetIndex);
+                    offset = subquery.substring(offsetIndex, subquery.length() - 1);
+                }
+            }
+
+            if (limit == null) {
                 groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
                 context.addChunk(" OVER (");
                 context.addChunk(subquery.substring(orderByIndex));
@@ -63,22 +101,20 @@ public class GroupConcatBasedToStringXmlFunction extends AbstractToStringXmlFunc
                 if (lateralStyle == LateralStyle.NONE) {
                     groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, selectItemExpressions, fromIndex), Collections.<Order>emptyList(), ","));
                     context.addChunk(" OVER (");
-                    context.addChunk(subquery.substring(orderByIndex, limitIndex));
-                    String limitClause = subquery.substring(limitIndex + " limit ".length(), subquery.length() - 1);
-                    int offsetIndex = limitClause.indexOf(" offset ");
-                    if (offsetIndex == -1) {
+                    context.addChunk(subquery.substring(orderByIndex, orderByEndIndex));
+                    if (offset == null) {
                         context.addChunk(" ROWS BETWEEN CURRENT ROW AND (");
-                        context.addChunk(limitClause);
+                        context.addChunk(limit);
                         context.addChunk(" - 1) FOLLOWING");
                     } else {
                         context.addChunk(" ROWS BETWEEN ");
-                        context.addChunk(limitClause.substring(offsetIndex + " offset ".length()));
+                        context.addChunk(limit);
                         context.addChunk(" FOLLOWING AND ");
-                        context.addChunk(limitClause.substring(0, offsetIndex));
+                        context.addChunk(offset);
                         context.addChunk(" FOLLOWING");
                     }
                     context.addChunk(")");
-                    context.addChunk(subquery.substring(fromIndex, limitIndex));
+                    context.addChunk(subquery.substring(fromIndex, orderByEndIndex));
                     context.addChunk(" limit 1)");
                 } else {
                     groupConcatFunction.render(context, new AbstractGroupConcatFunction.GroupConcat(false, createGroupConcatArgument(fields, fields, fromIndex), Collections.<Order>emptyList(), ","));

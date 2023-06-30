@@ -19,6 +19,7 @@ package com.blazebit.persistence.testsuite.entity;
 import java.io.Serializable;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -70,6 +71,7 @@ public class IntIdEntity implements Serializable {
         this.name = name;
     }
 
+    @Column(name = "val")
     public Integer getValue() {
         return value;
     }

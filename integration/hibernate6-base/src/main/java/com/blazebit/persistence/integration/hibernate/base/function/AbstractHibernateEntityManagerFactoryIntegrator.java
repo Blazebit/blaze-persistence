@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.integration.hibernate.base.function;
 
+import com.blazebit.persistence.integration.hibernate.base.HibernateAccessUtils;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
@@ -142,7 +143,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             em = entityManagerFactory.createEntityManager();
             Session s = em.unwrap(Session.class);
             SessionFactoryImplementor sfi = (SessionFactoryImplementor) s.getSessionFactory();
-            SqmFunctionRegistry sqmFunctionRegistry = sfi.getQueryEngine().getSqmFunctionRegistry();
+            SqmFunctionRegistry sqmFunctionRegistry = HibernateAccessUtils.getSqmFunctionRegistry(sfi);
             Dialect dialect = getDialect(s);
             String dbms = getDbmsName(dialect);
 
@@ -191,7 +192,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             Session s = em.unwrap(Session.class);
             SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
             Map<String, JpqlFunction> map = new HashMap<>();
-            sf.getQueryEngine().getSqmFunctionRegistry().getFunctionsByName().forEach( entry -> {
+            HibernateAccessUtils.getSqmFunctionRegistry(sf).getFunctionsByName().forEach( entry -> {
                 SqmFunctionDescriptor function = entry.getValue();
                 if (function instanceof HibernateJpqlFunctionAdapter) {
                     map.put(entry.getKey(), ((HibernateJpqlFunctionAdapter) function).unwrap());
@@ -204,13 +205,6 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
             if (em != null) {
                 em.close();
             }
-        }
-    }
-
-    private void replaceFunctions(Session s, Map<String, SqmFunctionDescriptor> newFunctions) {
-        SqmFunctionRegistry sqmFunctionRegistry = ((SessionFactoryImplementor) s.getSessionFactory()).getQueryEngine().getSqmFunctionRegistry();
-        for (Map.Entry<String, SqmFunctionDescriptor> entry : newFunctions.entrySet()) {
-            sqmFunctionRegistry.register(entry.getKey(), entry.getValue());
         }
     }
 

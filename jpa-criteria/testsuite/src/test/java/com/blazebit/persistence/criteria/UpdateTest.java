@@ -42,16 +42,16 @@ public class UpdateTest extends AbstractCoreTest {
         query.set(Document_.name, "asd");
         query.set(Document_.age, cb.literal(1L));
         query.set("idx", 1);
-        query.set(root.get(Document_.lastModified), cb.currentDate());
-        query.set(root.get(Document_.creationDate), cb.currentTimestamp().as(Calendar.class));
+        query.set(root.get(Document_.lastModified), cb.currentTimestamp());
+        query.set(root.get(Document_.creationDate), cb.currentDate().as(Calendar.class));
         query.set("intIdEntity", cb.nullLiteral(IntIdEntity.class));
         query.where(cb.equal(root.get(Document_.name), "abc"));
 
         UpdateCriteriaBuilder<Document> criteriaBuilder = query.createCriteriaBuilder(em);
         if (jpaProvider.supportsUpdateSetAssociationId()) {
-            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_DATE, d.creationDate = CURRENT_TIMESTAMP, d.intIdEntity.id = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_TIMESTAMP, d.creationDate = CURRENT_DATE, d.intIdEntity.id = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
         } else {
-            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_DATE, d.creationDate = CURRENT_TIMESTAMP, d.intIdEntity = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
+            assertEquals("UPDATE Document d SET d.name = :param_0, d.age = :param_1, d.idx = :param_2, d.lastModified = CURRENT_TIMESTAMP, d.creationDate = CURRENT_DATE, d.intIdEntity = NULL WHERE d.name = :generated_param_0", criteriaBuilder.getQueryString());
         }
         criteriaBuilder.getQuery();
     }

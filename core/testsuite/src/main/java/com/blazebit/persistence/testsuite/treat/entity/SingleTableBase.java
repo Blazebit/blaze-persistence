@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -83,6 +84,7 @@ public abstract class SingleTableBase implements Serializable, Base<SingleTableB
     }
 
     @Override
+    @Column(name = "val")
     public Integer getValue() {
         return value;
     }
