@@ -20,10 +20,12 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2Latest;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
@@ -112,8 +114,9 @@ public class InlineCTETest extends AbstractCoreTest {
 
     // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
+    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoMySQLOld.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoMySQLOld.class, NoH2Latest.class })
     public void testInliningFromSubqueryCte() {
         cbf.create(em, RecursiveEntity.class)
                 .withRecursive(DocumentCTE.class)
@@ -145,8 +148,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // TODO: Oracle requires a cycle clause #295
+    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoH2Latest.class })
     public void testReusedNestedCte() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .withRecursive(TestCTE.class)
@@ -227,8 +231,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // TODO: Oracle requires a cycle clause #295
+    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoH2Latest.class })
     public void testReusedNestedCte2() {
         CriteriaBuilder<ParameterOrderCte> cteBuilder = cbf.create(em, ParameterOrderCte.class)
                 .withRecursive(TestCTE.class)

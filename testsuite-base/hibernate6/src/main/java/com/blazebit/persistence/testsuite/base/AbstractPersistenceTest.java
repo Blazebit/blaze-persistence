@@ -164,6 +164,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean optimizesUnnecessaryCasts() {
+        return getJpaProviderMajorVersion() > 6 || getJpaProviderMajorVersion() == 6 && getJpaProviderMinorVersion() >= 3;
+    }
+
+    @Override
     public boolean supportsTableGroupJoins() {
         return true;
     }

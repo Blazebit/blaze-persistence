@@ -27,7 +27,7 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class KeyedEmbeddable {
 
-    @Column(length = 10)
+    @Column(name = "val", length = 10)
     private String value;
     @Column(length = 10)
     private String value2;

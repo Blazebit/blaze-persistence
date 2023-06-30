@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -83,6 +84,7 @@ public abstract class JoinedBase implements Serializable, Base<JoinedBase, Joine
     }
 
     @Override
+    @Column(name = "val")
     public Integer getValue() {
         return value;
     }

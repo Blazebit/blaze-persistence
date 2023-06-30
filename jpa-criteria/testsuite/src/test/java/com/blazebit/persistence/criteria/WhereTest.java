@@ -446,7 +446,13 @@ public class WhereTest extends AbstractCoreTest {
         );
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
-        assertEquals("SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > :generated_param_1 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > :generated_param_2 THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
+        String castedPath = "subDoc.lastModified";
+        if (!optimizesUnnecessaryCasts()) {
+            castedPath = function("CAST_TIMESTAMP", castedPath);
+        }
+        String queryString = "SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > :generated_param_1 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > :generated_param_2 THEN document.creationDate ELSE CURRENT_TIMESTAMP END")
+            + " < ALL(SELECT " + castedPath + " FROM Document subDoc)";
+        assertEquals(queryString, criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
     }

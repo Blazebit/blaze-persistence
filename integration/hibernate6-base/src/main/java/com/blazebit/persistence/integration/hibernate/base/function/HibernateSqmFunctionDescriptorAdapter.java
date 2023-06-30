@@ -21,17 +21,22 @@ import com.blazebit.persistence.spi.JpqlFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +46,22 @@ import java.util.List;
  * @since 1.6.7
  */
 public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
+
+    private static final Method GENERATE_SQM_EXPRESSION;
+
+    static {
+        Method generateSqmExpression;
+        try {
+            generateSqmExpression = SqmFunctionDescriptor.class.getMethod("generateSqmExpression", List.class, ReturnableType.class, QueryEngine.class);
+        } catch (NoSuchMethodException e1) {
+            try {
+                generateSqmExpression = SqmFunctionDescriptor.class.getMethod("generateSqmExpression", List.class, ReturnableType.class, QueryEngine.class, TypeConfiguration.class);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException("Could not find method to generate SQM expression for functions. Please report your version of hibernate so we can provide support for it!", e1);
+            }
+        }
+        GENERATE_SQM_EXPRESSION = generateSqmExpression;
+    }
 
     private final SessionFactoryImplementor sfi;
     private final SqmFunctionDescriptor function;
@@ -104,10 +125,19 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
                 return returnableType.getBindableJavaType();
             }
         }
-        SqmExpressible<?> expressionType = function.generateSqmExpression(arguments, null, sfi.getQueryEngine(), sfi.getTypeConfiguration())
-                .getNodeType();
+        try {
+            SqmExpressible<?> expressionType = ((SelfRenderingSqmFunction<?>) GENERATE_SQM_EXPRESSION.invoke(function, arguments, null, sfi.getQueryEngine(), sfi.getTypeConfiguration()))
+                    .getNodeType();
+            return expressionType == null ? null : expressionType.getBindableJavaType();
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Could not generate SQM expression for function. Please report your version of hibernate so we can provide support for it!", e);
+        } catch (InvocationTargetException e) {
+            if (e.getTargetException() instanceof RuntimeException) {
+                throw (RuntimeException) e.getTargetException();
+            }
+            throw new RuntimeException("Could not generate SQM expression", e);
+        }
 
-        return expressionType == null ? null : expressionType.getBindableJavaType();
     }
 
     @Override

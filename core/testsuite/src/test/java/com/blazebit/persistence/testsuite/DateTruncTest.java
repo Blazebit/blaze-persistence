@@ -17,11 +17,13 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2Latest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -250,7 +252,9 @@ public class DateTruncTest extends AbstractCoreTest {
         assertEquals(0, truncatedDate.get(Calendar.MILLISECOND));
     }
 
+    // NOTE: H2 2.0 changed the meaning of "week" to be locale sensitive: https://github.com/h2database/h2database/issues/3922
     @Test
+    @Category({ NoH2Latest.class })
     public void testDateTruncWeek() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")

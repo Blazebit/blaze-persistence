@@ -18,6 +18,7 @@ package com.blazebit.persistence.testsuite.treat.entity;
 
 import org.hibernate.annotations.ForeignKey;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -84,6 +85,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     }
 
     @Override
+    @Column(name = "val")
     public Integer getValue() {
         return value;
     }

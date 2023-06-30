@@ -680,6 +680,10 @@ public abstract class AbstractJpaPersistenceTest {
         return true;
     }
 
+    protected boolean optimizesUnnecessaryCasts() {
+        return false;
+    }
+
     protected boolean recreateDataSource() {
         return false;
     }

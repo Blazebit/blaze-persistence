@@ -54,9 +54,7 @@ public class Hibernate62Integrator implements Integrator {
                 if (clazz.isPolymorphic()) {
                     invalidPolymorphicCtes.add(clazz);
                 }
-                Iterator<Property> iterator = clazz.getSubclassPropertyClosureIterator();
-                while (iterator.hasNext()) {
-                    Property property = iterator.next();
+                for (Property property : clazz.getSubclassPropertyClosure()) {
                     if (property.getValue().hasFormula()) {
                         invalidFormulaCtes.add(clazz.getClassName() + "#" + property.getName());
                     }

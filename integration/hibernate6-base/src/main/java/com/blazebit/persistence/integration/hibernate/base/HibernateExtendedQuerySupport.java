@@ -32,6 +32,7 @@ import jakarta.persistence.TupleElement;
 import jakarta.persistence.criteria.CompoundSelection;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
@@ -48,14 +49,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.QueryPlan;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.MultiTableDeleteQueryPlan;
 import org.hibernate.query.sqm.internal.MultiTableUpdateQueryPlan;
@@ -126,7 +128,9 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.Type;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -138,9 +142,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Christian Beikov
@@ -150,6 +158,27 @@ import java.util.logging.Logger;
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_62;
+    private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_63;
+
+    static {
+        Constructor<TupleMetadata> constructor62 = null;
+        Constructor<TupleMetadata> constructor63 = null;
+        try {
+            constructor63 = TupleMetadata.class.getConstructor(TupleElement[].class, String[].class);
+        } catch (NoSuchMethodException ex1) {
+            try {
+                constructor62 = TupleMetadata.class.getConstructor(Map.class);
+            } catch (NoSuchMethodException ex2) {
+                // ignore
+            }
+        }
+        if (constructor62 == null && constructor63 == null) {
+            throw new RuntimeException("Could not find constructor for TupleMetadata. Please report your version of hibernate so we can provide support for it!");
+        }
+        TUPLE_METADATA_CONSTRUCTOR_62 = constructor62;
+        TUPLE_METADATA_CONSTRUCTOR_63 = constructor63;
+    }
 
     private final HibernateAccess hibernateAccess;
     private final BoundedConcurrentHashMap<QueryInterpretationCache.Key, QueryPlan> participatingInterpretationCache;
@@ -563,7 +592,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     realJdbcSelect,
                     jdbcParameterBindings,
                     new SqmJdbcExecutionContextAdapter(executionContext, jdbcSelect) {
-                        @Override
                         public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
                             //                            subSelectFetchKeyHandler.addKey( entityKey );
                         }
@@ -658,12 +686,17 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         session.autoFlushIfRequired(realJdbcSelect.getAffectedTableNames());
 
         try {
-            return session.getFactory().getJdbcServices().getJdbcSelectExecutor().stream(
-                    realJdbcSelect,
-                    jdbcParameterBindings,
-                    new SqmJdbcExecutionContextAdapter(executionContext, realJdbcSelect),
-                    rowTransformer
+            ScrollableResultsImplementor<?> scrollableResults = session.getFactory().getJdbcServices().getJdbcSelectExecutor().scroll(
+                realJdbcSelect,
+                ScrollMode.FORWARD_ONLY,
+                jdbcParameterBindings,
+                new SqmJdbcExecutionContextAdapter(executionContext, realJdbcSelect),
+                rowTransformer
             );
+            ScrollableResultsIterator iterator = new ScrollableResultsIterator<>(scrollableResults);
+            Spliterator spliterator = Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL);
+            Stream stream = StreamSupport.stream(spliterator, false);
+            return stream.onClose(scrollableResults::close);
         } catch (HibernateException e) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
             if (session.getFactory().getSessionFactoryOptions().isJpaBootstrap()) {
@@ -718,23 +751,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         if (Tuple.class.isAssignableFrom(resultType)) {
             // resultType is Tuple..
             if (queryOptions.getTupleTransformer() == null) {
-                final Map<TupleElement<?>, Integer> tupleElementMap;
-                if (selections.size() == 1 && selections.get(0).getSelectableNode() instanceof CompoundSelection<?>) {
-                    final List<? extends JpaSelection<?>> selectionItems = selections.get(0)
-                            .getSelectableNode()
-                            .getSelectionItems();
-                    tupleElementMap = new IdentityHashMap<>(selectionItems.size());
-                    for (int i = 0; i < selectionItems.size(); i++) {
-                        tupleElementMap.put(selectionItems.get(i), i);
-                    }
-                } else {
-                    tupleElementMap = new IdentityHashMap<>(selections.size());
-                    for (int i = 0; i < selections.size(); i++) {
-                        final SqmSelection<?> selection = selections.get(i);
-                        tupleElementMap.put(selection.getSelectableNode(), i);
-                    }
-                }
-                return (RowTransformer<R>) new RowTransformerJpaTupleImpl(new TupleMetadata(tupleElementMap));
+                return (RowTransformer<R>) new RowTransformerJpaTupleImpl(buildTupleMetadata(selections));
             }
 
             throw new IllegalArgumentException(
@@ -754,6 +771,83 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new IllegalQueryOperationException("Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)");
         } else {
             return RowTransformerSingularReturnImpl.instance();
+        }
+    }
+
+    private TupleMetadata buildTupleMetadata(List<SqmSelection<?>> selections) {
+        try {
+            if (TUPLE_METADATA_CONSTRUCTOR_63 != null) {
+                return TUPLE_METADATA_CONSTRUCTOR_63.newInstance(buildTupleElementArray(selections), buildTupleAliasArray(selections));
+            } else {
+                final Map<TupleElement<?>, Integer> tupleElementMap;
+                if (selections.size() == 1 && selections.get(0).getSelectableNode() instanceof CompoundSelection<?>) {
+                    final List<? extends JpaSelection<?>> selectionItems = selections.get(0)
+                        .getSelectableNode()
+                        .getSelectionItems();
+                    tupleElementMap = new IdentityHashMap<>(selectionItems.size());
+                    for (int i = 0; i < selectionItems.size(); i++) {
+                        tupleElementMap.put(selectionItems.get(i), i);
+                    }
+                } else {
+                    tupleElementMap = new IdentityHashMap<>(selections.size());
+                    for (int i = 0; i < selections.size(); i++) {
+                        final SqmSelection<?> selection = selections.get(i);
+                        tupleElementMap.put(selection.getSelectableNode(), i);
+                    }
+                }
+                return TUPLE_METADATA_CONSTRUCTOR_62.newInstance(tupleElementMap);
+            }
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException("Could not construct TupleMetadata. Please report your version of hibernate so we can provide support for it!", e);
+        } catch (InvocationTargetException e) {
+            if (e.getTargetException() instanceof RuntimeException) {
+                throw (RuntimeException) e.getTargetException();
+            }
+            throw new RuntimeException("Could not construct TupleMetadata.", e);
+        }
+    }
+
+    private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
+        if (selections.size() == 1) {
+            final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+            if (selectableNode instanceof CompoundSelection<?>) {
+                final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+                final TupleElement<?>[] elements = new TupleElement<?>[selectionItems.size()];
+                for (int i = 0; i < selectionItems.size(); i++) {
+                    elements[i] = selectionItems.get(i);
+                }
+                return elements;
+            } else {
+                return new TupleElement<?>[]{selectableNode};
+            }
+        } else {
+            final TupleElement<?>[] elements = new TupleElement<?>[selections.size()];
+            for (int i = 0; i < selections.size(); i++) {
+                elements[i] = selections.get(i).getSelectableNode();
+            }
+            return elements;
+        }
+    }
+
+    private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
+        if (selections.size() == 1) {
+            final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+            if (selectableNode instanceof CompoundSelection<?>) {
+                final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+                final String[] elements = new String[selectionItems.size()];
+                for (int i = 0; i < selectionItems.size(); i++) {
+                    elements[i] = selectionItems.get(i).getAlias();
+                }
+                return elements;
+            } else {
+                return new String[]{selectableNode.getAlias()};
+            }
+        } else {
+            final String[] elements = new String[selections.size()];
+            for (int i = 0; i < selections.size(); i++) {
+                elements[i] = selections.get(i).getAlias();
+            }
+            return elements;
         }
     }
 
@@ -1005,7 +1099,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     jdbcSelect.getLimitParameter()
             );
             ExecutionContext executionContext = new SqmJdbcExecutionContextAdapter(domainQueryExecutionContext, realJdbcSelect) {
-                @Override
                 public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 //                                subSelectFetchKeyHandler.addKey( entityKey, entry );
                 }
@@ -1289,10 +1382,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         if (hqlQuery.getSqmStatement() instanceof SqmSelectStatement<?>) {
             final SharedSessionContractImplementor session = hqlQuery.getSession();
             final SessionFactoryImplementor sessionFactory = session.getFactory();
-            final QueryEngine queryEngine = sessionFactory.getQueryEngine();
             final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey(hqlQuery);
 
-            final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+            final SqmTranslatorFactory sqmTranslatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(sessionFactory);
 
             final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(
                     (SqmSelectStatement<?>) hqlQuery.getSqmStatement(),
@@ -1312,10 +1404,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
             final SharedSessionContractImplementor session = hqlQuery.getSession();
             final SessionFactoryImplementor sessionFactory = session.getFactory();
-            final QueryEngine queryEngine = sessionFactory.getQueryEngine();
             final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey(hqlQuery);
 
-            final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+            final SqmTranslatorFactory sqmTranslatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(sessionFactory);
 
             final SqmTranslator<InsertStatement> sqmConverter = sqmTranslatorFactory.createInsertTranslator(
                     (SqmInsertSelectStatement<?>) hqlQuery.getSqmStatement(),
@@ -1334,9 +1425,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (nonSelectQueryPlan instanceof SimpleDeleteQueryPlan) {
                 SqmDeleteStatement<?> sqmDelete = getField(nonSelectQueryPlan, "sqmDelete");
                 SessionFactoryImplementor factory = hqlQuery.getSessionFactory();
-                final QueryEngine queryEngine = factory.getQueryEngine();
 
-                final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
+                final SqmTranslatorFactory translatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(factory);
                 final SqmTranslator<DeleteStatement> translator = translatorFactory.createSimpleDeleteTranslator(
                         sqmDelete,
                         hqlQuery.getQueryOptions(),
@@ -1351,9 +1441,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             } else if (nonSelectQueryPlan instanceof SimpleUpdateQueryPlan) {
                 SqmUpdateStatement<?> sqmUpdate = getField(nonSelectQueryPlan, "sqmUpdate");
                 SessionFactoryImplementor factory = hqlQuery.getSessionFactory();
-                final QueryEngine queryEngine = factory.getQueryEngine();
 
-                final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
+                final SqmTranslatorFactory translatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(factory);
                 final SqmTranslator<UpdateStatement> translator = translatorFactory.createSimpleUpdateTranslator(
                         sqmUpdate,
                         hqlQuery.getQueryOptions(),
@@ -1379,9 +1468,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         final SharedSessionContractImplementor session = hqlQuery.getSession();
         final SessionFactoryImplementor sessionFactory = session.getFactory();
-        final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
-        final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+        final SqmTranslatorFactory sqmTranslatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(sessionFactory);
         if (hqlQuery.getSqmStatement() instanceof SqmSelectStatement<?>) {
             final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(
                     (SqmSelectStatement<?>) hqlQuery.getSqmStatement(),
@@ -1419,9 +1507,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             DomainParameterXref domainParameterXref, ExecutionContext executionContext) {
         final SharedSessionContractImplementor session = executionContext.getSession();
         final SessionFactoryImplementor sessionFactory = session.getFactory();
-        final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
-        final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+        final SqmTranslatorFactory sqmTranslatorFactory = HibernateAccessUtils.getSqmTranslatorFactory(sessionFactory);
 
         final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(
                 sqm,

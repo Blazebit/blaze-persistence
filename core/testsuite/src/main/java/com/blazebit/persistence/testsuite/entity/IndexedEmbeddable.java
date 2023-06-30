@@ -27,7 +27,7 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class IndexedEmbeddable {
 
-    @Column(length = 10)
+    @Column(name = "val", length = 10)
     private String value;
     @Column(length = 10)
     private String value2;
