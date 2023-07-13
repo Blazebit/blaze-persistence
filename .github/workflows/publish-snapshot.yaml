@@ -10,6 +10,9 @@ jobs:
   snapshot:
     name: Publish Snapshot
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v2
       - name: Update /etc/hosts file
