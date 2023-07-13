@@ -1,8 +1,9 @@
-name: "Blaze-Persistence Publish Snapshot"
+# Based on https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-maven
+
+name: "Extend Fork: Blaze-Persistence release to github packages"
 on:
-  push:
-    branches:
-      - 'main'
+  release:
+    types: [created]
 env:
   MAVEN_SKIP_RC: true
 jobs:
@@ -42,9 +43,14 @@ jobs:
       - name: Set up Maven
         run: ./mvnw -v
 
-      - name: Run build script
+#      - name: Run build script
+#        env:
+#          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+#        run: ./ci/deploy-snapshot.sh
+#        shell: bash
+
+      - name: Publish package
+        run: mvn --batch-mode deploy
         env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: ./ci/deploy-snapshot.sh
-        shell: bash
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
