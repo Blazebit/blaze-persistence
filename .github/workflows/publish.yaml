@@ -54,6 +54,6 @@ jobs:
 #        shell: bash
 
       - name: Publish package
-        run: mvn --batch-mode deploy
+        run: ./mvnw -B -P "blazebit-release,spring-data-2.7.x,deltaspike-1.9,hibernate-5.6" -DperformRelease -DskipTests -DskipITs -Dgpg.skip=true -Dquiet=true --batch-mode deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
