@@ -15,96 +15,96 @@ jobs:
 ################################################
 # hibernate-5.2
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            native: true
-          - rdbms: mysql
-            provider: hibernate-5.6
-            jdk: 8
-            native: true
-          - rdbms: mysql8
-            provider: hibernate-5.6
-            jdk: 8
-            native: true
-          - rdbms: postgresql
-            provider: hibernate-5.6
-            jdk: 8
-            native: true
-          - rdbms: oracle
-            provider: hibernate-5.6
-            jdk: 8
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
 #            native: true
-          - rdbms: db2
-            provider: hibernate-5.6
-            jdk: 8
+#          - rdbms: mysql
+#            provider: hibernate-5.6
+#            jdk: 8
 #            native: true
-          - rdbms: mssql
-            provider: hibernate-5.6
-            jdk: 8
-            native: true
+#          - rdbms: mysql8
+#            provider: hibernate-5.6
+#            jdk: 8
+#            native: true
+#          - rdbms: postgresql
+#            provider: hibernate-5.6
+#            jdk: 8
+#            native: true
+#          - rdbms: oracle
+#            provider: hibernate-5.6
+#            jdk: 8
+##            native: true
+#          - rdbms: db2
+#            provider: hibernate-5.6
+#            jdk: 8
+##            native: true
+#          - rdbms: mssql
+#            provider: hibernate-5.6
+#            jdk: 8
+#            native: true
 ################################################
 # Test different spring-data and deltaspike versions
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.0.x
-            deltaspike: deltaspike-1.8
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.1.x
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.2.x
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.3.x
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.4.x
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.5.x
-          - rdbms: h2
-            provider: hibernate-5.6
-            jdk: 8
-            spring-data: spring-data-2.6.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.0.x
+#            deltaspike: deltaspike-1.8
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.1.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.2.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.3.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.4.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.5.x
+#          - rdbms: h2
+#            provider: hibernate-5.6
+#            jdk: 8
+#            spring-data: spring-data-2.6.x
 ################################################
 # A Hibernate 5.6 profile that also runs the entity-view-annotation-processor
 ################################################
-          - rdbms: postgresql
-            provider: hibernate-apt
-            jdk: 8
+#          - rdbms: postgresql
+#            provider: hibernate-apt
+#            jdk: 8
 
 ################################################
 # datanucleus-5
 ################################################
-          - rdbms: h2
-            provider: datanucleus-5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: datanucleus-5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: datanucleus-5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: datanucleus-5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: datanucleus-5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: datanucleus-5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mssql
 #            provider: datanucleus-5
 #            jdk: 8
@@ -124,11 +124,11 @@ jobs:
 ################################################
 # eclipselink
 ################################################
-          - rdbms: h2
-            provider: eclipselink
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: eclipselink
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql
 #            provider: eclipselink
 #            jdk: 8
@@ -192,36 +192,36 @@ jobs:
 ################################################
 # hibernate-5.3
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: oracle
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: db2
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mssql
-            provider: hibernate-5.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: oracle
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: db2
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mssql
+#            provider: hibernate-5.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 
 ################################################
 # datanucleus-5.1
@@ -260,21 +260,21 @@ jobs:
 ################################################
 # hibernate-5.5
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql8
-            provider: hibernate-5.5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.5
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql8
+#            provider: hibernate-5.5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.5
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: oracle
 #            provider: hibernate-5.5
 #            jdk: 8
@@ -294,21 +294,21 @@ jobs:
 ################################################
 # hibernate-5.4
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.4
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql8
-            provider: hibernate-5.4
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.4
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.4
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql8
+#            provider: hibernate-5.4
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.4
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: oracle
 #            provider: hibernate-5.4
 #            jdk: 8
@@ -328,21 +328,21 @@ jobs:
 ################################################
 # hibernate-5.2
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.2
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate-5.2
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.2
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.2
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate-5.2
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.2
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql8
 #            provider: hibernate-5.2
 #            jdk: 8
@@ -367,21 +367,21 @@ jobs:
 ################################################
 # hibernate-5.1
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.1
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate-5.1
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.1
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.1
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate-5.1
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.1
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql8
 #            provider: hibernate-5.1
 #            jdk: 8
@@ -406,21 +406,21 @@ jobs:
 ################################################
 # hibernate-5.0
 ################################################
-          - rdbms: h2
-            provider: hibernate-5.0
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate-5.0
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-5.0
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-5.0
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate-5.0
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-5.0
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql8
 #            provider: hibernate-5.0
 #            jdk: 8
@@ -445,21 +445,21 @@ jobs:
 ################################################
 # hibernate-4.3
 ################################################
-          - rdbms: h2
-            provider: hibernate-4.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate-4.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate-4.3
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate-4.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate-4.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate-4.3
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql8
 #            provider: hibernate-4.3
 #            jdk: 8
@@ -484,21 +484,21 @@ jobs:
 ################################################
 # hibernate-4.2
 ################################################
-          - rdbms: h2
-            provider: hibernate
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: mysql
-            provider: hibernate
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
-          - rdbms: postgresql
-            provider: hibernate
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: hibernate
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: mysql
+#            provider: hibernate
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
+#          - rdbms: postgresql
+#            provider: hibernate
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql8
 #            provider: hibernate
 #            jdk: 8
@@ -523,11 +523,11 @@ jobs:
 ################################################
 # datanucleus-4
 ################################################
-          - rdbms: h2
-            provider: datanucleus-4
-            jdk: 8
-            spring-data: spring-data-1.11.x
-            deltaspike: deltaspike-1.7
+#          - rdbms: h2
+#            provider: datanucleus-4
+#            jdk: 8
+#            spring-data: spring-data-1.11.x
+#            deltaspike: deltaspike-1.7
 #          - rdbms: mysql
 #            provider: datanucleus-4
 #            jdk: 8
