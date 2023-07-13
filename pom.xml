@@ -66,11 +66,6 @@
         <url>https://github.com/Blazebit/blaze-persistence/issues</url>
     </issueManagement>
 
-    <ciManagement>
-        <system>travisci</system>
-        <url>https://travis-ci.com/Blazebit/blaze-persistence</url>
-    </ciManagement>
-
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
