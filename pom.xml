@@ -388,4 +388,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+<!--        Based on https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-maven-->
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/paywithextend/blaze-persistence</url>
+        </repository>
+    </distributionManagement>
 </project>
