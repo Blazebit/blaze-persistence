@@ -3747,7 +3747,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         buildBaseQueryString(sbSelectFrom, false, lateralJoinNode, false);
         if (hasLimit()) {
             if (mainQuery.jpaProvider.supportsSubqueryLimitOffset()) {
-                applyJpaLimit(sbSelectFrom);
                 sbSelectFrom.append(')');
             } else {
                 final boolean hasFirstResult = firstResult != 0;
