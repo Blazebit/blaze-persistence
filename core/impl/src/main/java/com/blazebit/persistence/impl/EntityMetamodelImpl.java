@@ -305,7 +305,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
             }
 
             discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, pluralAttribute.getElementType(), baseType, newParent, pluralAttribute, false);
-        } else if (!seenTypesForEnumResolving.contains(fieldType) && !fieldType.isInterface()) {
+        } else if (!seenTypesForEnumResolving.contains(fieldType) && attribute.getPersistentAttributeType() != null) {
             discoverEnumTypes(seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, delegate.managedType(fieldType), attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ? newParent : null);
         }
     }
