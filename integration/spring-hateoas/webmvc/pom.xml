@@ -18,7 +18,7 @@
         <version.spring />
         <version.spring.boot />
         <version.spring.data />
-        <version.spring.hateoas>1.0.2.RELEASE</version.spring.hateoas>
+        <version.spring.hateoas>1.5.5</version.spring.hateoas>
         <main.java.version>1.8</main.java.version>
     </properties>
 
