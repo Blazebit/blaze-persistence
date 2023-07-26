@@ -318,4 +318,15 @@ public class CaseWhenTest extends AbstractCoreTest {
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
+
+    @Test
+    public void testCaseWhenWithLimitedSubquery(){
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
+            .from(Document.class, "d")
+            .selectCase()
+            .whenSubquery().from(Document.class).select("1").setMaxResults(1).end().gtExpression("2")
+            .thenExpression("TRUE")
+            .otherwiseExpression("FALSE");
+        criteria.getResultList();
+    }
 }
