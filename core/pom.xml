@@ -52,6 +52,7 @@
                 <module>parser</module>
                 <module>impl</module>
                 <module>testsuite</module>
+                <module>testsuite-hibernate6</module>
 
                 <module>api-jar</module>
                 <module>impl-jar</module>
