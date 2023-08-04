@@ -15,7 +15,7 @@
         <module.name>com.blazebit.persistence.integration.spring.data.impl</module.name>
         <spring.activeProfiles />
         <test.argLine />
-        <version.spring>4.3.3.RELEASE</version.spring>
+        <version.spring>4.3.30.RELEASE</version.spring>
         <main.java.version>1.8</main.java.version>
     </properties>
 
