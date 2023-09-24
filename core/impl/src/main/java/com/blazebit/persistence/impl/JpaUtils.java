@@ -389,22 +389,18 @@ public final class JpaUtils {
                 }
             }
         }
-        // Remove the embeddable itself since it was split up
-        if (attributeName != null) {
-            embeddedPropertyNames.remove(attributeName);
-            // Hibernate has a bug in the handling of the deep property named "id" when being part of an element collection alias, so we cut it off
-            if (needsElementCollectionIdCutoff && attributeEntries.get(attributeName).getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                Iterator<String> iterator = embeddedPropertyNames.iterator();
-                List<String> addProperties = new ArrayList<>();
-                while (iterator.hasNext()) {
-                    String property = iterator.next();
-                    if (property.endsWith(".id")) {
-                        iterator.remove();
-                        addProperties.add(property.substring(0, property.length() - ".id".length()));
-                    }
+        // Hibernate has a bug in the handling of the deep property named "id" when being part of an element collection alias, so we cut it off
+        if (needsElementCollectionIdCutoff && attributeName != null && attributeEntries.get(attributeName).getAttribute().getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+            Iterator<String> iterator = embeddedPropertyNames.iterator();
+            List<String> addProperties = new ArrayList<>();
+            while (iterator.hasNext()) {
+                String property = iterator.next();
+                if (property.endsWith(".id")) {
+                    iterator.remove();
+                    addProperties.add(property.substring(0, property.length() - ".id".length()));
                 }
-                embeddedPropertyNames.addAll(addProperties);
             }
+            embeddedPropertyNames.addAll(addProperties);
         }
         return embeddedPropertyNames;
     }
