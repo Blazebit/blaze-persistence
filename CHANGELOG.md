@@ -6,11 +6,12 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Support JDK 21
 
 ### Bug fixes
 
-None yet
+* Fix parsing error for entity view limit mapping
+* Fix dropping of embeddable group by expression when nested property has same name as parent property
 
 ### Backwards-incompatible changes
 
