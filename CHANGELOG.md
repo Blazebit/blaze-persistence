@@ -13,6 +13,7 @@ Changes that happened in releases
 * Fix parsing error for entity view limit mapping
 * Fix dropping of embeddable group by expression when nested property has same name as parent property
 * Fix SQL generation for lateral subqueries when correlated path has `@Where` predicate
+* Fix `ConcurrentModificationException` during metamodel determination for special Hibernate Envers mappings
 
 ### Backwards-incompatible changes
 

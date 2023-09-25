@@ -392,7 +392,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 } else if (isAssociation(attribute) && (elementCollectionPath != null || !jpaProvider.isForeignJoinColumn(e, attributeName))) {
                     // We create an attribute entry for the id attribute of *ToOne relations if the columns reside on the Many side
                     collectIdColumns(e, attributeMap, attributeName, newParents, elementCollectionPath, fieldType, temporaryExtendedManagedTypes, seenTypesForEnumResolving, enumTypes, enumTypesForLiterals, accessorCache);
-                    if (e != type) {
+                    if (e != type && attributeMap != managedTypeAttributes) {
                         String prefix = attributeName + ".";
                         for (AttributeEntry<?, ?> value : attributeMap.values()) {
                             if (value.getAttributePathString().startsWith(prefix)) {
