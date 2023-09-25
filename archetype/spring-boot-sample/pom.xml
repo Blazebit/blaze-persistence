@@ -27,6 +27,10 @@
 
     <name>Blazebit Persistence Archetype Spring-Boot Sample</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.spring.boot.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

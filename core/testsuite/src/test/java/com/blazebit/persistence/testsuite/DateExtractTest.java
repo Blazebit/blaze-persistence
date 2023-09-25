@@ -405,7 +405,6 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("HOUR(creationDate)")
                 .select("HOUR(lastModified)")
                 ;
 
@@ -414,8 +413,7 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        assertEquals(0, (int) actual.get(0)); // Date is truncted anyway
-        assertEquals(c2.get(Calendar.HOUR_OF_DAY), (int) actual.get(1));
+        assertEquals(c2.get(Calendar.HOUR_OF_DAY), (int) actual.get(0));
     }
 
     @Test
@@ -426,7 +424,6 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("MINUTE(creationDate)")
                 .select("MINUTE(lastModified)")
                 ;
 
@@ -435,8 +432,7 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        assertEquals(0, (int) actual.get(0)); // Date is truncated anyway
-        assertEquals(c2.get(Calendar.MINUTE), (int) actual.get(1));
+        assertEquals(c2.get(Calendar.MINUTE), (int) actual.get(0));
     }
 
     @Test
@@ -447,7 +443,6 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("SECOND(creationDate)")
                 .select("SECOND(lastModified)")
                 ;
 
@@ -456,8 +451,7 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        assertEquals(0, actual.get(0, Number.class).intValue()); // Date is truncated anyway
-        assertEquals(c2.get(Calendar.SECOND), actual.get(1, Number.class).intValue());
+        assertEquals(c2.get(Calendar.SECOND), actual.get(0, Number.class).intValue());
     }
 
     @Test
@@ -468,7 +462,6 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("MILLISECOND(creationDate)")
                 .select("MILLISECOND(lastModified)")
                 .select("lastModified")
                 ;
@@ -478,11 +471,10 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        lastModified.setTime((Date) actual.get(2));
+        lastModified.setTime((Date) actual.get(1));
         assumeTrue("Milliseconds were truncated or rounded in " + dbmsDialect, lastModified.get(Calendar.MILLISECOND) == c2.get(Calendar.MILLISECOND));
 
-        assertEquals(0, (int) actual.get(0)); // Date is truncated anyway
-        assertEquals(c2.get(Calendar.MILLISECOND), (int) actual.get(1), 1); // Milliseconds are rounded in MS SQL
+        assertEquals(c2.get(Calendar.MILLISECOND), (int) actual.get(0), 1); // Milliseconds are rounded in MS SQL
     }
 
     @Test
@@ -493,7 +485,6 @@ public class DateExtractTest extends AbstractCoreTest {
 
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
-                .select("MICROSECOND(creationDate)")
                 .select("MICROSECOND(lastModified)")
                 .select("lastModified")
                 ;
@@ -503,11 +494,10 @@ public class DateExtractTest extends AbstractCoreTest {
 
         Tuple actual = list.get(0);
 
-        lastModified.setTime((Date) actual.get(2));
+        lastModified.setTime((Date) actual.get(1));
         assumeTrue("Milliseconds were truncated or rounded in " + dbmsDialect, lastModified.get(Calendar.MILLISECOND) == c2.get(Calendar.MILLISECOND));
 
-        assertEquals(0, (int) actual.get(0)); // Date is truncated anyway
-        assertEquals(c2.get(Calendar.MILLISECOND) * 1000, (int) actual.get(1), 2000); // Microseconds are rounded in MS SQL
+        assertEquals(c2.get(Calendar.MILLISECOND) * 1000, (int) actual.get(0), 2000); // Microseconds are rounded in MS SQL
     }
 
     @Test

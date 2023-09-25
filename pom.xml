@@ -34,11 +34,42 @@
 
     <properties>
         <jdk8.home>${env.JAVA_HOME}</jdk8.home>
+        <dbHost>localhost</dbHost>
         <main.java.version>1.7</main.java.version>
         <maven.compiler.target>${main.java.version}</maven.compiler.target>
         <maven.compiler.source>${main.java.version}</maven.compiler.source>
         <version.checkstyle>9.3</version.checkstyle>
-        <version.javadoc.plugin>3.5.0</version.javadoc.plugin>
+
+        <!-- Plugin versions -->
+        <version.antrun.plugin>3.1.0</version.antrun.plugin>
+        <version.assembly.plugin>3.6.0</version.assembly.plugin>
+        <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
+        <version.clean.plugin>3.3.1</version.clean.plugin>
+        <version.compiler.plugin>3.11.0</version.compiler.plugin>
+        <version.dependency.plugin>3.6.0</version.dependency.plugin>
+        <version.deploy.plugin>3.1.1</version.deploy.plugin>
+        <version.ear.plugin>3.3.0</version.ear.plugin>
+        <version.ejb.plugin>3.2.1</version.ejb.plugin>
+        <version.enforcer.plugin>3.4.1</version.enforcer.plugin>
+        <version.exec.plugin>1.6.0</version.exec.plugin>
+        <version.failsafe.plugin>3.1.2</version.failsafe.plugin>
+        <version.gpg.plugin>3.1.0</version.gpg.plugin>
+        <version.injection.plugin>1.0.2</version.injection.plugin>
+        <version.install.plugin>3.1.1</version.install.plugin>
+        <version.jandex.plugin>3.1.2</version.jandex.plugin>
+        <version.jar.plugin>3.3.0</version.jar.plugin>
+        <version.javadoc.plugin>3.6.0</version.javadoc.plugin>
+        <version.moditect.plugin>1.0.0.RC1</version.moditect.plugin>
+        <version.plugin.plugin>3.9.0</version.plugin.plugin>
+        <version.processor.plugin>3.3.2</version.processor.plugin>
+        <version.release.plugin>3.0.1</version.release.plugin>
+        <version.resources.plugin>3.3.1</version.resources.plugin>
+        <version.shade.plugin>3.5.1</version.shade.plugin>
+        <version.site.plugin>4.0.0-M9</version.site.plugin>
+        <version.source.plugin>3.3.0</version.source.plugin>
+        <version.surefire.plugin>3.1.2</version.surefire.plugin>
+        <version.war.plugin>3.4.0</version.war.plugin>
+
         <maven.min.version>3.3.1</maven.min.version>
         <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
         <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
@@ -156,7 +187,6 @@
                 <jdk>[1.9,)</jdk>
             </activation>
             <properties>
-                <version.enforcer.plugin>3.0.0-M1</version.enforcer.plugin>
                 <maven.processor.source>1.9</maven.processor.source>
                 <maven.processor.target>1.9</maven.processor.target>
             </properties>
@@ -360,18 +390,6 @@
                         <phase />
                         <goals>
                             <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>

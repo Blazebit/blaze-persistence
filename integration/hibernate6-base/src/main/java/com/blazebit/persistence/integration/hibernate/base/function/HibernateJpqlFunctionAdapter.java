@@ -76,7 +76,10 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
                             }
                             return null;
                         }
-                        return (ReturnableType<?>) nodeType;
+                        if (nodeType instanceof ReturnableType<?>) {
+                            return (ReturnableType<?>) nodeType;
+                        }
+                        return null;
                     }
                     return typeConfiguration.getBasicTypeForJavaType(returnType);
                 }

@@ -15,32 +15,26 @@
  */
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.JsonDocument;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runners.Parameterized;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Moritz Becker

@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Archetype Core Sample</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.core.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

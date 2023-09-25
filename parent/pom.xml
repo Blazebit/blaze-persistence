@@ -142,25 +142,12 @@
         <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
-        <!-- Plugin versions -->
-        <version.antrun.plugin>3.1.0</version.antrun.plugin>
-        <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
-        <version.compiler.plugin>3.11.0</version.compiler.plugin>
-        <version.jandex.plugin>3.1.2</version.jandex.plugin>
-        <version.processor.plugin>3.3.2</version.processor.plugin>
-        <version.exec.plugin>1.6.0</version.exec.plugin>
-        <version.injection.plugin>1.0.2</version.injection.plugin>
-        <version.moditect.plugin>1.0.0.RC1</version.moditect.plugin>
-        <version.release.plugin>3.0.0</version.release.plugin>
-        <version.shade.plugin>3.3.0</version.shade.plugin>
-        <version.surefire.plugin>3.1.0</version.surefire.plugin>
-        <version.failsafe.plugin>3.1.0</version.failsafe.plugin>
         <asmVersion>9.5</asmVersion>
         <version.bnd>6.4.1</version.bnd>
 <!--        <version.bnd>7.0.0-SNAPSHOT</version.bnd>-->
 
         <h2.version>1.4.200</h2.version>
-        <mssql.version>7.2.2.jre8</mssql.version>
+        <mssql.version>12.4.1.jre8</mssql.version>
 
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
@@ -817,13 +804,13 @@
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
-                <version>8.0.22</version>
+                <version>8.0.33</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
-                <version>42.2.6.jre7</version>
+                <version>42.6.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -841,7 +828,7 @@
             <dependency>
                 <groupId>com.oracle.database.jdbc</groupId>
                 <artifactId>ojdbc8</artifactId>
-                <version>19.7.0.0</version>
+                <version>23.2.0.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

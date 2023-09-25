@@ -80,12 +80,10 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Required for JDK 16 -->
                                 <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                            <systemPropertyVariables>
                                 <quarkus.test.profile>postgresql</quarkus.test.profile>
                             </systemPropertyVariables>
                             <skip>false</skip>
@@ -107,12 +105,10 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Required for JDK 16 -->
                                 <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                            <systemPropertyVariables>
                                 <quarkus.test.profile>mysql8</quarkus.test.profile>
                             </systemPropertyVariables>
                             <skip>false</skip>
@@ -134,12 +130,10 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Required for JDK 16 -->
                                 <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                            <systemPropertyVariables>
                                 <quarkus.test.profile>mssql</quarkus.test.profile>
                             </systemPropertyVariables>
                             <skip>false</skip>
@@ -161,7 +155,7 @@
                                     <systemProperties>
                                         <systemProperty>
                                             <key>jdbc.url</key>
-                                            <value>jdbc:sqlserver://localhost:1433</value>
+                                            <value>jdbc:sqlserver://${dbHost}:1433;trustServerCertificate=true</value>
                                         </systemProperty>
                                         <systemProperty>
                                             <key>jdbc.user</key>
@@ -202,12 +196,10 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Required for JDK 16 -->
                                 <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                            <systemPropertyVariables>
                                 <quarkus.test.profile>h2</quarkus.test.profile>
                             </systemPropertyVariables>
                             <skip>false</skip>

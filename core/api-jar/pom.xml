@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-core-api-jar</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.core</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

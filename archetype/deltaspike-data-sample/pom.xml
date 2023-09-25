@@ -27,6 +27,10 @@
 
     <name>Blazebit Persistence Archetype DeltaSpike Data Sample</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.deltaspike.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

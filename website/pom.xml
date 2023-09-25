@@ -26,6 +26,7 @@
     </parent>
 
     <artifactId>blaze-persistence-website</artifactId>
+    <packaging>pom</packaging>
 
     <name>Blazebit Persistence Website</name>
 
@@ -51,6 +52,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-documentation</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
     </dependencies>
 

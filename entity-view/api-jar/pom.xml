@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-entity-view-api-jar</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.view</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

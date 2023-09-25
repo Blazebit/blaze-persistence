@@ -44,7 +44,10 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
             "'pg_catalog'," +
             "'pg_toast'," +
             "'pg_temp_1'," +
-            "'pg_toast_temp_1'";
+            "'pg_toast_temp_1'," +
+            "'tiger'," +
+            "'tiger_data'," +
+            "'topology'";
 
     private final List<String> ignoredTables = new ArrayList<>();
     private final Map<String, String> truncateSqlPerSchema = new HashMap<>();

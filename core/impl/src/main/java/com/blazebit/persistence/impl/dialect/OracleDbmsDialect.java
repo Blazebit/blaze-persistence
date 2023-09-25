@@ -272,6 +272,11 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
+    public int getPrepareFlags() {
+        return PreparedStatement.NO_GENERATED_KEYS;
+    }
+
+    @Override
     public PreparedStatement prepare(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
         if (REGISTER_RETURN_PARAMETER == null) {
             throw new IllegalStateException("Could not apply query returning because the class oracle.jdbc.OraclePreparedStatement could not be loaded!");
