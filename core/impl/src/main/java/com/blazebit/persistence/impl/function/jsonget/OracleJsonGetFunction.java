@@ -34,10 +34,10 @@ public class OracleJsonGetFunction extends AbstractJsonGetFunction {
         context.addArgument(0);
         context.addChunk(" format json,'");
         context.addChunk(jsonPath);
-        context.addChunk("'),json_query(");
+        context.addChunk("'),nullif(json_query(");
         context.addArgument(0);
         context.addChunk(" format json,'");
         context.addChunk(jsonPath);
-        context.addChunk("'))");
+        context.addChunk("'),'null'))");
     }
 }

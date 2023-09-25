@@ -24,6 +24,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-mysql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.23</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -53,10 +59,10 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner${runnerExtension}</native.image.path>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                            </systemProperties>
+                            </systemPropertyVariables>
                         </configuration>
                     </execution>
                 </executions>

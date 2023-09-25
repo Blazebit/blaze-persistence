@@ -12,6 +12,10 @@
 
     <name>Blazebit Persistence Archetype Spring-Data Sample</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.spring.data.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

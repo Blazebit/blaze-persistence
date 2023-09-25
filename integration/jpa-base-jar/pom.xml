@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-jpa-base-jar</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.jpa</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

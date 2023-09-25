@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-core-testsuite-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.core.testsuite</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

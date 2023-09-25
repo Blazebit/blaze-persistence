@@ -24,6 +24,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-mssql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>7.2.2.jre8</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -44,7 +50,7 @@
                             <systemProperties>
                                 <systemProperty>
                                     <key>jdbc.url</key>
-                                    <value>jdbc:sqlserver://localhost:1433</value>
+                                    <value>jdbc:sqlserver://${dbHost}:1433;trustServerCertificate=true</value>
                                 </systemProperty>
                                 <systemProperty>
                                     <key>jdbc.user</key>
@@ -106,10 +112,10 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner${runnerExtension}</native.image.path>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                            </systemProperties>
+                            </systemPropertyVariables>
                         </configuration>
                     </execution>
                 </executions>

@@ -501,6 +501,8 @@ The default DBMS connection infos are defined via Maven properties, so you can o
 
 The values are defined in e.g. `core/testsuite/pom.xml` in the respective DBMS profiles.
 
+For executing tests against a database on a dedicated host you might want to specify the following system property `-DdbHost=192.168.99.100`.
+
 ## Testing with Jakarta Persistence provider
 
 To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
@@ -530,10 +532,6 @@ After doing that, you should be able to execute any test in IntelliJ.
 
 Note that if you make changes to an entity class or add a new entity class you might need to redo the rebuild and enhancement. 
 
-## MySQL
-
-When using the MySQL docker container via `docker_db.sh mysql_5_7` or  `docker_db.sh mysql_8_0` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:mysql://192.168.99.100:3306/test?useUnicode=true&characterEncoding=utf8`
-
 ## Firebird
 
 When installing the 3.x version, you also need a 3.x JDBC driver.
@@ -549,23 +547,7 @@ After creating the DB with `create database 'localhost:test' user 'sysdba' passw
 
 When setting up Oracle locally, keep in mind that when you connect to it, you have to set the NLS_SORT to BINARY.
 Since the JDBC driver derives values from the locale settings of the JVM, you should set the default locale settings to en_US.
-In IntelliJ when defining the Oracle database, go to the Advanced tab an specify the JVM options `-Duser.country=us -Duser.language=en`. 
-
-For executing tests against the Oracle docker container started via `docker_db.sh oracle` you need to specify the following
-system properties `-Djdbc.url=jdbc:oracle:thin:@192.168.99.100:1521/xe -Djdbc.user=SYSTEM -Djdbc.password=Oracle18 -Doracle.jdbc.DateZeroTime=true`.
-
-### Install Oracle locally
-
-Download Oracle XE from http://www.oracle.com/technetwork/database/database-technologies/express-edition/downloads/index.html
-During installation use the password "oracle" which is also the default password for the docker image.
-
-## DB2
-
-When using the DB2 docker container via `docker_db.sh db2` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:db2://192.168.99.100:50000/test -Djdbc.user=db2inst1 -Djdbc.password=db2inst1-pwd`
-
-## SQL Server
-
-When using the DB2 docker container via `docker_db.sh mssql` you might want to specify the following properties when executing tests `-Djdbc.url=jdbc:sqlserver://192.168.99.100:1433`
+In IntelliJ when defining the Oracle database, go to the Advanced tab an specify the JVM options `-Duser.country=us -Duser.language=en`.
 
 ## GraalVM for native images with Quarkus
 

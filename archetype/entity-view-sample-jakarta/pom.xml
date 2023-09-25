@@ -30,6 +30,10 @@
 
     <name>Blazebit Persistence Archetype Entity-View Sample Jakarta</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.view.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

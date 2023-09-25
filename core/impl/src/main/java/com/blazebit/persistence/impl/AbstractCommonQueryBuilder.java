@@ -3113,9 +3113,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 buildLateralExampleQueryString(lateralExampleQueryString);
                 String sql = getQuerySpecification(cteInfo.nonRecursiveCriteriaBuilder.getLateralQuery(lateralExampleQueryString, lateralStyle ? null : lateInlineNode)).getSql();
                 int start = SqlUtils.indexOfWhere(sql);
-                while (sql.charAt(start) != '(') {
-                    start++;
+                start = sql.indexOf("(select", start);
+                while (sql.charAt(start) == '(') {
+                    start--;
                 }
+                start++;
 
                 String prefix;
                 if (dbmsDialect.getLateralStyle() == LateralStyle.LATERAL) {
@@ -3125,10 +3127,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 } else {
                     prefix = "outer apply (";
                 }
+                int endIndex = sql.lastIndexOf(')');
+                if (endsWith(sql, endIndex, " is not null")) {
+                    endIndex -= " is not null".length();
+                }
                 if (aliasesSb == null) {
-                    subquery = prefix + sql.substring(start + 1, sql.lastIndexOf(')')) + ")";
+                    subquery = prefix + sql.substring(start + 1, endIndex) + ")";
                 } else {
-                    aliasesSb.insert(0, prefix).append('(').append(sql, start + 1, sql.lastIndexOf(')')).append(')').append(')');
+                    aliasesSb.insert(0, prefix).append('(').append(sql, start + 1, endIndex).append(')').append(')');
                     subquery = aliasesSb.toString();
                 }
             } else {
@@ -3144,6 +3150,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         return 1;
+    }
+
+    private static boolean endsWith(String sql, int endIndex, String substring) {
+        return sql.regionMatches(endIndex - substring.length(), substring, 0, substring.length());
     }
 
     /**

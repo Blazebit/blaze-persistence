@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-spring-data-testsuite-webflux-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.spring.data.testsuite.webflux</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

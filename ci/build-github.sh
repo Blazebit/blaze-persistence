@@ -7,9 +7,9 @@ java -version
 if [ "$RDBMS" == 'mysql' ]; then
   bash $DIR/../docker_db.sh mysql_5_7
 elif [ "$RDBMS" == 'mysql8' ]; then
-  bash $DIR/../docker_db.sh mysql_8_0
+  bash $DIR/../docker_db.sh mysql
 elif [ "$RDBMS" == 'postgresql' ]; then
-  bash $DIR/../docker_db.sh postgresql_9_5
+  bash $DIR/../docker_db.sh postgresql
 elif [ "$RDBMS" == 'db2' ]; then
   bash $DIR/../docker_db.sh db2
 elif [ "$RDBMS" == 'oracle' ]; then

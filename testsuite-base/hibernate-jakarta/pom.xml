@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-testsuite-base-hibernate-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.testsuite.base.hibernate</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

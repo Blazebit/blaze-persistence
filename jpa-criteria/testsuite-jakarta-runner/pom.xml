@@ -29,6 +29,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <module.name>com.blazebit.persistence.criteria.testsuite.runner</module.name>
         <!-- We use Java 8 for a few tests -->
         <test.java.version>1.8</test.java.version>
         <main.java.version>${test.java.version}</main.java.version>
@@ -79,50 +80,43 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <jdbc.url>jdbc:h2:mem:core${surefire.forkNumber};DB_CLOSE_DELAY=-1</jdbc.url>
+                        <jdbc.user>admin</jdbc.user>
+                        <jdbc.password>admin</jdbc.password>
+                        <jdbc.driver>org.h2.Driver</jdbc.driver>
+                        <user.timezone>UTC</user.timezone>
+                    </systemPropertyVariables>
+                    <dependenciesToScan>
+                        <dependency>com.blazebit:blaze-persistence-jpa-criteria-testsuite-jakarta</dependency>
+                    </dependenciesToScan>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>${version.surefire.plugin}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
     <profiles>
-        <profile>
-            <id>h2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <jdbc.url>jdbc:h2:mem:core${surefire.forkNumber};DB_CLOSE_DELAY=-1</jdbc.url>
-                                <jdbc.user>admin</jdbc.user>
-                                <jdbc.password>admin</jdbc.password>
-                                <jdbc.driver>org.h2.Driver</jdbc.driver>
-                                <user.timezone>UTC</user.timezone>
-                            </systemPropertyVariables>
-                            <dependenciesToScan>
-                                <dependency>com.blazebit:blaze-persistence-jpa-criteria-testsuite-jakarta</dependency>
-                            </dependenciesToScan>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.maven.surefire</groupId>
-                                <artifactId>surefire-junit47</artifactId>
-                                <version>${version.surefire.plugin}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-            <dependencies>
-                <dependency>
-                    <groupId>com.h2database</groupId>
-                    <artifactId>h2</artifactId>
-                    <version>${h2.version}</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-        </profile>
         <profile>
             <id>hibernate-6.2</id>
             <properties>

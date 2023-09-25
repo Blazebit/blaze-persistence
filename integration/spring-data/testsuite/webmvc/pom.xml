@@ -16,6 +16,7 @@
         <spring.activeProfiles />
         <test.argLine />
         <main.java.version>1.8</main.java.version>
+        <version.spring>${version.spring-data-2.7-spring}</version.spring>
     </properties>
 
     <dependencyManagement>
@@ -235,7 +236,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
+                                <jdbc.url>jdbc:mysql://${dbHost}:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
@@ -270,7 +271,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
+                                <jdbc.url>jdbc:mysql://${dbHost}:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
                                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
@@ -305,7 +306,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:postgresql://localhost:5432/test</jdbc.url>
+                                <jdbc.url>jdbc:postgresql://${dbHost}:5432/test</jdbc.url>
                                 <jdbc.user>postgres</jdbc.user>
                                 <jdbc.password>postgres</jdbc.password>
                                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
@@ -376,7 +377,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoDB2,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
+                                <jdbc.url>jdbc:db2://${dbHost}:50000/test</jdbc.url>
                                 <jdbc.user>db2inst1</jdbc.user>
                                 <jdbc.password>db2inst1-pwd</jdbc.password>
                                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
@@ -412,7 +413,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:firebirdsql:localhost:/tmp/test.fdb</jdbc.url>
+                                <jdbc.url>jdbc:firebirdsql:${dbHost}:/tmp/test.fdb</jdbc.url>
                                 <jdbc.user>SYSDBA</jdbc.user>
                                 <jdbc.password>masterkey</jdbc.password>
                                 <jdbc.driver>org.firebirdsql.jdbc.FBDriver</jdbc.driver>
@@ -447,7 +448,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:oracle:thin:@localhost:1521:XE</jdbc.url>
+                                <jdbc.url>jdbc:oracle:thin:@${dbHost}:1521:XE</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
                                 <jdbc.password>Oracle18</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
@@ -488,7 +489,7 @@
                         <configuration>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:sqlserver://localhost:1433</jdbc.url>
+                                <jdbc.url>jdbc:sqlserver://${dbHost}:1433;trustServerCertificate=true</jdbc.url>
                                 <jdbc.user>sa</jdbc.user>
                                 <jdbc.password>Blaze-Persistence</jdbc.password>
                                 <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
@@ -518,7 +519,7 @@
                                     <systemProperties>
                                         <systemProperty>
                                             <key>jdbc.url</key>
-                                            <value>jdbc:sqlserver://localhost:1433</value>
+                                            <value>jdbc:sqlserver://${dbHost}:1433;trustServerCertificate=true</value>
                                         </systemProperty>
                                         <systemProperty>
                                             <key>jdbc.user</key>

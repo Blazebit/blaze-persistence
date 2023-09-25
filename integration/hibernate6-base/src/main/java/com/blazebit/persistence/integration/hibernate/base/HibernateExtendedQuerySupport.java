@@ -43,7 +43,6 @@ import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -1213,8 +1212,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         List<Integer> sqlTypes = new ArrayList<>(sqlSelections.size());
 
         for (int i = 0; i < sqlSelections.size(); i++) {
-            JdbcMapping jdbcMapping = getField(sqlSelections.get(i), "jdbcMapping");
-            sqlTypes.add(jdbcMapping.getJdbcType().getDefaultSqlTypeCode());
+            sqlTypes.add(sqlSelections.get(i).getExpressionType().getSingleJdbcMapping().getJdbcType().getDefaultSqlTypeCode());
         }
 
         int[] returningColumnTypes = new int[sqlTypes.size()];

@@ -26,6 +26,7 @@
     </parent>
 
     <artifactId>blaze-persistence-documentation</artifactId>
+    <packaging>pom</packaging>
     
     <name>Blazebit Persistence Documentation</name>
     

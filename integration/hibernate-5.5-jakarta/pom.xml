@@ -28,6 +28,10 @@
     <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <module.name>com.blazebit.persistence.integration.hibernate</module.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

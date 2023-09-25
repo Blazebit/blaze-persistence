@@ -27,6 +27,10 @@
 
     <name>Blazebit Persistence Archetype Java EE Sample</name>
 
+    <properties>
+        <module.name>com.blazebit.persistence.archetype.javaee.sample</module.name>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>

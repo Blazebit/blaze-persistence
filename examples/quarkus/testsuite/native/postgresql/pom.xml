@@ -24,6 +24,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.18</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -53,10 +59,10 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
-                            <systemProperties>
+                            <systemPropertyVariables>
                                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner${runnerExtension}</native.image.path>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                            </systemProperties>
+                            </systemPropertyVariables>
                         </configuration>
                     </execution>
                 </executions>
