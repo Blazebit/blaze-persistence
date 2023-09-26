@@ -113,6 +113,10 @@ class ConstantifiedJoinNodeAttributeCollector extends VisitorAdapter {
         rootPredicate.accept(this);
     }
 
+    public AliasManager getAliasManager() {
+        return aliasManager;
+    }
+
     public Map<Object, Map<String, Boolean>> getConstantifiedJoinNodeAttributes() {
         return constantifiedJoinNodeAttributes;
     }
