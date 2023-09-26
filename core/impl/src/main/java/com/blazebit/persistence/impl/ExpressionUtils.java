@@ -247,6 +247,17 @@ public class ExpressionUtils {
                 return true;
             }
             int size = expressions.size();
+            if (rootTypes == null) {
+                if (size == 1 && constantifiedJoinNodeAttributeCollector != null) {
+                    // In this case, the expression could be an alias referring to a non-path select item
+                    AliasInfo aliasInfo = constantifiedJoinNodeAttributeCollector.getAliasManager().getAliasInfo(((PropertyExpression) expression).getProperty());
+                    if (aliasInfo instanceof SelectInfo) {
+                        return isNullable(metamodel, constantifiedJoinNodeAttributeCollector, ((SelectInfo) aliasInfo).getExpression());
+                    }
+                }
+                // Not sure if this case is possible, but let's play defensive and return that this is nullable
+                return true;
+            }
             Type<?> baseType = rootTypes.get(((PropertyExpression) expression).getProperty());
             int i = 0;
             if (baseType != null) {

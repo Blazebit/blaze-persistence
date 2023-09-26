@@ -104,12 +104,12 @@ public class OrderByManager extends AbstractManager<ExpressionModifier> {
                     if (selectInfo.getExpression() instanceof PathExpression) {
                         expression = copiedSelectExpression;
                     } else {
-                        String alias = aliasManager.generateRootAlias("_generated_alias");
-                        selectManager.select(copiedSelectExpression, alias);
+                        String alias = aliasManager.generateRootAlias("bp_generated_alias");
                         List<Expression> args = new ArrayList<>(2);
-                        args.add(new PathExpression(new PropertyExpression(alias)));
+                        args.add(copiedSelectExpression);
                         args.add(new StringLiteral(alias));
-                        expression = new FunctionExpression(AliasFunction.FUNCTION_NAME, args);
+                        selectManager.select(new FunctionExpression(AliasFunction.FUNCTION_NAME, args), alias);
+                        expression = new PathExpression(new PropertyExpression(alias));
                     }
                 }
             } else {
