@@ -539,5 +539,10 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
         public <T> T getService(Class<T> serviceClass) {
             return entityViewManager.get().getService(serviceClass);
         }
+
+        @Override
+        public void close() {
+            entityViewManager.get().close();
+        }
     }
 }

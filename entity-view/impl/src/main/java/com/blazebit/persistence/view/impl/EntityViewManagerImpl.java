@@ -1450,6 +1450,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return serializableDelegates.get(proxyFactory.getProxy(this, metamodel.managedViewOrError(entityViewClass)));
     }
 
+    @Override
+    public void close() {
+        proxyFactory.clear();
+    }
+
     /**
      * @author Christian Beikov
      * @since 1.2.0

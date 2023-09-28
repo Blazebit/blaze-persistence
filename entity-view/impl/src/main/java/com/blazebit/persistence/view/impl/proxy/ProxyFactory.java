@@ -1011,6 +1011,8 @@ public class ProxyFactory {
     }
 
     private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, Class<?> neighbourClazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
+        Class<? extends T> c;
+        boolean newlyDefined = false;
         try {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
             if (clazz.getPackage() != null) {
@@ -1021,13 +1023,8 @@ public class ProxyFactory {
                 cc.writeFile(DEBUG_DUMP_DIRECTORY.toString());
             }
 
-            Class<? extends T> c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), neighbourClazz);
-
-            if (entityViewManager != null) {
-                c.getField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, entityViewManager);
-            }
-
-            return c;
+            c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), neighbourClazz);
+            newlyDefined = true;
         } catch (CannotCompileException | LinkageError ex) {
             // If there are multiple proxy factories for the same class loader
             // we could end up in defining a class multiple times, so we check if the classloader
@@ -1037,7 +1034,7 @@ public class ProxyFactory {
                     || ex.getCause() instanceof InvocationTargetException && ex.getCause().getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause().getCause()) != null
                     || ex.getCause() instanceof LinkageError && (error = (LinkageError) ex.getCause()) != null) {
                 try {
-                    return (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
+                    c = (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
                 } catch (ClassNotFoundException cnfe) {
                     // Something we can't handle happened
                     throw error;
@@ -1049,11 +1046,32 @@ public class ProxyFactory {
             // With Java 9 it's actually the case that Javassist doesn't throw the LinkageError but instead tries to define the class differently
             // Too bad that this different path lead to a NullPointerException
             try {
-                return (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
+                c = (Class<? extends T>) pool.getClassLoader().loadClass(cc.getName());
             } catch (ClassNotFoundException cnfe) {
                 // Something we can't handle happened
                 throw ex;
             }
+        }
+        if (entityViewManager != null) {
+            updateEvmReferences(c, entityViewManager, !newlyDefined);
+        }
+        return c;
+    }
+
+    private void updateEvmReferences(Class<?> entityViewClass, EntityViewManager evm, boolean updateSerializableEvmDelegate) {
+        try {
+            entityViewClass.getField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, evm);
+            if (updateSerializableEvmDelegate) {
+                SerializableEntityViewManager serializableEvm =
+                    (SerializableEntityViewManager) entityViewClass.getField(
+                        SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null);
+                Field serializableEvmDelegateField = SerializableEntityViewManager.class.getDeclaredField(
+                    SerializableEntityViewManager.SERIALIZABLE_EVM_DELEGATE_FIELD_NAME);
+                serializableEvmDelegateField.setAccessible(true);
+                serializableEvmDelegateField.set(serializableEvm, evm);
+            }
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -3488,5 +3506,18 @@ public class ProxyFactory {
         sb.append(';');
 
         return sb.toString();
+    }
+
+    public void clear() {
+        for (Class<?> proxyClass : proxyClasses.values()) {
+            updateEvmReferences(proxyClass, null, true);
+        }
+        proxyClasses.clear();
+        for (Class<?> unsafeProxyClass : unsafeProxyClasses.values()) {
+            updateEvmReferences(unsafeProxyClass, null, true);
+        }
+        unsafeProxyClasses.clear();
+        baseClasses.clear();
+        proxyClassesToViewClasses.clear();
     }
 }
