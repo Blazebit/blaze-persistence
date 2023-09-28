@@ -323,6 +323,11 @@ public class EntityViewManagerProducer {
         evm = config.createEntityViewManager(criteriaBuilderFactory);
     }
 
+    @PreDestroy
+    public void closeEvm() {
+        evm.close();
+    }
+
     @Produces
     @ApplicationScoped
     public EntityViewManager createEntityViewManager() {
@@ -375,6 +380,11 @@ public class EntityViewManagerProducer {
     public void init() {
         // do some configuration
         evm = config.createEntityViewManager(criteriaBuilderFactory);
+    }
+
+    @PreDestroy
+    public void closeEvm() {
+        evm.close();
     }
 
     @Produces

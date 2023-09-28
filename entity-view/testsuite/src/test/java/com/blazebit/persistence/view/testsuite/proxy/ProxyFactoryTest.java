@@ -21,6 +21,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.SerializableEntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.impl.metamodel.MappingConstructorImpl;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
@@ -337,9 +338,62 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     }
 
     @Test
-    public void testMutableProxyWithPrimitiveArray() throws Exception {
+    public void testMutableProxyWithPrimitiveArray() {
         ManagedViewType<DocumentCreateViewWithPrimitiveArray> viewType = build(entityViewConfiguration, DocumentCreateViewWithPrimitiveArray.class).getMetamodel().managedView(DocumentCreateViewWithPrimitiveArray.class);
         proxyFactory.getProxy(evm, (ManagedViewTypeImplementor<DocumentCreateViewWithPrimitiveArray>) viewType);
+    }
+
+    @Test
+    public void close() throws NoSuchFieldException, IllegalAccessException {
+        // Given
+        EntityViewManager evm = build(entityViewConfiguration, DocumentCreateViewWithPrimitiveArray.class,
+            DocumentInterfaceView.class);
+        ManagedViewType<DocumentCreateViewWithPrimitiveArray> documentCreateViewWithPrimitiveArrayType = evm.getMetamodel()
+            .managedView(DocumentCreateViewWithPrimitiveArray.class);
+        ManagedViewType<DocumentInterfaceView> documentInterfaceViewType = evm.getMetamodel()
+            .managedView(DocumentInterfaceView.class);
+        Class<? extends DocumentCreateViewWithPrimitiveArray> documentCreateViewWithPrimitiveArrayProxyClass = proxyFactory.getProxy(
+            AbstractEntityViewTest.evm, (ManagedViewTypeImplementor<DocumentCreateViewWithPrimitiveArray>) documentCreateViewWithPrimitiveArrayType);
+        Class<? extends DocumentInterfaceView> documentInterfaceViewProxyClass = proxyFactory.getProxy(
+            AbstractEntityViewTest.evm, (ManagedViewTypeImplementor<DocumentInterfaceView>) documentInterfaceViewType);
+
+        // When
+        proxyFactory.clear();
+
+        // Then
+        assertProxyEvmReferencesNull(documentCreateViewWithPrimitiveArrayProxyClass);
+        assertProxyEvmReferencesNull(documentInterfaceViewProxyClass);
+        Map<Class<?>, Class<?>> baseClasses = getDeclaredFieldValue(proxyFactory, "unsafeProxyClasses", Map.class);
+        assertTrue(baseClasses.isEmpty());
+        Map<Class<?>, Class<?>> proxyClasses = getDeclaredFieldValue(proxyFactory, "unsafeProxyClasses", Map.class);
+        assertTrue(proxyClasses.isEmpty());
+        Map<Class<?>, Class<?>> unsafeProxyClasses = getDeclaredFieldValue(proxyFactory, "unsafeProxyClasses", Map.class);
+        assertTrue(unsafeProxyClasses.isEmpty());
+        Map<Class<?>, Class<?>> proxyClassesToViewClasses = getDeclaredFieldValue(proxyFactory, "proxyClassesToViewClasses", Map.class);
+        assertTrue(proxyClassesToViewClasses.isEmpty());
+    }
+
+    private void assertProxyEvmReferencesNull(Class<?> proxy) throws NoSuchFieldException, IllegalAccessException {
+        EntityViewManager proxyEvm = (EntityViewManager) proxy.getField(SerializableEntityViewManager.EVM_FIELD_NAME).get(null);
+        SerializableEntityViewManager serializableEvm =
+            (SerializableEntityViewManager) proxy.getField(
+                SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null);
+        Field serializableEvmDelegateField = SerializableEntityViewManager.class.getDeclaredField(
+            SerializableEntityViewManager.SERIALIZABLE_EVM_DELEGATE_FIELD_NAME);
+        serializableEvmDelegateField.setAccessible(true);
+        EntityViewManager serializableEvmDelegate = (EntityViewManager) serializableEvmDelegateField.get(serializableEvm);
+        assertNull(proxyEvm);
+        assertNull(serializableEvmDelegate);
+    }
+
+    private <T> T getDeclaredFieldValue(Object obj, String fieldName, Class<T> resultType) {
+        try {
+            Field field = obj.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (T) field.get(obj);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void assertAttribute(Class<?> proxyClass, String fieldName, int modifiers, Class<?> type, Class<?>... typeArguments) throws Exception {

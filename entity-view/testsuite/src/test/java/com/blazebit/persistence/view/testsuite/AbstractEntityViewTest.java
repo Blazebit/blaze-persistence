@@ -64,7 +64,7 @@ public class AbstractEntityViewTest extends AbstractCoreTest {
         EntityViewManagerFactoryCacheKey cacheKey = new EntityViewManagerFactoryCacheKey(cbf, cfg);
         EntityViewManager evm;
         if ((evm = evmCache.get(cacheKey)) == null) {
-            evm = build0(cfg, classes);
+            evm = build0(cfg);
             evmCache.put(cacheKey, evm);
         }
         AbstractEntityViewTest.evm = evm;
@@ -100,7 +100,7 @@ public class AbstractEntityViewTest extends AbstractCoreTest {
         return evm;
     }
 
-    private EntityViewManager build0(EntityViewConfiguration cfg, Class<?>[] classes) {
+    private EntityViewManager build0(EntityViewConfiguration cfg) {
         return cfg.createEntityViewManager(cbf);
     }
 

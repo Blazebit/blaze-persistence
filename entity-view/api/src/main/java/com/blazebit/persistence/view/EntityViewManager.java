@@ -28,6 +28,14 @@ import java.util.Map;
 
 /**
  * An interface that gives access to the metamodel and object builders.
+ * <p>
+ * There are currently limitations when it comes to using multiple instances of {@link EntityViewManager}
+ * simultaneously in an application. Specifically, multiple instances of {@link EntityViewManager} running within
+ * in the same class loader may not share entity view types. This is because the {@link EntityViewManager}
+ * dynamically creates proxy classes for entity view types and injects static self-references into these proxies.
+ * Another {@link EntityViewManager} creating a proxy for the same entity view type may find that the proxy class
+ * already exists within the class loader in which case it will overwrite the static self-references to point to
+ * itself leading to undefined behavior in the other {@link EntityViewManager}.
  *
  * @author Christian Beikov
  * @since 1.0.0
@@ -502,4 +510,12 @@ public interface EntityViewManager extends ServiceProvider {
      * @since 1.2.0
      */
     public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot);
+
+    /**
+     * Closes this {@link EntityViewManager} and frees resources. The behavior of any method called on an entity
+     * view manager after this method has been invoked is undefined.
+     *
+     * @since 1.6.10
+     */
+    public void close();
 }

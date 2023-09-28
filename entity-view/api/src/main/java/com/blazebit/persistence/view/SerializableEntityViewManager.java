@@ -36,6 +36,7 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
 
     public static final String EVM_FIELD_NAME = "ENTITY_VIEW_MANAGER";
     public static final String SERIALIZABLE_EVM_FIELD_NAME = "SERIALIZABLE_ENTITY_VIEW_MANAGER";
+    public static final String SERIALIZABLE_EVM_DELEGATE_FIELD_NAME = "evm";
 
     private final Class<?> entityViewClass;
     private transient volatile EntityViewManager evm;
@@ -274,5 +275,10 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
     @Override
     public <T> T getService(Class<T> serviceClass) {
         return getEvm().getService(serviceClass);
+    }
+
+    @Override
+    public void close() {
+        getEvm().close();
     }
 }
