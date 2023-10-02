@@ -786,7 +786,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("microsoft", new MSSQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
-        jpqlFunctionGroup.add("cockroach", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("cockroach")));
         registerFunction(jpqlFunctionGroup);
 
         // window_group_concat
@@ -799,7 +799,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql")));
         jpqlFunctionGroup.add("mysql8", new MySQLGroupConcatWindowFunction(dbmsDialects.get("mysql8")));
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
-        jpqlFunctionGroup.add("cockroach", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("postgresql")));
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLGroupConcatWindowFunction(dbmsDialects.get("cockroach")));
         registerFunction(jpqlFunctionGroup);
 
         // datetime
