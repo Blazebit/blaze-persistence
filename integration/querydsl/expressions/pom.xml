@@ -57,11 +57,20 @@
                 <configuration>
                     <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
                     <isOffline>true</isOffline>
-                    <links>
-                        <link>https://javadoc.io/doc/com.querydsl/querydsl-jpa/${querydsl.version}/</link>
-                        <link>https://javadoc.io/doc/com.querydsl/querydsl-sql/${querydsl.version}/</link>
-                        <link>https://javadoc.io/doc/com.querydsl/querydsl-core/${querydsl.version}/</link>
-                    </links>
+                    <offlineLinks>
+                        <offlineLink>
+                            <url>https://javadoc.io/doc/com.querydsl/querydsl-jpa/${querydsl.version}/</url>
+                            <location>../../../javadoc/querydsl-jpa-${querydsl.version}/</location>
+                        </offlineLink>
+                        <offlineLink>
+                            <url>https://javadoc.io/doc/com.querydsl/querydsl-sql/${querydsl.version}/</url>
+                            <location>../../../javadoc/querydsl-sql-${querydsl.version}/</location>
+                        </offlineLink>
+                        <offlineLink>
+                            <url>https://javadoc.io/doc/com.querydsl/querydsl-core/${querydsl.version}/</url>
+                            <location>../../../javadoc/querydsl-core-${querydsl.version}/</location>
+                        </offlineLink>
+                    </offlineLinks>
                     <tags>
                         <tag>
                             <name>apiNote</name>
@@ -102,11 +111,20 @@
                             <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                             <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
                             <isOffline>true</isOffline>
-                            <links>
-                                <link>https://javadoc.io/doc/com.querydsl/querydsl-jpa/${querydsl.version}/</link>
-                                <link>https://javadoc.io/doc/com.querydsl/querydsl-sql/${querydsl.version}/</link>
-                                <link>https://javadoc.io/doc/com.querydsl/querydsl-core/${querydsl.version}/</link>
-                            </links>
+                            <offlineLinks>
+                                <offlineLink>
+                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-jpa/${querydsl.version}/</url>
+                                    <location>../../../javadoc/querydsl-jpa-${querydsl.version}/</location>
+                                </offlineLink>
+                                <offlineLink>
+                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-sql/${querydsl.version}/</url>
+                                    <location>../../../javadoc/querydsl-sql-${querydsl.version}/</location>
+                                </offlineLink>
+                                <offlineLink>
+                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-core/${querydsl.version}/</url>
+                                    <location>../../../javadoc/querydsl-core-${querydsl.version}/</location>
+                                </offlineLink>
+                            </offlineLinks>
                             <tags>
                                 <tag>
                                     <name>apiNote</name>

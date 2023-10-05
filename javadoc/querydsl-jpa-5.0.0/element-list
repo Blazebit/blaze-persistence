@@ -1,0 +1,6 @@
+com.querydsl.jpa
+com.querydsl.jpa.hibernate
+com.querydsl.jpa.hibernate.sql
+com.querydsl.jpa.impl
+com.querydsl.jpa.sql
+com.querydsl.jpa.support

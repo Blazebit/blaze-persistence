@@ -1,0 +1,9 @@
+com.querydsl.core
+com.querydsl.core.alias
+com.querydsl.core.annotations
+com.querydsl.core.dml
+com.querydsl.core.group
+com.querydsl.core.support
+com.querydsl.core.types
+com.querydsl.core.types.dsl
+com.querydsl.core.util

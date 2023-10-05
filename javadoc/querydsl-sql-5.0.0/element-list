@@ -1,0 +1,10 @@
+com.querydsl.sql
+com.querydsl.sql.dml
+com.querydsl.sql.mssql
+com.querydsl.sql.mysql
+com.querydsl.sql.namemapping
+com.querydsl.sql.oracle
+com.querydsl.sql.postgresql
+com.querydsl.sql.support
+com.querydsl.sql.teradata
+com.querydsl.sql.types
