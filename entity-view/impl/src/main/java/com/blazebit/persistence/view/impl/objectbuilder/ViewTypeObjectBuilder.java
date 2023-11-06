@@ -120,6 +120,6 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     private boolean hasSubFetches(String attributePath) {
         String fetchedPath = fetches.ceiling(attributePath);
-        return fetchedPath != null && (fetchedPath.length() == attributePath.length() || fetchedPath.startsWith(attributePath) && fetchedPath.length() > attributePath.length() && fetchedPath.charAt(attributePath.length()) == '.');
+        return fetchedPath != null && (fetchedPath.equals(attributePath) || fetchedPath.startsWith(attributePath) && fetchedPath.charAt(attributePath.length()) == '.');
     }
 }
