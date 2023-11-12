@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-quarkus-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.10</version>
+        <version>1.6.11-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
