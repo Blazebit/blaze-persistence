@@ -7,6 +7,8 @@ Changes that happened in releases
 ### New features
 
 * Support JDK 21
+* Add CockroachDB function registrations
+* Support Hibernate 6.3 and 6.4
 
 ### Bug fixes
 
@@ -14,7 +16,10 @@ Changes that happened in releases
 * Fix dropping of embeddable group by expression when nested property has same name as parent property
 * Fix SQL generation for lateral subqueries when correlated path has `@Where` predicate
 * Fix `ConcurrentModificationException` during metamodel determination for special Hibernate Envers mappings
-* Fix NPE caused by wrong order by expression during criteria builder copying 
+* Clear `EntityViewManager` static fields in entity view implementations to avoid possible memory leak
+* Ignore `@Any` mapped attributes in enum type scanning
+* Fix NPE caused by wrong order by expression during criteria builder copying
+* Workaround Hibernate 6 returning null java type for enum parameters
 
 ### Backwards-incompatible changes
 

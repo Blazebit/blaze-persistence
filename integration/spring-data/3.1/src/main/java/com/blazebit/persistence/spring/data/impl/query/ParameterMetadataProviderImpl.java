@@ -206,6 +206,7 @@ class ParameterMetadataProviderImpl implements ParameterMetadataProvider {
 		private final PersistenceProvider persistenceProvider;
 		private final EscapeCharacter escape;
 		private final boolean ignoreCase;
+		private final boolean noWildcards;
 
 		/**
 		 * Creates a new {@link ParameterMetadata}.
@@ -217,6 +218,7 @@ class ParameterMetadataProviderImpl implements ParameterMetadataProvider {
 			this.persistenceProvider = provider;
 			this.type = value == null && Type.SIMPLE_PROPERTY.equals(part.getType()) ? Type.IS_NULL : part.getType();
 			this.ignoreCase = IgnoreCaseType.ALWAYS.equals(part.shouldIgnoreCase());
+			this.noWildcards = part.getProperty().getLeafProperty().isCollection();
 			this.escape = escape;
 		}
 
@@ -245,20 +247,25 @@ class ParameterMetadataProviderImpl implements ParameterMetadataProvider {
 
 			Assert.notNull(value, "Value must not be null!");
 
-			Class<? extends T> expressionType = expression.getJavaType();
+			Object unwrapped = PersistenceProvider.unwrapTypedParameterValue(value);
+			Class<? extends T> expressionType;
 
-			if (String.class.equals(expressionType)) {
+			if (unwrapped == null || (expressionType = expression.getJavaType()) == null) {
+				return unwrapped;
+			}
+
+			if (String.class.equals(expression.getJavaType()) && !noWildcards) {
 
 				switch (type) {
 					case STARTING_WITH:
-						return String.format("%s%%", escape.escape(value.toString()));
+						return String.format("%s%%", escape.escape(unwrapped.toString()));
 					case ENDING_WITH:
-						return String.format("%%%s", escape.escape(value.toString()));
+						return String.format("%%%s", escape.escape(unwrapped.toString()));
 					case CONTAINING:
 					case NOT_CONTAINING:
-						return String.format("%%%s%%", escape.escape(value.toString()));
+						return String.format("%%%s%%", escape.escape(unwrapped.toString()));
 					default:
-						return value;
+						return unwrapped;
 				}
 			}
 

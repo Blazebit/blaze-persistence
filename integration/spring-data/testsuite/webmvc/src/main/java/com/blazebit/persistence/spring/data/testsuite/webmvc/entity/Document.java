@@ -17,6 +17,8 @@
 package com.blazebit.persistence.spring.data.testsuite.webmvc.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -41,6 +43,7 @@ public class Document implements Serializable {
     private String description;
     private long age;
     private Person owner;
+    private MyEnum status = MyEnum.ABC;
 
     public Document() {
     }
@@ -90,5 +93,14 @@ public class Document implements Serializable {
 
     public void setOwner(Person owner) {
         this.owner = owner;
+    }
+
+    @Enumerated(EnumType.STRING)
+    public MyEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(MyEnum status) {
+        this.status = status;
     }
 }
