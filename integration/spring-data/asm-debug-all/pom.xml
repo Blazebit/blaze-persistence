@@ -4,7 +4,7 @@
 
     <groupId>org.ow2.asm</groupId>
     <artifactId>asm-debug-all</artifactId>
-    <version>CUSTOM</version>
+    <version>1.6.10</version>
     
     <build>
         <plugins>
