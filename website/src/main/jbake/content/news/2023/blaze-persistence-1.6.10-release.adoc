@@ -1,0 +1,30 @@
+= Blaze-Persistence 1.6.10 Release
+Christian Beikov
+2023-11-12 0
+:description: Blaze-Persistence version 1.6.10 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the tenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6.3 and 6.4 support
+
+The Hibernate 6.2 integration now also supports Hibernate ORM 6.3 and 6.4.
+During testing we uncovered some bugs in Hibernate ORM which have been reported and will be fixed in the upcoming releases.
+
+=== Java 21 support
+
+Since Java 21 will be the next LTS release, we decided that ensuring that version works is vital+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+and made sure it works by regularly testing with this version on CI.
+
+=== Various bug fixes
+
+As always, this release comes with quite a few bug fixes, so we recommend you update soon!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1610[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
