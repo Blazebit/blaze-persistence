@@ -20,7 +20,6 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.DeleteJoinStyle;
-import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.UpdateJoinStyle;
 
 import java.util.Map;
@@ -54,11 +53,6 @@ public class MariaDBDbmsDialect extends MySQLDbmsDialect {
     @Override
     public boolean supportsNonRecursiveWithClause() {
         return true;
-    }
-
-    @Override
-    public LateralStyle getLateralStyle() {
-        return LateralStyle.LATERAL;
     }
 
     @Override

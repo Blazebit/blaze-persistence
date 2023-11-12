@@ -9,6 +9,7 @@ Changes that happened in releases
 * Support JDK 21
 * Add CockroachDB function registrations
 * Support Hibernate 6.3 and 6.4
+* Special case limit 1 in correlation builders to support old MySQL and MariaDB versions
 
 ### Bug fixes
 
