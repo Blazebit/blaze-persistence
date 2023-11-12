@@ -23,6 +23,7 @@ import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcesso
 import com.blazebit.persistence.spring.data.repository.EntityViewSpecificationExecutor;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Document;
+import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.MyEnum;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -107,4 +108,6 @@ public interface ReadOnlyDocumentRepository<T> extends EntityViewRepository<T, L
     Page<DocumentView> findAllByOrderByNameAsc(Pageable pageable, EntityViewSettingProcessor<DocumentView> processor);
 
     List<DocumentView> findAllByOrderByNameAsc(Sort sort, EntityViewSettingProcessor<DocumentView> processor);
+
+    int countDocumentsByStatus(MyEnum status);
 }

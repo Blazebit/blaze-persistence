@@ -26,6 +26,7 @@ import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAc
 import com.blazebit.persistence.spring.data.testsuite.webmvc.accessor.DocumentAccessors;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.config.SystemPropertyBasedActiveProfilesResolver;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Document;
+import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.MyEnum;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Person;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.repository.ReadOnlyDocumentEntityRepository;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.repository.ReadOnlyDocumentRepository;
@@ -861,6 +862,21 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
         assertEquals(2, actualIds.size());
         assertTrue(actualIds.contains(d1.getId()));
         assertTrue(actualIds.contains(d2.getId()));
+    }
+
+    // Test for #1817
+    // No idea what's wrong with Datanucleus
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testFindByEnum() {
+        // Given
+        final Document d1 = createDocument("D1", "test", 0, null);
+
+        // When
+        int elementCount = readOnlyDocumentRepository.countDocumentsByStatus(MyEnum.ABC);
+
+        // Then
+        assertEquals(1, elementCount);
     }
 
     private Pageable unpaged() {
