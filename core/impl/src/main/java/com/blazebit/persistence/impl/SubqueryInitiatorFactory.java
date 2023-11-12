@@ -17,7 +17,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.InplaceModificationResultVisitorAdapter;
@@ -53,7 +52,7 @@ public class SubqueryInitiatorFactory {
         return queryBuilder;
     }
 
-    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener, boolean inExists, ClauseType clause) {
+    public <T> SubqueryInitiatorImpl<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener, boolean inExists, ClauseType clause) {
         return new SubqueryInitiatorImpl<T>(mainQuery, new QueryContext(queryBuilder, clause), aliasManager, parentJoinManager, result, listener, inExists);
     }
 

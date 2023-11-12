@@ -55,6 +55,10 @@ public final class Limiter {
         }
     }
 
+    public Integer getLimitValue() {
+        return limitValue;
+    }
+
     public <T extends LimitBuilder<?> & OrderByBuilder<?>> void apply(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, T builder) {
         Integer limitValue = this.limitValue;
         if (limitValue == null) {
