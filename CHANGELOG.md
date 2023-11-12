@@ -21,6 +21,7 @@ Changes that happened in releases
 * Ignore `@Any` mapped attributes in enum type scanning
 * Fix NPE caused by wrong order by expression during criteria builder copying
 * Workaround Hibernate 6 returning null java type for enum parameters
+* Add Entity View type test values for more Java types
 
 ### Backwards-incompatible changes
 
