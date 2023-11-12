@@ -34,17 +34,23 @@ import javax.persistence.EntityManagerFactory;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  *
@@ -100,6 +106,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         typeTestValues.put(Timestamp.class, new Timestamp(1));
         typeTestValues.put(Calendar.class, Calendar.getInstance());
         typeTestValues.put(GregorianCalendar.class, new GregorianCalendar());
+        typeTestValues.put(TimeZone.class, TimeZone.getTimeZone("Universal"));
         typeTestValues.put(byte[].class, new byte[] { Byte.MAX_VALUE });
         typeTestValues.put(Byte[].class, new Byte[] { Byte.MAX_VALUE });
         typeTestValues.put(char[].class, new char[] { Character.MAX_VALUE });
@@ -107,6 +114,50 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
         typeTestValues.put(BigInteger.class, BigInteger.TEN);
         typeTestValues.put(BigDecimal.class, BigDecimal.TEN);
         typeTestValues.put(Serializable.class, "-");
+
+        typeTestValues.put(Class.class, EntityViewConfigurationImpl.class);
+        typeTestValues.put(Currency.class, Currency.getInstance("XXX"));
+        typeTestValues.put(Locale.class, new Locale("", "", ""));
+        typeTestValues.put(UUID.class, UUID.randomUUID());
+        try {
+            typeTestValues.put(URL.class, new URL("https://blazebit.com"));
+        } catch (MalformedURLException e) {
+            // Ignore
+        }
+
+        // Java 8 time types
+        try {
+            Class<?> localDate = Class.forName("java.time.LocalDate");
+            typeTestValues.put(localDate, localDate.getMethod("now").invoke(null));
+            Class<?> localTime = Class.forName("java.time.LocalTime");
+            typeTestValues.put(localTime, localTime.getMethod("now").invoke(null));
+            Class<?> localDateTime = Class.forName("java.time.LocalDateTime");
+            typeTestValues.put(localDateTime, localDateTime.getMethod("now").invoke(null));
+            Class<?> offsetTime = Class.forName("java.time.OffsetTime");
+            typeTestValues.put(offsetTime, offsetTime.getMethod("now").invoke(null));
+            Class<?> offsetDateTime = Class.forName("java.time.OffsetDateTime");
+            typeTestValues.put(offsetDateTime, offsetDateTime.getMethod("now").invoke(null));
+            Class<?> zonedDateTime = Class.forName("java.time.ZonedDateTime");
+            typeTestValues.put(zonedDateTime, zonedDateTime.getMethod("now").invoke(null));
+            Class<?> duration = Class.forName("java.time.Duration");
+            typeTestValues.put(duration, duration.getMethod("ofNanos", long.class).invoke(null, 1L));
+            Class<?> instant = Class.forName("java.time.Instant");
+            typeTestValues.put(instant, instant.getMethod("now").invoke(null));
+            Class<?> monthDay = Class.forName("java.time.MonthDay");
+            typeTestValues.put(monthDay, monthDay.getMethod("now").invoke(null));
+            Class<?> year = Class.forName("java.time.Year");
+            typeTestValues.put(year, year.getMethod("now").invoke(null));
+            Class<?> yearMonth = Class.forName("java.time.YearMonth");
+            typeTestValues.put(yearMonth, yearMonth.getMethod("now").invoke(null));
+            Class<?> period = Class.forName("java.time.Period");
+            typeTestValues.put(period, period.getMethod("ofDays", int.class).invoke(null, 1));
+            Class<?> zoneId = Class.forName("java.time.ZoneId");
+            typeTestValues.put(zoneId, zoneId.getMethod("of", String.class).invoke(null, "Universal"));
+            Class<?> zoneOffset = Class.forName("java.time.ZoneOffset");
+            typeTestValues.put(zoneOffset, zoneOffset.getMethod("of", String.class).invoke(null, "+17:59:59"));
+        } catch (Exception ex) {
+            // If they aren't found, we ignore them
+        }
     }
 
     @Override
