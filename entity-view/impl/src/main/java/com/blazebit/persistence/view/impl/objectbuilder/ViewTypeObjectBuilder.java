@@ -101,7 +101,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             if (secondaryMappers.length != 0) {
                 FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
                 for (SecondaryMapper viewRoot : secondaryMappers) {
-                    if (hasSubFetches(viewRoot.getAttributePath())) {
+                    if (hasSubFetches(fetches, viewRoot.getAttributePath())) {
                         viewRoot.apply(fullQueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro);
                     }
                 }
@@ -109,7 +109,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 String attributePath = mapper.getAttributePath();
-                if (attributePath != null && hasSubFetches(attributePath)) {
+                if (attributePath != null && hasSubFetches(fetches, attributePath)) {
                     mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
@@ -118,8 +118,11 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         }
     }
 
-    private boolean hasSubFetches(String attributePath) {
+    static boolean hasSubFetches(NavigableSet<String> fetches, String attributePath) {
+        // Fetches can never contain a path leading to a view i.e. one for which a dot is allowed to follow.
+        // To find a potential match in the fetches, we have to look for an entry that is greater-or-equal to a path
+        // See EntityViewConfiguration.getFetches(Collection, ManagedViewTypeImplementor)
         String fetchedPath = fetches.ceiling(attributePath);
-        return fetchedPath != null && (fetchedPath.length() == attributePath.length() || fetchedPath.startsWith(attributePath) && fetchedPath.length() > attributePath.length() && fetchedPath.charAt(attributePath.length()) == '.');
+        return fetchedPath != null && fetchedPath.startsWith(attributePath) && (fetchedPath.length() == attributePath.length() || fetchedPath.charAt(attributePath.length()) == '.');
     }
 }
