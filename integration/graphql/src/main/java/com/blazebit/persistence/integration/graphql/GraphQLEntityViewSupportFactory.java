@@ -71,6 +71,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -80,11 +81,14 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -95,58 +99,57 @@ import java.util.regex.Pattern;
  */
 public class GraphQLEntityViewSupportFactory {
 
-    private static final Map<Class<?>, String> TYPES;
-    private static final Map<Class<?>, String> MP_TYPES;
+    private static final Map<Class<?>, String> BASIC_TYPES;
+    private static final Map<Class<?>, String> SUPPORTED_TYPES;
 
     static {
         Map<Class<?>, String> types = new HashMap<>();
         types.put(boolean.class, "Boolean");
         types.put(Boolean.class, "Boolean");
-        types.put(byte.class, "Byte");
-        types.put(Byte.class, "Byte");
-        types.put(short.class, "Short");
-        types.put(Short.class, "Short");
         types.put(int.class, "Int");
         types.put(Integer.class, "Int");
-        types.put(long.class, "Long");
-        types.put(Long.class, "Long");
         types.put(float.class, "Float");
         types.put(Float.class, "Float");
         types.put(double.class, "Float");
         types.put(Double.class, "Float");
-        types.put(BigInteger.class, "BigInteger");
-        types.put(BigDecimal.class, "BigDecimal");
-        types.put(char.class, "Char");
-        types.put(Character.class, "Char");
         types.put(String.class, "String");
-        TYPES = types;
-        Map<Class<?>, String> mpTypes = new HashMap<>();
-        mpTypes.put(boolean.class, "Boolean");
-        mpTypes.put(Boolean.class, "Boolean");
-        mpTypes.put(byte.class, "Int");
-        mpTypes.put(Byte.class, "Int");
-        mpTypes.put(short.class, "Int");
-        mpTypes.put(Short.class, "Int");
-        mpTypes.put(int.class, "Int");
-        mpTypes.put(Integer.class, "Int");
-        mpTypes.put(long.class, "BigInteger");
-        mpTypes.put(Long.class, "BigInteger");
-        mpTypes.put(float.class, "Float");
-        mpTypes.put(Float.class, "Float");
-        mpTypes.put(double.class, "Float");
-        mpTypes.put(Double.class, "Float");
-        mpTypes.put(BigInteger.class, "BigInteger");
-        mpTypes.put(BigDecimal.class, "BigDecimal");
-        mpTypes.put(char.class, "String");
-        mpTypes.put(Character.class, "String");
-        mpTypes.put(String.class, "String");
-        mpTypes.put(LocalDate.class, "Date");
-        mpTypes.put(LocalTime.class, "Time");
-        mpTypes.put(OffsetTime.class, "Time");
-        mpTypes.put(LocalDateTime.class, "DateTime");
-        mpTypes.put(OffsetDateTime.class, "DateTime");
-        mpTypes.put(ZonedDateTime.class, "DateTime");
-        MP_TYPES = mpTypes;
+        BASIC_TYPES = types;
+
+        Map<Class<?>, String> extendedTypes = new HashMap<>();
+        // Java primitives
+        extendedTypes.put(long.class, "Long");
+        extendedTypes.put(Long.class, "Long");
+        extendedTypes.put(short.class, "Short");
+        extendedTypes.put(Short.class, "Short");
+        extendedTypes.put(byte.class, "Byte");
+        extendedTypes.put(Byte.class, "Byte");
+        extendedTypes.put(BigDecimal.class, "BigDecimal");
+        extendedTypes.put(BigInteger.class, "BigInteger");
+        extendedTypes.put(char.class, "Char");
+        extendedTypes.put(Character.class, "Char");
+        // Extensions
+        extendedTypes.put(LocalDate.class, "Date");
+        extendedTypes.put(LocalTime.class, "Time");
+        extendedTypes.put(OffsetTime.class, "Time");
+        extendedTypes.put(LocalDateTime.class, "DateTime");
+        extendedTypes.put(OffsetDateTime.class, "DateTime");
+        extendedTypes.put(ZonedDateTime.class, "DateTime");
+        extendedTypes.put(Locale.class, "Locale");
+        extendedTypes.put(Currency.class, "Currency");
+        extendedTypes.put(UUID.class, "UUID");
+        extendedTypes.put(URL.class, "Url");
+
+        Map<Class<?>, String> supportedTypes = new HashMap<>(BASIC_TYPES.size() + extendedTypes.size());
+        supportedTypes.putAll(BASIC_TYPES);
+        try {
+            // If extended scalars are available, assume we can use them
+            Class.forName("graphql.scalars.ExtendedScalars");
+            extendedTypes.put(Class.forName( "graphql.scalars.country.code.CountryCode" ), "CountryCode");
+            supportedTypes.putAll(extendedTypes);
+        } catch (ClassNotFoundException notFound) {
+            // Ignore
+        }
+        SUPPORTED_TYPES = supportedTypes;
     }
 
     private boolean defineNormalTypes;
@@ -1827,7 +1830,7 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getScalarType(TypeDefinitionRegistry typeRegistry, Class<?> javaType) {
-        String typeName = TYPES.get(javaType);
+        String typeName = SUPPORTED_TYPES.get(javaType);
         if (typeName == null) {
             if (javaType.isEnum()) {
                 typeName = getTypeName(javaType);
@@ -1893,7 +1896,7 @@ public class GraphQLEntityViewSupportFactory {
                 return scalarType;
             }
         }
-        String typeName = TYPES.get(javaType);
+        String typeName = SUPPORTED_TYPES.get(javaType);
         if (typeName == null) {
             if (javaType.isEnum()) {
                 typeName = getTypeName(javaType);
