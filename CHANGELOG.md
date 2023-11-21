@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix over-fetching of entity view data with dynamic fetches
 
 ### Backwards-incompatible changes
 
