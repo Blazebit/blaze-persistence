@@ -6,7 +6,7 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Special case mappings with limit of 1 to use `=` instead of `IN` predicate
 
 ### Bug fixes
 

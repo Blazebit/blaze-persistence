@@ -176,14 +176,17 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             batchSize = defaultBatchSize;
         }
 
+        boolean limitOne;
         String limitExpression;
         String offsetExpression;
         List<OrderByItem> orderByItems;
         if (mapping.getLimitExpression() == null) {
+            limitOne = false;
             limitExpression = null;
             offsetExpression = null;
             orderByItems = Collections.emptyList();
         } else {
+            limitOne = "1".equals(mapping.getLimitExpression());
             limitExpression = mapping.getLimitExpression();
             offsetExpression = mapping.getOffsetExpression();
             if (offsetExpression == null || offsetExpression.isEmpty()) {
@@ -250,7 +253,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 // This might be due to a @Where annotation being present on the association
                 if (fetchStrategy == FetchStrategy.SELECT && attribute != null && attribute.hasJoinCondition()) {
                     correlated = declaringType.getEntityClass();
-                    correlationExpression = "this IN __correlationAlias";
+                    correlationExpression = limitOne ? "this = __correlationAlias" : "this IN __correlationAlias";
                     correlationResult = mappingString;
                     correlationResultExpression = mappingExpression;
                 } else {
@@ -259,7 +262,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     if (attribute == null && (index = mappingString.indexOf('.')) != -1 && mappingString.indexOf('(') == -1
                             && (attribute = managedType.getOwnedAttributes().get(mappingString.substring(0, index))) != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
                         correlated = attribute.getElementClass();
-                        correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        correlationExpression = attribute.getMappedBy() + (limitOne ? " = __correlationAlias" : " IN __correlationAlias");
                         correlationResult = mappingString.substring(index + 1);
                         if (mappingExpression instanceof PathExpression) {
                             correlationResultExpression = ((PathExpression) mappingExpression).withoutFirst();
@@ -268,12 +271,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                         }
                     } else if (attribute != null && !StringUtils.isEmpty(attribute.getMappedBy()) && !attribute.hasJoinCondition()) {
                         correlated = attribute.getElementClass();
-                        correlationExpression = attribute.getMappedBy() + " IN __correlationAlias";
+                        correlationExpression = attribute.getMappedBy() + (limitOne ? " = __correlationAlias" : " IN __correlationAlias");
                         correlationResult = "";
                         correlationResultExpression = new PathExpression();
                     } else {
                         correlated = declaringType.getEntityClass();
-                        correlationExpression = "this IN __correlationAlias";
+                        correlationExpression = limitOne ? "this = __correlationAlias" : "this IN __correlationAlias";
                         correlationResult = mappingString;
                         correlationResultExpression = mappingExpression;
                         // When using @Limit in combination with JOIN fetching, we need to adapt the correlation expression when array expressions are used
