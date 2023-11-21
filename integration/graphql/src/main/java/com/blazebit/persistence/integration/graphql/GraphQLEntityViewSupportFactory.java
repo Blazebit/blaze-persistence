@@ -95,8 +95,9 @@ import java.util.regex.Pattern;
  */
 public class GraphQLEntityViewSupportFactory {
 
-    private static final Map<Class<?>, String> TYPES;
-    private static final Map<Class<?>, String> MP_TYPES;
+    private static final Map<Class<?>, String> BASIC_TYPES;
+    private static final Map<Class<?>, String> ADVANCED_TYPES;
+    private static final Map<Class<?>, String> SUPPORTED_TYPES;
 
     static {
         Map<Class<?>, String> types = new HashMap<>();
@@ -119,34 +120,45 @@ public class GraphQLEntityViewSupportFactory {
         types.put(char.class, "Char");
         types.put(Character.class, "Char");
         types.put(String.class, "String");
-        TYPES = types;
-        Map<Class<?>, String> mpTypes = new HashMap<>();
-        mpTypes.put(boolean.class, "Boolean");
-        mpTypes.put(Boolean.class, "Boolean");
-        mpTypes.put(byte.class, "Int");
-        mpTypes.put(Byte.class, "Int");
-        mpTypes.put(short.class, "Int");
-        mpTypes.put(Short.class, "Int");
-        mpTypes.put(int.class, "Int");
-        mpTypes.put(Integer.class, "Int");
-        mpTypes.put(long.class, "BigInteger");
-        mpTypes.put(Long.class, "BigInteger");
-        mpTypes.put(float.class, "Float");
-        mpTypes.put(Float.class, "Float");
-        mpTypes.put(double.class, "Float");
-        mpTypes.put(Double.class, "Float");
-        mpTypes.put(BigInteger.class, "BigInteger");
-        mpTypes.put(BigDecimal.class, "BigDecimal");
-        mpTypes.put(char.class, "String");
-        mpTypes.put(Character.class, "String");
-        mpTypes.put(String.class, "String");
-        mpTypes.put(LocalDate.class, "Date");
-        mpTypes.put(LocalTime.class, "Time");
-        mpTypes.put(OffsetTime.class, "Time");
-        mpTypes.put(LocalDateTime.class, "DateTime");
-        mpTypes.put(OffsetDateTime.class, "DateTime");
-        mpTypes.put(ZonedDateTime.class, "DateTime");
-        MP_TYPES = mpTypes;
+        BASIC_TYPES = types;
+
+        Map<Class<?>, String> advancedTypes = new HashMap<>();
+        advancedTypes.put(boolean.class, "Boolean");
+        advancedTypes.put(Boolean.class, "Boolean");
+        advancedTypes.put(byte.class, "Int");
+        advancedTypes.put(Byte.class, "Int");
+        advancedTypes.put(short.class, "Int");
+        advancedTypes.put(Short.class, "Int");
+        advancedTypes.put(int.class, "Int");
+        advancedTypes.put(Integer.class, "Int");
+        advancedTypes.put(long.class, "BigInteger");
+        advancedTypes.put(Long.class, "BigInteger");
+        advancedTypes.put(float.class, "Float");
+        advancedTypes.put(Float.class, "Float");
+        advancedTypes.put(double.class, "Float");
+        advancedTypes.put(Double.class, "Float");
+        advancedTypes.put(BigInteger.class, "BigInteger");
+        advancedTypes.put(BigDecimal.class, "BigDecimal");
+        advancedTypes.put(char.class, "String");
+        advancedTypes.put(Character.class, "String");
+        advancedTypes.put(String.class, "String");
+        advancedTypes.put(LocalDate.class, "Date");
+        advancedTypes.put(LocalTime.class, "Time");
+        advancedTypes.put(OffsetTime.class, "Time");
+        advancedTypes.put(LocalDateTime.class, "DateTime");
+        advancedTypes.put(OffsetDateTime.class, "DateTime");
+        advancedTypes.put(ZonedDateTime.class, "DateTime");
+        ADVANCED_TYPES = advancedTypes;
+
+        SUPPORTED_TYPES = new HashMap<>();
+        try {
+            // Test if graphql extended scalar library is avaible. If so, we are able to support advanced types, thus do so.
+            Class.forName("graphql.scalars.ExtendedScalars");
+            SUPPORTED_TYPES.putAll(ADVANCED_TYPES);
+            SUPPORTED_TYPES.putAll(BASIC_TYPES);
+        } catch (ClassNotFoundException notFound) {
+            SUPPORTED_TYPES.putAll(BASIC_TYPES);
+        }
     }
 
     private boolean defineNormalTypes;
@@ -1827,7 +1839,7 @@ public class GraphQLEntityViewSupportFactory {
      * @return The type
      */
     protected Type getScalarType(TypeDefinitionRegistry typeRegistry, Class<?> javaType) {
-        String typeName = TYPES.get(javaType);
+        String typeName = SUPPORTED_TYPES.get(javaType);
         if (typeName == null) {
             if (javaType.isEnum()) {
                 typeName = getTypeName(javaType);
@@ -1893,7 +1905,7 @@ public class GraphQLEntityViewSupportFactory {
                 return scalarType;
             }
         }
-        String typeName = TYPES.get(javaType);
+        String typeName = SUPPORTED_TYPES.get(javaType);
         if (typeName == null) {
             if (javaType.isEnum()) {
                 typeName = getTypeName(javaType);
