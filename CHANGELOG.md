@@ -11,6 +11,7 @@ Changes that happened in releases
 ### Bug fixes
 
 * Fix over-fetching of entity view data with dynamic fetches
+* Fix Spring 6.1 compatibility
 
 ### Backwards-incompatible changes
 
