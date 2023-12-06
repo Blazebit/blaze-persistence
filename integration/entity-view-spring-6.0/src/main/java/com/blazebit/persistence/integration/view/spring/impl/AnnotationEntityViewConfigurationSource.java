@@ -55,9 +55,9 @@ public class AnnotationEntityViewConfigurationSource extends AbstractEntityViewC
     public AnnotationEntityViewConfigurationSource(AnnotationMetadata metadata, Class<? extends Annotation> annotation,
                                                    ResourceLoader resourceLoader, Environment environment) {
         super(environment);
-        Assert.notNull(metadata);
-        Assert.notNull(annotation);
-        Assert.notNull(resourceLoader);
+        Assert.notNull(metadata, "metadata must not be null");
+        Assert.notNull(annotation, "annotation must not be null");
+        Assert.notNull(resourceLoader, "resourceLoader must not be null");
 
         this.attributes = new AnnotationAttributes(metadata.getAnnotationAttributes(annotation.getName()));
         this.configMetadata = metadata;
