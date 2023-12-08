@@ -76,7 +76,7 @@
         <version.hibernate-5.6>5.6.10.Final</version.hibernate-5.6>
         <version.hibernate-6.2>6.2.13.Final</version.hibernate-6.2>
         <version.hibernate-6.3>6.3.1.Final</version.hibernate-6.3>
-        <version.hibernate-6.4>6.4.0.CR1</version.hibernate-6.4>
+        <version.hibernate-6.4>6.4.1.Final</version.hibernate-6.4>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
