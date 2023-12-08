@@ -21,13 +21,13 @@ import com.blazebit.persistence.spi.JpqlFunctionKind;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -49,14 +49,24 @@ import java.util.function.Supplier;
  * @author Christian Beikov
  * @since 1.6.7
  */
-public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFunctionDescriptor implements FunctionRenderingSupport {
+public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFunctionDescriptor {
 
     private final JpqlFunction function;
 
     public HibernateJpqlFunctionAdapter(SessionFactoryImplementor sfi, JpqlFunctionKind kind, JpqlFunction function) {
         super(null, determineFunctionKind(kind), null, new FunctionReturnTypeResolver() {
-            @Override
-            public ReturnableType<?> resolveFunctionReturnType(ReturnableType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+            public ReturnableType<?> resolveFunctionReturnType(
+                    ReturnableType<?> impliedType,
+                    List<? extends SqmTypedNode<?>> arguments,
+                    TypeConfiguration typeConfiguration) {
+                return resolveFunctionReturnType(impliedType, null, arguments, typeConfiguration);
+            }
+
+            public ReturnableType<?> resolveFunctionReturnType(
+                    ReturnableType<?> impliedType,
+                    Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+                    List<? extends SqmTypedNode<?>> arguments,
+                    TypeConfiguration typeConfiguration) {
                 Class<?> argumentClass = null;
                 if (arguments.isEmpty()) {
                     Class<?> returnType = function.getReturnType(null);
@@ -131,15 +141,33 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
         return function;
     }
 
-    @Override
     public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-        render(sqlAppender, sqlAstArguments, null, walker);
+        render( sqlAppender, sqlAstArguments, null, (ReturnableType<?>) null, walker);
     }
 
-    @Override
-    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
-        AbstractSqlAstTranslator<?> sqlAstTranslator = (AbstractSqlAstTranslator<?>) walker;
-        final StringBuilder sqlBuffer = sqlAstTranslator.getSqlBuffer();
+    public void render(
+            SqlAppender sqlAppender,
+            List<? extends SqlAstNode> sqlAstArguments,
+            Predicate filter,
+            SqlAstTranslator<?> walker) {
+        render( sqlAppender, sqlAstArguments, filter, (ReturnableType<?>) null, walker );
+    }
+
+    public void render(
+            SqlAppender sqlAppender,
+            List<? extends SqlAstNode> sqlAstArguments,
+            ReturnableType<?> returnableType,
+            SqlAstTranslator<?> sqlAstTranslator) {
+        render( sqlAppender, sqlAstArguments, null, returnableType, sqlAstTranslator );
+    }
+
+    public void render(
+            SqlAppender sqlAppender,
+            List<? extends SqlAstNode> sqlAstArguments,
+            Predicate filter,
+            ReturnableType<?> returnableType,
+            SqlAstTranslator<?> sqlAstTranslator) {
+        final StringBuilder sqlBuffer = ((AbstractSqlAstTranslator<?>) sqlAstTranslator).getSqlBuffer();
         List<String> sqlArguments = new ArrayList<>(sqlAstArguments.size());
         int startLength = sqlBuffer.length();
         for (SqlAstNode sqlAstArgument : sqlAstArguments) {
