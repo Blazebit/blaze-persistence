@@ -151,8 +151,8 @@ public class FixedJpaQueryCreator extends AbstractQueryCreator<CriteriaQuery<Obj
          */
         public PredicateBuilder(Part part, Root<?> root) {
 
-            Assert.notNull(part);
-            Assert.notNull(root);
+            Assert.notNull(part, "part cannot be null");
+            Assert.notNull(root, "root cannot be null");
             this.part = part;
             this.root = root;
         }
