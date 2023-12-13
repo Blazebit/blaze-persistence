@@ -38,7 +38,7 @@ public class EntityViewComponentProvider extends ClassPathScanningCandidateCompo
     public EntityViewComponentProvider(Iterable<? extends TypeFilter> includeFilters) {
         super(false);
 
-        Assert.notNull(includeFilters);
+        Assert.notNull(includeFilters,"includeFilters cannot be null");
 
         if (includeFilters.iterator().hasNext()) {
             for (TypeFilter filter : includeFilters) {
