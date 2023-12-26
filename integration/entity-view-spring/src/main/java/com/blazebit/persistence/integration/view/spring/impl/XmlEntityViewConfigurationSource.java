@@ -42,8 +42,8 @@ public class XmlEntityViewConfigurationSource extends AbstractEntityViewConfigur
 
     public XmlEntityViewConfigurationSource(Element element, ParserContext context, Environment environment) {
         super(environment);
-        Assert.notNull(element);
-        Assert.notNull(context);
+        Assert.notNull(element, "element must not be null!");
+        Assert.notNull(context, "context must not be null!");
 
         this.element = element;
         this.context = context;
