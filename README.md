@@ -415,6 +415,22 @@ You also need to add the following server in the `settings.xml` with the appropr
 Commercial customers also get access to the [commercial repository](https://github.com/Blazebit-Commercial/blaze-persistence) where they access the source code of commercial releases,
 create issues that are treated with higher priority and browse commercial releases.
 
+Using snapshots
+==================
+
+To use the current snapshots which are published to the Sonatype OSS snapshot repository,
+you need to define the following repository in a profile of your project or the `settings.xml` located in `~/.m2`.
+
+```xml
+<repository>
+  <id>sonatype-snapshots</id>
+  <name>Sonatype Snapshots</name>
+  <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+</repository>
+```
+
+Also see the [Maven documentation](https://maven.apache.org/guides/introduction/introduction-to-repositories.html) for further details.
+
 Setup local development
 =======================
 

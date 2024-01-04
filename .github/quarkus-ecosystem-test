@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
+# For annotation processors, the managed dependency version doesn't work, so by default, we use 6.2.13.Final
+# Override this for snapshot builds and use the latest version instead
+HIBERNATE_VERSION=6.4.0.Final
+
 # Since the compile output is used rather than the shaded JAR when running a Quarkus test, we must first install the parser to the local maven repo
-mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -pl core/parser -am -Dversion.quarkus-3=${QUARKUS_VERSION} -DskipTests
+mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -pl core/parser -am -Dversion.quarkus-3=${QUARKUS_VERSION} -Dversion.hibernate-orm=${HIBERNATE_VERSION} -DskipTests
 # Then delete the target folder so that the Quarkus build doesn't use the output
 rm -Rf core/parser/target
 # In the second execution we exclude the parser from the project list so that it uses the previously installed one, which shades ANTLR
 PROJECT_LIST=integration/quarkus-3/deployment,examples/quarkus-3/testsuite/base,examples/quarkus-3/testsuite/native/h2,!core/parser
-mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus-3=${QUARKUS_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"spring-data-2.7.x" -P"deltaspike-1.9" --projects $PROJECT_LIST -am
+mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus-3=${QUARKUS_VERSION} -Dversion.hibernate-orm=${HIBERNATE_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"spring-data-2.7.x" -P"deltaspike-1.9" --projects $PROJECT_LIST -am
