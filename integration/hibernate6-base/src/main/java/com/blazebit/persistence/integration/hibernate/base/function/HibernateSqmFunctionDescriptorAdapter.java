@@ -20,6 +20,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -35,6 +36,7 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import java.util.List;
 public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
 
     private static final Method GENERATE_SQM_EXPRESSION;
+    private static final Constructor<QueryLiteral> QUERY_LITERAL_CONSTRUCTOR;
 
     static {
         Method generateSqmExpression;
@@ -61,6 +64,17 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
             }
         }
         GENERATE_SQM_EXPRESSION = generateSqmExpression;
+        Constructor<QueryLiteral> queryLiteralConstructor;
+        try {
+            queryLiteralConstructor = QueryLiteral.class.getConstructor(Object.class, SqlExpressible.class);
+        } catch (NoSuchMethodException e1) {
+            try {
+                queryLiteralConstructor = QueryLiteral.class.getConstructor(Object.class, BasicValuedMapping.class);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException("Could not find constructor for QueryLiteral. Please report your version of hibernate so we can provide support for it!", e1);
+            }
+        }
+        QUERY_LITERAL_CONSTRUCTOR = queryLiteralConstructor;
     }
 
     private final SessionFactoryImplementor sfi;
@@ -159,7 +173,11 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
         }
 
         public <X> X accept(SemanticQueryWalker<X> walker) {
-            return (X) new QueryLiteral(null, (BasicValuedMapping) type);
+            try {
+                return (X) QUERY_LITERAL_CONSTRUCTOR.newInstance(null, type);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
