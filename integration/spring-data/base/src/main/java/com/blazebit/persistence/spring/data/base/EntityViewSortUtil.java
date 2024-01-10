@@ -16,7 +16,13 @@
 
 package com.blazebit.persistence.spring.data.base;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.parser.expression.ExpressionFactory;
+import com.blazebit.persistence.parser.expression.PathElementExpression;
+import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -81,6 +87,24 @@ public final class EntityViewSortUtil {
         for (Sort.Order order : sort) {
             String entityViewAttributeAlias;
             if ((entityViewAttributeAlias = EntityViewSortUtil.resolveViewAttributeSelectAlias(viewType, order.getProperty())) == null) {
+                PathExpression pathExpression;
+                try {
+                    pathExpression = cb.getService(ExpressionFactory.class).createPathExpression(order.getProperty());
+                } catch (RuntimeException ex) {
+                    throw new IllegalArgumentException("Sort order [" + order.getProperty() + "] is not resolvable to a path expression.", ex);
+                }
+                javax.persistence.metamodel.Type<?> resultType = cb.getMetamodel().entity(viewType.getEntityClass());
+                for (PathElementExpression expression : pathExpression.getExpressions()) {
+                    if (!(resultType instanceof ManagedType<?>)) {
+                        throw new IllegalArgumentException("Sort order [" + order.getProperty() + "] is not resolvable to a valid path expression, because the type [" + resultType.getJavaType().getName() + "] can't be de-referenced.");
+                    }
+                    ManagedType<?> managedType = (ManagedType<?>) resultType;
+                    Attribute<?, ?> attribute = managedType.getAttribute(expression.toString());
+                    if (!(attribute instanceof javax.persistence.metamodel.SingularAttribute<?, ?>)) {
+                        throw new IllegalArgumentException("Sort order [" + order.getProperty() + "] is not resolvable to a valid path expression, because the type [" + resultType.getJavaType().getName() + "] does not contain a singular attribute named [" + expression + "].");
+                    }
+                    resultType = ( (javax.persistence.metamodel.SingularAttribute<?, ?>) attribute ).getType();
+                }
                 cb.orderBy(order.getProperty(), order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);
             } else {
                 cb.orderBy(entityViewAttributeAlias, order.isAscending(), order.getNullHandling() == Sort.NullHandling.NULLS_FIRST);

@@ -46,6 +46,8 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
+
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -877,6 +879,21 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
 
         // Then
         assertEquals(1, elementCount);
+    }
+
+    @Test
+    public void testSortByExpression() {
+        // Given
+        final Document d1 = createDocument("D1", "test", 0, null);
+
+        // When
+        try {
+            readOnlyDocumentRepository.findAll(Sort.of(new org.springframework.data.domain.Sort.Order(null, "1")));
+            Assert.fail("Should fail because '1' is not a valid property to sort by");
+        } catch (RuntimeException ex) {
+            // Then
+            assertTrue( ex.getMessage().contains( "Sort order [1] is not resolvable to a path expression" ) );
+        }
     }
 
     private Pageable unpaged() {
