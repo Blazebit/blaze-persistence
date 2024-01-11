@@ -23,6 +23,7 @@ None yet
 ### New features
 
 * Special case mappings with limit of 1 to use `=` instead of `IN` predicate
+* Added support for extended GraphlQL types, for example support DateTime (please read `Backwards-incompatible changes` below )
 
 ### Bug fixes
 
@@ -33,7 +34,7 @@ None yet
 
 ### Backwards-incompatible changes
 
-None yet
+* If you use the GraphQL integration and you are loading the [graphql-java-extended-scalars](https://github.com/graphql-java/graphql-java-extended-scalars), you might need to migrate your `LocalDataTime` EntityViews to `OffsetDateTime`. Dates will no longer be represented as String in the GraphQl-Schema, but as [DateTime](https://the-guild.dev/graphql/scalars/docs/scalars/date-time).
 
 ## 1.6.10
 
