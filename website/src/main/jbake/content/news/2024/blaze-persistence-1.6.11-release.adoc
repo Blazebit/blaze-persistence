@@ -1,0 +1,66 @@
+= Blaze-Persistence 1.6.11 Release
+Christian Beikov
+2024-01-10 0
+:description: Blaze-Persistence version 1.6.11 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the eleventh bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6.4 compatibility
+
+So far, the Hibernate ORM 6 integration was tested against Hibernate ORM 6.4.0.CR1.
+The integration was adapted due to a slight change in 6.4.0.Final,
+which unfortunately prevented the use of Blaze-Persistence with that version.
+
+=== Spring Framework 6.1 compatibility
+
+Spring Framework 6.1 apparently removed methods that were previously marked as deprecated, which+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+our Spring Data integration unfortunately was still using. This was causing `NoSuchMethodError` to be thrown, but is now fixed.
+
+=== Security fix for Spring Data integration
+
+This release contains a fix for a security issue in the Spring Data integration which was recently reported by https://github.com/nelsonneto-hotmart[Nelson Neto, window="_blank"].
+Since every version of Blaze-Persistence is affected, every user of the Spring Data integration is strongly advised to update immediately.
+The issue could potentially lead to a data leak. There is no known reproducer or attack yet, but know that this is a high severity issue.
+
+In short, the problem is that `Sort.Order` is assumed to be safe, but it is usually untrusted user input,
+usually being parsed by the Spring Data WebMvc/WebFlux integration from a query parameter.
+
+Any Spring Data repository method is affected that:
+
+* accepts a `Sort` parameter directly, or indirectly through `Pageable`/`PageRequest` or `KeysetPageable`/`KeysetPageRequest`
+* Returns an entity view type explicitly or through a dynamic projection
+
+Calling such repository methods with untrusted `Sort` inputs allows for JPQL.next injection,
+which ultimately is SQL injection.
+
+Regular Spring Data JPA repositories only allow sorting by attribute paths relative to the query root,
+which is ensured by construction i.e. Spring Data JPA tries to find attributes based on the entity metamodel.
+
+Entity view based Spring Data repositories allow sorting by entity view attribute paths and
+additionally also allow to sort by entity attribute paths. Until Blaze-Persistence 1.6.11
+entity attribute paths were not validated to be relative to the query root.
+In fact, any valid JPQL.next expression was accepted, which essentially leads to a SQL injection vulnerability.
+
+If updating to the latest version of Blaze-Persistence is not possible for some reason,
+the security issue can be mitigated by validating the `Sort` e.g.
+
+```java
+Pattern validCharsPattern = Pattern.compile("[\\w.]+");
+for (Sort.Order order : sort) {
+    if (!validCharsPattern.matcher(order.getProperty()).matches()) {
+        throw new IllegalArgumentException("Attempted SQL injection");
+    }
+}
+```
+
+=== Various bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1611[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

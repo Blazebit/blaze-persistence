@@ -18,7 +18,7 @@ A release involves various steps which are outlined here and should be kept up-t
 . Open `website/pom.xml` and update the property `stable.version` to the latest released version, `snapshot.version` to the latest snapshot version and `series.version` to the current version series
 . Open `documentation/pom.xml` and update the property `stable.version` to the latest released version and `series.version` to the current version series
 . Prepare a local Maven release via `mvnw -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:clean release:prepare "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'"`
-. Actually deploy the release with `mvnw -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:perform "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'"`
+. Actually deploy the release with `mvnw -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:perform "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot' -DretryFailedDeploymentCount=10"`
 . Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`

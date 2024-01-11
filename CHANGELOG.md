@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.11-SNAPSHOT
+## 1.6.12-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.11
+
+10/01/2024 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.11) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.11+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -13,6 +29,7 @@ Changes that happened in releases
 * Fix over-fetching of entity view data with dynamic fetches
 * Fix Spring 6.1 compatibility
 * Fix Hibernate 6.4.0.Final compatibility
+* Disallow repository sorting by anything other than entity or entity view attribute paths
 
 ### Backwards-incompatible changes
 
