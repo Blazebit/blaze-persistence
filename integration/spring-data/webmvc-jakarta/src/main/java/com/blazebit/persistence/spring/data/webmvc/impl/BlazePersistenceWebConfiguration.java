@@ -48,11 +48,9 @@ public class BlazePersistenceWebConfiguration implements WebMvcConfigurer {
     protected final ObjectMapper objectMapper;
     private final EntityViewManager entityViewManager;
 
-    public BlazePersistenceWebConfiguration(
-      EntityViewManager entityViewManager,
-      @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
-      @Autowired(required = false) ObjectMapper objectMapper
-    ) {
+    public BlazePersistenceWebConfiguration(EntityViewManager entityViewManager,
+            @Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService,
+            @Autowired(required = false) ObjectMapper objectMapper) {
         this.entityViewManager = entityViewManager;
         this.conversionService = conversionService;
         this.objectMapper = objectMapper == null ? new ObjectMapper() : objectMapper.copy();
@@ -87,7 +85,7 @@ public class BlazePersistenceWebConfiguration implements WebMvcConfigurer {
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         // Add it to the beginning, so it has precedence over the builtin
-        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, blazeWebmvcIdAttributeAccessor()));
+        converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, blazeWebmvcIdAttributeAccessor(), objectMapper()));
     }
 
     @Override

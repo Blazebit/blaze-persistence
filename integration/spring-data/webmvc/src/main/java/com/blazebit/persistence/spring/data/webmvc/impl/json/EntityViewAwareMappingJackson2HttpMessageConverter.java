@@ -20,6 +20,7 @@ import com.blazebit.persistence.integration.jackson.EntityViewAwareObjectMapper;
 import com.blazebit.persistence.integration.jackson.EntityViewIdValueAccessor;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -37,8 +38,9 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
 
     private final EntityViewAwareObjectMapper entityViewAwareObjectMapper;
 
-    public EntityViewAwareMappingJackson2HttpMessageConverter(final EntityViewManager entityViewManager, EntityViewIdValueAccessor entityViewIdValueAccessor) {
-        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, getObjectMapper(), entityViewIdValueAccessor);
+    public EntityViewAwareMappingJackson2HttpMessageConverter(final EntityViewManager entityViewManager, EntityViewIdValueAccessor entityViewIdValueAccessor, ObjectMapper objectMapper) {
+        super(objectMapper);
+        this.entityViewAwareObjectMapper = new EntityViewAwareObjectMapper(entityViewManager, objectMapper, entityViewIdValueAccessor);
     }
 
     @Override
