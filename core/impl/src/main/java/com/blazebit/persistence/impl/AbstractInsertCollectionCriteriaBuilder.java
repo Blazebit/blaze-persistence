@@ -236,6 +236,7 @@ public abstract class AbstractInsertCollectionCriteriaBuilder<T, X extends BaseI
         for (Map.Entry<String, String> entry : joinTable.getTargetColumnMappings().entrySet()) {
             columnExpressionRemappings.put(targetAlias + "." + entry.getValue(), entry.getKey());
             columnExpressionRemappings.put(targetAlias + "." + entry.getKey(), entry.getKey());
+            columnExpressionRemappings.put(collectionAlias + "." + entry.getKey(), entry.getKey());
         }
 
         int cutoffColumns = 0;

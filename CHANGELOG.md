@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix bug in collection insert code triggered by Hibernate ORM 6.4.2
 
 ### Backwards-incompatible changes
 
