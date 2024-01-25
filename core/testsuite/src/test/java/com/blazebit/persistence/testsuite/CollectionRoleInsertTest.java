@@ -685,4 +685,30 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
             }
         });
     }
+
+    // test for #1859
+    @Test
+    public void insertPoly() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                InsertCriteriaBuilder<Root> criteria = cbf.insertCollection(em, Root.class, "nodesPoly");
+                criteria.fromIdentifiableValues(Sub1.class, "val", 1);
+                criteria.bind("id").select("1");
+                criteria.bind("nodesPoly").select("val");
+                criteria.setParameter("val", Collections.singletonList(em.getReference(Sub1.class, p1Id)));
+
+                assertEquals("INSERT INTO Root.nodesPoly(id, nodesPoly.id)\n"
+                                     + "SELECT 1, val.id"
+                                     + " FROM Sub1(1 ID VALUES) val", criteria.getQueryString());
+                int updated = criteria.executeUpdate();
+                Root r = getRoot(em);
+
+                assertEquals(1, updated);
+                assertEquals(1, r.getNodesPoly().size());
+
+                assertEquals(p1Id, r.getNodesPoly().iterator().next().getId());
+            }
+        });
+    }
 }

@@ -20,6 +20,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
@@ -47,6 +48,9 @@ public class Root {
     @OneToMany
     @JoinTable(name = "list_one_to_many_set")
     private Set<Parent> nodes = new HashSet<>();
+    @ManyToMany
+    @JoinTable(name = "set_one_to_many_poly", joinColumns = @JoinColumn(name = "root_id"), inverseJoinColumns = @JoinColumn(name = "poly_id"))
+    private Set<Sub1> nodesPoly = new HashSet<>();
 
     @OneToMany
     @JoinTable(name = "list_one_to_many")
@@ -118,6 +122,14 @@ public class Root {
 
     public void setNodes(Set<Parent> nodes) {
         this.nodes = nodes;
+    }
+
+    public Set<Sub1> getNodesPoly() {
+        return nodesPoly;
+    }
+
+    public void setNodesPoly(Set<Sub1> nodesPoly) {
+        this.nodesPoly = nodesPoly;
     }
 
     public List<IndexedNode> getIndexedNodes() {
