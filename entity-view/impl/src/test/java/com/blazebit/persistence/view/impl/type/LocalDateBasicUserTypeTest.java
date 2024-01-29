@@ -26,5 +26,21 @@ import static org.junit.Assert.assertEquals;
  * @since 1.6.12
  */
 public class LocalDateBasicUserTypeTest {
+
+    @Test
+    public void testFromString() {
+        LocalDateBasicUserType userType = new LocalDateBasicUserType();
+        CharSequence sequence = "2024-01-30";
+
+        // Expected local date
+        LocalDate expectedDate = LocalDate.of(2024, 1,30);
+
+        // Call the method under test
+        LocalDate result = userType.fromString(sequence);
+
+        // Assert the result
+        assertEquals(expectedDate, result, "Converted LocalDate should match expected LocalDate");    
+  
+    }
   
 }
