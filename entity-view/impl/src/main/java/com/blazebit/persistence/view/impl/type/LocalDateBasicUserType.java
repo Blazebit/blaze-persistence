@@ -18,22 +18,24 @@ package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
  * @author Christian Beikov
+ * @author Raja Kolli
  * @since 1.5.0
  */
 public class LocalDateBasicUserType extends TimestampishImmutableBasicUserType<LocalDate> {
 
     public static final BasicUserType<LocalDate> INSTANCE = new LocalDateBasicUserType();
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     @Override
     public LocalDate fromString(CharSequence sequence) {
-        return Timestamp.valueOf(sequence.toString()).toInstant().atZone(ZoneOffset.UTC).toLocalDate();
+        // Parse the CharSequence directly into a LocalDate using ISO_DATE_TIME format
+        return LocalDate.parse(sequence, formatter);
     }
 
 }
