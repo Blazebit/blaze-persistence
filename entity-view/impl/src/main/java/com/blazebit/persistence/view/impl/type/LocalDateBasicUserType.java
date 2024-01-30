@@ -30,7 +30,7 @@ import java.time.format.DateTimeFormatter;
 public class LocalDateBasicUserType extends TimestampishImmutableBasicUserType<LocalDate> {
 
     public static final BasicUserType<LocalDate> INSTANCE = new LocalDateBasicUserType();
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
 
     @Override
     public LocalDate fromString(CharSequence sequence) {
