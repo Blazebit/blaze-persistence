@@ -26,6 +26,7 @@ import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.UpdateJoinStyle;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,10 +38,20 @@ import java.util.Map;
 public class MSSQLDbmsDialect extends DefaultDbmsDialect {
 
     public MSSQLDbmsDialect() {
+        super(getSqlTypes());
     }
 
     public MSSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
         super(childSqlTypes);
+    }
+
+    protected static Map<Class<?>, String> getSqlTypes() {
+        Map<Class<?>, String> types = new HashMap<>();
+
+        // SQL Server default varchar length is 30. We are overriding the same to make it good fit for String
+        types.put(String.class, "varchar(max)");
+
+        return types;
     }
 
     @Override
