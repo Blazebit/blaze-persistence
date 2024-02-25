@@ -16,26 +16,32 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.type.BasicUserType;
-
+import org.junit.Test;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Christian Beikov
  * @author Raja Kolli
- * @since 1.5.0
+ * @since 1.6.12
  */
-public class LocalDateBasicUserType extends TimestampishImmutableBasicUserType<LocalDate> {
+public class LocalDateBasicUserTypeTest {
 
-    public static final BasicUserType<LocalDate> INSTANCE = new LocalDateBasicUserType();
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+    @Test
+    public void testFromString() {
+        LocalDateBasicUserType userType = new LocalDateBasicUserType();
+        CharSequence sequence = "2024-01-30";
 
-    @Override
-    public LocalDate fromString(CharSequence sequence) {
-        // Parse the CharSequence directly into a LocalDate using ISO_DATE_TIME format
-        return LocalDate.parse(sequence, formatter);
+        // Expected local date
+        LocalDate expectedDate = LocalDate.of(2024, 1,30);
+
+        // Call the method under test
+        LocalDate result = userType.fromString(sequence);
+
+        // Assert the result
+        assertEquals(expectedDate, result, "Converted LocalDate should match expected LocalDate");    
+  
     }
-
+  
 }
