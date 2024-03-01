@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.criteria.impl;
 
+import com.blazebit.persistence.BaseCriteriaBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
@@ -280,4 +282,8 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
         return query.render(cb);
     }
 
+    @Override
+    public void applyToCriteriaBuilder(BaseCriteriaBuilder<T, ?> criteriaBuilder) {
+        query.render(criteriaBuilder);
+    }
 }
