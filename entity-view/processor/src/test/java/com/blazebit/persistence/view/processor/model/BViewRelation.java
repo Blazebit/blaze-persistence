@@ -1,6 +1,7 @@
 package com.blazebit.persistence.view.processor.model;
 
 import com.blazebit.persistence.view.StaticRelation;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMappingPath;
 import com.blazebit.persistence.view.metamodel.AttributePath;
 import com.blazebit.persistence.view.metamodel.AttributePathWrapper;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -34,4 +35,8 @@ public class BViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
         return (A) getWrapped().getAttributes().get(getWrapped().getAttributes().size() - 1);
     }
 
+    public AttributeFilterMappingPath<T, Integer> id_filter() {
+        MethodSingularAttribute<BView, Integer> attribute = BView_.id;
+        return attribute == null ? new AttributeFilterMappingPath<>(getWrapped().get("id"), "") : new AttributeFilterMappingPath<>(getWrapped().get(attribute), BView_.id_filter);
+    }
 }

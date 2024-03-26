@@ -11,6 +11,7 @@ import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Generated;
 
@@ -22,6 +23,7 @@ public abstract class AView_ {
     public static volatile MethodSingularAttribute<AView, byte[]> bytes;
     public static volatile MethodSingularAttribute<AView, Integer> id;
     public static volatile MethodSingularAttribute<AView, List<Object>> listMappingParameter;
+    public static volatile MethodSingularAttribute<AView, Map<String, String>> map;
     public static volatile MethodMultiListAttribute<AView, String, Set<String>> multiNames;
     public static volatile MethodSingularAttribute<AView, String> name;
     public static volatile MethodListAttribute<AView, String> names;
@@ -35,6 +37,7 @@ public abstract class AView_ {
     public static final String BYTES = "bytes";
     public static final String ID = "id";
     public static final String LIST_MAPPING_PARAMETER = "listMappingParameter";
+    public static final String MAP = "map";
     public static final String MULTI_NAMES = "multiNames";
     public static final String NAME = "name";
     public static final String NAMES = "names";
