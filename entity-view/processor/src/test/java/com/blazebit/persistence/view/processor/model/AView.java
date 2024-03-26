@@ -5,12 +5,14 @@ import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,6 +44,9 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
 
     @MappingParameter("listMappingParameter")
     List<Object> getListMappingParameter();
+
+    @MappingSingular
+    Map<String, String> getMap();
 
     class TestFilter extends ViewFilterProvider {
 

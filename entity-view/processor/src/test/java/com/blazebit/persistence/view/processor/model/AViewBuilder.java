@@ -32,6 +32,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     protected byte[] bytes;
     protected Integer id;
     protected List<Object> listMappingParameter;
+    protected Map<String, String> map;
     protected List<Set<String>> multiNames;
     protected String name;
     protected List<String> names;
@@ -45,6 +46,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         this.bytes = null;
         this.id = null;
         this.listMappingParameter = (List<Object>) blazePersistenceOptionalParameters.get("listMappingParameter");
+        this.map = null;
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
         this.name = null;
         this.names = (List<String>) (java.util.List<?>) AView_.names.getCollectionInstantiator().createCollection(0);
@@ -92,6 +94,16 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     }
     public BuilderType withListMappingParameter(List<Object> listMappingParameter) {
         this.listMappingParameter = listMappingParameter;
+        return (BuilderType) this;
+    }
+    public Map<String, String> getMap() {
+        return map;
+    }
+    public void setMap(Map<String, String> map) {
+        this.map = map;
+    }
+    public BuilderType withMap(Map<String, String> map) {
+        this.map = map;
         return (BuilderType) this;
     }
     public List<Set<String>> getMultiNames() {
@@ -258,6 +270,8 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 return (ElementType) (Object) this.id;
             case "listMappingParameter":
                 return (ElementType) (Object) this.listMappingParameter;
+            case "map":
+                return (ElementType) (Object) this.map;
             case "multiNames":
                 return (ElementType) (Object) this.multiNames;
             case "name":
@@ -298,6 +312,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 break;
             case "listMappingParameter":
                 this.listMappingParameter = value == null ? null : (List<Object>) value;
+                break;
+            case "map":
+                this.map = value == null ? null : (Map<String, String>) value;
                 break;
             case "multiNames":
                 this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;
@@ -541,6 +558,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.age,
                     this.bytes,
                     this.listMappingParameter,
+                    this.map,
                     this.multiNames,
                     this.name,
                     this.names,
@@ -579,6 +597,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         }
         public Init<X> withListMappingParameter(List<Object> listMappingParameter) {
             this.listMappingParameter = listMappingParameter;
+            return (Init<X>) this;
+        }
+        public Init<X> withMap(Map<String, String> map) {
+            this.map = map;
             return (Init<X>) this;
         }
         public Init<X> withMultiNames(List<Set<String>> multiNames) {
@@ -623,6 +645,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "listMappingParameter":
                     this.listMappingParameter = value == null ? null: (List<Object>) value;
+                    break;
+                case "map":
+                    this.map = value == null ? null : (Map<String, String>) value;
                     break;
                 case "multiNames":
                     this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;
@@ -920,6 +945,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.age,
                     this.bytes,
                     this.listMappingParameter,
+                    this.map,
                     this.multiNames,
                     this.name,
                     this.names,
@@ -959,6 +985,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         }
         public Nested<X, BuilderResult> withListMappingParameter(List<Object> listMappingParameter) {
             this.listMappingParameter = listMappingParameter;
+            return (Nested<X, BuilderResult>) this;
+        }
+        public Nested<X, BuilderResult> withMap(Map<String, String> map) {
+            this.map = map;
             return (Nested<X, BuilderResult>) this;
         }
         public Nested<X, BuilderResult> withMultiNames(List<Set<String>> multiNames) {
@@ -1003,6 +1033,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "listMappingParameter":
                     this.listMappingParameter = value == null ? null : (List<Object>) value;
+                    break;
+                case "map":
+                    this.map = value == null ? null : (Map<String, String>) value;
                     break;
                 case "multiNames":
                     this.multiNames = value == null ? (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0) : (List<Set<String>>) value;

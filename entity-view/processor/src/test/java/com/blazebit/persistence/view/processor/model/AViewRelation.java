@@ -1,6 +1,7 @@
 package com.blazebit.persistence.view.processor.model;
 
 import com.blazebit.persistence.view.StaticRelation;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMappingPath;
 import com.blazebit.persistence.view.metamodel.AttributePath;
 import com.blazebit.persistence.view.metamodel.AttributePathWrapper;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -9,6 +10,7 @@ import com.blazebit.persistence.view.metamodel.MethodMultiListAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Generated;
 
@@ -38,6 +40,11 @@ public class AViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
     public AttributePath<T, List<Object>, List<Object>> listMappingParameter() {
         MethodSingularAttribute<AView, List<Object>> attribute = AView_.listMappingParameter;
         return attribute == null ? getWrapped().<List<Object>>get("listMappingParameter") : getWrapped().get(attribute);
+    }
+
+    public AttributePath<T, Map<String, String>, Map<String, String>> map() {
+        MethodSingularAttribute<AView, Map<String, String>> attribute = AView_.map;
+        return attribute == null ? getWrapped().<Map<String, String>>get("map") : getWrapped().get(attribute);
     }
 
     public AttributePath<T, String, Set<String>> multiNames() {
@@ -74,4 +81,13 @@ public class AViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
         return (A) getWrapped().getAttributes().get(getWrapped().getAttributes().size() - 1);
     }
 
+    public AttributeFilterMappingPath<T, Integer> id_filter() {
+        MethodSingularAttribute<AView, Integer> attribute = AView_.id;
+        return attribute == null ? new AttributeFilterMappingPath<>(getWrapped().get("id"), "") : new AttributeFilterMappingPath<>(getWrapped().get(attribute), AView_.id_filter);
+    }
+
+    public AttributeFilterMappingPath<T, String> name_filter() {
+        MethodSingularAttribute<AView, String> attribute = AView_.name;
+        return attribute == null ? new AttributeFilterMappingPath<>(getWrapped().get("name"), "") : new AttributeFilterMappingPath<>(getWrapped().get(attribute), AView_.name_filter);
+    }
 }

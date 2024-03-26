@@ -96,10 +96,10 @@ public class ImportContextImpl implements ImportContext {
             imports.add(pureFqcn);
         }
 
-        if (inSamePackage(fqcn) || (imports.contains(pureFqcn) && canBeSimple)) {
-            result = unqualify(result);
-        } else if (inJavaLang(fqcn)) {
+        if (inJavaLang(fqcn)) {
             result = result.substring("java.lang.".length());
+        } else if (inSamePackage(fqcn) || (imports.contains(pureFqcn) && canBeSimple)) {
+            result = unqualify(result);
         }
 
         if (additionalTypePart != null) {
@@ -116,16 +116,21 @@ public class ImportContextImpl implements ImportContext {
     private String importTypeArguments(String typeArguments, int start, int end) {
         StringBuilder sb = new StringBuilder(end - start);
         sb.append('<');
+        int currentTypeIdx = 0;
         start++;
         for (int i = start; i < end; i++) {
             final char c = typeArguments.charAt(i);
             //CHECKSTYLE:OFF: MissingSwitchDefault
             switch (c) {
                 case ',':
-                    sb.append(importType(typeArguments.substring(start, i)));
+                    if (currentTypeIdx++ > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(importType(typeArguments.substring(start, i).trim()));
                     start = i + 1;
                     break;
                 case '<':
+                    currentTypeIdx = 1;
                     int gtIdx = typeArguments.lastIndexOf('>', i);
                     sb.append(importTypeArguments(typeArguments, i, gtIdx));
                     start = gtIdx + 1;
@@ -133,7 +138,10 @@ public class ImportContextImpl implements ImportContext {
             }
             //CHECKSTYLE:ON: MissingSwitchDefault
         }
-        sb.append(importType(typeArguments.substring(start, end)));
+        if (currentTypeIdx > 0) {
+            sb.append(", ");
+        }
+        sb.append(importType(typeArguments.substring(start, end).trim()));
         sb.append('>');
         return sb.toString();
     }
