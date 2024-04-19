@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.deser.AbstractDeserializer;
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -51,14 +52,22 @@ public class EntityViewAwareObjectMapper {
 
     public EntityViewAwareObjectMapper(final EntityViewManager entityViewManager, final ObjectMapper objectMapper, final EntityViewIdValueAccessor entityViewIdValueAccessor) {
         this.entityViewManager = entityViewManager;
-        SimpleModule module = new SimpleModule();
+        SimpleModule module = new SimpleModule("Blaze-Persistence" );
 
         module.setDeserializerModifier(new BeanDeserializerModifier() {
             @Override
             public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
-                ManagedViewType<?> view = entityViewManager.getMetamodel().managedView(beanDesc.getBeanClass());
-                if (view != null) {
-                    return new EntityViewReferenceDeserializer(entityViewManager, view, objectMapper, beanDesc.getIgnoredPropertyNames(), entityViewIdValueAccessor);
+                if ( deserializer instanceof AbstractDeserializer ) {
+                    ManagedViewType<?> view = entityViewManager.getMetamodel().managedView( beanDesc.getBeanClass() );
+                    if ( view != null ) {
+                        return new EntityViewReferenceDeserializer(
+                                entityViewManager,
+                                view,
+                                objectMapper,
+                                beanDesc.getIgnoredPropertyNames(),
+                                entityViewIdValueAccessor
+                        );
+                    }
                 }
                 return deserializer;
             }
