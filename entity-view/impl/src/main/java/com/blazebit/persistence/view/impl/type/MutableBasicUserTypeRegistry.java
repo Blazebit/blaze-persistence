@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
@@ -81,8 +82,8 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
         basicUserTypes.put(Character[].class, CharArrayBasicUserType.INSTANCE);
 
         basicUserTypes.put(java.util.Date.class, DateBasicUserType.INSTANCE);
-        basicUserTypes.put(java.sql.Date.class, DateBasicUserType.INSTANCE);
-        basicUserTypes.put(java.sql.Time.class, DateBasicUserType.INSTANCE);
+        basicUserTypes.put(java.sql.Date.class, JavaSqlDateBasicUserType.INSTANCE);
+        basicUserTypes.put(java.sql.Time.class, TimeBasicUserType.INSTANCE);
         basicUserTypes.put(java.sql.Timestamp.class, TimestampBasicUserType.INSTANCE);
         basicUserTypes.put(java.util.TimeZone.class, TimeZoneBasicUserType.INSTANCE);
 
@@ -224,6 +225,12 @@ public class MutableBasicUserTypeRegistry implements BasicUserTypeRegistry {
             if (clazz.isEnum()) {
                 //noinspection rawtypes
                 userType = new EnumBasicUserType<>((Class<Enum>) clazz);
+            } else if (java.sql.Date.class == clazz) {
+                userType = JavaSqlDateBasicUserType.INSTANCE;
+            } else if ( Time.class == clazz) {
+                userType = TimeBasicUserType.INSTANCE;
+            } else if (Timestamp.class == clazz) {
+                userType = TimestampBasicUserType.INSTANCE;
             } else if (Date.class.isAssignableFrom(clazz)) {
                 userType = DateBasicUserType.INSTANCE;
             } else if (Calendar.class.isAssignableFrom(clazz)) {

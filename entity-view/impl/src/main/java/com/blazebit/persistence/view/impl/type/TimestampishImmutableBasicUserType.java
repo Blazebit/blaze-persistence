@@ -32,6 +32,6 @@ public abstract class TimestampishImmutableBasicUserType<X> extends ImmutableBas
 
     @Override
     public String toStringExpression(String expression) {
-        return "TO_CHAR(" + expression + ", 'YYYY-MM-DD HH24:MI:SS.US')";
+        return "TIMESTAMP_ISO(" + expression + ")";
     }
 }

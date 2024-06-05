@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.type;
-
-import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
+package com.blazebit.persistence.impl.function.dateiso;
 
 /**
- *
  * @author Christian Beikov
- * @since 1.5.0
+ * @since 1.6.12
  */
-public abstract class TimeZoneishBasicUserType<X> extends ImmutableBasicUserType<X> {
-
+public class SQLServerDateIsoFunction extends DateIsoFunction {
     @Override
-    public abstract X fromString(CharSequence sequence);
-
-    @Override
-    public String toStringExpression(String expression) {
-        return "TO_CHAR(" + expression + ", 'TZ')";
+    protected String getExpression(String timestampArgument) {
+        return "format(" + timestampArgument + ", 'yyyy-MM-dd')";
     }
+
 }

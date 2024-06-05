@@ -86,6 +86,7 @@ import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.type.IntegerBasicUserType;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -683,10 +684,18 @@ public class ViewTypeObjectBuilderTemplate<T> {
             String joinBase = mapperBuilder.getMapping();
             String joinCorrelationAttributePath = mapperBuilder.getJoinCorrelationAttributePath(attributePath);
             String embeddingViewPath = joinBase;
-            if (factory.isParameterized()) {
-                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(mapperBuilder, correlationAlias, attribute), viewRoot.getEntityViewRootTypes().keySet());
+            BasicUserTypeStringSupport<Object> correlationResultExpressionBasicType;
+            Type<?> resultType = attribute.getElementType();
+            if ( resultType.getMappingType() == Type.MappingType.BASIC ) {
+                //noinspection unchecked
+                correlationResultExpressionBasicType = (BasicUserTypeStringSupport<Object>) ((BasicType<?>) resultType).getUserType();
             } else {
-                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(mapperBuilder, correlationAlias, attribute), viewRoot.getEntityViewRootTypes().keySet());
+                correlationResultExpressionBasicType = null;
+            }
+            if (factory.isParameterized()) {
+                mapper = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), correlationResultExpressionBasicType, alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(mapperBuilder, correlationAlias, attribute), viewRoot.getEntityViewRootTypes().keySet());
+            } else {
+                mapper = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), ef, joinBase, correlationBasis, attribute.getCorrelationResultExpression(), correlationResultExpressionBasicType, alias, joinCorrelationAttributePath, embeddingViewPath, attribute.getFetches(), createLimiter(mapperBuilder, correlationAlias, attribute), viewRoot.getEntityViewRootTypes().keySet());
             }
             mapperBuilder.addMapper(mapper);
         } else if (attribute.getFetchStrategy() == FetchStrategy.SELECT) {

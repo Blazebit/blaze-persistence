@@ -19,8 +19,8 @@ package com.blazebit.persistence.view.impl.type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 
-import java.sql.Time;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 
 /**
  *
@@ -33,12 +33,17 @@ public class LocalTimeBasicUserType extends ImmutableBasicUserType<LocalTime> {
 
     @Override
     public LocalTime fromString(CharSequence sequence) {
-        return Time.valueOf(sequence.toString()).toLocalTime();
+        String input = sequence.toString();
+        try {
+            return LocalTime.parse(input);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid time format: " + input, e);
+        }
     }
 
     @Override
     public String toStringExpression(String expression) {
-        return "TO_CHAR(" + expression + ", 'HH24:MI:SS.US')";
+        return "TIME_ISO(" + expression + ")";
     }
 
 }

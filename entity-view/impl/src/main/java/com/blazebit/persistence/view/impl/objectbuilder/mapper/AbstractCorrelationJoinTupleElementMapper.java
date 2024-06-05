@@ -39,6 +39,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     protected final String correlationResult;
     protected final String correlationAlias;
     protected final String correlationExternalAlias;
+    protected final BasicUserTypeStringSupport<Object> correlationResultBasicType;
     protected final String joinBase;
     protected final String alias;
     protected final String attributePath;
@@ -46,7 +47,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
     protected final String[] fetches;
     protected final Limiter limiter;
 
-    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
+    public AbstractCorrelationJoinTupleElementMapper(ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, BasicUserTypeStringSupport<Object> correlationResultBasicType, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
         this.correlationBasis = correlationBasis.intern();
         this.alias = alias;
         this.attributePath = attributePath;
@@ -60,6 +61,7 @@ public abstract class AbstractCorrelationJoinTupleElementMapper implements Alias
         } else {
             this.correlationExternalAlias = CorrelationProviderHelper.getDefaultExternalCorrelationAlias(attributePath);
         }
+        this.correlationResultBasicType = correlationResultBasicType;
         if (correlationResult == null || correlationResult instanceof PathExpression && ((PathExpression) correlationResult).getExpressions().isEmpty()) {
             this.correlationResult = correlationExternalAlias;
         } else {

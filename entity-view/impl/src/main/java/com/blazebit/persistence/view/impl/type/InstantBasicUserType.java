@@ -18,8 +18,10 @@ package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
-import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 
 /**
  *
@@ -32,7 +34,12 @@ public class InstantBasicUserType extends TimestampishImmutableBasicUserType<Ins
 
     @Override
     public Instant fromString(CharSequence sequence) {
-        return Timestamp.valueOf(sequence.toString()).toInstant();
+        String input = sequence.toString();
+        try {
+            return LocalDateTime.parse( input).toInstant( ZoneOffset.UTC );
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date-time format: " + input, e);
+        }
     }
 
 }

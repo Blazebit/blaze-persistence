@@ -16,20 +16,20 @@
 
 package com.blazebit.persistence.view.impl.type;
 
-import com.blazebit.persistence.view.spi.type.BasicUserType;
-import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
+import java.sql.Time;
+import java.util.Calendar;
 
-import java.sql.Timestamp;
-import java.util.Date;
+import com.blazebit.persistence.parser.CharSequenceUtils;
+import com.blazebit.persistence.view.spi.type.BasicUserType;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserType<Date> {
+public class TimeBasicUserType implements BasicUserType<Time> {
 
-    public static final BasicUserType<?> INSTANCE = new DateBasicUserType();
+    public static final BasicUserType<?> INSTANCE = new TimeBasicUserType();
 
     @Override
     public boolean isMutable() {
@@ -57,62 +57,52 @@ public class DateBasicUserType implements BasicUserType<Date>, VersionBasicUserT
     }
 
     @Override
-    public boolean isEqual(Date initial, Date current) {
+    public boolean isEqual(Time initial, Time current) {
         return initial.getTime() == current.getTime();
     }
 
     @Override
-    public boolean isDeepEqual(Date initial, Date current) {
+    public boolean isDeepEqual(Time initial, Time current) {
         return initial.getTime() == current.getTime();
     }
 
     @Override
-    public int hashCode(Date object) {
+    public int hashCode(Time object) {
         return object.hashCode();
     }
 
     @Override
-    public boolean shouldPersist(Date entity) {
+    public boolean shouldPersist(Time entity) {
         return false;
     }
 
     @Override
-    public String[] getDirtyProperties(Date entity) {
+    public String[] getDirtyProperties(Time entity) {
         return DIRTY_MARKER;
     }
 
     @Override
-    public Date deepClone(Date object) {
-        return (Date) object.clone();
+    public Time deepClone(Time object) {
+        return (Time) object.clone();
     }
 
     @Override
-    public Date nextValue(Date current) {
-        return new Date();
-    }
-
-    @Override
-    public Date fromString(CharSequence sequence) {
-        return new Date(parseTimestamp(sequence).getTime());
-    }
-
-    protected Timestamp parseTimestamp(CharSequence sequence) {
-        char[] chars = new char[29];
-        int length = sequence.length();
-        for (int i = 0; i < length; i++) {
-            chars[i] = sequence.charAt(i);
+    public Time fromString(CharSequence sequence) {
+        int fractionDot = CharSequenceUtils.lastIndexOf(sequence, '.');
+        if (fractionDot == -1) {
+            return Time.valueOf(sequence.toString());
         }
-        // Fill up zeros
-        for (int i = length; i < chars.length; i++) {
-            chars[i] = '0';
-        }
-        // Replace the T from the ISO format
-        chars[10] = ' ';
-        return java.sql.Timestamp.valueOf(new String(chars));
+        int millisEndIndex = fractionDot + 4;
+        Time t = Time.valueOf(sequence.subSequence(0, fractionDot).toString());
+        Calendar c = Calendar.getInstance();
+        c.setTime(t);
+        String fractions = sequence.subSequence(fractionDot + 1, millisEndIndex).toString();
+        c.set(Calendar.MILLISECOND, Integer.parseInt(fractions));
+        return new Time(c.getTimeInMillis());
     }
 
     @Override
     public String toStringExpression(String expression) {
-        return "TIMESTAMP_ISO(" + expression + ")";
+        return "TIME_ISO(" + expression + ")";
     }
 }

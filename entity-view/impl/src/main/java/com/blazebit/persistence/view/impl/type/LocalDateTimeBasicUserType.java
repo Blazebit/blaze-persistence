@@ -18,9 +18,8 @@ package com.blazebit.persistence.view.impl.type;
 
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 
 /**
  *
@@ -33,7 +32,12 @@ public class LocalDateTimeBasicUserType extends TimestampishImmutableBasicUserTy
 
     @Override
     public LocalDateTime fromString(CharSequence sequence) {
-        return Timestamp.valueOf(sequence.toString()).toInstant().atZone(ZoneOffset.UTC).toLocalDateTime();
+        String input = sequence.toString();
+        try {
+            return LocalDateTime.parse(input);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date-time format: " + input, e);
+        }
     }
 
 }

@@ -64,7 +64,7 @@ public final class UnsafeHelper {
             lookup = methodHandlesClass.getMethod("lookup");
             defineClass = lookupClass.getMethod("defineClass", byte[].class);
 
-        } catch (Exception e) {
+        } catch (Exception | NoSuchMethodError e) {
             // ignore
         }
         GET_MODULE = getModule;
