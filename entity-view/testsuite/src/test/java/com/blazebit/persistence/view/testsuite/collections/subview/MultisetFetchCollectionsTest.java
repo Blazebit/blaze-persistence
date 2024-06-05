@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,6 +91,8 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
 
                 doc1.getContacts().put(1, pers1);
                 doc1.getContacts().put(2, pers2);
+
+                doc1.setDateCollected(LocalDate.now());
 
                 em.persist(pers1);
                 em.persist(pers2);

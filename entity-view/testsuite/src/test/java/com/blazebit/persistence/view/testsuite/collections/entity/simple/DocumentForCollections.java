@@ -28,6 +28,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +49,7 @@ public class DocumentForCollections implements Serializable {
 
     private Long id;
     private String name;
+    private LocalDate dateCollected;
     private PersonForCollections owner;
     private Set<PersonForCollections> partners = new HashSet<PersonForCollections>();
     private Map<Integer, PersonForCollections> contacts = new HashMap<Integer, PersonForCollections>();
@@ -117,6 +119,14 @@ public class DocumentForCollections implements Serializable {
 
     public void setPersonList(List<PersonForCollections> personList) {
         this.personList = personList;
+    }
+
+    public LocalDate getDateCollected() {
+        return dateCollected;
+    }
+
+    public void setDateCollected(LocalDate dateCollected) {
+        this.dateCollected = dateCollected;
     }
 
     @Override

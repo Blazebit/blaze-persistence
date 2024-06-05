@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,8 @@ public interface SubviewDocumentMultisetFetchView extends SubviewSimpleDocumentM
     public Long getId();
 
     public String getName();
+
+    public LocalDate getDateCollected();
 
     @Mapping(value = "partners", fetch = FetchStrategy.MULTISET)
     public Set<SubviewPersonForCollectionsMultisetFetchView> getMultisetPartners();
