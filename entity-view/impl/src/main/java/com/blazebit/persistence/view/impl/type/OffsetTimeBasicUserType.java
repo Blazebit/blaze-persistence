@@ -19,9 +19,10 @@ package com.blazebit.persistence.view.impl.type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.ImmutableBasicUserType;
 
-import java.sql.Time;
+import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 
 /**
  *
@@ -34,12 +35,17 @@ public class OffsetTimeBasicUserType extends ImmutableBasicUserType<OffsetTime> 
 
     @Override
     public OffsetTime fromString(CharSequence sequence) {
-        return Time.valueOf(sequence.toString()).toLocalTime().atOffset(ZoneOffset.UTC);
+        String input = sequence.toString();
+        try {
+            return LocalTime.parse(input).atOffset(ZoneOffset.UTC);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid time format: " + input, e);
+        }
     }
 
     @Override
     public String toStringExpression(String expression) {
-        return "TO_CHAR(" + expression + ", 'HH24:MI:SS.US')";
+        return "TIME_ISO(" + expression + ")";
     }
 
 }

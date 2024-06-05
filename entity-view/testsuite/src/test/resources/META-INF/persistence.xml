@@ -20,6 +20,8 @@
         <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForElementCollections</class>
         <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections</class>
         <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForElementCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.timeentity.DocumentForMultisetFetch</class>
+        <class>com.blazebit.persistence.view.testsuite.timeentity.PersonForMultisetFetch</class>
 <!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForCollections</class> -->
 <!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections</class> -->
 <!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForCollections</class> -->

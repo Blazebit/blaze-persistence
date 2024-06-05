@@ -26,6 +26,8 @@ import com.blazebit.persistence.view.spi.type.TypeConverter;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -122,6 +124,12 @@ public class DefaultBasicUserTypeRegistry implements BasicUserTypeRegistry {
                 userType = new EnumBasicUserType<>((Class<Enum>) clazz);
             } else if (entityMetamodel.getEntity(clazz) != null) {
                 userType = entityBasicUserType;
+            } else if (java.sql.Date.class == clazz) {
+                userType = JavaSqlDateBasicUserType.INSTANCE;
+            } else if (Time.class == clazz) {
+                userType = TimeBasicUserType.INSTANCE;
+            } else if (Timestamp.class == clazz) {
+                userType = TimestampBasicUserType.INSTANCE;
             } else if (Date.class.isAssignableFrom(clazz)) {
                 userType = DateBasicUserType.INSTANCE;
             } else if (Calendar.class.isAssignableFrom(clazz)) {

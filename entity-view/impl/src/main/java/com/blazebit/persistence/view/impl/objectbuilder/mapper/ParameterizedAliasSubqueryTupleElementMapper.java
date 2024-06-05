@@ -43,7 +43,11 @@ public class ParameterizedAliasSubqueryTupleElementMapper extends ParameterizedS
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(viewPath);
-        providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(alias));
+        if (asString && basicTypeStringSupport != null) {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(alias, basicTypeStringSupport.toStringExpression(alias)));
+        } else {
+            providerFactory.create(parameterHolder, optionalParameters).createSubquery(queryBuilder.selectSubquery(alias));
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 

@@ -119,10 +119,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        boolean isMySql = properties.get("javax.persistence.jdbc.url").toString().contains("mysql");
+        String jdbcUrl = properties.get("javax.persistence.jdbc.url").toString();
         if (System.getProperty("hibernate.dialect") != null) {
             properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
-        } else if (isMySql) {
+        } else if (jdbcUrl.contains( "mysql" )) {
             // MySQL is drunk, it does stuff case insensitive by default...
             properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
             
@@ -130,22 +130,25 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("db2")) {
+        } else if ( jdbcUrl.contains( "oracle")) {
+            // The original DB2 dialect maps time types to `date`
+            properties.put("hibernate.dialect", SaneOracleDialect.class.getName());
+        } else if ( jdbcUrl.contains( "db2")) {
             // The original DB2 dialect misses support for sequence retrieve in select statements
             properties.put("hibernate.dialect", SaneDB2Dialect.class.getName());
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("h2")) {
+        } else if ( jdbcUrl.contains( "h2")) {
             // Hibernate 5 uses sequences by default but h2 seems to have a bug with sequences in a limited query
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }
-        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("sqlserver")) {
+        } else if ( jdbcUrl.contains( "sqlserver")) {
             // Apparently the dialect resolver doesn't choose the latest dialect
             properties.put("hibernate.dialect", SQLServer2012Dialect.class.getName());
             // Not sure what is happening, but when the sequence is tried to be fetched, it doesn't exist in SQL Server
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }
-        } else if (isHibernate5() && properties.get("javax.persistence.jdbc.url").toString().contains("oracle")) {
+        } else if (isHibernate5() && jdbcUrl.contains( "oracle")) {
             // Apparently the dialect resolver doesn't choose the latest dialect
             properties.put("hibernate.dialect", "org.hibernate.dialect.Oracle10gDialect");
         }

@@ -181,6 +181,10 @@ import com.blazebit.persistence.impl.function.datediff.year.DefaultYearDiffFunct
 import com.blazebit.persistence.impl.function.datediff.year.MySQLYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.OracleYearDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.year.PostgreSQLYearDiffFunction;
+import com.blazebit.persistence.impl.function.dateiso.DateIsoFunction;
+import com.blazebit.persistence.impl.function.dateiso.MySQLDateIsoFunction;
+import com.blazebit.persistence.impl.function.dateiso.PostgreSQLDateIsoFunction;
+import com.blazebit.persistence.impl.function.dateiso.SQLServerDateIsoFunction;
 import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DayFunction;
@@ -409,6 +413,14 @@ import com.blazebit.persistence.impl.function.stringxmlagg.GroupConcatBasedStrin
 import com.blazebit.persistence.impl.function.stringxmlagg.OracleGroupConcatBasedStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.PostgreSQLStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
+import com.blazebit.persistence.impl.function.timeiso.MySQLTimeIsoFunction;
+import com.blazebit.persistence.impl.function.timeiso.PostgreSQLTimeIsoFunction;
+import com.blazebit.persistence.impl.function.timeiso.SQLServerTimeIsoFunction;
+import com.blazebit.persistence.impl.function.timeiso.TimeIsoFunction;
+import com.blazebit.persistence.impl.function.timestampiso.MySQLTimestampIsoFunction;
+import com.blazebit.persistence.impl.function.timestampiso.PostgreSQLTimestampIsoFunction;
+import com.blazebit.persistence.impl.function.timestampiso.SQLServerTimestampIsoFunction;
+import com.blazebit.persistence.impl.function.timestampiso.TimestampIsoFunction;
 import com.blazebit.persistence.impl.function.tomultiset.ToMultisetFunction;
 import com.blazebit.persistence.impl.function.tostringjson.AbstractToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.ForJsonPathToStringJsonFunction;
@@ -1977,6 +1989,33 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(), new PercentileDiscFunction(dialectEntry.getValue()));
         }
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup( TimestampIsoFunction.FUNCTION_NAME, false );
+        jpqlFunctionGroup.add(null, new TimestampIsoFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLTimestampIsoFunction());
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLTimestampIsoFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerTimestampIsoFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLTimestampIsoFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTimestampIsoFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup( DateIsoFunction.FUNCTION_NAME, false );
+        jpqlFunctionGroup.add(null, new DateIsoFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLDateIsoFunction());
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLDateIsoFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerDateIsoFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLDateIsoFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLDateIsoFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup( TimeIsoFunction.FUNCTION_NAME, false );
+        jpqlFunctionGroup.add(null, new TimeIsoFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLTimeIsoFunction());
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLTimeIsoFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerTimeIsoFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLTimeIsoFunction());
+        jpqlFunctionGroup.add("mysql8", new MySQLTimeIsoFunction());
         registerFunction(jpqlFunctionGroup);
     }
 

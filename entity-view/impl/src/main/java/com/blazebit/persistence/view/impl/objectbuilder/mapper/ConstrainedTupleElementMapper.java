@@ -91,7 +91,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             } else {
                 sb.append(" ELSE ");
             }
-            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
+            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, asString);
         }
         sb.append(" END");
 
@@ -111,7 +111,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
             for (Map.Entry<String, TupleElementMapper> entry : subqueryMappers) {
                 selectBuilder.setInitiator(initiator.with(entry.getKey()));
-                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
+                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, asString);
             }
 
             initiator.end();

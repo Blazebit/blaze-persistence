@@ -14,30 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.type;
-
-import com.blazebit.persistence.view.spi.type.BasicUserType;
-
-import java.sql.Timestamp;
-import java.util.Date;
+package com.blazebit.persistence.impl.function.timestampiso;
 
 /**
- *
  * @author Christian Beikov
- * @since 1.2.0
+ * @since 1.6.12
  */
-public class TimestampBasicUserType extends DateBasicUserType {
-
-    public static final BasicUserType<Date> INSTANCE = new TimestampBasicUserType();
-
+public class MySQLTimestampIsoFunction extends TimestampIsoFunction {
     @Override
-    public Date nextValue(Date current) {
-        return new Timestamp(System.currentTimeMillis());
-    }
-
-    @Override
-    public Date fromString(CharSequence sequence) {
-        return parseTimestamp(sequence);
+    protected String getExpression(String timestampArgument) {
+        return "date_format(" + timestampArgument + ", '%Y-%m-%dT%H:%i:%S.%f')";
     }
 
 }

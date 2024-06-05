@@ -43,7 +43,11 @@ public class AliasSubqueryTupleElementMapper extends SimpleSubqueryTupleElementM
     public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(viewPath);
-        provider.createSubquery(queryBuilder.selectSubquery(alias));
+        if (asString && basicTypeStringSupport != null) {
+            provider.createSubquery(queryBuilder.selectSubquery(alias, basicTypeStringSupport.toStringExpression(alias)));
+        } else {
+            provider.createSubquery(queryBuilder.selectSubquery(alias));
+        }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
     }
 

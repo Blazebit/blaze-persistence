@@ -29,6 +29,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
+import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
 import java.util.Set;
@@ -42,8 +43,8 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
 
     private final CorrelationProviderFactory providerFactory;
 
-    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
-        super(ef, joinBase, correlationBasis, correlationResult, alias, attributePath, embeddingViewPath, fetches, limiter, rootAliases);
+    public ParameterizedExpressionCorrelationJoinTupleElementMapper(CorrelationProviderFactory providerFactory, ExpressionFactory ef, String joinBase, String correlationBasis, Expression correlationResult, BasicUserTypeStringSupport<Object> correlationResultBasicType, String alias, String attributePath, String embeddingViewPath, String[] fetches, Limiter limiter, Set<String> rootAliases) {
+        super(ef, joinBase, correlationBasis, correlationResult, correlationResultBasicType, alias, attributePath, embeddingViewPath, fetches, limiter, rootAliases);
         this.providerFactory = providerFactory;
     }
 
@@ -81,7 +82,11 @@ public class ParameterizedExpressionCorrelationJoinTupleElementMapper extends Ab
         // Basic element has an alias, subviews don't
         if (alias != null) {
             viewJpqlMacro.setViewPath(null);
-            queryBuilder.select(correlationResult, alias);
+            if ( asString && correlationResultBasicType != null ) {
+                queryBuilder.select( correlationResultBasicType.toStringExpression( correlationResult ), alias );
+            } else {
+                queryBuilder.select( correlationResult, alias );
+            }
         }
         viewJpqlMacro.setViewPath(oldViewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
