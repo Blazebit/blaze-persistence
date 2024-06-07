@@ -67,11 +67,6 @@
             <version>2.4.12</version>
         </dependency>
         <dependency>
-            <groupId>com.github.jsqlparser</groupId>
-            <artifactId>jsqlparser</artifactId>
-            <version>3.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.opentest4j</groupId>
             <artifactId>opentest4j</artifactId>
             <version>1.0.0-M2</version>

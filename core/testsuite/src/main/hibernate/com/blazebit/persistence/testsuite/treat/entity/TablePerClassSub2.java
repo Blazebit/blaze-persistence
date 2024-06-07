@@ -19,8 +19,6 @@ package com.blazebit.persistence.testsuite.treat.entity;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import org.hibernate.annotations.ForeignKey;
 
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,16 +38,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "table_per_class_sub_2")
-@AssociationOverrides({
-    @AssociationOverride(
-            name = "embeddable.list",
-            joinTable = @JoinTable(name = "tpces2_list")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    ),
-    @AssociationOverride(
-            name = "embeddable.map",
-            joinTable = @JoinTable(name = "tpces2_map")//, inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-    )
-})
 public class TablePerClassSub2 extends TablePerClassBase implements Sub2<TablePerClassBase, TablePerClassEmbeddable, TablePerClassEmbeddableSub2> {
     private static final long serialVersionUID = 1L;
 
