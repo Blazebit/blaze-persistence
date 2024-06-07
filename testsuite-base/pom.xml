@@ -30,6 +30,8 @@
 
     <name>Blazebit Persistence Testsuite Base</name>
     <modules>
+        <module>assertion</module>
+
         <module>jpa</module>
         <module>hibernate</module>
         <module>datanucleus</module>

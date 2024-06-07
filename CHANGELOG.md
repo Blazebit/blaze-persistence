@@ -6,11 +6,17 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Add support for Spring Data/Boot 3.3
+* Add `date_iso`, `time_iso` and `timestamp_iso` internal functions
 
 ### Bug fixes
 
 * Fix bug in collection insert code triggered by Hibernate ORM 6.4.2
+* Fix concurrency issue leading to NPE when concurrently creating entity view updaters
+* Fix `CAST_STRING` for SQL Server
+* Ensure Spring Jackson integration copies `ObjectMapper` bean
+* Fix entity view processor generated code for `@MappingSingular` leading to compilation error
+* Fix `MULTISET` issues with temporal `BasicUserType` 
 
 ### Backwards-incompatible changes
 

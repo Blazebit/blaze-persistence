@@ -28,6 +28,7 @@ import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -629,6 +630,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
                 em.close();
             }
         }
+    }
+
+    public AssertStatementBuilder assertOrderedQuerySequence() {
+        return new AssertStatementBuilder(getRelationalModelAccessor(), QueryInspectorListener.EXECUTED_QUERIES);
+    }
+
+    public AssertStatementBuilder assertUnorderedQuerySequence() {
+        return assertOrderedQuerySequence().unordered();
     }
 
 }

@@ -202,7 +202,7 @@ OpenJPA integration              | N/A                                 | (Curren
 Entity View CDI integration      | CDI 1.0                             | 1.0, 1.1, 1.2, 2.0, 3.0
 Entity View Spring integration   | Spring 4.3                          | 4.3, 5.0, 5.1, 5.2, 5.3, 6.0
 DeltaSpike Data integration      | DeltaSpike 1.7                      | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.7, 3.1
+Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.7, 3.1 - 3.3
 Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3 | Spring Data 1.11 - 2.7, Spring WebMvc 4.3 - 5.3
 Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0 | Spring Data 2.0 - 2.7, Spring WebFlux 5.0 - 5.3
 Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2  | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
@@ -468,6 +468,8 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+  * `hibernate-6.6` + the `jakarta` profile
+  * `hibernate-6.5` + the `jakarta` profile
   * `hibernate-6.4` + the `jakarta` profile
   * `hibernate-6.3` + the `jakarta` profile
   * `hibernate-6.2` + the `jakarta` profile

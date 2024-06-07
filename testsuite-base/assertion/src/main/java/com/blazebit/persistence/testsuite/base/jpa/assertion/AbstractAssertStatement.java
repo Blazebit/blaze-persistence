@@ -28,11 +28,11 @@ import net.sf.jsqlparser.statement.merge.Merge;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.ParenthesedFromItem;
+import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
-import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.update.Update;
 import org.junit.Assert;
 
@@ -134,20 +134,18 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                 if (select.getSelectBody() instanceof PlainSelect) {
                     PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
                     for (SelectItem item : plainSelect.getSelectItems()) {
-                        if (item instanceof SelectExpressionItem) {
-                            ((SelectExpressionItem) item).getExpression().accept(new ExpressionVisitorAdapter() {
-                                @Override
-                                public void visit(Column column) {
-                                    Table t = column.getTable();
-                                    Table realTable;
-                                    if ((realTable = findTable(tables, t.getName())) == null) {
-                                        throw new IllegalStateException("Table '" + t + "' not found in determined tables: " + tables);
-                                    }
-
-                                    fetchedTables.add(realTable);
+                        item.getExpression().accept(new ExpressionVisitorAdapter() {
+                            @Override
+                            public void visit(Column column) {
+                                Table t = column.getTable();
+                                Table realTable;
+                                if ((realTable = findTable(tables, t.getName())) == null) {
+                                    throw new IllegalStateException("Table '" + t + "' not found in determined tables: " + tables);
                                 }
-                            });
-                        }
+
+                                fetchedTables.add(realTable);
+                            }
+                        });
                     }
                 }
             }
@@ -180,9 +178,14 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                     }
 
                     @Override
-                    public void visit(SubJoin subjoin) {
-                        subjoin.getLeft().accept(this);
-                        for (Join join : subjoin.getJoinList()) {
+                    public void visit(ParenthesedSelect selectBody) {
+                        tables.addAll( getTables( selectBody.getSelect() ) );
+                    }
+
+                    @Override
+                    public void visit(ParenthesedFromItem fromItem) {
+                        fromItem.getFromItem().accept( this );
+                        for (Join join : fromItem.getJoins()) {
                             join.getRightItem().accept(this);
                         }
                     }

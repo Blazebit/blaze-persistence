@@ -24,7 +24,6 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DB2DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.DatabaseCleaner;
 import com.blazebit.persistence.testsuite.base.jpa.cleaner.H2DatabaseCleaner;
@@ -749,10 +748,10 @@ public abstract class AbstractJpaPersistenceTest {
                 .build();
     }
 
-    private static final class QueryInspectorListener implements QueryExecutionListener {
+    protected static final class QueryInspectorListener implements QueryExecutionListener {
 
         public static final QueryInspectorListener INSTANCE = new QueryInspectorListener();
-        private static final List<String> EXECUTED_QUERIES = new ArrayList<>();
+        public static final List<String> EXECUTED_QUERIES = new ArrayList<>();
         private static boolean enabled = false;
         private static boolean collectSequences = false;
 
@@ -807,14 +806,6 @@ public abstract class AbstractJpaPersistenceTest {
                     count,
                     queries.size());
         }
-    }
-
-    public AssertStatementBuilder assertOrderedQuerySequence() {
-        return new AssertStatementBuilder(getRelationalModelAccessor(), QueryInspectorListener.EXECUTED_QUERIES);
-    }
-
-    public AssertStatementBuilder assertUnorderedQuerySequence() {
-        return assertOrderedQuerySequence().unordered();
     }
 
     protected static <T, E extends Throwable> E verifyException(T object, Consumer<T> action) {
