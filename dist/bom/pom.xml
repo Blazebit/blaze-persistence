@@ -308,6 +308,12 @@
             </dependency>
             <dependency>
                 <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-base-3.3</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
@@ -363,6 +369,12 @@
             <dependency>
                 <groupId>com.blazebit</groupId>
                 <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+                <version>${project.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.blazebit</groupId>
+                <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
                 <version>${project.version}</version>
                 <scope>compile</scope>
             </dependency>
