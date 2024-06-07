@@ -32,7 +32,7 @@
         <module.name>com.blazebit.persistence.integration.spring.data.testsuite.webflux.runner</module.name>
         <test.java.version>17</test.java.version>
         <main.java.version>${test.java.version}</main.java.version>
-        <version.spring>${version.spring-data-3.1-spring}</version.spring>
+        <version.spring>${version.spring-data-3.3-spring}</version.spring>
         <version.h2>${h2-2.version}</version.h2>
         <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
     </properties>
@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-3.1}</version>
+            <version>${version.spring-data-3.3}</version>
             <scope>test</scope>
         </dependency>
 
@@ -114,7 +114,7 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -156,7 +156,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-            <version>${version.spring-data-3.1-spring-boot}</version>
+            <version>${version.spring-data-3.3-spring-boot}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -191,7 +191,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>${version.spring-data-3.1}</version>
+            <version>${version.spring-data-3.3}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -214,7 +214,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${version.spring-data-3.1-spring-boot}</version>
+            <version>${version.spring-data-3.3-spring-boot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
