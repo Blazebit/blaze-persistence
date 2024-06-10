@@ -33,6 +33,9 @@
         <test.java.version>17</test.java.version>
         <main.java.version>${test.java.version}</main.java.version>
         <version.spring>${version.spring-data-3.3-spring}</version.spring>
+        <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
+        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
+        <version.hibernate>${version.hibernate-6.2}</version.hibernate>
         <version.h2>${h2-2.version}</version.h2>
         <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
     </properties>
@@ -75,7 +78,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-3.3}</version>
+            <version>${version.spring-data}</version>
             <scope>test</scope>
         </dependency>
 
@@ -121,17 +124,17 @@
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${version.hibernate-6.2}</version>
+            <version>${version.hibernate}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-envers</artifactId>
-            <version>${version.hibernate-6.2}</version>
+            <version>${version.hibernate}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-testing</artifactId>
-            <version>${version.hibernate-6.2}</version>
+            <version>${version.hibernate}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
@@ -156,7 +159,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-            <version>${version.spring-data-3.3-spring-boot}</version>
+            <version>${version.spring-boot}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -191,7 +194,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>${version.spring-data-3.3}</version>
+            <version>${version.spring-data}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -214,7 +217,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${version.spring-data-3.3-spring-boot}</version>
+            <version>${version.spring-boot}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -252,5 +255,79 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>hibernate-6.2</id>
+            <properties>
+                <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.4</id>
+            <properties>
+                <version.hibernate>${version.hibernate-6.4}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.5</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.hibernate>${version.hibernate-6.5}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.6</id>
+            <properties>
+                <version.hibernate>${version.hibernate-6.6}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>spring-data-3.1.x</id>
+            <properties>
+                <version.spring-boot>${version.spring-data-3.1-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.1}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-3.2.x</id>
+            <properties>
+                <version.spring-boot>${version.spring-data-3.1-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.1}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-3.3.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.3}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>
