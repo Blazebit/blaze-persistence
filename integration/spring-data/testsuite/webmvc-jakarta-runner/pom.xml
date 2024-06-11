@@ -287,6 +287,7 @@
             for ORM 5.6 + JDK 17 testing
             -->
             <properties>
+                <version.spring>${version.spring-data-3.1-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.1-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.1}</version.spring-data>
             </properties>
@@ -301,6 +302,7 @@
         <profile>
             <id>spring-data-3.1.x</id>
             <properties>
+                <version.spring>${version.spring-data-3.1-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.1-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.1}</version.spring-data>
             </properties>
@@ -315,6 +317,7 @@
         <profile>
             <id>spring-data-3.2.x</id>
             <properties>
+                <version.spring>${version.spring-data-3.2-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.2-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.2}</version.spring-data>
             </properties>
@@ -332,6 +335,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
+                <version.spring>${version.spring-data-3.3-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.3}</version.spring-data>
             </properties>
