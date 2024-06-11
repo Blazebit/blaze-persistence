@@ -244,6 +244,16 @@
     </build>
     <profiles>
         <profile>
+            <id>hibernate-5.6</id>
+            <!--
+            Default to compiling with ORM 6.2 as profile activation gets too complicated
+            for ORM 5.6 + JDK 17 testing
+            -->
+            <properties>
+                <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
             <id>hibernate-6.2</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
@@ -269,6 +279,24 @@
             <properties>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>
+        </profile>
+        <profile>
+            <id>spring-data-2.7.x</id>
+            <!--
+            Default to compiling with Spring Data 3.1 as profile activation gets too complicated
+            for ORM 5.6 + JDK 17 testing
+            -->
+            <properties>
+                <version.spring-boot>${version.spring-data-3.1-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.1}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>spring-data-3.1.x</id>
