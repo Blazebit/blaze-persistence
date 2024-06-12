@@ -169,6 +169,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-base-3.3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
         </dependency>
         <dependency>
@@ -206,6 +210,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

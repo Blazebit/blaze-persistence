@@ -18,10 +18,8 @@ package com.blazebit.persistence.testsuite.entity;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.Table;
 
 @Entity
-@Table(name = "emb_tst_ent_sub")
 @DiscriminatorValue("sub")
 public class EmbeddableTestEntitySub extends EmbeddableTestEntity {
 

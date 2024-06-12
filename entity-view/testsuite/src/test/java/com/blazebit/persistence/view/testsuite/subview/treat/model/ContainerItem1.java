@@ -17,14 +17,12 @@
 package com.blazebit.persistence.view.testsuite.subview.treat.model;
 
 import javax.persistence.Entity;
-import javax.persistence.Table;
 
 /**
  * @author Moritz Becker
  * @since 1.4.0
  */
 @Entity
-@Table(name = "container_item_1")
 public class ContainerItem1 extends BaseContainerItem {
     public ContainerItem1() {
     }
