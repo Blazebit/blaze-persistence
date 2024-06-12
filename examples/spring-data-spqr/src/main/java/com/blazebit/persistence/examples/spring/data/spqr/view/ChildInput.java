@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 - 2024 Blazebit.
+ * Copyright 2014 - 2023 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,30 @@
 
 package com.blazebit.persistence.examples.spring.data.spqr.view;
 
-import com.blazebit.persistence.examples.spring.data.spqr.model.Person;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdatableEntityView;
-
-import java.util.Set;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * @author Christian Beikov
  * @since 1.6.4
  */
-@UpdatableEntityView
-@EntityView(Person.class)
-public interface PersonSimpleView extends PersonIdView {
+@GraphQLType(name = "ChildInput")
+public class ChildInput {
+    BoyView boy;
+    GirlView girl;
 
-    String getName();
+    public BoyView getBoy() {
+        return boy;
+    }
 
-    Set<ChildView> getChildren();
+    public void setBoy(BoyView boy) {
+        this.boy = boy;
+    }
+
+    public GirlView getGirl() {
+        return girl;
+    }
+
+    public void setGirl(GirlView girl) {
+        this.girl = girl;
+    }
 }
