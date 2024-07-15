@@ -1018,9 +1018,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 alias = aliasManager.generateRootAlias(alias);
             }
             JoinAliasInfo rootAliasInfo = new JoinAliasInfo(alias, alias, true, true, aliasManager);
-            JoinNode joinNode = JoinNode.createEntityJoinNode(result.baseNode, JoinType.LEFT, result.baseNode.getEntityType(), rootAliasInfo, false);
-            result.baseNode.addEntityJoin(joinNode);
+            JoinNode joinNode = JoinNode.createEntityJoinNode(result.baseNode, JoinType.INNER, result.baseNode.getEntityType(), rootAliasInfo, false);
             rootAliasInfo.setJoinNode(joinNode);
+            rootNodes.add(joinNode);
             explicitJoinNodes.add(joinNode);
             // register root alias in aliasManager
             aliasManager.registerAliasInfo(rootAliasInfo);
@@ -1962,6 +1962,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
     private boolean shouldEmulateEntityJoin(JoinNode node) {
         if (node.getJoinType() != JoinType.INNER) {
             return false;
+        }
+        if (!mainQuery.dbmsDialect.supportsCorrelationInJoinOnClause() && node.isEntityJoinNode() && node.getAliasInfo().getAliasOwner() != node.getParent().getAliasInfo().getAliasOwner()) {
+            return true;
         }
         // in Hibernate < 5.1, we weren't able to refer to non-driving table aliases in the ON clause which can be worked around by emulating through a cross join
         if (!mainQuery.jpaProvider.supportsNonDrivingAliasInOnClause()) {

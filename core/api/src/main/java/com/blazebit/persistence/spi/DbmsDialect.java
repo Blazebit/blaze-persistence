@@ -154,6 +154,14 @@ public interface DbmsDialect {
      * @since 1.5.0
      */
     public boolean supportsNestedCorrelations();
+
+    /**
+     * Returns true if the dbms supports correlations in the JOIN ON clause, false otherwise.
+     *
+     * @return Whether correlations are supported by the dbms in the JOIN ON clause
+     * @since 1.6.12
+     */
+    public boolean supportsCorrelationInJoinOnClause();
     
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.

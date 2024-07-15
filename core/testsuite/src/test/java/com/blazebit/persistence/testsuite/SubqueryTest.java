@@ -351,7 +351,14 @@ public class SubqueryTest extends AbstractCoreTest {
                     .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
                     .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d.id = d_owner_base.id AND dSub <> d)";
+
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM Document dSub JOIN Document d_owner_base" + onClause("d.id = d_owner_base.id") + " JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND dSub <> d";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d.id = d_owner_base.id AND dSub <> d";
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (" + expectedSubQuery + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -365,7 +372,14 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
                 .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d = d_owner_base AND dSub <> d)";
+
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM Document dSub JOIN Document d_owner_base" + onClause("d = d_owner_base") + " JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND dSub <> d";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d = d_owner_base AND dSub <> d";
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (" + expectedSubQuery + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

@@ -153,4 +153,11 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     public boolean supportsArbitraryLengthMultiset() {
         return true;
     }
+
+    @Override
+    public boolean supportsCorrelationInJoinOnClause() {
+        // It's not possible to do `from Document d where exists (select 1 from Person p join Document d2 on d = d2)`
+        // i.e. refer to the join alias of the outer query from the ON condition within a subquery
+        return false;
+    }
 }

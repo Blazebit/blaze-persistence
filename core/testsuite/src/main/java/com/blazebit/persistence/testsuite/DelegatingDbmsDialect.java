@@ -113,6 +113,11 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean supportsCorrelationInJoinOnClause() {
+        return delegate.supportsCorrelationInJoinOnClause();
+    }
+
+    @Override
     public boolean supportsWithClauseInModificationQuery() {
         return delegate.supportsWithClauseInModificationQuery();
     }
