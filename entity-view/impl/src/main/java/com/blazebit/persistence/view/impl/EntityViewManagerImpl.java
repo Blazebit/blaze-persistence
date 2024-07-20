@@ -1409,8 +1409,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
             if (localCache == null || (value = localCache.get(key)) == null) {
                 value = contextAwareEntityViewUpdaterCache.get(key);
                 if (value == null) {
-                    value = new EntityViewUpdaterImpl(this, localCache == null ? (localCache = new HashMap<>()) : localCache, viewType, declaredViewType, owner, ownerMapping);
-                    contextAwareEntityViewUpdaterCache.putAll((Map<? extends ContextAwareUpdaterKey, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                    boolean store = localCache == null;
+                    if (store) {
+                        localCache = new HashMap<>();
+                    }
+                    value = new EntityViewUpdaterImpl(this, localCache, viewType, declaredViewType, owner, ownerMapping);
+                    if (store) {
+                        contextAwareEntityViewUpdaterCache.putAll((Map<? extends ContextAwareUpdaterKey, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                    }
                 }
             }
 
@@ -1421,8 +1427,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
             if (localCache == null || (value = localCache.get(viewType)) == null) {
                 value = entityViewUpdaterCache.get(viewType);
                 if (value == null) {
-                    value = new EntityViewUpdaterImpl(this, localCache == null ? (localCache = new HashMap<>()) : localCache, viewType, null, null, null);
-                    entityViewUpdaterCache.putAll((Map<? extends ManagedViewType<?>, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                    boolean store = localCache == null;
+                    if (store) {
+                        localCache = new HashMap<>();
+                    }
+                    value = new EntityViewUpdaterImpl(this, localCache, viewType, null, null, null);
+                    if (store) {
+                        entityViewUpdaterCache.putAll((Map<? extends ManagedViewType<?>, ? extends EntityViewUpdaterImpl>) (Map<?, ?>) localCache);
+                    }
                 }
             }
 
