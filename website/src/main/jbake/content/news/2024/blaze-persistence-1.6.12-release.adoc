@@ -1,0 +1,33 @@
+= Blaze-Persistence 1.6.12 Release
+Christian Beikov
+2024-08-02 0
+:description: Blaze-Persistence version 1.6.12 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the twelfth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6.6 compatibility
+
+So far, the Hibernate ORM 6 integration was tested against Hibernate ORM 6.4.
+The CI was now updated to also test against ORM 6.5 and 6.6.
+
+=== Spring Data 3.3 integration
+
+Thanks to https://github.com/EugenMayer[Eugen Mayer, window="_blank"] and Andrius Juozapaitis there is now
+a new integration module+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++ for Spring Data 3.3.
+
+=== Concurrency issue in Entity View Updater initialization
+
+When Entity View Updaters are created concurrently where one depends on another, there is the possibility of a
+`NullPointerException` which was now fixed.
+
+=== Various bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1612[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

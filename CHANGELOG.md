@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.12-SNAPSHOT
+## 1.6.13-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.12
+
+02/08/2024 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.12) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.12+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
@@ -16,7 +32,7 @@ Changes that happened in releases
 * Fix `CAST_STRING` for SQL Server
 * Ensure Spring Jackson integration copies `ObjectMapper` bean
 * Fix entity view processor generated code for `@MappingSingular` leading to compilation error
-* Fix `MULTISET` issues with temporal `BasicUserType` 
+* Fix `MULTISET` issues with temporal `BasicUserType`
 
 ### Backwards-incompatible changes
 
