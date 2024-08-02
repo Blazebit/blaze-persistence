@@ -25,7 +25,7 @@
     </parent>
 
     <artifactId>blaze-persistence</artifactId>
-    <version>1.6.12-SNAPSHOT</version>
+    <version>1.6.12</version>
     <packaging>pom</packaging>
 
     <name>Blazebit Blaze-Persistence</name>
@@ -118,7 +118,7 @@
         <connection>scm:git:git@github.com:Blazebit/blaze-persistence.git</connection>
         <developerConnection>scm:git:git@github.com:Blazebit/blaze-persistence.git</developerConnection>
         <url>git@github.com:Blazebit/blaze-persistence.git</url>
-        <tag>HEAD</tag>
+        <tag>1.6.12</tag>
     </scm>
 
     <developers>
