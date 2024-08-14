@@ -15,6 +15,10 @@
  */
 package com.blazebit.persistence.testsuite;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
@@ -25,16 +29,11 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author Moritz Becker
@@ -68,8 +67,8 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class, NoMySQLOld.class })
-    public void testJsonGet() throws JsonProcessingException {
+    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class })
+    public void testJsonGetWithLiteralPathElements() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
                 .select("d.content")
                 .select("cast_integer(json_get(d.content, 'K1', '0', 'K2'))")
@@ -107,6 +106,64 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
         assertEquals(jsonTestDocument.get("K1").get(0), objectMapper.readTree((String) objectRootResult.get(0).get(10)));
         assertEquals(jsonTestDocument.get("1"), objectMapper.readTree((String) objectRootResult.get(0).get(11)));
         assertEquals(jsonTestDocument.get("key with blanks"), objectMapper.readTree((String) objectRootResult.get(0).get(12)));
+
+        assertEquals(1, arrayRootResult.size());
+        assertEquals(1, arrayRootResult.get(0).get(1));
+        assertEquals(2, arrayRootResult.get(0).get(2));
+    }
+
+    @Test
+    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class })
+    public void testJsonGetWithLiteralJsonPath() throws JsonProcessingException {
+        List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
+            .select("d.content")
+            .select("json_get(d.content, '$.K1[0]')")
+            .where("id").eq(1L)
+            .getResultList();
+        List<Tuple> arrayRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
+            .select("d.content")
+            .select("cast_integer(json_get(d.content, '$[1].K2'))")
+            .where("id").eq(2L)
+            .getResultList();
+
+        assertEquals(1, objectRootResult.size());
+        JsonNode jsonTestDocument = objectMapper.readTree((String) objectRootResult.get(0).get(0));
+        assertEquals(jsonTestDocument.get("K1").get(0), objectMapper.readTree((String) objectRootResult.get(0).get(1)));
+
+        assertEquals(1, arrayRootResult.size());
+        assertEquals(2, arrayRootResult.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class, NoOracle.class })
+    public void testJsonGetWithParameterizedJsonPath() throws JsonProcessingException {
+        List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
+            .select("d.content")
+            .select("json_get(d.content, '$.K1[??].K3', :array_index_2)")
+            .select("json_get(d.content, '$.K1[??]', :array_index_0)")
+            .select("json_get(d.content, '$.??[0]', :k1)")
+            .select("json_get(d.content, '$.??[??]', :k1, :array_index_0)")
+            .where("id").eq(1L)
+            .setParameter("array_index_0", 0)
+            .setParameter("array_index_2", 2)
+            .setParameter("k1", "K1")
+            .getResultList();
+        List<Tuple> arrayRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
+            .select("d.content")
+            .select("cast_integer(json_get(d.content, '$[??]', :array_index_0))")
+            .select("cast_integer(json_get(d.content, '$[??].??', :array_index_1, :k2))")
+            .where("id").eq(2L)
+            .setParameter("array_index_0", 0)
+            .setParameter("array_index_1", 1)
+            .setParameter("k2", "K2")
+            .getResultList();
+
+        assertEquals(1, objectRootResult.size());
+        JsonNode jsonTestDocument = objectMapper.readTree((String) objectRootResult.get(0).get(0));
+        assertNull(objectRootResult.get(0).get(1));
+        assertEquals(jsonTestDocument.get("K1").get(0), objectMapper.readTree((String) objectRootResult.get(0).get(2)));
+        assertEquals(jsonTestDocument.get("K1").get(0), objectMapper.readTree((String) objectRootResult.get(0).get(3)));
+        assertEquals(jsonTestDocument.get("K1").get(0), objectMapper.readTree((String) objectRootResult.get(0).get(4)));
 
         assertEquals(1, arrayRootResult.size());
         assertEquals(1, arrayRootResult.get(0).get(1));
