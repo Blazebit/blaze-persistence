@@ -649,6 +649,10 @@ Returns a Base64 encoded string that represents the passed bytes.
 
 ==== JSON_GET
 
+There are 2 overloads of the JSON_GET function.
+
+===== JSON_GET with literal path segments
+
 Sytax: `JSON_GET(jsonDocument, pathSegment1, ..., pathSegmentN)`
 
 Where `pathSegmentN` is a quoted literal json key or array index.
@@ -665,6 +669,27 @@ json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "foo
 json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', 'owner', 'hobbies', '1')
 --> tennis
 ----
+
+===== JSON_GET with JSON path
+
+Sytax: `JSON_GET(jsonDocument, jsonPathTemplate, param1, ..., paramN)`
+
+Where `jsonPathTemplate` is a JSON path template that uses the special character sequence of `??` as parameter
+placeholder. The `paramN` arguments are the parameters that replace the `??` placeholders in the `jsonPathTemplate`.
+
+Usage examples:
+
+[source]
+----
+json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', '$.owner.??', 'firstName')
+--> John
+
+// Assuming the presence of a named parameter :hobbies_index with value 1
+json_get('{ "owner": { "firstName": "John", "lastName": "Smith", hobbies: [ "football", "tennis" ] } }', '$.owner.hobbies[??]', :hobbies_index)
+--> tennis
+----
+
+NOTE: The use of parameters is not supported for Oracle. Only the `jsonPathTemplate` may be passed.
 
 ==== JSON_SET
 

@@ -15,21 +15,19 @@
  */
 package com.blazebit.persistence.impl.function.jsonset;
 
-import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-
 import java.util.List;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
-public class MSSQLJsonSetFunction extends AbstractJsonGetFunction {
+public class MSSQLJsonSetFunction extends AbstractJsonSetFunction {
 
     @Override
     protected void render0(FunctionRenderContext context) {
-        List<Object> jsonPathElements = AbstractJsonGetFunction.retrieveJsonPathElements(context, 2);
-        String jsonPath = AbstractJsonGetFunction.toJsonPath(jsonPathElements, jsonPathElements.size(), true);
+        List<Object> jsonPathElements = AbstractJsonFunction.retrieveJsonPathElements(context, 2);
+        String jsonPath = AbstractJsonFunction.toJsonPathTemplate(jsonPathElements, jsonPathElements.size(), true);
 
         context.addChunk("(select case when isjson(temp.val) = 0 then (case ");
 

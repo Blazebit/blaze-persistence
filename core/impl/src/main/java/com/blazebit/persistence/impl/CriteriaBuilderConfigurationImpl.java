@@ -22,8 +22,8 @@ import com.blazebit.persistence.impl.dialect.CockroachSQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
-import com.blazebit.persistence.impl.dialect.MariaDBDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MSSQLDbmsDialect;
+import com.blazebit.persistence.impl.dialect.MariaDBDbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQL8DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
@@ -359,7 +359,7 @@ import com.blazebit.persistence.impl.function.groupingsets.RollupFunction;
 import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.DB2JsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.MSSQLJsonGetFunction;
-import com.blazebit.persistence.impl.function.jsonget.MySQL8JsonGetFunction;
+import com.blazebit.persistence.impl.function.jsonget.MySQLJsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.OracleJsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonget.PostgreSQLJsonGetFunction;
 import com.blazebit.persistence.impl.function.jsonset.AbstractJsonSetFunction;
@@ -543,8 +543,6 @@ import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.spi.SetOperationType;
-
-import javax.persistence.EntityManagerFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -561,6 +559,7 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
+import javax.persistence.EntityManagerFactory;
 
 /**
  *
@@ -2093,13 +2092,23 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         JpqlFunctionGroup jpqlFunctionGroup;
         // JSON_GET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonGetFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction());
-        jpqlFunctionGroup.add("cockroach", new PostgreSQLJsonGetFunction());
-        jpqlFunctionGroup.add("mariadb", new MySQL8JsonGetFunction());
-        jpqlFunctionGroup.add("mysql8", new MySQL8JsonGetFunction());
-        jpqlFunctionGroup.add("oracle", new OracleJsonGetFunction());
-        jpqlFunctionGroup.add("db2", new DB2JsonGetFunction());
-        jpqlFunctionGroup.add("microsoft", new MSSQLJsonGetFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"postgresql")));
+        jpqlFunctionGroup.add("cockroach", new PostgreSQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"cockroach")));
+        jpqlFunctionGroup.add("mariadb", new MySQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mariadb")));
+        jpqlFunctionGroup.add("mysql", new MySQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mysql")));
+        jpqlFunctionGroup.add("mysql8", new MySQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mysql8")));
+        jpqlFunctionGroup.add("oracle", new OracleJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"oracle")));
+        jpqlFunctionGroup.add("db2", new DB2JsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"db2")));
+        jpqlFunctionGroup.add("microsoft", new MSSQLJsonGetFunction(
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"microsoft"),
+            (CastFunction) findFunction("cast_string","microsoft")));
         registerFunction(jpqlFunctionGroup);
 
         // JSON_SET

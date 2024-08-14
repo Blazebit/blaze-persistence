@@ -73,4 +73,12 @@ public class CastFunction implements JpqlFunction {
         return "cast(" + argument + " as " + defaultSqlCastType + ")";
     }
 
+    public String startCastExpression() {
+        return "cast(";
+    }
+
+    public String endCastExpression(String castType) {
+        return " as " + (castType == null ? defaultSqlCastType : castType) + ")";
+    }
+
 }

@@ -15,9 +15,7 @@
  */
 package com.blazebit.persistence.impl.function.jsonset;
 
-import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-
 import java.util.List;
 
 /**
@@ -28,13 +26,15 @@ public class MySQL8JsonSetFunction extends AbstractJsonSetFunction {
 
     @Override
     protected void render0(FunctionRenderContext context) {
-        List<Object> jsonPathElements = AbstractJsonGetFunction.retrieveJsonPathElements(context, 2);
+        List<Object> jsonPathElements = AbstractJsonFunction.retrieveJsonPathElements(context, 2);
+        String jsonPath =
+            AbstractJsonFunction.toJsonPathTemplate(jsonPathElements, jsonPathElements.size(), true);
 
         context.addChunk("(select ");
         context.addChunk("case when lower(temp.val) = 'null' then json_set(");
         context.addArgument(0);
         context.addChunk(",'");
-        context.addChunk(AbstractJsonGetFunction.toJsonPath(jsonPathElements, jsonPathElements.size(), true));
+        context.addChunk(jsonPath);
         context.addChunk("', null) else ");
         context.addChunk("json_merge_patch(");
         context.addArgument(0);
@@ -66,7 +66,8 @@ public class MySQL8JsonSetFunction extends AbstractJsonSetFunction {
             context.addChunk("json_table(");
             context.addArgument(0);
             context.addChunk(",'");
-            context.addChunk(AbstractJsonGetFunction.toJsonPath(pathElems, curIndex, true) + "[*]");
+            String jsonPathTemplate = AbstractJsonFunction.toJsonPathTemplate(pathElems, curIndex, true);
+            context.addChunk(jsonPathTemplate + "[*]");
             context.addChunk("' COLUMNS (");
             context.addChunk("rownumber FOR ORDINALITY,");
             context.addChunk("complexvalue JSON PATH '$',");
@@ -83,7 +84,7 @@ public class MySQL8JsonSetFunction extends AbstractJsonSetFunction {
 
             if (curIndex < pathElems.size() - 1) {
                 context.addChunk("coalesce(json_merge_patch(");
-                renderJsonGet(context, AbstractJsonGetFunction.toJsonPath(pathElems, curIndex + 1, true));
+                renderJsonGet(context, AbstractJsonFunction.toJsonPathTemplate(pathElems, curIndex + 1, true));
                 context.addChunk(", concat('");
             } else {
                 context.addChunk("concat('");

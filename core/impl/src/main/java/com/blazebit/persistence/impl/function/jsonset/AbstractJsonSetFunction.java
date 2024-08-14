@@ -17,15 +17,18 @@ package com.blazebit.persistence.impl.function.jsonset;
 
 import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
-public abstract class AbstractJsonSetFunction implements JpqlFunction {
+public abstract class AbstractJsonSetFunction extends AbstractJsonFunction {
 
     public static final String FUNCTION_NAME = "JSON_SET";
+
+    protected AbstractJsonSetFunction() {
+        super(null);
+    }
 
     @Override
     public boolean hasArguments() {

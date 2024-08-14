@@ -15,9 +15,7 @@
  */
 package com.blazebit.persistence.impl.function.jsonset;
 
-import com.blazebit.persistence.impl.function.jsonget.AbstractJsonGetFunction;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-
 import java.util.List;
 
 /**
@@ -28,7 +26,7 @@ public class OracleJsonSetFunction extends AbstractJsonSetFunction {
 
     @Override
     protected void render0(FunctionRenderContext context) {
-        List<Object> jsonPathElements = AbstractJsonGetFunction.retrieveJsonPathElements(context, 2);
+        List<Object> jsonPathElements = AbstractJsonFunction.retrieveJsonPathElements(context, 2);
 
         context.addChunk("(select ");
         context.addChunk("json_mergepatch(");
@@ -61,7 +59,7 @@ public class OracleJsonSetFunction extends AbstractJsonSetFunction {
             context.addChunk("json_table(");
             context.addArgument(0);
             context.addChunk(",'");
-            context.addChunk(AbstractJsonGetFunction.toJsonPath(pathElems, curIndex, true) + "[*]");
+            context.addChunk(AbstractJsonFunction.toJsonPathTemplate(pathElems, curIndex, true) + "[*]");
             context.addChunk("' COLUMNS (");
             context.addChunk("row_number FOR ORDINALITY,");
             context.addChunk("\"complex_value\" varchar2 FORMAT JSON PATH '$',");
@@ -77,7 +75,7 @@ public class OracleJsonSetFunction extends AbstractJsonSetFunction {
 
             if (curIndex < pathElems.size() - 1) {
                 context.addChunk("coalesce(json_mergepatch(");
-                renderJsonGet(context, AbstractJsonGetFunction.toJsonPath(pathElems, curIndex + 1, true));
+                renderJsonGet(context, AbstractJsonFunction.toJsonPathTemplate(pathElems, curIndex + 1, true));
                 context.addChunk(",'");
             } else {
                 context.addChunk("'");

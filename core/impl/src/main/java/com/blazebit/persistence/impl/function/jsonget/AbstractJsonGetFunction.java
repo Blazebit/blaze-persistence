@@ -15,20 +15,21 @@
  */
 package com.blazebit.persistence.impl.function.jsonget;
 
-import com.blazebit.persistence.impl.util.JpqlFunctionUtil;
+import com.blazebit.persistence.impl.function.concat.ConcatFunction;
+import com.blazebit.persistence.impl.function.jsonset.AbstractJsonFunction;
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Moritz Becker
  * @since 1.5.0
  */
-public abstract class AbstractJsonGetFunction implements JpqlFunction {
+public abstract class AbstractJsonGetFunction extends AbstractJsonFunction {
 
     public static final String FUNCTION_NAME = "JSON_GET";
+
+    protected AbstractJsonGetFunction(ConcatFunction concatFunction) {
+        super(concatFunction);
+    }
 
     @Override
     public boolean hasArguments() {
@@ -54,38 +55,4 @@ public abstract class AbstractJsonGetFunction implements JpqlFunction {
     }
 
     protected abstract void render0(FunctionRenderContext context);
-
-    public static String toJsonPath(List<Object> pathElements, int to, boolean quotePathElements) {
-        StringBuilder jsonPathBuilder = new StringBuilder("$");
-        for (int i = 0; i < to; i++) {
-            Object currentPathElement = pathElements.get(i);
-            if (currentPathElement instanceof Integer) {
-                jsonPathBuilder.append('[');
-                jsonPathBuilder.append((int) currentPathElement);
-                jsonPathBuilder.append(']');
-            } else {
-                jsonPathBuilder.append('.');
-                if (quotePathElements) {
-                    jsonPathBuilder.append("\"");
-                }
-                jsonPathBuilder.append((String) currentPathElement);
-                if (quotePathElements) {
-                    jsonPathBuilder.append("\"");
-                }
-            }
-        }
-        return jsonPathBuilder.toString();
-    }
-
-    public static List<Object> retrieveJsonPathElements(FunctionRenderContext context, int pathStartOffset) {
-        List<Object> jsonPathElements = new ArrayList<>(context.getArgumentsSize() - pathStartOffset);
-        for (int i = pathStartOffset; i < context.getArgumentsSize(); i++) {
-            try {
-                jsonPathElements.add(Integer.parseInt(JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(i))));
-            } catch (NumberFormatException e) {
-                jsonPathElements.add(JpqlFunctionUtil.unquoteDoubleQuotes(JpqlFunctionUtil.unquoteSingleQuotes(context.getArgument(i))));
-            }
-        }
-        return jsonPathElements;
-    }
 }

@@ -22,11 +22,13 @@ package com.blazebit.persistence.impl.util;
  */
 public class JpqlFunctionUtil {
 
+    private static final char SINGLE_QUOTE_CHARACTER = '\'';
+
     private JpqlFunctionUtil() {
     }
 
     public static String unquoteSingleQuotes(String s) {
-        return unquote(s, '\'');
+        return unquote(s, SINGLE_QUOTE_CHARACTER);
     }
 
     public static String unquoteDoubleQuotes(String s) {
@@ -59,5 +61,9 @@ public class JpqlFunctionUtil {
             sb.append(quoteCharacter);
         }
         return sb.toString();
+    }
+
+    public static String quoteSingle(String s) {
+        return SINGLE_QUOTE_CHARACTER + s + SINGLE_QUOTE_CHARACTER;
     }
 }
