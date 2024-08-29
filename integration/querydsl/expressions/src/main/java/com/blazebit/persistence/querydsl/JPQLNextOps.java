@@ -23,6 +23,13 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -71,11 +78,12 @@ public enum JPQLNextOps implements Operator {
     WITH_COLUMNS(Object.class),
     WITH_RECURSIVE_COLUMNS(Object.class),
     BIND(Object.class),
+
     CAST_BOOLEAN(Boolean.class),
     CAST_BYTE(Byte.class),
     CAST_SHORT(Short.class),
-    CAST_LONG(Long.class),
     CAST_INTEGER(Integer.class),
+    CAST_LONG(Long.class),
     CAST_FLOAT(Float.class),
     CAST_DOUBLE(Double.class),
     CAST_CHARACTER(Character.class),
@@ -86,11 +94,12 @@ public enum JPQLNextOps implements Operator {
     CAST_DATE(Date.class),
     CAST_TIMESTAMP(Timestamp.class),
     CAST_CALENDAR(Calendar.class),
+
     TREAT_BOOLEAN(Boolean.class),
     TREAT_BYTE(Byte.class),
     TREAT_SHORT(Short.class),
-    TREAT_LONG(Long.class),
     TREAT_INTEGER(Integer.class),
+    TREAT_LONG(Long.class),
     TREAT_FLOAT(Float.class),
     TREAT_DOUBLE(Double.class),
     TREAT_CHARACTER(Character.class),
@@ -101,6 +110,25 @@ public enum JPQLNextOps implements Operator {
     TREAT_DATE(Date.class),
     TREAT_TIMESTAMP(Timestamp.class),
     TREAT_CALENDAR(Calendar.class),
+    TREAT_INSTANT(Instant.class),
+    TREAT_LOCALDATE(LocalDate.class),
+    TREAT_LOCALDATETIME(LocalDateTime.class),
+    TREAT_LOCALTIME(LocalTime.class),
+    TREAT_OFFSETDATETIME(OffsetDateTime.class),
+    TREAT_OFFSETTIME(OffsetTime.class),
+    TREAT_ZONEDDATETIME(ZonedDateTime.class),
+
+    LITERAL_TIME(Time.class),
+    LITERAL_DATE(Date.class),
+    LITERAL_TIMESTAMP(Timestamp.class),
+    LITERAL_CALENDAR(Calendar.class),
+    LITERAL_INSTANT(Instant.class),
+    LITERAL_LOCALDATE(LocalDate.class),
+    LITERAL_LOCALDATETIME(LocalDateTime.class),
+    LITERAL_LOCALTIME(LocalTime.class),
+    LITERAL_OFFSETDATETIME(OffsetDateTime.class),
+    LITERAL_OFFSETTIME(OffsetTime.class),
+    LITERAL_ZONEDDATETIME(ZonedDateTime.class),
 
     WINDOW_NAME(Object.class),
     WINDOW_BASE(Object.class),
@@ -119,6 +147,8 @@ public enum JPQLNextOps implements Operator {
     WINDOW_FOLLOWING(Object.class),
     WINDOW_UNBOUNDED_FOLLOWING(Object.class),
     WINDOW_CURRENT_ROW(Object.class),
+
+    JSON_GET(Object.class),
 
     FILTER(Object.class);
 
