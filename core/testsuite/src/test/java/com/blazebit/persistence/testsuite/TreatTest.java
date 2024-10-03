@@ -252,17 +252,22 @@ public class TreatTest extends AbstractCoreTest {
                     .select("1")
                     .where("TREAT(p.children.container.child AS PolymorphicSub1).id").eqExpression("sub1.id")
                 .end();
-        assertEquals(
-                "SELECT p FROM PolymorphicBase p " +
-                "WHERE EXISTS (" +
-                    "SELECT 1 FROM PolymorphicSub1 sub1, PolymorphicBase p_children_base " +
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM PolymorphicSub1 sub1 JOIN PolymorphicBase p_children_base" + onClause("p.id = p_children_base.id") + " " +
+                "LEFT JOIN p_children_base.children children_1 " +
+                "LEFT JOIN children_1.container container_1 " +
+                "LEFT JOIN container_1.child child_1 " +
+                "WHERE " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM PolymorphicSub1 sub1, PolymorphicBase p_children_base " +
                     "LEFT JOIN p_children_base.children children_1 " +
                     "LEFT JOIN children_1.container container_1 " +
                     "LEFT JOIN container_1.child child_1 " +
                     "WHERE p.id = p_children_base.id " +
-                    "AND " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id)",
-                crit.getQueryString()
-        );
+                    "AND " + treatRoot("child_1", PolymorphicSub1.class, "id") + " = sub1.id";
+        }
+        assertEquals("SELECT p FROM PolymorphicBase p WHERE EXISTS (" + expectedSubQuery + ")", crit.getQueryString());
         crit.getResultList();
     }
 }
