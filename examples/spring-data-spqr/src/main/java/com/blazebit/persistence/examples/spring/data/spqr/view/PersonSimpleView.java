@@ -18,6 +18,8 @@ package com.blazebit.persistence.examples.spring.data.spqr.view;
 
 import com.blazebit.persistence.examples.spring.data.spqr.model.Person;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.Mapping;
 
 import java.util.Set;
 
@@ -30,5 +32,6 @@ public interface PersonSimpleView extends PersonIdView {
 
     String getName();
 
+    @Mapping(fetch = FetchStrategy.SELECT)
     Set<ChildView> getChildren();
 }
