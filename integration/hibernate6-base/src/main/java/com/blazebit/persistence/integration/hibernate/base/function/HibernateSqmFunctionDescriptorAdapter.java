@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -41,6 +42,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  *
@@ -50,6 +52,7 @@ import java.util.List;
 public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
 
     private static final Method GENERATE_SQM_EXPRESSION;
+    private static final Method RESOLVE_FUNCTION_RETURN_TYPE;
     private static final Constructor<QueryLiteral> QUERY_LITERAL_CONSTRUCTOR;
 
     static {
@@ -64,6 +67,17 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
             }
         }
         GENERATE_SQM_EXPRESSION = generateSqmExpression;
+        Method resolveFunctionReturnType;
+        try {
+            resolveFunctionReturnType = FunctionReturnTypeResolver.class.getMethod("resolveFunctionReturnType", ReturnableType.class, Supplier.class, List.class, TypeConfiguration.class);
+        } catch (NoSuchMethodException e1) {
+            try {
+                resolveFunctionReturnType = FunctionReturnTypeResolver.class.getMethod("resolveFunctionReturnType", ReturnableType.class, List.class, TypeConfiguration.class);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException("Could not find method to resolve function return type. Please report your version of hibernate so we can provide support for it!", e1);
+            }
+        }
+        RESOLVE_FUNCTION_RETURN_TYPE = resolveFunctionReturnType;
         Constructor<QueryLiteral> queryLiteralConstructor;
         try {
             queryLiteralConstructor = QueryLiteral.class.getConstructor(Object.class, SqlExpressible.class);
@@ -130,18 +144,44 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
         List<SqmTypedNode<?>> arguments = new ArrayList<>(1);
         arguments.add(new CustomSqmTypedNode<>(type));
         if ( function instanceof AbstractSqmFunctionDescriptor ) {
-            ReturnableType<?> returnableType = ((AbstractSqmFunctionDescriptor) function).getReturnTypeResolver().resolveFunctionReturnType(
-                null,
-                arguments,
-                sfi.getTypeConfiguration()
-            );
-            if (returnableType != null) {
-                return returnableType.getBindableJavaType();
+            try {
+                FunctionReturnTypeResolver returnTypeResolver = ((AbstractSqmFunctionDescriptor) function).getReturnTypeResolver();
+                ReturnableType<?> returnableType;
+                if (RESOLVE_FUNCTION_RETURN_TYPE.getParameterCount() == 4) {
+                    returnableType = (ReturnableType<?>) RESOLVE_FUNCTION_RETURN_TYPE.invoke(
+                            returnTypeResolver,
+                            null,
+                            null,
+                            arguments,
+                            sfi.getTypeConfiguration()
+                    );
+                } else {
+                    returnableType = (ReturnableType<?>) RESOLVE_FUNCTION_RETURN_TYPE.invoke(
+                            returnTypeResolver,
+                            null,
+                            arguments,
+                            sfi.getTypeConfiguration()
+                    );
+                }
+                if (returnableType != null) {
+                    return returnableType.getBindableJavaType();
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Could not resolve function return type. Please report your version of hibernate so we can provide support for it!", e);
+            } catch (InvocationTargetException e) {
+                if (e.getTargetException() instanceof RuntimeException) {
+                    throw (RuntimeException) e.getTargetException();
+                }
+                throw new RuntimeException("Could not resolve function return type", e);
             }
         }
         try {
-            SqmExpressible<?> expressionType = ((SelfRenderingSqmFunction<?>) GENERATE_SQM_EXPRESSION.invoke(function, arguments, null, sfi.getQueryEngine(), sfi.getTypeConfiguration()))
-                    .getNodeType();
+            SqmExpressible<?> expressionType;
+            if (GENERATE_SQM_EXPRESSION.getParameterCount() == 4) {
+                expressionType = ((SelfRenderingSqmFunction<?>) GENERATE_SQM_EXPRESSION.invoke(function, arguments, null, sfi.getQueryEngine(), sfi.getTypeConfiguration())).getNodeType();
+            } else {
+                expressionType = ((SelfRenderingSqmFunction<?>) GENERATE_SQM_EXPRESSION.invoke(function, arguments, null, sfi.getQueryEngine())).getNodeType();
+            }
             return expressionType == null ? null : expressionType.getBindableJavaType();
         } catch (IllegalAccessException e) {
             throw new RuntimeException("Could not generate SQM expression for function. Please report your version of hibernate so we can provide support for it!", e);

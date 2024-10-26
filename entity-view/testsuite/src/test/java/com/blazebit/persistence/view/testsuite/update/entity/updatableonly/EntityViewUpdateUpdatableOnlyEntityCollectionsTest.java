@@ -316,7 +316,7 @@ public class EntityViewUpdateUpdatableOnlyEntityCollectionsTest extends Abstract
                 AssertStatementBuilder builder = assertUnorderedQuerySequence();
                 fullFetch(builder);
 
-                if (version) {
+                if (!doesTransientCheckBeforeFlush() && version) {
                     versionUpdate(builder);
                 }
                 builder.validate();

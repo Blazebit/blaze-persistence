@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.testsuite.embedded.entity;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -28,6 +29,7 @@ import com.blazebit.persistence.view.testsuite.embedded.entity.model.DocumentVie
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
@@ -78,7 +80,9 @@ public class EmbeddedMappingEntityTest extends AbstractEmbeddedMappingTest {
         assertEquals("doc2", results.get(1).getEmbeddedDetails().getName());
     }
 
+    // NOTE: Hibernate ORM 6.6.1 has a bug: https://hibernate.atlassian.net/browse/HHH-18773
     @Test
+    @Category(NoHibernate66.class)
     public void filteringOnEmbeddedAttributeWorks() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "e")
                 .orderByAsc("id");

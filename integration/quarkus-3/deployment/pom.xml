@@ -629,7 +629,7 @@
             <id>hibernate-6.6</id>
             <!-- Note that we still run against 6.2 because Quarkus doesn't support 6.6 yet -->
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernatecom.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

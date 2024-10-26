@@ -343,7 +343,7 @@ public class EntityViewUpdateUpdatableOnlyEntityMapsTest extends AbstractEntityV
                 }
             } else {
                 fullFetch(builder);
-                if (version) {
+                if (!doesTransientCheckBeforeFlush() && version) {
                     versionUpdate(builder);
                 }
             }

@@ -1539,7 +1539,7 @@
             <id>hibernate-6.6</id>
             <!-- Note that we compile the test suite against Hibernate 5.6 because this testsuite will be jakarta-transformed -->
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
