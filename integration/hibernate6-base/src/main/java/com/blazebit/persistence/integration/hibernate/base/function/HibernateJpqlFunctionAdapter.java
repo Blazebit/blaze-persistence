@@ -59,7 +59,7 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
                     ReturnableType<?> impliedType,
                     List<? extends SqmTypedNode<?>> arguments,
                     TypeConfiguration typeConfiguration) {
-                return resolveFunctionReturnType(impliedType, null, arguments, typeConfiguration);
+                return resolveFunctionReturnType(impliedType, (Supplier<MappingModelExpressible<?>>) null, arguments, typeConfiguration);
             }
 
             public ReturnableType<?> resolveFunctionReturnType(

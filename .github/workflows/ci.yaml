@@ -688,7 +688,7 @@ jobs:
         shell: bash
 
       - name: Upload test reports (if Maven failed)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-reports-${{ matrix.provider }}-${{ matrix.rdbms }}-jdk${{ matrix.jdk }}-build-jdk${{ matrix.build-jdk }}-${{ matrix.deltaspike }}-${{ matrix.spring-data }}

@@ -221,6 +221,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return major > 5 || (major == 5 && (minor > 2 || (minor == 2 && fix >= 8)));
     }
 
+    @Override
     protected boolean doesJpaMergeOfRecentlyPersistedEntityForceUpdate() {
         // Not sure when exactly this got fixed, but 5.1 doesn't seem to have that problem
         String version = org.hibernate.Version.getVersionString();
@@ -231,6 +232,7 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return major < 5 || major == 5 && minor < 1 || major == 5 && minor == 1 && fix < 0;
     }
 
+    @Override
     protected boolean supportsIndexedInplaceUpdate() {
         // Hibernate 4 doesn't support inplace updates
         return isHibernate5();

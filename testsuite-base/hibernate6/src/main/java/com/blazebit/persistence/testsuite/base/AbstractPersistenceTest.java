@@ -177,6 +177,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         return false;
     }
 
+    @Override
+    protected boolean doesTransientCheckBeforeFlush() {
+        return HIBERNATE_MAJOR_VERSION > 6 || HIBERNATE_MINOR_VERSION > 5;
+    }
+
     protected boolean supportsIndexedInplaceUpdate() {
         return true;
     }

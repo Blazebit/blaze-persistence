@@ -35,7 +35,6 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -117,7 +116,6 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -592,10 +590,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     realJdbcSelect,
                     jdbcParameterBindings,
                     new SqmJdbcExecutionContextAdapter(executionContext, jdbcSelect) {
-                        public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-                            //                            subSelectFetchKeyHandler.addKey( entityKey );
-                        }
-
                         @Override
                         public String getQueryIdentifier(String sql) {
                             return sql;
@@ -1099,9 +1093,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     jdbcSelect.getLimitParameter()
             );
             ExecutionContext executionContext = new SqmJdbcExecutionContextAdapter(domainQueryExecutionContext, realJdbcSelect) {
-                public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-//                                subSelectFetchKeyHandler.addKey( entityKey, entry );
-                }
 
                 @Override
                 public String getQueryIdentifier(String sql) {
@@ -1114,11 +1105,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 }
             };
 //            ExecutionContext executionContext = new ExecutionContext() {
-//                @Override
-//                public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-////                                subSelectFetchKeyHandler.addKey( entityKey, entry );
-//                }
-//
 //                @Override
 //                public SharedSessionContractImplementor getSession() {
 //                    return domainQueryExecutionContext.getSession();

@@ -559,6 +559,10 @@ public abstract class AbstractJpaPersistenceTest {
         return true;
     }
 
+    protected boolean doesTransientCheckBeforeFlush() {
+        return false;
+    }
+
     @After
     public void destruct() {
         // NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
