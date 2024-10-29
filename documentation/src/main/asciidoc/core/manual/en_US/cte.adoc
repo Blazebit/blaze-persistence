@@ -121,7 +121,7 @@ CriteriaBuilder<CatCte> cb = cbf.create(em, CatCte.class)
         .from(CatCte.class, "parentCat") #<2>
         .bind("id").select("cat.id")
         .bind("ancestor").select("cat.ancestor")
-        .where("id").eqExpression("parentCat.ancestor.id") #<3>
+        .where("cat.id").eqExpression("parentCat.ancestor.id") #<3>
     .end();
 ----
 <1> We start with the non-recursive query and just bind the cat attributes of the desired cat
