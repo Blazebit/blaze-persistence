@@ -252,7 +252,7 @@ List<CatCte> result = new BlazeJPAQuery<CatCte>(entityManager, criteriaBuilderFa
             .where(QCat.cat.id.eq(someCatId)),
         new BlazeJPAQuery()
             .from(QCat.cat)
-            .from(QCatCte.catCte, parentCat)
+            .from(parentCat)
             .bind(QCatCte.catCte.id, QCat.cat.id)
             .bind(QCatCte.catCte.ancestor, QCat.cat.ancestor)
             .where(QCat.cat.id.eq(parentCat.ancestor.id)))
