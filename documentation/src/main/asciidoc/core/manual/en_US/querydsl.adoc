@@ -129,7 +129,7 @@ QBook book = new QBook("book");
 
 Map<Author, List<Book>> booksByAuthor = new BlazeJPAQuery<>(entityManager, criteriaBuilderFactory)
     .from(author)
-    .innerJoin(book).on(otherBook.author.eq(author))
+    .innerJoin(book).on(book.author.eq(author))
     .transform(GroupBy.groupBy(author).as(GroupBy.list(book)));
 ----
 
@@ -188,6 +188,7 @@ QCat cat = QCat.cat;
 NamedWindow myWindow = new NamedWindow("myWindow").partitionBy(cat.id);
 
 BlazeJPAQuery<Tuple> query = new BlazeJPAQuery<Tuple>(entityManager, criteriaBuilderFactory).from(cat)
+    .window(myWindow)
     .select(cat.name, JPQLNextExpressions.rowNumber().over(myWindow), JPQLNextExpressions.lastValue(cat.name).over(myWindow));
 
  List<Tuple> fetch = query.fetch();
@@ -215,7 +216,7 @@ Next, it can be queried as such:
 
 [source,java]
 ----
-List<Long> fetch = new BlazeJPAQuery<TestEntity>(entityManager, cbf)
+List<Long> fetch = new BlazeJPAQuery<>(entityManager, cbf)
     .with(idHolderCte, JPQLNextExpressions.select(
         JPQLNextExpressions.bind(idHolderCte.id, book.id),
         JPQLNextExpressions.bind(idHolderCte.name, book.name)).from(book))
@@ -227,10 +228,10 @@ Alternatively, you can use the convenience `bind` method on `BlazeJPAQuery`:
 
 [source,java]
 ----
-List<Long> fetch = new BlazeJPAQuery<TestEntity>(entityManager, cbf)
-    .with(idHolderCte, new BlazeJPAQuery()
-        .bind(idHolderCte.id, book.id),
-        .bind(idHolderCte.name, book.name)).from(book))
+List<Long> fetch = new BlazeJPAQuery<>(entityManager, cbf)
+    .with(idHolderCte, new BlazeJPAQuery<>()
+        .bind(idHolderCte.id, book.id)
+        .bind(idHolderCte.name, book.name).from(book))
     .select(idHolderCte.id).from(idHolderCte)
     .fetch();
 ----
@@ -244,13 +245,13 @@ Set operations are also allowed in CTEs, and through set operations it is also p
 QCatCte parentCat = new QCatCte("parentCat");
 
 List<CatCte> result = new BlazeJPAQuery<CatCte>(entityManager, criteriaBuilderFactory)
-    .withRecursive(QCatCte.catCte, new BlazeJPAQuery().unionAll(
+    .withRecursive(QCatCte.catCte, new BlazeJPAQuery<>().unionAll(
         new BlazeJPAQuery()
             .from(QCat.cat)
             .bind(QCatCte.catCte.id, QCat.cat.id)
             .bind(QCatCte.catCte.ancestor, QCat.cat.ancestor)
             .where(QCat.cat.id.eq(someCatId)),
-        new BlazeJPAQuery()
+        new BlazeJPAQuery<>()
             .from(QCat.cat)
             .from(parentCat)
             .bind(QCatCte.catCte.id, QCat.cat.id)
@@ -268,14 +269,14 @@ A limitation of JPQL frequently stumbled opon, is that subqueries cannot be join
 
 [source,java]
 ----
-QRecursiveEntity recursiveEntity = new QRecursiveEntity("t");
+QAuthor author = new QAuthor("t");
 
 List<Author> fetch = new BlazeJPAQuery<>(entityManager, cbf)
     .select(author)
-    .from(select(author)
+    .from(JPQLNextExpressions.select(author)
         .from(author)
         .orderBy(author.name.asc())
-        .limit(1L), recursiveEntity)
+        .limit(1L), author)
     .fetch();
 ----
 
@@ -298,7 +299,7 @@ QRecursiveEntity subT2 = new QRecursiveEntity("subT2");
 List<Tuple> fetch = new BlazeJPAQuery<>(entityManager, cbf)
     .select(t, subT2)
     .from(t)
-    .leftJoin(select(subT).from(t.children, subT).orderBy(subT.id.asc()).limit(1), subT2)
+    .leftJoin(JPQLNextExpressions.select(subT).from(t.children, subT).orderBy(subT.id.asc()).limit(1), subT2)
     .lateral()
     .fetch();
 ----
