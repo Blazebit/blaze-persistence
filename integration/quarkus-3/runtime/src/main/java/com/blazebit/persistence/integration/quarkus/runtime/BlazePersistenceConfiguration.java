@@ -19,7 +19,6 @@ import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
 
 import java.util.Map;
 
@@ -28,7 +27,6 @@ import java.util.Map;
  * @since 1.5.0
  */
 @ConfigRoot
-@ConfigMapping(prefix = "quarkus.blaze-persistence")
 public class BlazePersistenceConfiguration {
 
     /**
