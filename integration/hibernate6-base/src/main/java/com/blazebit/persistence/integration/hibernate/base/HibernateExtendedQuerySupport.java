@@ -147,6 +147,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_62;
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_63;
+    private static final RowTransformer ROW_TRANSFORMER_SINGULAR_RETURN;
+    private static final RowTransformer ROW_TRANSFORMER_STANDARD;
 
     static {
         Constructor<TupleMetadata> constructor62 = null;
@@ -165,6 +167,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         TUPLE_METADATA_CONSTRUCTOR_62 = constructor62;
         TUPLE_METADATA_CONSTRUCTOR_63 = constructor63;
+        try {
+            ROW_TRANSFORMER_SINGULAR_RETURN = (RowTransformer) RowTransformerSingularReturnImpl.class.getField("INSTANCE" ).get(null);
+            ROW_TRANSFORMER_STANDARD = (RowTransformer) RowTransformerStandardImpl.class.getField("INSTANCE").get(null);
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
+            throw new RuntimeException("Could not find standard row transformers. Please report your version of hibernate so we can provide support for it!", ex);
+        }
     }
 
     private final HibernateAccess hibernateAccess;
@@ -724,7 +732,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (queryOptions.getTupleTransformer() != null) {
                 return makeRowTransformerTupleTransformerAdapter(sqm, queryOptions);
             } else {
-                return RowTransformerStandardImpl.instance();
+                return ROW_TRANSFORMER_STANDARD;
             }
         }
 
@@ -753,7 +761,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } else if (selections.size() > 1) {
             throw new IllegalQueryOperationException("Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)");
         } else {
-            return RowTransformerSingularReturnImpl.instance();
+            return ROW_TRANSFORMER_SINGULAR_RETURN;
         }
     }
 
@@ -1147,7 +1155,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                         realJdbcSelect,
                         jdbcParameterBindings,
                         hibernateAccess.wrapExecutionContext(executionContext, dbmsDialect, returningColumns, returningColumnTypes, returningResult),
-                        RowTransformerStandardImpl.instance(),
+                        ROW_TRANSFORMER_STANDARD,
                         ListResultsConsumer.UniqueSemantic.FILTER
                 );
             } catch (HibernateException e) {
