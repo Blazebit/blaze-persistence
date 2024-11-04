@@ -2,7 +2,7 @@
 
 Changes that happened in releases
 
-## 1.6.15-SNAPSHOT
+## 2.0.0-SNAPSHOT
 
 ### New features
 
