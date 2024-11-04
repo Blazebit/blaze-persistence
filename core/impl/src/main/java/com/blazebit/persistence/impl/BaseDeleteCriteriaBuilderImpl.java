@@ -24,8 +24,8 @@ import com.blazebit.persistence.spi.DeleteJoinStyle;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

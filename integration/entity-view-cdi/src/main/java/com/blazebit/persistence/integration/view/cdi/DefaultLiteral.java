@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.integration.view.cdi;
 
-import javax.enterprise.inject.Default;
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 /**
  * Literal for {@link Default}

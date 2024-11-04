@@ -21,7 +21,7 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +54,7 @@ public interface MetamodelBuildingContext {
      * @param mapping The mapping annotation
      * @return The possible target types or <code>null</code>
      */
-    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Attribute<?, ?> rootAttribute, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes);
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Attribute<?, ?> rootAttribute, Annotation mapping, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes);
 
     public Map<String, JpqlFunction> getJpqlFunctions();
 

@@ -8,8 +8,8 @@ import com.blazebit.persistence.integration.jaxrs.jsonb.EntityViewMessageBodyRea
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverterProvider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

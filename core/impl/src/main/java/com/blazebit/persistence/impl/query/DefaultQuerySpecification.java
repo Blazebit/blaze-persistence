@@ -12,9 +12,9 @@ import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;

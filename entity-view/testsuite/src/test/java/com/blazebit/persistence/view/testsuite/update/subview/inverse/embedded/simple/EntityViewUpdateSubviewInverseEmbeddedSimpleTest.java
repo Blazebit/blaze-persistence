@@ -38,7 +38,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -6,7 +6,7 @@
 package com.blazebit.persistence.view.testsuite.inheritance.collection;
 
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Before;
 import org.junit.Test;

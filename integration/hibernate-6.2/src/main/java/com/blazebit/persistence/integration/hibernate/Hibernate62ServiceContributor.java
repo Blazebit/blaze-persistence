@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.Database;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -18,7 +17,6 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(ServiceContributor.class)
 public class Hibernate62ServiceContributor implements ServiceContributor {
 
     @Override

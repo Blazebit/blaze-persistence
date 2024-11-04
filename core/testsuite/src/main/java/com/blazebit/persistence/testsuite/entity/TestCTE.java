@@ -7,9 +7,9 @@ package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import com.blazebit.persistence.CTE;
 

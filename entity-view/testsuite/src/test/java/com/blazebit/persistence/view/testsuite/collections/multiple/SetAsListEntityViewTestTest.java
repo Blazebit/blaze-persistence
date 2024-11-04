@@ -18,7 +18,7 @@ import com.blazebit.persistence.view.testsuite.collections.multiple.model.IdClas
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;

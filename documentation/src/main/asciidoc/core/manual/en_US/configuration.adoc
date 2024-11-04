@@ -1,7 +1,7 @@
 == Configuration
 
 {projectname} can be configured by setting properties on a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#setProperty(java.lang.String,%20java.lang.String)[`CriteriaBuilderConfiguration`]
-object and creating a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(javax.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`] from it.
+object and creating a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(jakarta.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`] from it.
 
 You can also set configuration properties on a per builder basis via the link:{core_jdoc}/persistence/CommonQueryBuilder.html#setProperty(java.lang.String,%20java.lang.String)[`setProperty(String, String)`] method.
 

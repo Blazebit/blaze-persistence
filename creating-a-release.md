@@ -17,14 +17,14 @@ A release involves various steps which are outlined here and should be kept up-t
 . Open `website/src/main/jbake/jbake.properties` and update `stable.version` to the latest released version
 . Open `website/pom.xml` and update the property `stable.version` to the latest released version, `snapshot.version` to the latest snapshot version and `series.version` to the current version series
 . Open `documentation/pom.xml` and update the property `stable.version` to the latest released version and `series.version` to the current version series
-. Prepare a local Maven release via `mvnw -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:clean release:prepare "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'"`
-. Actually deploy the release with `mvnw -P "blazebit-release,h2,hibernate-5.6,deltaspike-1.9,spring-data-2.7.x" release:perform "-Darguments=-DskipTests -DskipITs '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot' -DretryFailedDeploymentCount=10"`
+. Prepare a local Maven release via `mvnw -P "blazebit-release,h2,hibernate-6.6,deltaspike-2.0,spring-data-3.3.x" release:clean release:prepare "-Darguments=-DskipTests -DskipITs"`
+. Actually deploy the release with `mvnw -P "blazebit-release,h2,hibernate-6.6,deltaspike-2.0,spring-data-3.3.x" release:perform "-Darguments=-DskipTests -DskipITs -DretryFailedDeploymentCount=10"`
 . Goto https://oss.sonatype.org and login. In *Build Promotion* click on *Staging Repositories* then scroll down and find a repository named *comblazebit-...*
 . Click on the repository, then click *Close* and *Confirm*. Wait a few seconds, click *Refresh* and finally click *Release* and *Confirm*
 . Commit the changes and push the branch `git push origin`, as well as the created tag `git push origin TAG`
 . Create a GitHub release from the tag and use the same content as in `website/src/main/jbake/content/news/CURRENT_YEAR/blaze-persistence-VERSION-release.adoc` and add the _tar.gz_ and _zip_ artifacts of `blaze-persistence-distribution` as binaries to the release
-. Push the new website changes only if you are working on the latest version series and first to the staging server by invoking `./build-deploy-website.sh staging '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'` and if everything is alright push to production with `./build-deploy-website.sh prod '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'`
-. If you want to push just the documentation changes use `./build-deploy-documentation.sh staging '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'` and if everything is alright also push to production with `./build-deploy-documentation.sh prod '-Djdk8.home=C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot'`
+. Push the new website changes only if you are working on the latest version series and first to the staging server by invoking `./build-deploy-website.sh staging` and if everything is alright push to production with `./build-deploy-website.sh prod`
+. If you want to push just the documentation changes use `./build-deploy-documentation.sh staging` and if everything is alright also push to production with `./build-deploy-documentation.sh prod`
 . Create tweet about new version
 . Update version in Quarkus ecosystem ci poms
 
@@ -37,7 +37,7 @@ A private release involves the following steps
 . Make sure you have GPG installed and the executable is available on PATH
 . Make sure your Maven settings.xml has credentials for the server `blazebit` configured
 . Make sure your Maven settings.xml has a profile called `blazebit-release` with the property `gpg.passphrase`
-. Make sure you have `C:\Program Files\Java\jdk-14` and `C:\Program Files\Eclipse Adoptium\jdk-8.0.332.9-hotspot` installed or update the `deploy-project-release.bat` script
+. Make sure you have `C:\Program Files\Java\jdk-17` installed or update the `deploy-project-release.bat` script
 . Checkout the commercial branch for the minor version e.g. `1.5-commercial`
 . Invoke `mvn org.codehaus.mojo:versions-maven-plugin:2.1:set "-DnewVersion=1.5.X"`
 . Invoke `deploy-project-release.bat`

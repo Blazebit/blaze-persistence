@@ -9,8 +9,8 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
-import javax.persistence.criteria.CriteriaBuilder.Trimspec;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.Trimspec;
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Christian Beikov

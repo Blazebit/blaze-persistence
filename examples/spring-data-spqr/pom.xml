@@ -20,10 +20,9 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.spring.data.spqr</module.name>
-        <main.java.version>1.8</main.java.version>
-        <version.spring>${version.spring-data-2.7-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-        <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+        <version.spring>${version.spring-data-latest-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-latest-spring-boot}</version.spring.boot>
+        <version.hibernate>${version.hibernate-6.6}</version.hibernate>
         <start-class>com.blazebit.persistence.examples.spring.data.spqr.Application</start-class>
     </properties>
 
@@ -43,7 +42,7 @@
         <dependency>
             <groupId>io.leangen.graphql</groupId>
             <artifactId>graphql-spqr-spring-boot-starter</artifactId>
-            <version>0.0.7</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -66,7 +65,7 @@
             <version>${version.spring.boot}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.hibernate</groupId>
+                    <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                 </exclusion>
             </exclusions>
@@ -76,7 +75,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.7}</version>
+            <version>${version.spring-data-3.3}</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -85,11 +84,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
         </dependency>
 
         <dependency>
@@ -99,8 +98,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
             <version>${version.hibernate}</version>
         </dependency>
 
@@ -131,7 +130,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+            <artifactId>blaze-persistence-integration-entity-view-spring-6.0</artifactId>
         </dependency>
 
         <!-- Spring dependencies -->
@@ -151,17 +150,44 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>${version.junit-vintage}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
             <!-- Need this to run the application directly -->
             <scope>runtime</scope>
+        </dependency>
+        <!-- Overriding the JUnit version is kind of pain -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -183,7 +209,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
         </dependency>
     </dependencies>
     
@@ -207,6 +233,20 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Too complicated to make entities in test source open -->
+                    <useModulePath>false</useModulePath>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>${version.junit-vintage}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -7,6 +7,7 @@
  * Blaze-Persistence Spring Data WebMvc integration.
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 package com.blazebit.persistence.spring.data.webmvc;

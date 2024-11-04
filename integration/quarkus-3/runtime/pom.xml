@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>blaze-persistence-integration-quarkus-3-parent</artifactId>
         <groupId>com.blazebit</groupId>
@@ -35,20 +36,20 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
 
@@ -80,43 +81,42 @@
         </resources>
         <plugins>
             <plugin>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-extension-maven-plugin</artifactId>
-            <version>${version.quarkus-3}</version>
-            <executions>
-                <execution>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>extension-descriptor</goal>
-                    </goals>
-                    <configuration>
-                        <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}</deployment>
-                        <capabilities>
-                            <provides>com.blazebit.persistence.integration.quarkus</provides>
-                        </capabilities>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.quarkus</groupId>
-                        <artifactId>quarkus-extension-processor</artifactId>
-                        <version>${version.quarkus-3}</version>
-                    </dependency>
-                </dependencies>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-extension-maven-plugin</artifactId>
+                <version>${version.quarkus-3}</version>
                 <executions>
                     <execution>
-                        <id>process-config-roots</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
                         <phase>compile</phase>
+                        <goals>
+                            <goal>extension-descriptor</goal>
+                        </goals>
+                        <configuration>
+                            <deployment>${project.groupId}:${project.artifactId}-deployment:${project.version}
+                            </deployment>
+                            <capabilities>
+                                <provides>com.blazebit.persistence.integration.quarkus</provides>
+                            </capabilities>
+                        </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <dependency>
+                            <groupId>io.quarkus</groupId>
+                            <artifactId>quarkus-extension-processor</artifactId>
+                            <version>${version.quarkus-3}</version>
+                        </dependency>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <compilerArg>-AlegacyConfigRoot=true</compilerArg>
+                    </compilerArgs>
+                    <annotationProcessors>
+                        <processor>io.quarkus.annotation.processor.ExtensionAnnotationProcessor</processor>
+                    </annotationProcessors>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -11,7 +11,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.jpa.JPQLTemplates;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * BlazeJPAQuery is the default implementation of the JPQLQuery interface for Blaze-Persistence JPQL.Next

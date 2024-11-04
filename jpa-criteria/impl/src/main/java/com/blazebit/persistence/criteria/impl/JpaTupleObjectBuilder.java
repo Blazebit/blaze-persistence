@@ -9,9 +9,9 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.Selection;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

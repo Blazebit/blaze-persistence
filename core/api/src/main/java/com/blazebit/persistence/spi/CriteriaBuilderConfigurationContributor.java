@@ -8,7 +8,7 @@ package com.blazebit.persistence.spi;
 /**
  * A bootstrap process hook for contributing settings to the {@link CriteriaBuilderConfiguration}.
  * {@code CriteriaBuilderConfigurationContributor} instances may be annotated with {@link Priority}
- * (or {@code javax.annotation.Priority}) to influence the order in which they are registered.
+ * (or {@code jakarta.annotation.Priority}) to influence the order in which they are registered.
  * The range 0-500 is reserved for internal uses. 500 - 1000 is reserved for libraries and 1000+
  * is for user provided contributors.
  *

@@ -10,8 +10,8 @@ import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.DbmsModificationState;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

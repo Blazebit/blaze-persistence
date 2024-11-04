@@ -34,7 +34,7 @@ public class UnmappedAttributeCascadeDeleterUtil {
         for (Map.Entry<String, ? extends ExtendedAttribute<?, ?>> entry : attributes.entrySet()) {
             ExtendedAttribute<?, ?> extendedAttribute = entry.getValue();
             if (extendedAttribute.getAttribute().isCollection()) {
-                if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
+                if (((jakarta.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
                     deleters.add(new UnmappedMapAttributeCascadeDeleter(
                             evm,
                             entry.getKey(),

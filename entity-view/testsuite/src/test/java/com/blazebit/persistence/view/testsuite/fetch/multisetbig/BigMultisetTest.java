@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -135,7 +135,7 @@ public class BigMultisetTest extends AbstractEntityViewTest {
                 .where("id").in(pers1.getId(), pers2.getId())
                 .orderByAsc("id");
         CriteriaBuilder<PersonMultisetFetchView> cb = evm.applySetting( EntityViewSetting.create(
-				PersonMultisetFetchView.class), criteria);
+                PersonMultisetFetchView.class), criteria);
         List<PersonMultisetFetchView> results = cb.getResultList();
 
         assertEquals(2, results.size());

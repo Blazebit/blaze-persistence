@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
  * The type of the annotated parameter must be an entity view type.
  *
  * @author Moritz Becker
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

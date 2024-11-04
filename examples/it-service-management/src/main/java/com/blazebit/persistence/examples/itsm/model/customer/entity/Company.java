@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.itsm.model.customer.entity;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Giovanni Lovato

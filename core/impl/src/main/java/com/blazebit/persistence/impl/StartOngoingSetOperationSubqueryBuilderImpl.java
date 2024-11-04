@@ -13,7 +13,7 @@ import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 import java.util.Map;
 
 /**

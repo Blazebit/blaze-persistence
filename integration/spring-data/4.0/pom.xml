@@ -62,20 +62,20 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-api}</version>
+            <version>${version.jakarta-jpa-3.2-api}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -92,12 +92,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
 
@@ -114,39 +114,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${version.javadoc.plugin}</version>
-                <configuration>
-                    <source>${main.java.version}</source>
-                    <additionalJOption>-Xdoclint:none</additionalJOption>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-resource</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>add-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>target/generated/resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

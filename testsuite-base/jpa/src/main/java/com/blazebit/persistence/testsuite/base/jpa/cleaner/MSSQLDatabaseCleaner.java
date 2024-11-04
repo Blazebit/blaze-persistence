@@ -270,8 +270,8 @@ public class MSSQLDatabaseCleaner implements DatabaseCleaner {
 
     @Override
     public void applyTargetDatabasePropertyModifications(Map<Object, Object> properties, String databaseName) {
-        String jdbcUrl = properties.get("javax.persistence.jdbc.url") + ";databaseName=" + databaseName;
-        properties.put("javax.persistence.jdbc.url", jdbcUrl);
+        String jdbcUrl = properties.get("jakarta.persistence.jdbc.url") + ";databaseName=" + databaseName;
+        properties.put("jakarta.persistence.jdbc.url", jdbcUrl);
     }
 
     @Override

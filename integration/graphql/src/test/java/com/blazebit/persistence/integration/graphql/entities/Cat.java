@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.integration.graphql.entities;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Christian Beikov

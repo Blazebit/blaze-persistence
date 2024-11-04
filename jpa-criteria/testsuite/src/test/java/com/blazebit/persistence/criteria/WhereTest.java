@@ -18,8 +18,8 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.*;
 import java.sql.Timestamp;
 import java.util.*;
 

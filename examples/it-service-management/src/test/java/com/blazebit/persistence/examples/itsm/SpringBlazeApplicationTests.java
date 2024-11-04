@@ -54,15 +54,15 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.ContextConfiguration;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -212,7 +212,7 @@ public class SpringBlazeApplicationTests {
             @Autowired ConfigurationViewRepository viewRepository) {
         HotspotConfiguration c = repository.save(new HotspotConfiguration());
         HotspotConfigurationView v = repository.findOne((root, query, builder) -> builder
-                .equal(root.get("id"), c.getId()));
+                .equal(root.get("id"), c.getId())).get();
         this.em.flush();
         this.em.clear();
         v.getLoginConfiguration().getWelcomeMessage().getLocalizedValues()

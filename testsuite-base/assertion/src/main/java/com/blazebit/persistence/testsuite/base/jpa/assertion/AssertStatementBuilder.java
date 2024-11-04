@@ -172,7 +172,7 @@ public class AssertStatementBuilder {
             try {
                 statements.get(i).validate(queries.get(i));
             } catch (Throwable t) {
-                if (t instanceof MultipleFailuresError) {
+                if (t instanceof MultipleFailuresError ) {
                     failures.addAll(((MultipleFailuresError) t).getFailures());
                 } else {
                     failures.add(t);

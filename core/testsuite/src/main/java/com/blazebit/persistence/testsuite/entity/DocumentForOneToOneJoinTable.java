@@ -5,11 +5,11 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.OneToOne;
 import java.io.Serializable;
 
 /**

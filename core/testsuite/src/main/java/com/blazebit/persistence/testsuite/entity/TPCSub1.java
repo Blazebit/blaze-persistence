@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  *

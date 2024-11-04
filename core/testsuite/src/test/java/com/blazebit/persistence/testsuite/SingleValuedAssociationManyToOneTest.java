@@ -7,7 +7,7 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Assert;

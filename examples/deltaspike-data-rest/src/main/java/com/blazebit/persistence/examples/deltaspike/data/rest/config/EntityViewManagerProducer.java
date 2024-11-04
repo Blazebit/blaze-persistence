@@ -9,17 +9,17 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@jakarta.ejb.Singleton
+@jakarta.ejb.Startup
 public class EntityViewManagerProducer {
 
     // inject the configuration provided by the cdi integration

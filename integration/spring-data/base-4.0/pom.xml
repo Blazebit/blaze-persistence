@@ -34,15 +34,15 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
@@ -59,12 +59,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
 

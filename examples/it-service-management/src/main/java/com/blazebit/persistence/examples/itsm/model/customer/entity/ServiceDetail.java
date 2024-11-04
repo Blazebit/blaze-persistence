@@ -7,11 +7,11 @@ package com.blazebit.persistence.examples.itsm.model.customer.entity;
 
 import com.blazebit.persistence.examples.itsm.model.common.entity.User;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.OrderColumn;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;

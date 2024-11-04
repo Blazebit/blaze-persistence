@@ -11,7 +11,7 @@ import com.blazebit.persistence.deltaspike.data.testsuite.repository.PersonRepos
 import com.blazebit.persistence.deltaspike.data.testsuite.repository.RestrictedPersonViewRepository;
 import org.junit.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;

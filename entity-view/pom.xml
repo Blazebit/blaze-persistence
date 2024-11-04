@@ -24,50 +24,5 @@
         <module>impl</module>
         <module>processor</module>
         <module>testsuite</module>
-
-        <module>api-jar</module>
-        <module>impl-jar</module>
-
-        <module>api-jakarta</module>
-        <module>impl-jakarta</module>
-        <module>processor-jakarta</module>
     </modules>
-    <profiles>
-        <profile>
-            <id>jakarta</id>
-            <modules>
-                <module>api</module>
-                <module>impl</module>
-                <module>processor</module>
-                <module>testsuite</module>
-
-                <module>api-jar</module>
-                <module>impl-jar</module>
-
-                <module>api-jakarta</module>
-                <module>impl-jakarta</module>
-                <module>processor-jakarta</module>
-                <module>testsuite-jakarta</module>
-                <module>testsuite-jakarta-runner</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>blazebit-release</id>
-            <modules>
-                <module>api</module>
-                <module>impl</module>
-                <module>processor</module>
-                <module>testsuite</module>
-
-                <module>api-jar</module>
-                <module>impl-jar</module>
-
-                <module>api-jakarta</module>
-                <module>impl-jakarta</module>
-                <module>processor-jakarta</module>
-                <module>testsuite-jakarta</module>
-                <module>testsuite-jakarta-runner</module>
-            </modules>
-        </profile>
-    </profiles>
 </project>

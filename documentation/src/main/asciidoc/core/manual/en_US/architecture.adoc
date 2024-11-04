@@ -347,7 +347,7 @@ All these query objects are then passed to a _QuerySpecification_ which is capab
 It serves as component that can be composed into a bigger query but also provides a method for creating a _SelectQueryPlan_ or _ModificationQueryPlan_.
 Such query plans represent the executable form of query specifications that are fixed. The reason for the separation between the two is that _list parameters_ or calls to `setFirstResult()` and `setMaxResults()` could change the SQL.
 
-The query specification is wrapped in an implementation of the JPA query interfaces `javax.persistence.Query` or `javax.persistence.TypedQuery` and a query plan is only created on demand just before executing.
+The query specification is wrapped in an implementation of the JPA query interfaces `jakarta.persistence.Query` or `jakarta.persistence.TypedQuery` and a query plan is only created on demand just before executing.
 Parameters, lock modes and flush modes are propagated to all necessary _participating queries_.
 
 Set operations on top level queries essentially are special query specifications that contain multiple other query specifications.

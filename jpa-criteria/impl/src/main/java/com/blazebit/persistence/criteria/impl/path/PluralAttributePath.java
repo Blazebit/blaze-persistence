@@ -7,10 +7,10 @@ package com.blazebit.persistence.criteria.impl.path;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
-import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.PluralAttribute;
 import java.io.Serializable;
 
 /**

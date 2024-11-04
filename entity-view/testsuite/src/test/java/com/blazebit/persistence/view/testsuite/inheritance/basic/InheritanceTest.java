@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;

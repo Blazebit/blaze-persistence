@@ -805,7 +805,7 @@ whether it is an aggregate function and the DBMS specific implementations of it 
 When a function is marked as being an aggregate function, it is treated like any other aggregate function regarding <<implicit-group-by-generation,implicit group by generation>>.
 This means that the occurrence of the function invocation in a query builder, will trigger implicit group by generation.
 
-During the building of a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(javax.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`]
+During the building of a link:{core_jdoc}/persistence/spi/CriteriaBuilderConfiguration.html#createCriteriaBuilderFactory(jakarta.persistence.EntityManagerFactory)[`CriteriaBuilderFactory`]
 the DBMS specific implementations of the registered `JpqlFunctionGroup` instances are selected. If there is no DBMS specific one available, it will fallback to the _default_.
 If there is no default implementation available, a warning message is emitted, saying that no applicable function was found.
 
@@ -901,7 +901,7 @@ Currently you can register functions for the following DBMS
 * sqlite
 * firebird
 
-The determination of the DBMS happens in implementations of link:{core_jdoc}/persistence/spi/EntityManagerFactoryIntegrator.html#getDbms(javax.persistence.EntityManagerFactory)[`EntityManagerFactoryIntegrator`]
+The determination of the DBMS happens in implementations of link:{core_jdoc}/persistence/spi/EntityManagerFactoryIntegrator.html#getDbms(jakarta.persistence.EntityManagerFactory)[`EntityManagerFactoryIntegrator`]
 that reside in the JPA provider integrations. The determination is provider specific and there is currently no way of overriding this behavior.
 
 ==== Parameters in JPQL functions

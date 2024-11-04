@@ -14,12 +14,16 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -89,6 +93,18 @@ public class AbstractModificationCriteriaQuery<T> implements BlazeCommonAbstract
         SubqueryExpression<U> subquery = new SubqueryExpression<U>(criteriaBuilder, subqueryType, this);
         internalGetSubqueries().add(subquery);
         return subquery;
+    }
+
+    @Override
+    public <U> Subquery<U> subquery(EntityType<U> type) {
+        SubqueryExpression<U> subquery = new SubqueryExpression<U>(criteriaBuilder, type.getJavaType(), this);
+        internalGetSubqueries().add(subquery);
+        return subquery;
+    }
+
+    @Override
+    public Set<ParameterExpression<?>> getParameters() {
+        return new HashSet<>();
     }
 
     public List<BlazeSubquery<?>> internalGetSubqueries() {

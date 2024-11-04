@@ -40,9 +40,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.provider.PersistenceProvider;
 import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
-import org.springframework.data.jpa.repository.query.FixedJpaCountQueryCreator;
-import org.springframework.data.jpa.repository.query.FixedJpaQueryCreator;
-import org.springframework.data.jpa.repository.query.Jpa21Utils;
 import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -55,7 +52,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import static org.junit.Assert.*;
 

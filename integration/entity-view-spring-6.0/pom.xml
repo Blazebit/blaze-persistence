@@ -36,7 +36,7 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -55,13 +55,21 @@
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-api}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <version>${version.jakarta-jta}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -69,13 +77,12 @@
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-            <version>2.0.1</version>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -90,43 +97,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires java.sql;
-                                        requires jakarta.persistence;
-                                        requires spring.core;
-                                        requires spring.beans;
-                                        requires spring.context;
-                                        requires com.blazebit.persistence.view;
-                                        requires spring.tx;
-                                        requires jakarta.transaction;
-                                        exports com.blazebit.persistence.integration.view.spring;
-                                        exports com.blazebit.persistence.integration.view.spring.impl to spring.beans;
-                                        opens com.blazebit.persistence.integration.view.spring.impl to spring.core, spring.context;
-                                        // This also opens up the XSD file
-                                        opens com.blazebit.persistence.integration.view.spring;
-                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.view.spring.impl.SpringTransactionAccessFactory;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

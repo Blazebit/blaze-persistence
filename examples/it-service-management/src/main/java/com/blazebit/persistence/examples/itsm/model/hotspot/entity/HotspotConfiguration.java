@@ -9,10 +9,10 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 
 import com.blazebit.persistence.examples.itsm.model.article.entity.LocalizedString;
 import com.blazebit.persistence.examples.itsm.model.hotspot.Configuration;

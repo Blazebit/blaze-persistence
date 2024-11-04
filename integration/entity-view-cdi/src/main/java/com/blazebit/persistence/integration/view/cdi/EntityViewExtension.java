@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.view.cdi;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewListener;
 import com.blazebit.persistence.view.EntityViewListeners;
@@ -14,14 +13,14 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.WithAnnotations;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.Extension;
+import jakarta.enterprise.inject.spi.ProcessAnnotatedType;
+import jakarta.enterprise.inject.spi.WithAnnotations;
 import java.lang.annotation.Annotation;
 
 /**
@@ -29,7 +28,6 @@ import java.lang.annotation.Annotation;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@ServiceProvider(Extension.class)
 public class EntityViewExtension implements Extension {
 
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();

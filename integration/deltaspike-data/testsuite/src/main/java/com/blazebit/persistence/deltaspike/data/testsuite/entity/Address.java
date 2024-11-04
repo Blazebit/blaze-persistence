@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.deltaspike.data.testsuite.entity;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Moritz Becker

@@ -18,9 +18,9 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.JoinType;
 
 import static org.junit.Assert.assertEquals;
 

@@ -32,9 +32,9 @@ import com.blazebit.persistence.testsuite.tx.TxSupport;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.testsuite.tx.TxWork;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;

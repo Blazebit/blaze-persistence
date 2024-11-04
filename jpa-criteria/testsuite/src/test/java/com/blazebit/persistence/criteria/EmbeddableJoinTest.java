@@ -23,7 +23,7 @@ import com.blazebit.persistence.testsuite.entity.NameObject_;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import static org.junit.Assert.assertEquals;
 

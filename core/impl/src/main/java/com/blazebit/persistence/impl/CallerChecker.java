@@ -5,6 +5,8 @@
 
 package com.blazebit.persistence.impl;
 
+import java.util.Set;
+
 /**
  * A contract that checks if the caller of our caller is trusted. On Java 9 this will actually check modules.
  *
@@ -17,6 +19,8 @@ class CallerChecker {
     }
 
     public static boolean isCallerTrusted() {
-        return true;
+        return StackWalker.getInstance(Set.of(), 2).walk(stackFrames -> {
+            return stackFrames.limit(2).allMatch(s -> s.getClassName().startsWith("com.blazebit.persistence."));
+        });
     }
 }

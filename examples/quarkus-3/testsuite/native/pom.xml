@@ -26,7 +26,7 @@
             </modules>
         </profile>
         <profile>
-            <id>mysql8</id>
+            <id>mysql</id>
             <modules>
                 <module>mysql</module>
             </modules>

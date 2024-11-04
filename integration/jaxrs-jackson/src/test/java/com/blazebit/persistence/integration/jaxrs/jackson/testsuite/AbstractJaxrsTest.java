@@ -16,7 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
@@ -25,14 +25,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Persistence;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.BindException;
 import java.net.URI;
 import java.util.HashMap;
@@ -112,7 +112,7 @@ public abstract class AbstractJaxrsTest {
 
     @Before
     public void initInstance() {
-        ((JettyHttpContainer) SERVER.getHandler()).getApplicationHandler().getInjectionManager().inject(this);
+        ((JettyHttpContainer) (Object) SERVER.getHandler()).getApplicationHandler().getInjectionManager().inject(this);
         dropAndCreateSchema();
         this.webTarget = ClientBuilder.newClient()
                 .register(JacksonJsonProvider.class)
@@ -122,7 +122,7 @@ public abstract class AbstractJaxrsTest {
 
     private void dropAndCreateSchema() {
         Map<String, String> properties = new HashMap<>();
-        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
+        properties.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
         Persistence.createEntityManagerFactory("TestsuiteBase", properties);
     }
 

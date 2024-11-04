@@ -5,8 +5,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 java -version
 
 if [ "$RDBMS" == 'mysql' ]; then
-  bash $DIR/../docker_db.sh mysql_5_7
-elif [ "$RDBMS" == 'mysql8' ]; then
   bash $DIR/../docker_db.sh mysql
 elif [ "$RDBMS" == 'postgresql' ]; then
   bash $DIR/../docker_db.sh postgresql

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Like {@link org.springframework.data.jpa.repository.JpaSpecificationExecutor} but allows to specify an entity view
@@ -30,7 +31,7 @@ public interface EntityViewSpecificationExecutor<V, E> {
      * @param spec The specification for filtering
      * @return The matching view
      */
-    V findOne(Specification<E> spec);
+    Optional<V> findOne(Specification<E> spec);
 
     /**
      * Returns all views matching the given {@link Specification}.

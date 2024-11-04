@@ -9,7 +9,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;

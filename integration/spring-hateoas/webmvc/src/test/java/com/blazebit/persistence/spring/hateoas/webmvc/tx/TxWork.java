@@ -7,11 +7,12 @@ package com.blazebit.persistence.spring.hateoas.webmvc.tx;
 
 import com.blazebit.persistence.view.EntityViewManager;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Moritz Becker
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public interface TxWork<V> {
 

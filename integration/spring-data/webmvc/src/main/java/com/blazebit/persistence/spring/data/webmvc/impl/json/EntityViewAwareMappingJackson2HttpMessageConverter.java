@@ -21,7 +21,8 @@ import java.lang.reflect.Type;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJackson2HttpMessageConverter {
 

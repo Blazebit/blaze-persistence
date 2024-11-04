@@ -7,8 +7,8 @@ package com.blazebit.persistence.examples.itsm.model.common.view;
 
 import java.io.Serializable;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -94,7 +94,7 @@ public interface AuditedView extends Serializable {
             String entityName = metamodel.entityPersister(entityClass)
                     .getEntityName();
             String auditedEntityName = this.getEnvers(serviceProvider)
-                    .getAuditEntitiesConfiguration()
+                    .getConfig()
                     .getAuditEntityName(entityName);
             return metamodel.entity(auditedEntityName);
         }

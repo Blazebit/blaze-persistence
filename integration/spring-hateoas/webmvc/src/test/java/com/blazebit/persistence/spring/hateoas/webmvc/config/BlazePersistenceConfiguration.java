@@ -17,14 +17,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 import java.lang.reflect.Type;
 import java.util.UUID;
 
 /**
  * @author Moritz Becker
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Configuration
 public class BlazePersistenceConfiguration {

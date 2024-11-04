@@ -13,7 +13,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpqlFunctionProcessor;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

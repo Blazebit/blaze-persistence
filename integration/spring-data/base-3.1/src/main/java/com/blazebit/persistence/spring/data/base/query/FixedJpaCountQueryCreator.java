@@ -1,0 +1,33 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Blazebit
+ */
+
+package com.blazebit.persistence.spring.data.base.query;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.parser.PartTree;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
+/**
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
+public class FixedJpaCountQueryCreator extends FixedJpaQueryCreator {
+
+    public FixedJpaCountQueryCreator(PartTree tree, Class<?> domainClass, CriteriaBuilder builder,
+                                     ParameterMetadataProvider provider) {
+        super(tree, domainClass, builder, provider);
+    }
+
+    @Override
+    protected CriteriaQuery<Object> complete(Predicate predicate, Sort sort, CriteriaQuery<Object> query,
+                                             CriteriaBuilder builder, Root<?> root) {
+        CriteriaQuery<Object> select = query.select(query.isDistinct() ? builder.countDistinct(root) : builder.count(root));
+        return predicate == null ? select : select.where(predicate);
+    }
+}

@@ -5,18 +5,18 @@
 
 package com.blazebit.persistence.examples.deltaspike.data.rest.config;
 
-import javax.enterprise.inject.Produces;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceUnit;
+import jakarta.enterprise.inject.Produces;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceUnit;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@jakarta.ejb.Singleton
+@jakarta.ejb.Startup
 public class EntityManagerProducer {
 
     // inject your entity manager factory

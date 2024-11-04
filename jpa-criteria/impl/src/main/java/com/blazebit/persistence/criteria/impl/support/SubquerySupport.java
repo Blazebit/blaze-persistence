@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.criteria.impl.support;
 
-import javax.persistence.criteria.CommonAbstractCriteria;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * An interface necessary to be able to compile against JPA 2.0 but let users use JPA 2.1 APIs.

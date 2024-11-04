@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Type;
 
 /**
  *

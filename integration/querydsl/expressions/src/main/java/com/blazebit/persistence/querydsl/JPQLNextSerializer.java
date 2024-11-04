@@ -15,8 +15,8 @@ import com.querydsl.jpa.JPQLOps;
 import com.querydsl.jpa.JPQLSerializer;
 import com.querydsl.jpa.JPQLTemplates;
 
-import javax.annotation.Nullable;
-import javax.persistence.EntityManager;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityManager;
 import java.lang.reflect.Field;
 import java.util.List;
 

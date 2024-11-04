@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.examples.itsm.model.ticket.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 import com.blazebit.persistence.examples.itsm.model.common.entity.User;
 

@@ -7,8 +7,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.Attribute;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;

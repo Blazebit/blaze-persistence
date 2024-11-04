@@ -100,7 +100,7 @@ link:{core_jdoc}/persistence/FullQueryBuilder.html#pageAndNavigate(java.lang.Obj
 === Under the hood
 
 In {projectname} we have followed a more involved approach for implementing pagination than plainly using JPA standard
-methods like `javax.persistence.Query.setMaxResults()` or `javax.persistence.Query.setFirstResult()` to steer the result set
+methods like `jakarta.persistence.Query.setMaxResults()` or `jakarta.persistence.Query.setFirstResult()` to steer the result set
 dimensions. This is due to deficiencies in some JPA providers when it comes to handling paginated queries containing
 join fetches for collections, but also to support custom pagination that is necessary for reporting queries or entity views.
 
@@ -112,7 +112,7 @@ The approach used in {projectname} consists of up to three queries executed cons
 `com.blazebit.persistence.PagedList.getTotalPages()`. If this query returns 0, no further queries are executed.
 
 . The *ID query* is used to fetch the entity ids that are contained in the target page. In this step, the previously
- mentioned `javax.persistence.Query.setMaxResults()` and `javax.persistence.Query.setFirstResult()` are used to select the
+ mentioned `jakarta.persistence.Query.setMaxResults()` and `jakarta.persistence.Query.setFirstResult()` are used to select the
  target ID set. Only selecting the IDs allows to omit all fetch joins, especially collection joins that might trigger inefficient jpa provider
  strategies. The *ID query* is omitted if no collection fetch joins are done, because in that case JPA providers tend to do the right thing when paginating directly.
 

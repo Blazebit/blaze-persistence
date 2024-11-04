@@ -16,7 +16,8 @@ import java.lang.annotation.Target;
  * Required configuration for a {@link KeysetPageable} that specifies the keyset element type.
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)

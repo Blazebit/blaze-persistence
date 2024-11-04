@@ -21,12 +21,10 @@
     <properties>
         <module.name>com.blazebit.persistence.examples.deltaspike.data.rest</module.name>
         <!-- Don't test compiling to newer classfile versions to avoid having to deal with Deltaspike updates -->
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
 
-        <version.hibernate>5.0.12.Final</version.hibernate>
-        <!-- For Hibernate 5.2 use "5.2" -->
-        <version.integration-hibernate>5</version.integration-hibernate>
+        <version.hibernate>${version.hibernate-6.6}</version.hibernate>
         <version.eclipselink>2.6.4</version.eclipselink>
     </properties>
 
@@ -35,7 +33,7 @@
             <dependency>
                 <groupId>org.apache.deltaspike.distribution</groupId>
                 <artifactId>distributions-bom</artifactId>
-                <version>${version.deltaspike-1.9}</version>
+                <version>${version.deltaspike-2.0}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -44,26 +42,53 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jboss.spec</groupId>
-            <artifactId>jboss-javaee-8.0</artifactId>
-            <version>1.0.4.Final</version>
-            <type>pom</type>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.taglibs</groupId>
-                    <artifactId>taglibs-standard-spec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.taglibs</groupId>
-                    <artifactId>taglibs-standard-impl</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ejb</groupId>
+            <artifactId>jakarta.ejb-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.8.11.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -112,7 +137,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-deltaspike-data-impl-1.8</artifactId>
+            <artifactId>blaze-persistence-integration-deltaspike-data-impl-2.0</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -152,19 +177,6 @@
             <artifactId>weld-se-core</artifactId>
             <version>${version.weld}</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss</groupId>
-                    <artifactId>jandex</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- Since we are including a module-info.class file, we need at least 2.0.4.Final -->
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jandex</artifactId>
-            <version>${version.jandex}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -192,7 +204,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
         </dependency>
     </dependencies>
     
@@ -240,24 +252,24 @@
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-${version.integration-hibernate}</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-entitymanager</artifactId>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate}</version>
-                    <scope>test</scope>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.jboss.resteasy</groupId>
                     <artifactId>resteasy-jackson2-provider</artifactId>
-                    <version>3.0.8.Final</version>
+                    <version>6.2.10.Final</version>
                     <scope>provided</scope>
                 </dependency>
 
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
-                    <groupId>org.hibernate</groupId>
+                    <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
                     <version>${version.hibernate}</version>
                     <scope>provided</scope>
@@ -266,50 +278,40 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                    </processors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <!-- Metamodel -->
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source-metamodel</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>org.hibernate.orm</groupId>
+                                    <artifactId>hibernate-jpamodelgen</artifactId>
+                                    <version>${version.hibernate}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -323,20 +325,15 @@
                 </dependency>
                 <dependency>
                     <groupId>org.eclipse.persistence</groupId>
-                    <artifactId>javax.persistence</artifactId>
-                    <version>2.1.1</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.eclipse.persistence</groupId>
                     <artifactId>eclipselink</artifactId>
                     <version>${version.eclipselink}</version>
-                    <scope>test</scope>
+                    <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.glassfish.jersey.media</groupId>
                     <artifactId>jersey-media-json-jackson</artifactId>
-                    <version>2.23.1</version>
+                    <version>3.1.9</version>
+                    <scope>provided</scope>
                 </dependency>
 
                 <!-- IntelliJ apparently needs the annotation processor here -->
@@ -350,53 +347,43 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/generated-sources/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/generated-sources/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
-                                    </processors>
-                                    <optionMap>
-                                        <eclipselink.persistencexml>${basedir}/src/main/resources/META-INF/persistence.xml</eclipselink.persistencexml>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <!-- Metamodel -->
-                            <dependency>
-                                <groupId>org.eclipse.persistence</groupId>
-                                <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
-                                <version>${version.eclipselink}</version>
-                            </dependency>
-                        </dependencies>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>org.eclipse.persistence</groupId>
+                                    <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+                                    <version>${version.eclipselink}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <compilerArgs>
+                                <compilerArg>-Aeclipselink.persistencexml=${basedir}/src/main/resources/META-INF/persistence.xml</compilerArg>
+                            </compilerArgs>
+                            <annotationProcessors>
+                                <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -412,24 +399,24 @@
                 </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-${version.integration-hibernate}</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-entitymanager</artifactId>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.jboss.resteasy</groupId>
                     <artifactId>resteasy-jackson2-provider</artifactId>
-                    <version>3.0.8.Final</version>
+                    <version>6.2.10.Final</version>
                     <scope>provided</scope>
                 </dependency>
 
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
-                    <groupId>org.hibernate</groupId>
+                    <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
                     <version>${version.hibernate}</version>
                     <scope>provided</scope>
@@ -438,76 +425,46 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
-                                    </processors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <!-- Metamodel -->
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source-metamodel</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.hibernate.orm</groupId>
+                                    <artifactId>hibernate-jpamodelgen</artifactId>
+                                    <version>${version.hibernate-apt}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

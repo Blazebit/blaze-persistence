@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.itsm.model.ticket.entity;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Giovanni Lovato

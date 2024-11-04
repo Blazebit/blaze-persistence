@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.PersonForCollectionsListNestedView;

@@ -19,31 +19,31 @@ import com.blazebit.persistence.view.FlushOperationBuilder;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Priority;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbConfig;
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.stream.JsonParser;
-import javax.persistence.EntityManager;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.Provider;
-import javax.ws.rs.ext.Providers;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.bind.JsonbConfig;
+import jakarta.json.bind.serializer.DeserializationContext;
+import jakarta.json.stream.JsonParser;
+import jakarta.persistence.EntityManager;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.MessageBodyReader;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverterProvider;
+import jakarta.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.Providers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -169,7 +169,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
     }
 
     /**
-     * Copy of {@link com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider#hasMatchingMediaType(javax.ws.rs.core.MediaType)}
+     * Copy of {@link com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider#hasMatchingMediaType(jakarta.ws.rs.core.MediaType)}
      *
      * @param mediaType the media type to be matched
      * @return true, if this reader accepts the given mediaType or false otherwise
@@ -279,7 +279,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
          *
          * @param <T> The parameter type
          */
-        private static class MethodBasedParamConverter<T> implements javax.ws.rs.ext.ParamConverter<T> {
+        private static class MethodBasedParamConverter<T> implements jakarta.ws.rs.ext.ParamConverter<T> {
             private final Method stringConsumingMethod;
 
             public MethodBasedParamConverter(Method stringConsumingMethod) {
@@ -307,7 +307,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
          *
          * @param <T> The parameter type
          */
-        private static class ConstructorBasedParamConverter<T> implements javax.ws.rs.ext.ParamConverter<T> {
+        private static class ConstructorBasedParamConverter<T> implements jakarta.ws.rs.ext.ParamConverter<T> {
             private final Constructor<T> stringConstructor;
 
             public ConstructorBasedParamConverter(Constructor<T> stringConstructor) {
@@ -333,7 +333,7 @@ public class EntityViewMessageBodyReader implements MessageBodyReader<Object> {
         /**
          * ParamConverter for default parameter conversion for {@link java.lang.Character}
          */
-        private static class CharacterParamConverter implements javax.ws.rs.ext.ParamConverter<Character> {
+        private static class CharacterParamConverter implements jakarta.ws.rs.ext.ParamConverter<Character> {
 
             @Override
             @SuppressWarnings("unchecked")

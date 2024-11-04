@@ -27,7 +27,7 @@ import com.blazebit.persistence.examples.itsm.model.common.view.GroupDetail;
 import com.blazebit.persistence.examples.itsm.model.common.view.RoleDetail;
 import com.blazebit.persistence.examples.itsm.model.common.view.UserDetail;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Giovanni Lovato

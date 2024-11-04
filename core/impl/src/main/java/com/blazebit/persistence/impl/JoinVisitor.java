@@ -32,9 +32,9 @@ import com.blazebit.persistence.parser.predicate.PredicateBuilder;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

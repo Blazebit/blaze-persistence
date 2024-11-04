@@ -33,12 +33,12 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JoinTable;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

@@ -12,14 +12,10 @@ elif [ "$COMPONENT" == 'hibernate-6.4' ]; then
   export JPAPROVIDER="hibernate-6.4"
   export SPRING_DATA="spring-data-3.2.x"
   export PROPERTIES="-s $DIR/latest-settings.xml -Dversion.hibernate-6.4=[6.4,6.5.Alpha)"
-elif [ "$COMPONENT" == 'hibernate-6.5' ]; then
-  export JPAPROVIDER="hibernate-6.5"
-  export SPRING_DATA="spring-data-3.3.x"
-  export PROPERTIES="-s $DIR/latest-settings.xml -Dversion.hibernate-6.5=[6.5,6.6.Alpha)"
 elif [ "$COMPONENT" == 'hibernate-6.6' ]; then
   export JPAPROVIDER="hibernate-6.6"
   export SPRING_DATA="spring-data-3.3.x"
-  export PROPERTIES="-s $DIR/latest-settings.xml -Dversion.hibernate-6.6=[6.6,6.6.Alpha)"
+  export PROPERTIES="-s $DIR/latest-settings.xml -Dversion.hibernate-6.6=[6.6,7.0.Alpha)"
 elif [ "$COMPONENT" == 'hibernate-7.1' ]; then
   export JPAPROVIDER="hibernate-7.1"
   export SPRING_DATA="spring-data-4.0.x"
@@ -29,9 +25,9 @@ elif [ "$COMPONENT" == 'hibernate-7.2' ]; then
   export SPRING_DATA="spring-data-4.0.x"
   export PROPERTIES="-s $DIR/latest-settings.xml -Dversion.hibernate-7.2=[7.2,7.2.Alpha)"
 else
-  export JPAPROVIDER="hibernate-6.2"
-  export SPRING_DATA="spring-data-3.1.x"
-  export PROPERTIES="-Dversion.spring-data-3.1=[3,4.Alpha) -Dversion.spring-data-3.1-spring=[6.0,6.1.Alpha) -Dversion.spring-data-3.1-spring-boot=[3,4.Alpha)"
+  export JPAPROVIDER="hibernate-6.6"
+  export SPRING_DATA="spring-data-3.3.x"
+  export PROPERTIES="-Dversion.spring-data-3.3=[3,4.Alpha) -Dversion.spring-data-3.3-spring=[6.0,6.1.Alpha) -Dversion.spring-data-3.3-spring-boot=[3,4.Alpha)"
 fi
 
 exec bash $DIR/../build.sh

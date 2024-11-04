@@ -11,12 +11,12 @@ Don't forget to also add it to your persistence.xml so that the JPA provider can
 [source,java]
 ----
 @CTE    // from com.blazebit.persistence
-@Entity // from javax.persistence
+@Entity // from jakarta.persistence
 public class MyCte {
 
     private Long id;
 
-    @Id // from javax.persistence
+    @Id // from jakarta.persistence
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 }
@@ -91,13 +91,13 @@ The following illustrates how the ancestor hierarchy of an entity can be retriev
 .CTE structure definition
 ----
 @CTE    // from com.blazebit.persistence
-@Entity // from javax.persistence
+@Entity // from jakarta.persistence
 public class CatCte {
 
     private Long id;
     private Cat ancestor;
 
-    @Id // from javax.persistence
+    @Id // from jakarta.persistence
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

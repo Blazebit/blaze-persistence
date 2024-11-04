@@ -20,9 +20,8 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.spring.hateoas</module.name>
-        <main.java.version>1.8</main.java.version>
 
-        <version.hibernate>5.0.12.Final</version.hibernate>
+        <version.hibernate>${version.hibernate-6.6}</version.hibernate>
         <start-class>com.blazebit.persistence.examples.spring.hateoas.Application</start-class>
     </properties>
 
@@ -56,8 +55,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
             <version>${version.hibernate}</version>
         </dependency>
 
@@ -134,7 +133,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
         </dependency>
     </dependencies>
     
@@ -171,239 +170,20 @@
 
     <profiles>
         <profile>
-            <id>spring-data-1.11.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.0.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.1.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.2.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.2-spring-boot}</version.spring.boot>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.3.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.3-spring-boot}</version.spring.boot>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.3}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.4.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.4-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.4-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.4}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.5.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.5-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.5-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.4}</version.hibernate>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.5}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.5</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.6.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.6-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.6-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.6}</version.hibernate>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.6}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.aspectj</groupId>
-                    <artifactId>aspectjweaver</artifactId>
-                    <version>1.9.4</version>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.6</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.7.x</id>
+            <id>spring-data-3.3.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+                <version.spring>${version.spring-data-3.3-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.3-spring-boot}</version.spring.boot>
+                <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.7}</version>
+                    <version>${version.spring-data-3.3}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -412,26 +192,26 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-                <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+                <version.spring>${version.spring-data-3.3-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.3-spring-boot}</version.spring.boot>
+                <version.hibernate>${version.hibernate-apt}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.7}</version>
+                    <version>${version.spring-data-3.3}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -440,11 +220,11 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -456,70 +236,20 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
-                                    </processors>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <!-- Metamodel -->
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source-metamodel</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

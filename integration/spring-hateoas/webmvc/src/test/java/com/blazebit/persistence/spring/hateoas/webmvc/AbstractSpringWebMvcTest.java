@@ -20,7 +20,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 /**
  * @author Moritz Becker
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @WebAppConfiguration
 public abstract class AbstractSpringWebMvcTest extends AbstractSpringTest {

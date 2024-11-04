@@ -25,9 +25,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;

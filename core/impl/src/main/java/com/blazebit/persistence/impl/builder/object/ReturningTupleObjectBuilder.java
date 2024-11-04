@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.SimpleReturningBuilder;

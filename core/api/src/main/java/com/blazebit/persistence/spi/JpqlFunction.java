@@ -12,7 +12,7 @@ package com.blazebit.persistence.spi;
  *
  * @author Christian Beikov
  * @since 1.0.0
- * @see EntityManagerFactoryIntegrator#registerFunctions(javax.persistence.EntityManagerFactory, java.util.Map)
+ * @see EntityManagerFactoryIntegrator#registerFunctions(jakarta.persistence.EntityManagerFactory, java.util.Map)
  */
 public interface JpqlFunction {
 

@@ -9,8 +9,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import java.util.List;
 import ${package}.model.Cat;
 import ${package}.model.Person;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SampleTest extends AbstractSampleTest {
     
@@ -25,7 +25,7 @@ public class SampleTest extends AbstractSampleTest {
             List<Person> list = cb.getResultList();
             
             System.out.println(list);
-            Assert.assertEquals(2, list.size());
+            assertEquals(2, list.size());
         });
     }
 }

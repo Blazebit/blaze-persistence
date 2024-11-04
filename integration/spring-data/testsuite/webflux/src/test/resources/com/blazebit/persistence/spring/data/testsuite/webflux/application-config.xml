@@ -26,10 +26,10 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
             <property name="persistenceUnitName" value="TestsuiteBase"/>
             <property name="jpaProperties">
                 <props>
-                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
-                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
-                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
-                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="jakarta.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="jakarta.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="jakarta.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="jakarta.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
                     <prop key="hibernate.show_sql">false</prop>
 
                     <!-- required for Hibernate 4.2 -->
@@ -54,11 +54,11 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
             </property>
             <property name="jpaProperties">
                 <props>
-                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
-                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
-                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
-                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
-                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                    <prop key="jakarta.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="jakarta.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="jakarta.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="jakarta.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="jakarta.persistence.schema-generation.database.action">NONE</prop>
                     <prop key="eclipselink.logging.level">OFF</prop> <!-- use FINE for debugging -->
                 </props>
             </property>
@@ -71,11 +71,11 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
             <property name="persistenceUnitName" value="TestsuiteBase"/>
             <property name="jpaProperties">
                 <props>
-                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
-                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
-                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
-                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
-                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                    <prop key="jakarta.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="jakarta.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="jakarta.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="jakarta.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="jakarta.persistence.schema-generation.database.action">NONE</prop>
                 </props>
             </property>
         </bean>
@@ -89,11 +89,11 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
             <property name="persistenceUnitName" value="TestsuiteBase"/>
             <property name="jpaProperties">
                 <props>
-                    <prop key="javax.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
-                    <prop key="javax.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
-                    <prop key="javax.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
-                    <prop key="javax.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
-                    <prop key="javax.persistence.schema-generation.database.action">NONE</prop>
+                    <prop key="jakarta.persistence.jdbc.url">#{systemProperties['jdbc.url']}</prop>
+                    <prop key="jakarta.persistence.jdbc.user">#{systemProperties['jdbc.user']}</prop>
+                    <prop key="jakarta.persistence.jdbc.password">#{systemProperties['jdbc.password']}</prop>
+                    <prop key="jakarta.persistence.jdbc.driver">#{systemProperties['jdbc.driver']}</prop>
+                    <prop key="jakarta.persistence.schema-generation.database.action">NONE</prop>
                 </props>
             </property>
         </bean>

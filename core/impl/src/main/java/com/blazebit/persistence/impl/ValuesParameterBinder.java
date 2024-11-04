@@ -7,7 +7,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.spi.AttributeAccessor;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.Collection;
 import java.util.Iterator;
 

@@ -18,7 +18,7 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 /**
  *

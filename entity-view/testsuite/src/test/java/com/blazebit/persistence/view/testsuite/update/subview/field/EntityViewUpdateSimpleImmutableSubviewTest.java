@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.subview.field;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -22,18 +22,6 @@ To use the GraphQL integration you need the following Maven dependencies:
 </dependency>
 ----
 
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-graphql-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
 Note that the integration works with the de facto standard runtime for GraphQL which is `graphql-java`. At least version 17.3 is required.
 
 === Usage
@@ -435,17 +423,6 @@ To use the SPQR GraphQL integration you need the following Maven dependencies:
     <scope>compile</scope>
 </dependency>
 ----
-
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
 ----
 
 The SPQR configuration is very simple and since the framework is fully declarative, you don't need a dedicated GraphQL schema definition.

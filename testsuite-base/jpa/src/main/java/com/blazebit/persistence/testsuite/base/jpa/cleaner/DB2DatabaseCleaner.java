@@ -410,10 +410,10 @@ public class DB2DatabaseCleaner implements DatabaseCleaner {
 
     @Override
     public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
-        String jdbcUrl = (String) properties.get("javax.persistence.jdbc.url");
+        String jdbcUrl = (String) properties.get("jakarta.persistence.jdbc.url");
         if (!jdbcUrl.endsWith(";")) {
             jdbcUrl = jdbcUrl + ":";
         }
-        properties.put("javax.persistence.jdbc.url", jdbcUrl + "currentSchema=" + schemaName.toUpperCase() + ";");
+        properties.put("jakarta.persistence.jdbc.url", jdbcUrl + "currentSchema=" + schemaName.toUpperCase() + ";");
     }
 }

@@ -26,11 +26,11 @@
     <dependencies>        
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-testsuite-base-jpa-jakarta</artifactId>
+            <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>

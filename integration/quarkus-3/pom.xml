@@ -87,7 +87,7 @@
             <id>hibernate-6.6</id>
             <properties>
                 <version.jakarta-jpa>${version.jakarta-jpa-3.1-api}</version.jakarta-jpa>
-                <version.quarkus>${version.quarkus-3.15}</version.quarkus>
+                <version.quarkus>${version.quarkus-3.20}</version.quarkus>
                 <version.jandex>3.1.6</version.jandex>
             </properties>
         </profile>

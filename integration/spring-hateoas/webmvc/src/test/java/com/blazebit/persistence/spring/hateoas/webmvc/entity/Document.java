@@ -5,16 +5,17 @@
 
 package com.blazebit.persistence.spring.hateoas.webmvc.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import java.io.Serializable;
 
 /**
  * @author Moritz Becker
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Entity
 public class Document implements Serializable {

@@ -29,11 +29,11 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -171,7 +171,7 @@ public class TupleElementMapperBuilder implements ServiceProvider {
             return getMapping(expression);
         }
 
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttr = idAttributes.iterator().next();
+        jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttr = idAttributes.iterator().next();
         if (ExpressionUtils.isEmptyOrThis(expression)) {
             return getMapping(mappingPrefix, idAttr.getName());
         } else {

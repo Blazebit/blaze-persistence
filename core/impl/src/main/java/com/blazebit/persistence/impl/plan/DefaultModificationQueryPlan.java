@@ -7,7 +7,7 @@ package com.blazebit.persistence.impl.plan;
 
 import com.blazebit.persistence.spi.DbmsStatementType;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  *

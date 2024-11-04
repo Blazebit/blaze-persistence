@@ -9,7 +9,7 @@ import com.blazebit.persistence.CorrelationQueryBuilder;
 import com.blazebit.persistence.FromProvider;
 import com.blazebit.persistence.JoinOnBuilder;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * A builder for correlating a basis with an entity class.

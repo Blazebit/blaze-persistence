@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.parser.expression;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * TODO: documentation

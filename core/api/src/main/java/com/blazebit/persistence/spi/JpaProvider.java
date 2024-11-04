@@ -7,10 +7,10 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.JoinType;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.List;
 import java.util.Map;
 

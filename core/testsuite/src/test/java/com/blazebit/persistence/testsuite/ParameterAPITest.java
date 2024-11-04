@@ -11,9 +11,9 @@ import com.blazebit.persistence.testsuite.entity.DocumentType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;

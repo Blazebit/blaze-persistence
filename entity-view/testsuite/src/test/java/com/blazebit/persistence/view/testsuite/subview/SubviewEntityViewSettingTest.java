@@ -7,7 +7,7 @@ package com.blazebit.persistence.view.testsuite.subview;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;

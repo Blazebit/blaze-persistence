@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatement;

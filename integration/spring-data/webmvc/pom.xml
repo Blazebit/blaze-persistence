@@ -13,8 +13,9 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.spring.data.webmvc</module.name>
-        <spring.activeProfiles />
         <test.argLine />
+        <version.spring>${version.spring-data-3.3-spring}</version.spring>
+        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
     </properties>
 
     <dependencyManagement>
@@ -31,9 +32,34 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${version.servlet}</version>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>${version.servlet-api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -47,9 +73,20 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <version>${version.spring-data}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${version.spring-data}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.8.11.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -71,12 +108,12 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
-            <version>${version.activation}</version>
+            <version>${version.activation-api}</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -93,404 +130,94 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires transitive spring.webmvc;
-                                        requires transitive com.blazebit.persistence.integration.spring.data;
-                                        requires com.blazebit.persistence.integration.jackson;
-                                        exports com.blazebit.persistence.spring.data.webmvc;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
     <profiles>
         <!-- Profiles for various Spring-Data versions -->
         <profile>
-            <id>spring-data-1.11.x</id>
+            <id>spring-data-3.1.x</id>
             <properties>
-                <version.spring>${version.spring-data-1.x-spring}</version.spring>
+                <version.spring>${version.spring-data-3.1-spring}</version.spring>
+                <version.spring-data>${version.spring-data-3.1}</version.spring-data>
             </properties>
-
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>1.13.10.RELEASE</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
-            <id>spring-data-2.0.x</id>
+            <id>spring-data-3.2.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
+                <version.spring>${version.spring-data-3.2-spring}</version.spring>
+                <version.spring-data>${version.spring-data-3.2}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.0}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.1</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
         </profile>
         <profile>
-            <id>spring-data-2.1.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.1-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.1}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.2.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.2-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.2}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.2</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.3.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.3-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.3}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.3</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.4.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.4-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.4}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.4</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.5.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.5-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.5}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.5</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.6.x</id>
-            <properties>
-                <version.spring>${version.spring-data-2.6-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.6}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.6</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-2.7.x</id>
+            <id>spring-data-3.3.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring>${version.spring-data-3.3-spring}</version.spring>
+                <version.spring-data>${version.spring-data-3.3}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-        </profile>
-        <profile>
-            <id>spring-data-3.1.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
-            <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.1 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>spring-data-3.2.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
-            <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.2 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>spring-data-3.3.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
-            <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
-                    <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.3 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>spring-data-3.4.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring>${version.spring-data-3.4-spring}</version.spring>
+                <version.spring-data>${version.spring-data-3.4}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.4 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>spring-data-3.5.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
+                <version.spring-data>${version.spring-data-3.5}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.5 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>spring-data-4.0.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring>${version.spring-data-4.0-spring}</version.spring>
+                <version.spring-data>${version.spring-data-4.0}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework.data</groupId>
-                    <artifactId>spring-data-commons</artifactId>
-                    <version>${version.spring-data-2.7}</version>
-                    <optional>true</optional>
-                </dependency>
-                <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 4.0 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 

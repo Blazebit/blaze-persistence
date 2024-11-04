@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.integration.hibernate.base.Database;
 import com.blazebit.persistence.integration.hibernate.base.MultiIterator;
@@ -28,7 +27,6 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(Integrator.class)
 public class Hibernate62Integrator implements Integrator {
 
     @Override

@@ -9,8 +9,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;

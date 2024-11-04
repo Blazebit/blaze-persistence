@@ -15,8 +15,8 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,14 +64,14 @@ public abstract class AbstractEntityLoader implements EntityLoader {
         }
     }
 
-    protected static javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
+    protected static jakarta.persistence.metamodel.SingularAttribute<?, ?> jpaIdOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
         if (subviewType instanceof ViewType<?>) {
             return JpaMetamodelUtils.getSingleIdAttribute(evm.getMetamodel().getEntityMetamodel().entity(subviewType.getEntityClass()));
         }
         return null;
     }
 
-    protected static javax.persistence.metamodel.SingularAttribute<?, ?> viewIdMappingOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
+    protected static jakarta.persistence.metamodel.SingularAttribute<?, ?> viewIdMappingOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType) {
         if (subviewType instanceof ViewType<?>) {
             ExtendedManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, subviewType.getEntityClass());
             return (SingularAttribute<?, ?>) managedType.getAttributes().get(((MappingAttribute) ((ViewType<?>) subviewType).getIdAttribute()).getMapping()).getAttribute();
@@ -79,7 +79,7 @@ public abstract class AbstractEntityLoader implements EntityLoader {
         return null;
     }
 
-    protected static javax.persistence.metamodel.SingularAttribute<?, ?> associationIdMappingOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, String attributeIdAttributeName) {
+    protected static jakarta.persistence.metamodel.SingularAttribute<?, ?> associationIdMappingOf(EntityViewManagerImpl evm, ManagedViewType<?> subviewType, String attributeIdAttributeName) {
         if (subviewType instanceof ViewType<?>) {
             ExtendedManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, subviewType.getEntityClass());
             return (SingularAttribute<?, ?>) managedType.getAttributes().get(attributeIdAttributeName).getAttribute();

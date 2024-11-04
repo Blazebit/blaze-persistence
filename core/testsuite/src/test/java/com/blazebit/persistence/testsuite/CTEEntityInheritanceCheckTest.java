@@ -14,9 +14,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
 
 /**
  * @author Moritz Becker

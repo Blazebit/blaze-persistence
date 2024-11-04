@@ -22,7 +22,7 @@
     <properties>
         <version.asciidoctor>1.6.0-alpha.7</version.asciidoctor>
         <stable.version>1.6.17</stable.version>
-        <series.version>1.6</series.version>
+        <series.version>2.0</series.version>
     </properties>
 
     <build>

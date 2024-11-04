@@ -7,12 +7,12 @@ package com.blazebit.persistence.integration.jaxrs.jsonb.testsuite.config;
 
 import org.apache.deltaspike.jpa.api.transaction.TransactionScoped;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.inject.Disposes;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.inject.Disposes;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * @author Moritz Becker

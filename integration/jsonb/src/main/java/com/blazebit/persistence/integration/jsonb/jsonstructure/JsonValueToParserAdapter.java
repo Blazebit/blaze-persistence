@@ -12,12 +12,12 @@
 
 package com.blazebit.persistence.integration.jsonb.jsonstructure;
 
-import javax.json.JsonNumber;
-import javax.json.JsonString;
-import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
-import javax.json.stream.JsonLocation;
-import javax.json.stream.JsonParser;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.bind.JsonbException;
+import jakarta.json.stream.JsonLocation;
+import jakarta.json.stream.JsonParser;
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 
@@ -68,9 +68,9 @@ public class JsonValueToParserAdapter implements JsonParser {
 
     @Override
     public String getString() {
-        if (hasNext) {
-            throw new NoSuchElementException();
-        }
+//        if (hasNext) {
+//            throw new NoSuchElementException();
+//        }
 
         switch (value.getValueType()) {
             case TRUE:
@@ -109,9 +109,9 @@ public class JsonValueToParserAdapter implements JsonParser {
     }
 
     private JsonNumber getJsonNumberValue() {
-        if (hasNext) {
-            throw new NoSuchElementException();
-        }
+//        if (hasNext) {
+//            throw new NoSuchElementException();
+//        }
         if (value.getValueType() != JsonValue.ValueType.NUMBER) {
             throw new UnsupportedOperationException("Unsupported value: " + value);
         }

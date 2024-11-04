@@ -13,11 +13,11 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.support.JoinSupport;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Christian Beikov

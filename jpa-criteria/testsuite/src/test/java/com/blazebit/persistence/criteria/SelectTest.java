@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.Root;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.tx.TxWork;

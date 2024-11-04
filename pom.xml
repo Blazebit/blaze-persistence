@@ -22,19 +22,19 @@
     <description>Blazebit Blaze-Persistence</description>
 
     <properties>
-        <jdk8.home>${env.JAVA_HOME}</jdk8.home>
         <dbHost>localhost</dbHost>
-        <main.java.version>1.7</main.java.version>
+        <main.java.version>11</main.java.version>
+        <jdk.min.version>17</jdk.min.version>
         <maven.compiler.target>${main.java.version}</maven.compiler.target>
         <maven.compiler.source>${main.java.version}</maven.compiler.source>
-        <version.checkstyle>9.3</version.checkstyle>
+        <version.checkstyle>10.19.0</version.checkstyle>
 
         <!-- Plugin versions -->
         <version.antrun.plugin>3.1.0</version.antrun.plugin>
         <version.assembly.plugin>3.6.0</version.assembly.plugin>
-        <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
+        <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
         <version.clean.plugin>3.3.1</version.clean.plugin>
-        <version.compiler.plugin>3.11.0</version.compiler.plugin>
+        <version.compiler.plugin>3.13.0</version.compiler.plugin>
         <version.dependency.plugin>3.6.0</version.dependency.plugin>
         <version.deploy.plugin>3.1.1</version.deploy.plugin>
         <version.ear.plugin>3.3.0</version.ear.plugin>
@@ -50,7 +50,6 @@
         <version.javadoc.plugin>3.11.2</version.javadoc.plugin>
         <version.moditect.plugin>1.0.0.RC1</version.moditect.plugin>
         <version.plugin.plugin>3.9.0</version.plugin.plugin>
-        <version.processor.plugin>3.3.2</version.processor.plugin>
         <version.release.plugin>3.0.1</version.release.plugin>
         <version.resources.plugin>3.3.1</version.resources.plugin>
         <version.shade.plugin>3.5.1</version.shade.plugin>
@@ -158,137 +157,6 @@
             </roles>
         </developer>
     </developers>
-    <profiles>
-        <profile>
-            <!-- It disables javadoc doclint for JDK > 8 -->
-            <id>javadoc-xdoclint-disable-jdk8+</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>${version.javadoc.plugin}</version>
-                            <configuration>
-                                <!--
-                                A major reason why this is necessary is because the moditect plugin generates
-                                a module-info file into the JAR, which is seems to cause trouble for the javadoc plugin.
-                                If the module-info.java files existed in the source folder directly, this could be removed.
-                                -->
-                                <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
-<!--                                <source>${main.java.version}</source>-->
-                                <additionalJOption>-Xdoclint:none</additionalJOption>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
-            <id>jdk9+</id>
-            <activation>
-                <jdk>[1.9,)</jdk>
-            </activation>
-            <properties>
-                <maven.processor.source>1.9</maven.processor.source>
-                <maven.processor.target>1.9</maven.processor.target>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk20+</id>
-            <activation>
-                <jdk>[20,)</jdk>
-            </activation>
-            <properties>
-                <!-- JDK20 dropped support for compiling to the target version 7 -->
-                <main.java.version>1.8</main.java.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>blazebit-release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.8.0</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.gmavenplus</groupId>
-                        <artifactId>gmavenplus-plugin</artifactId>
-                        <version>1.9.0</version>
-                        <executions>
-                            <execution>
-                                <id>prepare-escaped-jar-path</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <scripts>
-                                        <script>
-                                            <![CDATA[
-                                                String s = System.getProperty("jdk8.home");
-                                                if (s == null) {
-                                                    s = project.properties['jdk8.home'];
-                                                }
-                                                if (s.endsWith(java.io.File.separator)) {
-                                                    s = s.substring(0, s.length() - 1);
-                                                }
-                                                if (System.getProperty("os.name").startsWith("Windows")) {
-                                                    System.setProperty("jdk8.classes.jar.escaped", (s + java.io.File.separator + "jre" + java.io.File.separator + "lib" + java.io.File.separator + "rt.jar").replaceAll(java.io.File.separator + java.io.File.separator, java.io.File.separator + java.io.File.separator + java.io.File.separator + java.io.File.separator));
-                                                } else if (System.getProperty("os.name").startsWith("Mac")) {
-                                                    System.setProperty("jdk8.classes.jar.escaped", s + java.io.File.separator + "jre" + java.io.File.separator + "lib" + java.io.File.separator + "classes.jar");
-                                                } else {
-                                                    System.setProperty("jdk8.classes.jar.escaped", s + java.io.File.separator + "jre" + java.io.File.separator + "lib" + java.io.File.separator + "rt.jar");
-                                                }
-                                            ]]>
-                                        </script>
-                                    </scripts>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-all</artifactId>
-                                <version>3.0.11</version>
-                                <type>pom</type>
-                                <scope>runtime</scope>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>enforce-jdk8-available</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <configuration>
-                                    <rules>
-                                        <evaluateBeanshell>
-                                            <message>To create a release build of this project with JDK 11+ you need to provide a system property "jdk8.home" that can be used to access the rt.jar or classes.jar on Mac</message>
-                                            <condition>System.getProperty("java.specification.version").contains(".") || Integer.parseInt(System.getProperty("java.specification.version")) &lt; 11 || new java.io.File(System.getProperty("jdk8.classes.jar.escaped")).exists()</condition>
-                                        </evaluateBeanshell>
-                                    </rules>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <build>
         <pluginManagement>
@@ -314,6 +182,15 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${version.javadoc.plugin}</version>
+                    <configuration>
+                        <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                        <additionalJOption>-Xdoclint:none</additionalJOption>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -361,8 +238,8 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/PageableHandlerMethodArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortHandlerMethodArgumentResolver.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/spring/data/webflux/impl/SortArgumentResolver.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/jpa/repository/query/FixedJpaQueryCreator.java</exclude>
-                        <exclude>**/src/main/java/org/springframework/data/repository/config/BootstrapMode.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/FixedJpaQueryCreator.java</exclude>
+                        <exclude>**/src/main/java/com/blazebit/persistence/spring/data/base/query/QueryUtils.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/integration/jsonb/jsonstructure/**</exclude>
 
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryDefinitionException.java</exclude>
@@ -372,6 +249,7 @@
                         <exclude>**/src/main/java/jakarta/persistence/**</exclude>
                         <exclude>**/src/test/java/com/blazebit/persistence/view/processor/model/**</exclude>
                         <exclude>**/src/test/java/javax/annotation/**</exclude>
+                        <exclude>**/jpa-3.2-compatibility/src/main/java/module-info.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>

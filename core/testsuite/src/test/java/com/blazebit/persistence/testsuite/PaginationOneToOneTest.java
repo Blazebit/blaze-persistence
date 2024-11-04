@@ -14,8 +14,8 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 

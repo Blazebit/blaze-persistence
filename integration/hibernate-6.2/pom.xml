@@ -21,36 +21,43 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate</module.name>
-        <main.java.version>1.8</main.java.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-3.1-api}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-api</artifactId>
+        </dependency>
+        <!-- Unfortunately, a compile time dependency has to be setup in case. See module-info.java for details -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-hibernate6-base</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-apt-utils</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
@@ -61,82 +68,6 @@
     
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-resource</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>add-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>target/generated/resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process-resources</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <outputDirectory>target/generated/resources</outputDirectory>
-                            <processors>
-                                <!-- list of processors to use -->
-                                <processor>com.blazebit.apt.service.ServiceProviderAnnotationProcessor</processor>
-                            </processors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires java.sql;
-                                        requires jakarta.persistence;
-                                        requires org.hibernate.orm.core;
-                                        requires com.blazebit.persistence.core;
-                                        requires transitive com.blazebit.persistence.integration.hibernate.base;
-                                        requires com.blazebit.persistence.view;
-                                        requires jakarta.transaction;
-                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate62Access;
-                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate62EntityManagerFactoryIntegrator;
-                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory;
-                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate62Integrator;
-                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
-                                        provides org.hibernate.boot.spi.AdditionalMappingContributor with com.blazebit.persistence.integration.hibernate.Hibernate62AdditionalMappingContributor;
-                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate62ServiceContributor;
-                                        exports com.blazebit.persistence.integration.hibernate;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <inherited>true</inherited>
@@ -165,17 +96,8 @@
         <!-- Profiles for various Hibernate 6 versions -->
         <profile>
             <id>hibernate-6.2</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
-            </properties>
-        </profile>
-        <profile>
-            <id>hibernate-6.3</id>
-            <properties>
-                <version.hibernate>${version.hibernate-6.3}</version.hibernate>
             </properties>
         </profile>
         <profile>
@@ -185,13 +107,10 @@
             </properties>
         </profile>
         <profile>
-            <id>hibernate-6.5</id>
-            <properties>
-                <version.hibernate>${version.hibernate-6.5}</version.hibernate>
-            </properties>
-        </profile>
-        <profile>
             <id>hibernate-6.6</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>

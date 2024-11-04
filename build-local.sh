@@ -11,20 +11,18 @@ BUILD="$3"
 PROPERTIES=
 
 if [ "$JPA_PROVIDER" == "" ]; then
-	echo "JPA provider (hibernate-4.2, hibernate-4.3, hibernate-5.0, hibernate-5.1, hibernate-5.2, datanucleus-4, datanucleus-5, eclipselink, openjpa) [hibernate-5.2]: "
+	echo "JPA provider (hibernate-6.6, hibernate-6.4, hibernate-6.2, eclipselink) [hibernate-6.6]: "
 	read input </dev/tty
 	
 	if [ "$input" == "" ]; then
-		JPA_PROVIDER="hibernate-5.2"
-	elif [ "$input" == "hibernate-4.2" ]; then
-		JPA_PROVIDER="hibernate"
+		JPA_PROVIDER="hibernate-6.6"
 	else
 		JPA_PROVIDER=$input
 	fi
 fi
 
 if [ "$DBMS" == "" ]; then
-	echo "DBMS (h2, mysql, postgresql, sqlite, db2, firebird, oracle, mssql) [h2]: "
+	echo "DBMS (h2, mysql, postgresql, db2, oracle, mssql) [h2]: "
 	read input </dev/tty
 	
 	if [ "$input" == "" ]; then

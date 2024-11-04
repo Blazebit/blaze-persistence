@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocume
 import com.blazebit.persistence.view.testsuite.basic.model.SelectFetchingPrimitivePersonView;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -19,10 +19,10 @@ import com.blazebit.reflection.ReflectionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;

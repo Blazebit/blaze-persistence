@@ -5,10 +5,8 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.HibernateJpaProvider;
 import com.blazebit.persistence.integration.hibernate.base.function.AbstractHibernateEntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import jakarta.persistence.EntityManager;
@@ -24,7 +22,6 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class Hibernate62EntityManagerFactoryIntegrator extends AbstractHibernateEntityManagerFactoryIntegrator {
 
     @Override

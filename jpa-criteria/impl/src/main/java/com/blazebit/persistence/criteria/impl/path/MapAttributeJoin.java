@@ -12,13 +12,13 @@ import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.criteria.impl.expression.function.EntryFunction;
 import com.blazebit.persistence.criteria.impl.support.MapJoinSupport;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
 import java.util.Map;
 
 /**

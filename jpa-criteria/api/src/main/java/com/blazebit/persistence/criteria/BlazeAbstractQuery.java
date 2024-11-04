@@ -5,15 +5,15 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.AbstractQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Set;
 
 /**
- * An extended version of {@link AbstractQuery} that allows setting an alias for {@link javax.persistence.criteria.From} elements.
+ * An extended version of {@link AbstractQuery} that allows setting an alias for {@link jakarta.persistence.criteria.From} elements.
  *
  * @param <T> the type of the result
  * @author Christian Beikov

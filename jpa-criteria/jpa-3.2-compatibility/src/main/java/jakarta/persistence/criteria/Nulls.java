@@ -24,16 +24,16 @@ package jakarta.persistence.criteria;
  * @since 3.2
  */
 public enum Nulls {
-    /**
-     * Null precedence not specified.
-     */
-    NONE,
-    /**
-     * Null values occur at the beginning of the result set.
-     */
-    FIRST,
-    /**
-     * Null values occur at the end of the result set.
-     */
-    LAST
+	/**
+	 * Null precedence not specified.
+	 */
+	NONE,
+	/**
+	 * Null values occur at the beginning of the result set.
+	 */
+	FIRST,
+	/**
+	 * Null values occur at the end of the result set.
+	 */
+	LAST
 }

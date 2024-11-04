@@ -7,7 +7,7 @@ import com.blazebit.persistence.view.StaticMetamodel;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticMetamodel(BView.class)

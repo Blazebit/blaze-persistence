@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Order;
+import jakarta.persistence.criteria.Order;
 
 /**
  * An extended version of {@link Order}.

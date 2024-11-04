@@ -12,17 +12,17 @@ import ${package}.model.Cat;
 import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.repository.CatSimpleViewRepository;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.*;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.*;
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.repository.config.EnableBlazeRepositories;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = SampleTest.TestConfig.class)
 public class SampleTest extends AbstractSampleTest {
 
@@ -35,7 +35,7 @@ public class SampleTest extends AbstractSampleTest {
             final Iterable<CatSimpleView> listIterable = catSimpleViewRepository.findAll();
             final List<CatSimpleView> list = new ArrayList<>();
             listIterable.forEach(view -> list.add(view));
-            Assert.assertEquals(6, list.size());
+            assertEquals(6, list.size());
         });
     }
 
@@ -43,9 +43,7 @@ public class SampleTest extends AbstractSampleTest {
     @ComponentScan("${package}")
     @ImportResource("/META-INF/application-config.xml")
     @EnableEntityViews(basePackages = { "${package}.view"})
-    @EnableBlazeRepositories(
-            basePackages = "${package}.repository",
-            entityManagerFactoryRef = "myEmf")
+    @EnableBlazeRepositories(basePackages = "${package}.repository")
     static class TestConfig {
     }
 }

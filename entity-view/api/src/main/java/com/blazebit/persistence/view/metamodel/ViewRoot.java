@@ -9,7 +9,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 import java.util.List;
 
 /**

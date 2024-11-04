@@ -35,13 +35,6 @@ jobs:
             jdk: 17
 
 ################################################
-# hibernate-6.5
-################################################
-          - rdbms: h2
-            component: hibernate-6.5
-            jdk: 17
-
-################################################
 # hibernate-6.6
 ################################################
           - rdbms: h2
@@ -61,20 +54,15 @@ jobs:
         run: echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
-      - name: Set up Java 8
-        uses: AdoptOpenJDK/install-jdk@v1
-        with:
-          version: 8
-          targets: JDK8_HOME;JAVA_HOME
       - name: Set up Requested JDK
         uses: actions/setup-java@v4
-        if: ${{ matrix.jdk != 8 && !endsWith(matrix.jdk, '-ea') }}
+        if: ${{ !endsWith(matrix.jdk, '-ea') }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
       - name: Set up EA JDK
         uses: actions/setup-java@v4
-        if: ${{ matrix.jdk != 8 && endsWith(matrix.jdk, '-ea') }}
+        if: ${{ endsWith(matrix.jdk, '-ea') }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'zulu'
@@ -97,7 +85,6 @@ jobs:
 
       - name: Run build script
         env:
-          JDK8_HOME: ${{ env.JDK8_HOME }}
           RDBMS: ${{ matrix.rdbms }}
           COMPONENT: ${{ matrix.component }}
           JDK: ${{ matrix.jdk }}

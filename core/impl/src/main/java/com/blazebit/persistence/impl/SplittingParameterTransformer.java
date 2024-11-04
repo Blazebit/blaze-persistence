@@ -9,9 +9,9 @@ import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;

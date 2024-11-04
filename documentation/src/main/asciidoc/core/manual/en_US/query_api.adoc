@@ -2,9 +2,9 @@
 
 The central element to the construction of criteria or query builders is the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html[`CriteriaBuilderFactory`].
 The factory provides methods for constructing <<dml-statements,DML statements>>, <<set-operations,left nested set operations>> and
-link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`CriteriaBuilder`] instances for `SELECT` statements.
+link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(jakarta.persistence.EntityManager,%20java.lang.Class)[`CriteriaBuilder`] instances for `SELECT` statements.
 
-The top level query builders allow access to the query string and also to construct JPA `javax.persistence.Query` or `javax.persistence.TypedQuery` instances through the interfaces
+The top level query builders allow access to the query string and also to construct JPA `jakarta.persistence.Query` or `jakarta.persistence.TypedQuery` instances through the interfaces
 
 * link:{core_jdoc}/persistence/Queryable.html[`Queryable`]
 * link:{core_jdoc}/persistence/Executable.html[`Executable`]

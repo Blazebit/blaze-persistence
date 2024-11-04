@@ -14,9 +14,9 @@ import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.OrderColumn;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ListAttribute;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ListAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -112,8 +112,8 @@ public final class MetamodelUtils {
     public static boolean isIndexedList(EntityMetamodel metamodel, Class<?> entityClass, Expression expression, String mapping) {
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, metamodel.managedType(entityClass), null);
         expression.accept(visitor);
-        Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
-        Iterator<Map.Entry<Attribute<?, ?>, javax.persistence.metamodel.Type<?>>> iter = possibleTargets.entrySet().iterator();
+        Map<Attribute<?, ?>, jakarta.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+        Iterator<Map.Entry<Attribute<?, ?>, jakarta.persistence.metamodel.Type<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already
         Map.Entry<Attribute<?, ?>, ?> targetEntry = iter.next();
         boolean indexed = isIndexedList(targetEntry.getKey());

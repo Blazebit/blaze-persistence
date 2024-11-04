@@ -14,8 +14,8 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.List;
 

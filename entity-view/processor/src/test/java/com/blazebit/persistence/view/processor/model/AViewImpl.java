@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticImplementation(AView.class)

@@ -22,7 +22,7 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 /**
  *

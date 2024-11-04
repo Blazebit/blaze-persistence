@@ -11,7 +11,7 @@ import com.blazebit.persistence.testsuite.entity.DocumentInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
