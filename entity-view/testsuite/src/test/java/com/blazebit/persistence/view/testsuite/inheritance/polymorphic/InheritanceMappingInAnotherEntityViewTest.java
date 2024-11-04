@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import static org.junit.Assert.assertTrue;
 

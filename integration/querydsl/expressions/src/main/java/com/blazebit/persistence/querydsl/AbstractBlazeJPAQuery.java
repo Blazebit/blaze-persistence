@@ -32,10 +32,10 @@ import com.querydsl.jpa.JPQLSerializer;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.AbstractJPAQuery;
 
-import javax.annotation.Nullable;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -311,9 +311,9 @@ public abstract class AbstractBlazeJPAQuery<T, Q extends AbstractBlazeJPAQuery<T
         try {
             Query query = createQuery(getMetadata().getModifiers(), false);
             return (T) getSingleResult(query);
-        } catch (javax.persistence.NoResultException e) {
+        } catch (jakarta.persistence.NoResultException e) {
             return null;
-        } catch (javax.persistence.NonUniqueResultException e) {
+        } catch (jakarta.persistence.NonUniqueResultException e) {
             throw new NonUniqueResultException(e);
         } finally {
             reset();

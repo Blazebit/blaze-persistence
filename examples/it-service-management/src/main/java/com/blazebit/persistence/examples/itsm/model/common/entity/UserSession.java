@@ -8,10 +8,10 @@ package com.blazebit.persistence.examples.itsm.model.common.entity;
 import java.time.Instant;
 import java.util.Objects;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Giovanni Lovato

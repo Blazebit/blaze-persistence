@@ -29,10 +29,10 @@ import com.blazebit.persistence.examples.itsm.model.ticket.entity.TicketComment_
 import com.blazebit.persistence.examples.itsm.model.ticket.entity.TicketFilter;
 import com.blazebit.persistence.examples.itsm.model.ticket.entity.Ticket_;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 
 
 /**

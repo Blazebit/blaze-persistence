@@ -75,9 +75,9 @@ import javassist.compiler.Parser;
 import javassist.compiler.SymbolTable;
 import javassist.compiler.ast.Stmnt;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -1001,7 +1001,6 @@ public class ProxyFactory {
 
     private <T> Class<? extends T> defineOrGetClass(EntityViewManager entityViewManager, boolean unsafe, Class<?> clazz, Class<?> neighbourClazz, CtClass cc) throws IOException, IllegalAccessException, NoSuchFieldException, CannotCompileException {
         Class<? extends T> c;
-        boolean newlyDefined = false;
         try {
             // Ask the package opener to allow deep access, otherwise defining the class will fail
             if (clazz.getPackage() != null) {
@@ -1013,7 +1012,6 @@ public class ProxyFactory {
             }
 
             c = (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), neighbourClazz);
-            newlyDefined = true;
         } catch (CannotCompileException | LinkageError ex) {
             // If there are multiple proxy factories for the same class loader
             // we could end up in defining a class multiple times, so we check if the classloader
@@ -1042,23 +1040,14 @@ public class ProxyFactory {
             }
         }
         if (entityViewManager != null) {
-            updateEvmReferences(c, entityViewManager, !newlyDefined);
+            updateEvmReferences(c, entityViewManager );
         }
         return c;
     }
 
-    private void updateEvmReferences(Class<?> entityViewClass, EntityViewManager evm, boolean updateSerializableEvmDelegate) {
+    private void updateEvmReferences(Class<?> entityViewClass, EntityViewManager evm) {
         try {
             entityViewClass.getField(SerializableEntityViewManager.EVM_FIELD_NAME).set(null, evm);
-            if (updateSerializableEvmDelegate) {
-                SerializableEntityViewManager serializableEvm =
-                    (SerializableEntityViewManager) entityViewClass.getField(
-                        SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null);
-                Field serializableEvmDelegateField = SerializableEntityViewManager.class.getDeclaredField(
-                    SerializableEntityViewManager.SERIALIZABLE_EVM_DELEGATE_FIELD_NAME);
-                serializableEvmDelegateField.setAccessible(true);
-                serializableEvmDelegateField.set(serializableEvm, evm);
-            }
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
@@ -1902,7 +1891,7 @@ public class ProxyFactory {
                     if (jpaEntity) {
                         IdentifiableType<?> identifiableType = (IdentifiableType<?>) basicType.getManagedType();
 
-                        for (javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(identifiableType)) {
+                        for (jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttribute : JpaMetamodelUtils.getIdAttributes(identifiableType)) {
                             Class<?> idClass = JpaMetamodelUtils.resolveFieldClass(basicType.getJavaType(), idAttribute);
                             String idAccessor = addIdAccessor(cc, identifiableType, idAttribute, pool.get(idClass.getName()));
                             sb.append(" && ");
@@ -3257,7 +3246,7 @@ public class ProxyFactory {
         return declaringClass.getName() + "#" + name;
     }
 
-    private String addIdAccessor(CtClass declaringClass, IdentifiableType<?> type, javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, CtClass idType) throws NotFoundException, CannotCompileException {
+    private String addIdAccessor(CtClass declaringClass, IdentifiableType<?> type, jakarta.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute, CtClass idType) throws NotFoundException, CannotCompileException {
         String name = "$$_" + ((EntityType<?>) type).getName() + "_" + jpaIdAttribute.getName();
         CtMethod[] methods = declaringClass.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++) {
@@ -3499,11 +3488,11 @@ public class ProxyFactory {
 
     public void clear() {
         for (Class<?> proxyClass : proxyClasses.values()) {
-            updateEvmReferences(proxyClass, null, true);
+            updateEvmReferences(proxyClass, null );
         }
         proxyClasses.clear();
         for (Class<?> unsafeProxyClass : unsafeProxyClasses.values()) {
-            updateEvmReferences(unsafeProxyClass, null, true);
+            updateEvmReferences(unsafeProxyClass, null );
         }
         unsafeProxyClasses.clear();
         baseClasses.clear();

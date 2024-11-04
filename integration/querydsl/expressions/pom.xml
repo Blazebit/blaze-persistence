@@ -14,9 +14,50 @@
     <name>Blazebit Persistence Integration QueryDSL Expressions</name>
     <dependencies>
         <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-jpa</artifactId>
             <version>${querydsl.version}</version>
+            <classifier>jakarta</classifier>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -38,12 +79,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
-            <version>2.2</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>3.0.2</version>
@@ -55,6 +90,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
+                    <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                     <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
                     <isOffline>true</isOffline>
                     <offlineLinks>
@@ -96,60 +132,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>jdk9+</id>
-            <activation>
-                <jdk>[1.9,)</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
-                            <dependencySourceIncludes>com.querydsl:*</dependencySourceIncludes>
-                            <isOffline>true</isOffline>
-                            <offlineLinks>
-                                <offlineLink>
-                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-jpa/${querydsl.version}/</url>
-                                    <location>../../../javadoc/querydsl-jpa-${querydsl.version}/</location>
-                                </offlineLink>
-                                <offlineLink>
-                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-sql/${querydsl.version}/</url>
-                                    <location>../../../javadoc/querydsl-sql-${querydsl.version}/</location>
-                                </offlineLink>
-                                <offlineLink>
-                                    <url>https://javadoc.io/doc/com.querydsl/querydsl-core/${querydsl.version}/</url>
-                                    <location>../../../javadoc/querydsl-core-${querydsl.version}/</location>
-                                </offlineLink>
-                            </offlineLinks>
-                            <tags>
-                                <tag>
-                                    <name>apiNote</name>
-                                    <placement>a</placement>
-                                    <head>API Note:</head>
-                                </tag>
-                            </tags>
-                            <additionalDependencies>
-                                <additionalDependency>
-                                    <groupId>com.querydsl</groupId>
-                                    <artifactId>querydsl-sql</artifactId>
-                                    <version>${querydsl.version}</version>
-                                </additionalDependency>
-                            </additionalDependencies>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>com.google.code.findbugs</groupId>
-                                <artifactId>jsr305</artifactId>
-                                <version>3.0.2</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

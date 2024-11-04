@@ -9,8 +9,8 @@ import com.blazebit.persistence.view.metamodel.BasicType;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Type;
 
 /**

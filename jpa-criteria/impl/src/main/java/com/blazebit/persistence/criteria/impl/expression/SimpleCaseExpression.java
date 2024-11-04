@@ -5,12 +5,13 @@
 
 package com.blazebit.persistence.criteria.impl.expression;
 
+import com.blazebit.persistence.criteria.BlazeExpression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
-import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.SimpleCase;
+import jakarta.persistence.criteria.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,6 +69,25 @@ public class SimpleCaseExpression<C, R> extends AbstractExpression<R> implements
     @Override
     public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
         WhenClause whenClause = new WhenClause(criteriaBuilder.value(condition), result);
+        whenClauses.add(whenClause);
+        adjustJavaType(result);
+        return this;
+    }
+
+    @Override
+    public SimpleCase<C, R> when(Expression<? extends C> condition, R result) {
+        BlazeExpression<R> resultExpression = criteriaBuilder.value(result);
+        //noinspection unchecked
+        WhenClause whenClause = new WhenClause((Expression<C>) condition, resultExpression);
+        whenClauses.add(whenClause);
+        adjustJavaType(resultExpression);
+        return this;
+    }
+
+    @Override
+    public SimpleCase<C, R> when(Expression<? extends C> condition, Expression<? extends R> result) {
+        //noinspection unchecked
+        WhenClause whenClause = new WhenClause((Expression<C>) condition, result);
         whenClauses.add(whenClause);
         adjustJavaType(result);
         return this;

@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * A base interface for executable query builders.

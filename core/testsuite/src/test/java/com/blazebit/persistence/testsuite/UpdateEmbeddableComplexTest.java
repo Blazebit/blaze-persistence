@@ -26,7 +26,7 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.

@@ -9,18 +9,18 @@ import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * @author Christian Beikov
  * @since 1.2.0
  */
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@jakarta.ejb.Singleton
+@jakarta.ejb.Startup
 public class CriteriaBuilderFactoryProducer {
 
     // inject your entity manager factory

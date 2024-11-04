@@ -6,8 +6,8 @@
 package com.blazebit.persistence.integration.jsonb;
 
 
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.stream.JsonParser;
+import jakarta.json.bind.serializer.DeserializationContext;
+import jakarta.json.stream.JsonParser;
 
 /**
  * This interface is used to supply an entity view id from platform specific sources

@@ -18,8 +18,8 @@ import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;

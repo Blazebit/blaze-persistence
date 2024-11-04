@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * An extended version of {@link Path}.

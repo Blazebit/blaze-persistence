@@ -18,9 +18,9 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

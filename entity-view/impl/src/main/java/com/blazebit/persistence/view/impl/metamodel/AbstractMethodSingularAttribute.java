@@ -18,8 +18,8 @@ import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -116,7 +116,7 @@ public abstract class AbstractMethodSingularAttribute<X, Y> extends AbstractMeth
         ManagedType<?> managedType = context.getEntityMetamodel().getManagedType(declaringType.getEntityClass());
         this.mappedBy = mapping.determineMappedBy(managedType, this.mapping, context, embeddableMapping);
         this.disallowOwnedUpdatableSubview = context.isDisallowOwnedUpdatableSubview() && mapping.determineDisallowOwnedUpdatableSubview(context, embeddableMapping, updateMappableAttribute) && type instanceof ManagedViewType<?> && mappedBy == null
-                && updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() != javax.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
+                && updateMappableAttribute != null && updateMappableAttribute.getPersistentAttributeType() != jakarta.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
 
         // The declaring type must be mutable, otherwise attributes can't have cascading
         if (mapping.isId() || mapping.isVersion() || !declaringType.isUpdatable() && !declaringType.isCreatable()) {

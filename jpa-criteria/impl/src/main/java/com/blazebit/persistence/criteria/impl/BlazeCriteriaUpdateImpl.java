@@ -13,12 +13,12 @@ import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 import com.blazebit.persistence.criteria.impl.path.AbstractPath;
 import com.blazebit.persistence.criteria.impl.path.SingularAttributePath;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

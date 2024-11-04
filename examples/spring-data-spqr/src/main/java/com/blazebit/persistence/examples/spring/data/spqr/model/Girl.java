@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.spring.data.spqr.model;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class Girl extends Child {

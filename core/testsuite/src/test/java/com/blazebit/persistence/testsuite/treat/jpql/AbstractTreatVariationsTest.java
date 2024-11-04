@@ -33,8 +33,8 @@ import org.junit.FixMethodOrder;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;

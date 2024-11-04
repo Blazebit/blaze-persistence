@@ -12,13 +12,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.envers.Audited;
 
@@ -31,7 +31,7 @@ import com.blazebit.persistence.examples.itsm.model.common.entity.User;
  */
 @Entity
 @Audited
-public class TicketComment implements Serializable {
+public class TicketComment implements Comparable<TicketComment>, Serializable {
 
     @Id
     @GeneratedValue
@@ -95,4 +95,8 @@ public class TicketComment implements Serializable {
         return this.attachments;
     }
 
+    @Override
+    public int compareTo(TicketComment o) {
+        return creationInstant.compareTo(o.creationInstant);
+    }
 }

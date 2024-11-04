@@ -8,8 +8,8 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

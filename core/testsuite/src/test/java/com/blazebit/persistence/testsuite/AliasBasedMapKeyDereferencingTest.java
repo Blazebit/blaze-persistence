@@ -15,11 +15,11 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.HashMap;
 import java.util.Map;
 

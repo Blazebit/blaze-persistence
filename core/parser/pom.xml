@@ -24,10 +24,9 @@
     </properties>
 
     <dependencies>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -41,7 +40,7 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <version>4.7.2</version>
+            <version>4.13.0</version>
             <exclusions>
                 <exclusion>
                     <artifactId>org.abego.treelayout.core</artifactId>
@@ -96,7 +95,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.7.2</version>
+                <version>4.13.0</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -124,36 +123,6 @@
                             <sources>
                                 <source>target/generated/antlr</source>
                             </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires java.sql;
-                                        requires java.persistence;
-                                        requires com.blazebit.common.utils;
-                                        exports com.blazebit.persistence.parser;
-                                        exports com.blazebit.persistence.parser.expression;
-                                        exports com.blazebit.persistence.parser.expression.modifier;
-                                        exports com.blazebit.persistence.parser.predicate;
-                                        exports com.blazebit.persistence.parser.util;
-                                        uses com.blazebit.persistence.parser.util.TypeConverterContributor;
-                                    }
-                                </moduleInfoSource>
-                            </module>
                         </configuration>
                     </execution>
                 </executions>

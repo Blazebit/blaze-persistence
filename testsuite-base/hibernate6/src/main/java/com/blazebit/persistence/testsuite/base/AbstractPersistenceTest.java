@@ -40,7 +40,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     private static final int HIBERNATE_MINOR_VERSION;
 
     static {
-        String version = org.hibernate.Version.getVersionString();
+        String version;
+        if (org.hibernate.Version.class.getModule().getDescriptor() == null) {
+            version = org.hibernate.Version.getVersionString();
+        } else {
+            version = org.hibernate.Version.class.getModule().getDescriptor().version().get().toString();
+        }
         String[] versionParts = version.split("[\\.-]");
         HIBERNATE_MAJOR_VERSION = Integer.parseInt(versionParts[0]);
         HIBERNATE_MINOR_VERSION = Integer.parseInt(versionParts[1]);

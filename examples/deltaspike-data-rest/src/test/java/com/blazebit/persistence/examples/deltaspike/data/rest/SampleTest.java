@@ -13,7 +13,7 @@ import com.blazebit.persistence.examples.deltaspike.data.rest.view.CatWithOwnerV
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @author Christian Beikov

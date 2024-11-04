@@ -7,7 +7,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;

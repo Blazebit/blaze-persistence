@@ -20,9 +20,9 @@ import com.blazebit.persistence.spi.ExtendedAttribute;
 import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.FetchType;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

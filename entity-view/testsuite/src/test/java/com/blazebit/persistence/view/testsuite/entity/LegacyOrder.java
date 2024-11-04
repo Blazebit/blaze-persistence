@@ -7,9 +7,9 @@ package com.blazebit.persistence.view.testsuite.entity;
 
 import com.blazebit.persistence.testsuite.entity.LongSequenceEntity;
 
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
 

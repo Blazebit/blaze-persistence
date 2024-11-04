@@ -14,9 +14,9 @@ import com.blazebit.persistence.view.impl.accessor.AttributeAccessor;
 import com.blazebit.persistence.view.impl.accessor.PassthroughAttributeAccessor;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

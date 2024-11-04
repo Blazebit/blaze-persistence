@@ -7,7 +7,7 @@ package com.blazebit.persistence.criteria.impl.expression;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 import java.util.Collections;
 import java.util.List;
 

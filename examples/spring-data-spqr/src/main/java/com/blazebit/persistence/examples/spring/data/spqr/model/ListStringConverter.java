@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.spring.data.spqr.model;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.util.ArrayList;
 import java.util.List;
 

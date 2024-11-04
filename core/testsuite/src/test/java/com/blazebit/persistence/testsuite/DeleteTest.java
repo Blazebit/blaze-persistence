@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.SimpleReturningBuilder;

@@ -7,7 +7,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * @author Christian Beikov

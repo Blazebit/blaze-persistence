@@ -6,11 +6,9 @@
 package com.blazebit.persistence.examples.itsm.model.ticket.entity;
 
 import com.blazebit.persistence.examples.itsm.model.article.entity.LocalizedEntity;
-import com.blazebit.persistence.examples.itsm.model.article.entity.LocalizedEntity_;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.OrderBy;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -41,7 +39,6 @@ public class TicketStatus extends LocalizedEntity
 
     private String theme;
 
-    @OrderBy(LocalizedEntity_.NAME)
     @ManyToMany
     private SortedSet<TicketStatus> next = new TreeSet<>();
 

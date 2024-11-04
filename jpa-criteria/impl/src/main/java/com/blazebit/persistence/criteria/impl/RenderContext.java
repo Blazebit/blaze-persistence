@@ -7,8 +7,8 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
 
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Selection;
 
 /**
  * @author Christian Beikov

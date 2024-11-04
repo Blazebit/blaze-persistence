@@ -10,7 +10,7 @@ import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  *

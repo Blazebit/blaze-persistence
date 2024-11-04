@@ -12,10 +12,10 @@
 
 package com.blazebit.persistence.integration.jsonb.jsonstructure;
 
-import javax.json.JsonObject;
-import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
-import javax.json.stream.JsonParser;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
+import jakarta.json.bind.JsonbException;
+import jakarta.json.stream.JsonParser;
 import java.util.Iterator;
 
 /**

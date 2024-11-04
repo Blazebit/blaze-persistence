@@ -7,8 +7,8 @@ package com.blazebit.persistence.view.impl.tx;
 
 import com.blazebit.persistence.view.spi.TransactionAccess;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

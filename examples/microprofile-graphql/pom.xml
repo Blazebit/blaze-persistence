@@ -20,33 +20,44 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.microprofile.graphql</module.name>
-        <main.java.version>1.8</main.java.version>
 
-        <version.hibernate-orm>5.4.22.Final</version.hibernate-orm>
+        <version.hibernate-orm>${version.hibernate-6.6}</version.hibernate-orm>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.jboss.spec</groupId>
-            <artifactId>jboss-javaee-8.0</artifactId>
-            <version>1.0.4.Final</version>
-            <type>pom</type>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.taglibs</groupId>
-                    <artifactId>taglibs-standard-spec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.taglibs</groupId>
-                    <artifactId>taglibs-standard-impl</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.8.11.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -120,11 +131,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate6-base</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -144,19 +155,6 @@
             <groupId>org.jboss.weld.se</groupId>
             <artifactId>weld-se-core</artifactId>
             <version>${version.weld}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss</groupId>
-                    <artifactId>jandex</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- Since we are including a module-info.class file, we need at least 2.0.4.Final -->
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jandex</artifactId>
-            <version>${version.jandex}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -185,7 +183,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
         </dependency>
     </dependencies>
     

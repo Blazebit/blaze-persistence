@@ -10,7 +10,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -78,7 +78,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewTypeI
             LOG.warning("The method for the " + ((AbstractMethodAttribute<?, ?>) idAttribute).getLocation() + " is non-public and declared in a different package " + javaMethod.getDeclaringClass().getPackage() + " than the view type " + getJavaType().getName() +
                     " which makes it impossible to allow checking for equality with user provided implementations of the view type. If you don't need that, you can ignore this warning.");
             // We also disallow interface equality when the view is defined for an abstract entity type
-        } else if (getJpaManagedType().getPersistenceType() != javax.persistence.metamodel.Type.PersistenceType.ENTITY || java.lang.reflect.Modifier.isAbstract(getJpaManagedType().getJavaType().getModifiers())) {
+        } else if (getJpaManagedType().getPersistenceType() != jakarta.persistence.metamodel.Type.PersistenceType.ENTITY || java.lang.reflect.Modifier.isAbstract(getJpaManagedType().getJavaType().getModifiers())) {
             supportsUserTypeEquals = false;
             LOG.warning("The view class " + getJavaType().getName() + " is defined for an abstract or non-entity type which is why id-based equality can't be checked on a user provided instance. If you don't need that, you can ignore this warning.");
         }

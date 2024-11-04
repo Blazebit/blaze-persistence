@@ -17,7 +17,7 @@
     <artifactId>blaze-persistence-archetype-core-sample</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Archetype Core Sample</name>
+    <name>Blazebit Persistence Archetype Core Sample Jakarta</name>
 
     <properties>
         <module.name>com.blazebit.persistence.archetype.core.sample</module.name>

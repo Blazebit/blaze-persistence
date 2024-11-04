@@ -20,18 +20,18 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbConfig;
-import javax.json.bind.config.PropertyVisibilityStrategy;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.bind.JsonbConfig;
+import jakarta.json.bind.config.PropertyVisibilityStrategy;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Persistence;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.UriBuilder;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -115,7 +115,7 @@ public abstract class AbstractJaxrsTest {
 
     @Before
     public void initInstance() {
-        ((JettyHttpContainer) SERVER.getHandler()).getApplicationHandler().getInjectionManager().inject(this);
+        ((JettyHttpContainer) (Object) SERVER.getHandler()).getApplicationHandler().getInjectionManager().inject(this);
         dropAndCreateSchema();
         this.webTarget = ClientBuilder.newClient()
                 .register(JsonbJsonProvider.class)
@@ -125,7 +125,7 @@ public abstract class AbstractJaxrsTest {
 
     private void dropAndCreateSchema() {
         Map<String, String> properties = new HashMap<>();
-        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
+        properties.put("jakarta.persistence.schema-generation.database.action", "drop-and-create");
         Persistence.createEntityManagerFactory("TestsuiteBase", properties);
     }
 

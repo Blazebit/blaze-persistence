@@ -24,10 +24,10 @@
     </properties>
 
     <dependencies>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
+
         <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
 

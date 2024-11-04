@@ -9,7 +9,7 @@ import com.blazebit.persistence.deltaspike.data.EntityViewManagerResolver;
 import com.blazebit.persistence.deltaspike.data.testsuite.qualifier.Restricted;
 import com.blazebit.persistence.view.EntityViewManager;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @author Moritz Becker

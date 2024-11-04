@@ -10,8 +10,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;

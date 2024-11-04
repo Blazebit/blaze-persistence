@@ -11,8 +11,8 @@ import com.blazebit.persistence.integration.jaxrs.jsonb.testsuite.view.DocumentU
 import com.blazebit.persistence.integration.jaxrs.jsonb.testsuite.view.DocumentView;
 import org.junit.Test;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 
 import static org.junit.Assert.assertEquals;
 

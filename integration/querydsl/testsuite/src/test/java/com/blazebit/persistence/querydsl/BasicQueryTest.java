@@ -48,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -560,16 +560,14 @@ public class BasicQueryTest extends AbstractCoreTest {
             entityManager.persist(person);
 
             Document theBook = new Document();
-            theBook.setId(1337L);
             theBook.setName("test");
             theBook.setOwner(person);
-            entityManager.merge(theBook);
+            entityManager.persist(theBook);
 
             Document theSequel = new Document();
-            theSequel.setId(42L);
             theSequel.setName("test2");
             theSequel.setOwner(person);
-            entityManager.merge(theSequel);
+            entityManager.persist(theSequel);
         });
 
         doInJPA(entityManager -> {
@@ -578,7 +576,7 @@ public class BasicQueryTest extends AbstractCoreTest {
                         queryFactory.intersect(
                                 select(document).from(document).where(document.id.eq(41L)),
                                 queryFactory.except(
-                                        select(document).from(document).where(document.id.eq(42L)),
+                                        select(document).from(document).where(document.name.eq("test2")),
                                         select(document).from(document).where(document.id.eq(43L)))),
                         select(document).from(document).where(document.id.eq(46L)))
                     .fetch();
@@ -598,27 +596,25 @@ public class BasicQueryTest extends AbstractCoreTest {
             entityManager.persist(person);
 
             Document theBook = new Document();
-            theBook.setId(1337L);
             theBook.setName("test");
             theBook.setOwner(person);
-            entityManager.merge(theBook);
+            entityManager.persist(theBook);
 
             Document theSequel = new Document();
-            theSequel.setId(42L);
             theSequel.setName("test2");
             theSequel.setOwner(person);
-            entityManager.merge(theSequel);
+            entityManager.persist(theSequel);
         });
 
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
             SetExpression<Long> union = queryFactory
-                    .union(select(document.id).from(document).where(document.id.eq(1337L)),
+                    .union(select(document.id).from(document).where(document.name.eq("test")),
                             queryFactory.intersect(
                                     select(document.id).from(document).where(document.id.eq(41L)),
                                     queryFactory.except(
-                                            select(document.id).from(document).where(document.id.eq(42L)),
+                                            select(document.id).from(document).where(document.name.eq("test2")),
                                             select(document.id).from(document).where(document.id.eq(43L)))),
                             select(document.id).from(document).where(document.id.eq(46L))
                     );

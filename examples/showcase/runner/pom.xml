@@ -17,17 +17,9 @@
     <artifactId>blaze-persistence-examples-showcase-runner</artifactId>
     <packaging>pom</packaging>
 
-    <profiles>
-        <profile>
-            <id>jdk-8</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <modules>
-                <module>cdi</module>
-                <module>spring</module>
-            </modules>
-        </profile>
-    </profiles>
+    <modules>
+        <module>cdi</module>
+        <module>spring</module>
+    </modules>
 
 </project>

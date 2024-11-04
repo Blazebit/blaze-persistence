@@ -10,8 +10,8 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 
-import javax.persistence.criteria.CriteriaBuilder.Coalesce;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.Coalesce;
+import jakarta.persistence.criteria.Expression;
 import java.util.ArrayList;
 import java.util.List;
 

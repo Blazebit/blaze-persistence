@@ -7,8 +7,8 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.ReturningResult;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import java.util.List;
 
 /**

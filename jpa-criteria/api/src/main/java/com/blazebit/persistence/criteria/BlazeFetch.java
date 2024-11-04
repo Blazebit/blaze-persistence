@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Fetch;
 
 /**
  * An extended version of {@link Fetch}.

@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.spi;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.Map;
 
 /**

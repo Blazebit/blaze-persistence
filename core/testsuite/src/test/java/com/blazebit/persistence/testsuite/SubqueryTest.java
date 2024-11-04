@@ -8,8 +8,8 @@ package com.blazebit.persistence.testsuite;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;

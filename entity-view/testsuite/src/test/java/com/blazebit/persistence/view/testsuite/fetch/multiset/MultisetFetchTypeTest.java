@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;

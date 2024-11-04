@@ -7,8 +7,8 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Selection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

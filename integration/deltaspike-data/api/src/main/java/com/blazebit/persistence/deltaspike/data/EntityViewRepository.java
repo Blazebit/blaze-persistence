@@ -7,7 +7,7 @@ package com.blazebit.persistence.deltaspike.data;
 
 import org.apache.deltaspike.core.spi.activation.Deactivatable;
 
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.io.Serializable;
 import java.util.List;
 
@@ -24,7 +24,7 @@ import java.util.List;
 public interface EntityViewRepository<E, V, PK extends Serializable> extends Deactivatable {
     /**
      * Entity lookup by primary key. Convenicence method around
-     * {@link javax.persistence.EntityManager#find(Class, Object)}.
+     * {@link jakarta.persistence.EntityManager#find(Class, Object)}.
      * @param primaryKey        DB primary key.
      * @return                  Entity identified by primary or null if it does not exist.
      */

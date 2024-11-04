@@ -84,7 +84,7 @@ public interface ReturningModificationCriteriaBuilderFactory<X> {
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass, String alias);
 
     /**
-     * Like {@link CriteriaBuilderFactory#updateCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#updateCollection(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
      *
      * @param updateOwnerClass The entity class owning the collection for the update criteria

@@ -9,8 +9,8 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
-import javax.persistence.criteria.CriteriaBuilder.Case;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.Case;
+import jakarta.persistence.criteria.Expression;
 import java.util.ArrayList;
 import java.util.List;
 

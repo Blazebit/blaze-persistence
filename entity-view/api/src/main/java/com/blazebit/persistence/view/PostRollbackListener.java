@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A listener for getting a callback after rolling back a flush for an entity view.

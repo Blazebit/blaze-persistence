@@ -12,14 +12,14 @@
 
 package com.blazebit.persistence.integration.jsonb.jsonstructure;
 
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
-import javax.json.stream.JsonLocation;
-import javax.json.stream.JsonParser;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue;
+import jakarta.json.bind.JsonbException;
+import jakarta.json.stream.JsonLocation;
+import jakarta.json.stream.JsonParser;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.Deque;

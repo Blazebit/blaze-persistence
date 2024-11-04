@@ -12,8 +12,8 @@ import com.blazebit.persistence.view.impl.mapper.Mapper;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  *

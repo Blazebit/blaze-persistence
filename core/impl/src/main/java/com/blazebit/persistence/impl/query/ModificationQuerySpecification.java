@@ -16,8 +16,8 @@ import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

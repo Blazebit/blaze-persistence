@@ -14,7 +14,7 @@ import com.blazebit.persistence.view.testsuite.subview.treat.model.Container;
 import com.blazebit.persistence.view.testsuite.subview.treat.model.ContainerItem1;
 import org.junit.Test;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import static org.junit.Assert.assertEquals;
 

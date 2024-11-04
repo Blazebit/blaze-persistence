@@ -191,7 +191,7 @@ public final class ConfigurationProperties {
     public static final String CRITERIA_NEGATION_WRAPPER = "com.blazebit.persistence.criteria_negation_wrapper";
 
     /**
-     * If set to true, values passed to the JPA {@link javax.persistence.criteria.CriteriaBuilder} API are rendered as parameters,
+     * If set to true, values passed to the JPA {@link jakarta.persistence.criteria.CriteriaBuilder} API are rendered as parameters,
      * otherwise values are rendered as literals.
      * Valid values for this property are <code>true</code> and <code>false</code>.
      * Default is <code>true</code>.

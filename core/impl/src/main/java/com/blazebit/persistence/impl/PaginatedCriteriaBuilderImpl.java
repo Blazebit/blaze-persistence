@@ -55,8 +55,8 @@ import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.AttributeAccessor;
 
-import javax.persistence.Parameter;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TypedQuery;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;

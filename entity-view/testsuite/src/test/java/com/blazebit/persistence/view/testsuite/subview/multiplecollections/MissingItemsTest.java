@@ -18,7 +18,7 @@ import com.blazebit.persistence.view.testsuite.subview.multiplecollections.model
 import com.blazebit.persistence.view.testsuite.subview.multiplecollections.model.C;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Set;
 

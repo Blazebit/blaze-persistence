@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 /**
  * A builder for subquery criteria queries.

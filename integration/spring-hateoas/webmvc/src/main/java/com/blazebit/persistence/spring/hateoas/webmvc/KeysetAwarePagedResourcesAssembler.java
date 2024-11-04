@@ -45,7 +45,8 @@ import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class KeysetAwarePagedResourcesAssembler<T> implements RepresentationModelAssembler<Page<T>, PagedModel<EntityModel<T>>> {
 

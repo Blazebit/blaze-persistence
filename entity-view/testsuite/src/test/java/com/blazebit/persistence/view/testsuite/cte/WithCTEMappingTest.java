@@ -7,7 +7,7 @@ package com.blazebit.persistence.view.testsuite.cte;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.*;
 import org.junit.Before;

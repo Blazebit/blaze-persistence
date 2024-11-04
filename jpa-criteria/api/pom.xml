@@ -28,46 +28,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-            <version>${project.version}</version>
-            <optional>true</optional>
-        </dependency>
 
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
         <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires transitive com.blazebit.persistence.core;
-                                        exports com.blazebit.persistence.criteria;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

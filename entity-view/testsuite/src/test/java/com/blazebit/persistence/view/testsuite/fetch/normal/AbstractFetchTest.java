@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimpleDocument
 import com.blazebit.persistence.view.testsuite.fetch.normal.model.SimplePersonFetchSubView;
 import org.junit.Before;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 
 import static org.junit.Assert.*;

@@ -7,10 +7,10 @@ package com.blazebit.persistence.view.testsuite.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Basic;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Basic;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  *

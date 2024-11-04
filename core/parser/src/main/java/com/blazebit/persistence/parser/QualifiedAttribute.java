@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.parser;
 
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
  * Super type for attributes like KEY/VALUE/ENTRY/INDEX

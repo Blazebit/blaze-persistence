@@ -11,9 +11,9 @@ import com.blazebit.persistence.integration.jaxrs.jackson.testsuite.view.PersonV
 import com.blazebit.persistence.integration.jaxrs.jackson.testsuite.entity.Person;
 import org.junit.Test;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.UUID;
 

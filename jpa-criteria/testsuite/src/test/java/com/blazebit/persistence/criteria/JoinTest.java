@@ -7,7 +7,7 @@ package com.blazebit.persistence.criteria;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import org.junit.Test;

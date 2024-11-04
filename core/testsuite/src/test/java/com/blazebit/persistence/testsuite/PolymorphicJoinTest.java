@@ -7,7 +7,7 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertTrue;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;

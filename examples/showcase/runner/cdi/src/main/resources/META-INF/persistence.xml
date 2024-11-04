@@ -11,12 +11,12 @@
         <mapping-file>META-INF/showcaseEntities.xml</mapping-file>
 
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1" />
-            <property name="javax.persistence.jdbc.user" value="user" />
-            <property name="javax.persistence.jdbc.password" value="password" />
-            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver" />
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1" />
+            <property name="jakarta.persistence.jdbc.user" value="user" />
+            <property name="jakarta.persistence.jdbc.password" value="password" />
+            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver" />
 
-            <property name="javax.persistence.schema-generation.database.action" value="create-drop"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create-drop"/>
         </properties>
     </persistence-unit>
 </persistence>

@@ -17,9 +17,9 @@ import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.TransactionSupport;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.persistence.EntityManager;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

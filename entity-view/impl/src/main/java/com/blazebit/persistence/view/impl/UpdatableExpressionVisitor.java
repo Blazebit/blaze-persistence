@@ -47,8 +47,8 @@ import com.blazebit.persistence.parser.predicate.LikePredicate;
 import com.blazebit.persistence.parser.predicate.LtPredicate;
 import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

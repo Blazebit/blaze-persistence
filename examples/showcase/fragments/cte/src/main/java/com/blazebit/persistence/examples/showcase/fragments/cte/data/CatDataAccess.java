@@ -15,9 +15,9 @@ import com.blazebit.persistence.examples.showcase.fragments.cte.CatHierarchyCTE;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 
-import javax.inject.Inject;
-import javax.persistence.Tuple;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
+import jakarta.transaction.Transactional;
 import java.util.List;
 
 /**

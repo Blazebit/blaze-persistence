@@ -9,13 +9,13 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.PersistenceException;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.*;
 import java.util.stream.Stream;
 

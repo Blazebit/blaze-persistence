@@ -12,12 +12,12 @@ http://www.springframework.org/schema/tx http://www.springframework.org/schema/t
 
     <bean id="jpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
 
-    <bean id="myEmf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="jpaVendorAdapter" ref="jpaVendorAdapter"/>
     </bean>
 
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-        <property name="entityManagerFactory" ref="myEmf"/>
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
     </bean>
 
     <tx:annotation-driven />

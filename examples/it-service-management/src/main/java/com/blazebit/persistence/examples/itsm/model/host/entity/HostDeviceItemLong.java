@@ -8,9 +8,9 @@ package com.blazebit.persistence.examples.itsm.model.host.entity;
 import java.time.Instant;
 import java.util.Map;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
 
 /**
  * @author Giovanni Lovato

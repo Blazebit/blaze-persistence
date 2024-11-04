@@ -17,6 +17,7 @@
     <name>Blazebit Persistence Integration Entity-View CDI</name>
 
     <properties>
+        <surefire.jvm.params>--add-opens java.base/java.lang=ALL-UNNAMED</surefire.jvm.params>
         <module.name>com.blazebit.persistence.integration.view.cdi</module.name>
     </properties>
 
@@ -25,7 +26,7 @@
             <dependency>
                 <groupId>org.apache.deltaspike.distribution</groupId>
                 <artifactId>distributions-bom</artifactId>
-                <version>${version.deltaspike-1.9}</version>
+                <version>${version.deltaspike-2.0}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -41,13 +42,7 @@
         <dependency>
             <groupId>org.jboss.weld.se</groupId>
             <artifactId>weld-se-core</artifactId>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jboss</groupId>
-                    <artifactId>jandex</artifactId>
-                </exclusion>
-            </exclusions>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -56,12 +51,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-apt-utils</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -125,93 +114,21 @@
         <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <version>${version.jta}</version>
+            <version>${version.jta-api}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-resource</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>add-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>target/generated/resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process-resources</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <outputDirectory>target/generated/resources</outputDirectory>
-                            <processors>
-                                <!-- list of processors to use -->
-                                <processor>com.blazebit.apt.service.ServiceProviderAnnotationProcessor</processor>
-                            </processors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <!-- This must be an open module because CDI needs to introspect the extension -->
-                                <moduleInfoSource>
-                                    open module ${module.name} {
-                                        requires java.sql;
-                                        requires java.persistence;
-                                        requires jakarta.enterprise.cdi.api;
-                                        requires com.blazebit.persistence.view;
-                                        exports com.blazebit.persistence.integration.view.cdi;
-                                        provides javax.enterprise.inject.spi.Extension with com.blazebit.persistence.integration.view.cdi.EntityViewExtension;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- No idea why, but the Jakarta EL API is not picked up by the class loader -->
+                    <useModulePath>false</useModulePath>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>post-10-unsafe-code</id>
-            <activation>
-                <jdk>[11,)</jdk>
-            </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens java.base/java.lang=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
-        </profile>
-    </profiles>
 </project>

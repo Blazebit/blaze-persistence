@@ -9,7 +9,7 @@ import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.metamodel.Metamodel;
+import jakarta.persistence.metamodel.Metamodel;
 import java.util.Map;
 
 /**

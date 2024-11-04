@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.testsuite.correlation.model.SimpleVersionCo
 import org.junit.Assert;
 import org.junit.Before;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Collection;
 import java.util.List;
 

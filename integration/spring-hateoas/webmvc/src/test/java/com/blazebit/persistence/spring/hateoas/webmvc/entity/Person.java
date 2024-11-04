@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.spring.hateoas.webmvc.entity;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +17,8 @@ import java.util.UUID;
 /**
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Entity
 public class Person implements Serializable {
