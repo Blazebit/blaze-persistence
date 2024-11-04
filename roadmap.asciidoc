@@ -3,37 +3,42 @@ Blaze-Persistence - Roadmap
 
 As a side note, we are naming releases after http://marvel.com/comics/characters[Marvel comic characters] since we like the Avengers :)
 
-= 2.2 Kang
+// = 2.2 Kang
+//
+// ** Spatial/Range datatype support
+// ** RDBMS array datatype support
+// ** Full query parser and EntityManager implementation
+// ** Deep EclipseLink integration
+// ** Deep DataNuceleus integration
+//
+// = 2.1 Black Panther
+//
+// ** Debezium integration
+// ** Collection DML and select API improvements
+// ** Flush ordering according to data dependencies
+//
+// = 2.0 Drax
+//
+// ** JPA static metamodel
+// ** Custom static metamodel
+// ** Dedicated Java 8 API
+// ** API refactorings
+//
+// = 1.7 Enchantress
+//
+// ** Table function support
+// ** Merge operation support
+// ** Interval arithmetics support
+// ** Entity view collection attribute filters
+// ** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
+// ** DataNucleus 5.1/5.2/6.0 integration
+// ** EclipseLink 2.7/3.0/3.1 integration
+// ** Returning clause emulation
 
-** Spatial/Range datatype support
-** RDBMS array datatype support
-** Full query parser and EntityManager implementation
-** Deep EclipseLink integration
-** Deep DataNuceleus integration
+= 2.0 Enchantress
 
-= 2.1 Black Panther
-
-** Debezium integration
-** Collection DML and select API improvements
-** Flush ordering according to data dependencies
-
-= 2.0 Drax
-
-** JPA static metamodel
-** Custom static metamodel
-** Dedicated Java 8 API
-** API refactorings
-
-= 1.7 Enchantress
-
-** Table function support
-** Merge operation support
-** Interval arithmetics support
-** Entity view collection attribute filters
-** Specification(like JpaSpecification in Spring) for Spring Data and DeltaSpike Data
-** DataNucleus 5.1/5.2/6.0 integration
-** EclipseLink 2.7/3.0/3.1 integration
-** Returning clause emulation
+** Jakarta Persistence 3.1+ and Java 11+ only
+** Align library integration version support with upstream support guarantees
 
 = 1.6 Lockjaw *[RELEASED]*
 

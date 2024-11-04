@@ -2,7 +2,7 @@
 
 Changes that happened in releases
 
-## 1.6.13-SNAPSHOT
+## 1.6.14-SNAPSHOT
 
 ### New features
 
@@ -11,6 +11,22 @@ None yet
 ### Bug fixes
 
 None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.13
+
+04/11/2024 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.13) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.13+is%3Aclosed+sort%3Aupdated-desc)
+
+### New features
+
+* Add parameter and JSON path support for `JSON_GET()` function
+
+### Bug fixes
+
+* Fix integration issues with Hibernate ORM 6.6 and Quarkus 3
 
 ### Backwards-incompatible changes
 

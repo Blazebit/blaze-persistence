@@ -1,0 +1,27 @@
+= Blaze-Persistence 1.6.13 Release
+Christian Beikov
+2024-11-04 0
+:description: Blaze-Persistence version 1.6.13 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the thirteenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6.6 compatibility fixes
+
+Users reported problems with Hibernate ORM 6.6 in Spring and Quarkus applications+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+which were solved in this release.
+
+=== JSON_GET enhancement
+
+The `JSON_GET()` function was enhanced to support passing a JSON path literal and parameters.
+
+=== Various bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1613[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
