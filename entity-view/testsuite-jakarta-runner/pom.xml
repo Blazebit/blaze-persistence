@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-entity-view</artifactId>
-        <version>1.6.13</version>
+        <version>1.6.14-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
