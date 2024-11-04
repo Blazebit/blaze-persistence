@@ -442,6 +442,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected boolean needsSqlReplacement(Set<JoinNode> keyRestrictedLeftJoins) {
+        if (isMainQuery && mainQuery.cteManager.hasCtes()) {
+            return true;
+        }
         if (setOperationManager.getStartQueryBuilder().needsSqlReplacement(setOperationManager.getStartQueryBuilder().getKeyRestrictedLeftJoins())) {
             return true;
         }
