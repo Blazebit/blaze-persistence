@@ -15,7 +15,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.core.testsuite.hibernate</module.name>
-        <testBasePackage>com.blazebit.persistence.testsuite</testBasePackage>
+        <testBasePackage>com.blazebit.persistence.testsuite.hibernate</testBasePackage>
         <surefireForkCount>0</surefireForkCount>
         <jpa-api-version>${version.jpa-api}</jpa-api-version>
     </properties>
@@ -840,6 +840,36 @@
                             <annotationProcessors>
                                 <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                             </annotationProcessors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- No need to run this with the APT profile -->
+            <id>hibernate-apt</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                            <skipMain>true</skipMain>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- No need to run this with EclipseLink -->
+            <id>eclipselink</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                            <skipMain>true</skipMain>
                         </configuration>
                     </plugin>
                 </plugins>

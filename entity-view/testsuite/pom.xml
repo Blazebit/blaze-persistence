@@ -1095,6 +1095,7 @@
                                 <compilerArg>-AstrictCascadingCheck=false</compilerArg>
                                 <compilerArg>-AdefaultVersionAttributeName=version</compilerArg>
                                 <compilerArg>-AdefaultVersionAttributeType=java.lang.Long</compilerArg>
+                                <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
                             </compilerArgs>
                             <annotationProcessors>
                                 <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>

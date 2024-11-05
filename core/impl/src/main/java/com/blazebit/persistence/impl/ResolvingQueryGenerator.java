@@ -950,7 +950,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 rewriteToIdParam(right);
             }
         } else {
-            if (expressionToSplit == null || dbmsDialect.supportsAnsiRowValueConstructor() || !(left instanceof ParameterExpression) && !(right instanceof ParameterExpression)) {
+            if (expressionToSplit == null || !(left instanceof ParameterExpression) && !(right instanceof ParameterExpression)) {
                 left.accept(this);
                 sb.append(operator);
                 if (quantifier != PredicateQuantifier.ONE) {

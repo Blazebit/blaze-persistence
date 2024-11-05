@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Blazebit
  */
-package com.blazebit.persistence.testsuite.hibernate6.entity;
+package com.blazebit.persistence.testsuite.hibernate.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,8 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "integer_property")
-public class IntegerProperty implements Property<Integer> {
+@Table(name = "string_property")
+public class StringProperty implements Property<String> {
 
     @Id
     private Long id;
@@ -20,7 +20,7 @@ public class IntegerProperty implements Property<Integer> {
     private String name;
 
     @Column(name = "`value`")
-    private Integer value;
+    private String value;
 
     public Long getId() {
         return id;
@@ -40,11 +40,11 @@ public class IntegerProperty implements Property<Integer> {
     }
 
     @Override
-    public Integer getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(Integer value) {
+    public void setValue(String value) {
         this.value = value;
     }
 }
