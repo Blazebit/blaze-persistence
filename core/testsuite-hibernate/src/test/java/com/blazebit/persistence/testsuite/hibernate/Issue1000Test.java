@@ -5,16 +5,12 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
+import org.junit.Test;
+
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.entity.LongSequenceEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
@@ -45,9 +41,6 @@ public class Issue1000Test extends AbstractCoreTest {
     public static class Timer extends LongSequenceEntity {}
 
     @Test
-    @Category({
-            NoHibernate50.class, NoHibernate43.class, NoHibernate42.class, // Entity join required for fallback
-    })
     public void testCorrelation() {
         transactional(new TxVoidWork() {
             @Override

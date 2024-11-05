@@ -5,25 +5,21 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,9 +27,6 @@ import static org.junit.Assert.assertEquals;
  * @author Moritz Becker
  * @since 1.4.0
  */
-// NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-// NOTE: Seems Datanucleus fails to properly interpret the entity literal
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class })
 public class TreatedEntityJoinTest extends AbstractCoreTest {
 
     private PolymorphicSub1 root2;
@@ -116,7 +109,7 @@ public class TreatedEntityJoinTest extends AbstractCoreTest {
 
     // NOTE: EclipseLink requires a join for "relation1" that it doesn't add...
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void entityJoinTreat() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");

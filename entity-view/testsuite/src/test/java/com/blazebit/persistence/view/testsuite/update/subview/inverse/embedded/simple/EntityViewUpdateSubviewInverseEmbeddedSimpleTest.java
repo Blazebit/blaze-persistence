@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.embedded.simple;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -55,7 +54,7 @@ import static org.junit.Assert.assertNotEquals;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseEmbeddedSimpleTest extends AbstractEntityViewUpdateTest<UpdatableLegacyOrderView> {
 
     @Override

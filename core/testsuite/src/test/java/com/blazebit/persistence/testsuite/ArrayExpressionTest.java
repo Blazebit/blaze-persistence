@@ -7,14 +7,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.parser.expression.ArrayExpression;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
@@ -237,9 +230,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    // NOTE: Older Hibernate versions don't like the IS NULL predicate when applied to an association in the ON clause
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void testNewImplicitRoot() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
         criteria.select("d.contacts[friend IS NULL]");
@@ -251,8 +242,6 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class })
     public void testEntityArray() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class).from(Document.class, "d");
         criteria.select("Person[name = d.name]");
@@ -264,8 +253,6 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class })
     public void testEntityArrayReuse() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d");
         criteria.select("Person[name = d.name].id");

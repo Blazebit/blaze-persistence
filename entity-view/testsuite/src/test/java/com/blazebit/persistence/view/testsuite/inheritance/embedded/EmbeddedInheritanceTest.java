@@ -5,8 +5,13 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.embedded;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
@@ -19,25 +24,17 @@ import com.blazebit.persistence.testsuite.treat.entity.SingleTableSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.IntIdEntityView;
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.SingleTableDetailsView;
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.SingleTableSub1DetailsView;
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.SingleTableSub2DetailsView;
 import com.blazebit.persistence.view.testsuite.inheritance.embedded.model.SingleTableView;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -46,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.2.0
  */
 // NOTE: Eclipselink and Datanucleus have no real support for subtype property access
-@Category({ NoEclipselink.class, NoDatanucleus.class })
+@Category({ NoEclipselink.class })
 public class EmbeddedInheritanceTest extends AbstractEntityViewTest {
 
     private SingleTableSub1 base1;

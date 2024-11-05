@@ -401,7 +401,7 @@
         <profile>
             <id>hibernate-6.2</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -494,6 +494,10 @@
                             <annotationProcessors>
                                 <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                             </annotationProcessors>
+                            <!-- ORM 6.2 still added the javax annotation -->
+                            <compilerArgs>
+                                <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
+                            </compilerArgs>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -502,7 +506,7 @@
         <profile>
             <id>hibernate-6.4</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate64</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -606,7 +610,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

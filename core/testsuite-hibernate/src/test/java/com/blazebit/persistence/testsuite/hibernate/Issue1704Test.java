@@ -5,20 +5,18 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.annotations.Where;
+
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
@@ -26,9 +24,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Tuple;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author Christian Beikov
@@ -43,10 +38,7 @@ public class Issue1704Test extends AbstractCoreTest {
         };
     }
 
-    // NOTE: Old MySQL do not support lateral joins
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     @Test
-    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class })
     public void testLateralLimit() {
         transactional(new TxVoidWork() {
             @Override

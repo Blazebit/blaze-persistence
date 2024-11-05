@@ -5,27 +5,26 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.parser.JsonParser;
 import com.blazebit.persistence.parser.XmlParser;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,7 +70,7 @@ public class JsonAndXmlTest extends AbstractCoreTest {
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
     // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoDB2.class })
+    @Category({ NoEclipselink.class, NoDB2.class })
     public void testToStringJson() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "p")
@@ -95,7 +94,7 @@ public class JsonAndXmlTest extends AbstractCoreTest {
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
     // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoDB2.class })
+    @Category({ NoEclipselink.class, NoDB2.class })
     public void testToStringXml() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "p")
@@ -157,7 +156,7 @@ public class JsonAndXmlTest extends AbstractCoreTest {
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
     // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoDB2.class })
+    @Category({ NoEclipselink.class, NoDB2.class })
     public void testToMultiset() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "p")
@@ -181,7 +180,7 @@ public class JsonAndXmlTest extends AbstractCoreTest {
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
     // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoDB2.class })
+    @Category({ NoEclipselink.class, NoDB2.class })
     public void testNestedToMultiset() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "p")

@@ -5,13 +5,17 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.Collections;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
@@ -26,14 +30,8 @@ import com.blazebit.persistence.testsuite.entity.Sub2;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
-
-import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.2.0
  */
 // NOTE: No advanced sql support for datanucleus, eclipselink and openjpa yet
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class CollectionRoleInsertTest extends AbstractCoreTest {
 
     private static final Integer I2_ID = 4;
@@ -185,7 +183,7 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
     // NOTE: Oracle doesn't support the RETURNING clause for INSERT .. SELECT statements, only for INSERT .. VALUES
     // https://stackoverflow.com/questions/5325033/plsql-insert-into-with-subquery-and-returning-clause-oracle
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoEclipselink.class })
     public void insertIndexedReturning() {
         transactional(new TxVoidWork() {
             @Override
@@ -446,7 +444,7 @@ public class CollectionRoleInsertTest extends AbstractCoreTest {
     // NOTE: Oracle doesn't support the RETURNING clause for INSERT .. SELECT statements, only for INSERT .. VALUES
     // https://stackoverflow.com/questions/5325033/plsql-insert-into-with-subquery-and-returning-clause-oracle
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoEclipselink.class })
     public void insertIndexedReturningWithParams() {
         transactional(new TxVoidWork() {
             @Override

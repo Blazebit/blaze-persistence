@@ -7,16 +7,9 @@ package com.blazebit.persistence.testsuite.hibernate;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
@@ -71,10 +64,6 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     }
 
     @Test
-    @Category({
-            // Although unused, this test dependent on the availability of group join support introduced in Hibernate 5.2.8
-            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class
-    })
     public void testRootTypeJoinWithGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -113,10 +102,6 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     }
 
     @Test
-    @Category({
-            NoHibernate50.class, NoHibernate43.class, NoHibernate42.class, // Entity join required for fallback
-            NoHibernate52.class, NoHibernate53.class // Optimize with group joins instead
-    })
     public void testRootTypeJoinWithoutGroupJoins() {
         Assume.assumeFalse(supportsTableGroupJoins());
 
@@ -169,10 +154,6 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     }
 
     @Test
-    @Category({
-            // This test requires group joins introduced in Hibernate 5.2.8
-            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class
-    })
     public void testSubTypeJoinWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -211,10 +192,6 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     }
 
     @Test
-    @Category({
-            NoHibernate50.class, NoHibernate43.class, NoHibernate42.class, // Entity join required for fallback
-            NoHibernate52.class, NoHibernate53.class // Optimize with group joins instead
-    })
     public void testSubTypeJoinWithoutTableGroupJoins() {
         Assume.assumeFalse(supportsTableGroupJoins());
         Assume.assumeTrue(jpaProvider.supportsEntityJoin());

@@ -5,26 +5,23 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CTE;
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.entity.IdClassEntity;
-import com.blazebit.persistence.testsuite.entity.IdClassEntityId;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import java.io.Serializable;
+import java.util.Objects;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
+import com.blazebit.persistence.CTE;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.IdClassEntity;
+import com.blazebit.persistence.testsuite.entity.IdClassEntityId;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
@@ -32,8 +29,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToOne;
-import java.io.Serializable;
-import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,8 +59,8 @@ public class Issue571Test extends AbstractCoreTest {
     }
 
     @Test
-    // Ignore MySQL / Oracle because of unsupported use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class })
+    // Ignore MySQL / Oracle because of unsupported use of CTE's
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testBindingCteAssociationToEntity() {
         transactional(new TxVoidWork() {
             @Override
@@ -104,8 +99,8 @@ public class Issue571Test extends AbstractCoreTest {
     }
 
     @Test
-    // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    // Ignore MySQL / Oracle because of unsuppored use of CTE's
+    @Category({ NoEclipselink.class, NoOracle.class  })
     public void testBindingCteAssociationToEntityId() {
         expectedException.expectMessage("An association should be bound to its association type and not its identifier type");
 
@@ -148,7 +143,7 @@ public class Issue571Test extends AbstractCoreTest {
 
     @Test
     // Ignore MySQL / Oracle because of unsuppored use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    @Category({ NoEclipselink.class, NoOracle.class  })
     public void testBindingCteAssociationIdToEntityId() {
         transactional(new TxVoidWork() {
             @Override
@@ -188,8 +183,8 @@ public class Issue571Test extends AbstractCoreTest {
     }
 
     @Test
-    // Ignore MySQL / Oracle because of unsupported use of CTE's, ignore Hibernate 4.3 and 4.3 metamodel bug
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoHibernate42.class, NoHibernate43.class  })
+    // Ignore MySQL / Oracle because of unsupported use of CTE's
+    @Category({ NoEclipselink.class, NoOracle.class  })
     public void testBindingCteUsingNestedIdClass() {
         transactional(new TxVoidWork() {
             @Override

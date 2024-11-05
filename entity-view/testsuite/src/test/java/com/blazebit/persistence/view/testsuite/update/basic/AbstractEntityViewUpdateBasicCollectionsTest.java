@@ -5,17 +5,17 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.ArrayList;
+
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDocumentTest;
 import com.blazebit.persistence.view.testsuite.update.basic.model.UpdatableDocumentBasicWithCollectionsViewBase;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import java.util.ArrayList;
 
 /**
  *
@@ -23,8 +23,7 @@ import java.util.ArrayList;
  * @since 1.2.0
  */
 @RunWith(Parameterized.class)
-// NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public abstract class AbstractEntityViewUpdateBasicCollectionsTest<T extends UpdatableDocumentBasicWithCollectionsViewBase> extends AbstractEntityViewUpdateDocumentTest<T> {
 
     public AbstractEntityViewUpdateBasicCollectionsTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {

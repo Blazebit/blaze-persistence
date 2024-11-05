@@ -5,6 +5,6 @@
 
 package com.blazebit.persistence.testsuite.base.jpa.category;
 
-public interface NoHibernate53 {
+public interface NoHibernate62 {
 
 }

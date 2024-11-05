@@ -5,10 +5,15 @@
 
 package com.blazebit.persistence.view.testsuite.pagination;
 
+import java.util.List;
+import java.util.Set;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -20,13 +25,7 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.IdHolderView;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -74,7 +73,7 @@ public class PaginationTest extends AbstractEntityViewTest {
     private Document doc1;
     
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void testPagination() {
         EntityViewSetting<DocumentViewInterface, PaginatedCriteriaBuilder<DocumentViewInterface>> settings = EntityViewSetting.create(DocumentViewInterface.class, 0, 1)

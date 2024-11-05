@@ -5,22 +5,20 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
@@ -32,9 +30,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class GroupByTest extends AbstractCoreTest {
 
-    // Datanucleus does not support grouping by a byte[] as it seems
     @Test
-    @Category({ NoDatanucleus.class })
     public void testGroupByEntitySelect() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d");
         criteria.groupBy("d.owner");
@@ -62,7 +58,7 @@ public class GroupByTest extends AbstractCoreTest {
 
     // This is a MySQL only test
     @Test
-    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
+    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
     public void testImplicitGroupByFunctionExpression() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("CAST_DATE(FUNCTION('date', '2000-01-01'))")
@@ -96,7 +92,9 @@ public class GroupByTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
+    // NOTE: Hibernate ORM doesn't detect that it has to use the join alias column
     @Test
+    @Category({ NoHibernate.class })
     public void testGroupBySubqueryCorrelatedExpression() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")
@@ -143,8 +141,6 @@ public class GroupByTest extends AbstractCoreTest {
     }
 
     @Test
-    // DataNucleus4 apparently can't handle join of associations within element collections
-    @Category({ NoDatanucleus4.class })
     public void testGroupByElementCollectionValue() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class, "d")

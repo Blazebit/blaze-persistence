@@ -5,30 +5,27 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Tuple;
-
-import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlMacro;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
-import org.junit.experimental.categories.Category;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -327,7 +324,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     // This test compares ids
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testSubqueryCorrelatesArrayExpression() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .whereExists()
@@ -354,8 +351,6 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: Report datanucleus issue
-    @Category({ NoDatanucleus.class })
     public void testMultipleCorrelationsWithJoins() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
@@ -400,8 +395,6 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: Report datanucleus issue
-    @Category({ NoDatanucleus.class })
     public void testReorderExplicitJoins() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .where("owner").in()
@@ -492,7 +485,9 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
+    // NOTE: Hibernate ORM doesn't detect that it has to use the join alias column
     @Test
+    @Category({ NoHibernate.class })
     public void testSubqueryUsesOuterJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")
@@ -574,7 +569,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     // A special test for Hibernate that needs a different query to be generated to properly work
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testJoinElementCollectionsOnCorrelatedInverseAssociations() {
         CriteriaBuilder<Integer> crit = cbf.create(em, Integer.class)
                 .from(Document.class, "d")
@@ -687,8 +682,6 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus has a bug here: https://github.com/datanucleus/datanucleus-core/issues/173
-    @Category({ NoDatanucleus.class })
     public void testMultiLevelSubqueryAliasVisibility() {
         final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class, "d")
@@ -714,8 +707,6 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    // Test for issue #504
-    @Category({ NoDatanucleus.class })
     public void testMultiLevelSubqueryImplicitAliasCollision() {
         final CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Document.class)

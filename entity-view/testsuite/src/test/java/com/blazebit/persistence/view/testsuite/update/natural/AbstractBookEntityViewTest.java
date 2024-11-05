@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.natural;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
@@ -32,7 +31,7 @@ import jakarta.persistence.EntityManager;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public abstract class AbstractBookEntityViewTest<T> extends AbstractEntityViewUpdateTest<T> {
 
     protected NaturalIdJoinTableEntity e1;

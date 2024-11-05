@@ -5,10 +5,14 @@
 
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.onetoone.entity;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentForSimpleOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfoSimple;
@@ -19,12 +23,6 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.onetoone.entity.model.DocumentForOneToOneIdView;
 import com.blazebit.persistence.view.testsuite.update.subview.inverse.onetoone.entity.model.UpdatableDocumentForOneToOneView;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import jakarta.persistence.EntityManager;
 
 /**
@@ -33,10 +31,8 @@ import jakarta.persistence.EntityManager;
  * @since 1.3.0
  */
 @RunWith(Parameterized.class)
-// NOTE: No Datanucleus support yet
-//@Category({ NoDatanucleus.class, NoEclipselink.class})
 // NOTE: Hibernate has a bug when selecting inverse one-to-ones: https://hibernate.atlassian.net/browse/HHH-12885
-@Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseOneToOneEntityTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
 
     private DocumentForSimpleOneToOne doc1;

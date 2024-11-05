@@ -5,16 +5,19 @@
 
 package com.blazebit.persistence.testsuite;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.entity.*;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,8 +54,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void implicitJoinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -62,8 +63,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void treatInAggregateHaving() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -78,8 +77,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void treatedRootInCaseWhenCondition() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -91,8 +88,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void treatedRootInCaseWhenResult() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -104,10 +99,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
-    @Category({ NoDatanucleus.class , NoDatanucleus4.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void fetchJoinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -117,10 +110,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
-    @Category({ NoDatanucleus.class , NoDatanucleus4.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void fetchJoinTreatedNode() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -131,8 +122,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void implicitJoinTreatedRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -142,9 +131,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void singleValuedAssociationIdOfTreatedImplicitJoinedRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "relation1");
@@ -154,10 +142,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
     // NOTE: Eclipselink does not support root treat joins i.e. "JOIN TREAT(..).relation"
-    @Category({ NoDatanucleus.class , NoDatanucleus4.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void implicitJoinTreatedRootTreatJoin() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -167,9 +153,6 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class, NoDatanucleus4.class })
     public void joinTreatedRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -181,9 +164,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: With datanucleus this only fails with INNER JOIN but works with left join. Maybe a bug? TODO: report the error
     // Eclipselink and Datanucleus do not support root treat joins
-    @Category({ NoDatanucleus.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void joinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -194,9 +176,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: With datanucleus this only fails with INNER JOIN but works with left join. Maybe a bug? TODO: report the error
     // Eclipselink does not support dereferencing of TREAT join path elements
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void joinTreatedRootEmbeddable() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -207,9 +188,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: With datanucleus this only fails with INNER JOIN but works with left join. Maybe a bug? TODO: report the error
     // Eclipselink does not support dereferencing of TREAT join path elements
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void selectTreatedRootEmbeddable() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -219,8 +199,7 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: With datanucleus this only fails with INNER JOIN but works with left join. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class, NoHibernate.class })
+    @Category({ NoHibernate.class })
     public void treatJoinTreatedRootRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -233,8 +212,7 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus fails with a NPE
-    @Category({ NoEclipselink.class, NoDatanucleus4.class })
+    @Category({ NoEclipselink.class })
     public void implicitJoinTreatedImplicitCorrelation() {
         CriteriaBuilder<PolymorphicBase> crit = cbf.create(em, PolymorphicBase.class, "p")
                 .whereExists().from(PolymorphicSub1.class, "sub1")

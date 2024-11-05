@@ -6,15 +6,7 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
+import java.util.Properties;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.H2Dialect;
@@ -26,9 +18,16 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import java.util.Properties;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -48,7 +47,7 @@ public class CustomFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({NoMSSQL.class, NoMySQL.class, NoMySQLOld.class, NoPostgreSQL.class, NoOracle.class, NoDB2.class})
+    @Category({NoMSSQL.class, NoMySQL.class, NoPostgreSQL.class, NoOracle.class, NoDB2.class})
     public void implicitJoinCustomAggregateFunction() {
         String queryString = cbf.create(em, BasicEntity.class, "b")
                 .select("addone(b.id)")

@@ -5,6 +5,20 @@
 
 package com.blazebit.persistence.spring.data.testsuite.webmvc;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.integration.view.spring.EnableEntityViews;
 import com.blazebit.persistence.spring.data.repository.BlazeSpecification;
 import com.blazebit.persistence.spring.data.repository.EntityViewSettingProcessor;
@@ -24,25 +38,18 @@ import com.blazebit.persistence.spring.data.testsuite.webmvc.tx.TransactionalWor
 import com.blazebit.persistence.spring.data.testsuite.webmvc.tx.TxWork;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentView;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.ComponentScan;
@@ -55,17 +62,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -106,9 +102,8 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     }
 
     // NOTE: EclipseLink and DataNucleus seem to have a problem with the way Spring Data makes use of entity graphs, although it just uses the JPA APIs
-    // Hibernate 4.2 doesn't support the JPA 2.1 APIs that introduced entity graphs
     @Test
-    @Category({ NoHibernate42.class, NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class})
     public void testFindD1EntityGraph() {
         // Given
         final Document d1 = createDocument("D1");
@@ -137,8 +132,7 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     @Test
     // We don't want to deal with the different casing requirements for table names in the various DBs so we only run
     // this test for H2.
-    // DataNucleus is not able to create entities from native query result sets.
-    @Category({NoDatanucleus.class, NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoSQLite.class, NoFirebird.class, NoDB2.class})
+    @Category({ NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoDB2.class})
     public void testFindD1Native() {
         // Given
         final Document d1 = createDocument("D1");
@@ -180,7 +174,7 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     @Test
     // We don't want to deal with the different casing requirements for table names in the various DBs so we only run
     // this test for H2.
-    @Category({NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoSQLite.class, NoFirebird.class, NoDB2.class})
+    @Category({NoPostgreSQL.class, NoOracle.class, NoMySQL.class, NoDB2.class})
     public void testFindD1NativeProjection() {
         // Given
         final Document d1 = createDocument("D1");
@@ -856,9 +850,7 @@ public class ReadOnlyDocumentRepositoryTest extends AbstractSpringTest {
     }
 
     // Test for #1817
-    // No idea what's wrong with Datanucleus
     @Test
-    @Category({ NoDatanucleus.class })
     public void testFindByEnum() {
         // Given
         final Document d1 = createDocument("D1", "test", 0, null);

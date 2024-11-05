@@ -5,22 +5,20 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.embedding;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.ConfigurationProperties;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.correlation.embedding.model.DocumentEmbeddingCorrelationView;
 import com.blazebit.persistence.view.testsuite.correlation.embedding.model.DocumentEmbeddingCorrelationViewJoinId;
@@ -31,12 +29,7 @@ import com.blazebit.persistence.view.testsuite.correlation.embedding.model.Docum
 import com.blazebit.persistence.view.testsuite.correlation.embedding.model.DocumentEmbeddingCorrelationViewSubselectNormal;
 import com.blazebit.persistence.view.testsuite.correlation.embedding.model.SimpleDocumentEmbeddingCorrelatedView;
 import com.blazebit.persistence.view.testsuite.correlation.embedding.model.SimplePersonEmbeddingCorrelatedSubView;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,57 +41,47 @@ import static org.junit.Assert.assertEquals;
 public class EmbeddingViewRootCorrelationTest extends AbstractEntityViewTest {
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelationNormal() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryNormal.class, null);
     }
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelationId() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryId.class, null);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize2() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryNormal.class, 2);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize2() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryId.class, 2);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize4() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryNormal.class, 4);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize4() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryId.class, 4);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize20() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryNormal.class, 20);
     }
 
     @Test
-    // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize20() {
         testCorrelation(DocumentEmbeddingCorrelationViewSubqueryId.class, 20);
     }
@@ -117,17 +100,15 @@ public class EmbeddingViewRootCorrelationTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentEmbeddingCorrelationViewJoinNormal.class, null);
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinCorrelationId() {
         testCorrelation(DocumentEmbeddingCorrelationViewJoinId.class, null);
     }

@@ -5,14 +5,14 @@
 
 package com.blazebit.persistence.view.testsuite.viewroot;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -22,12 +22,7 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.viewroot.model.DocumentWithViewRoots;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,11 +31,8 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.6.0
  */
-// NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
 // NOTE: Eclipselink doesn't like the limit subquery function
-// NOTE: Datanucleus can't handle "alias IN (subquery)"
-// NOTE: Requires lateral joins or support for correlated limit subquery in ON clause which older MySQL versions don't support
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class, NoMySQLOld.class })
+@Category({ NoEclipselink.class })
 public class SecondaryViewRootTest extends AbstractEntityViewTest {
 
     private Document doc1;

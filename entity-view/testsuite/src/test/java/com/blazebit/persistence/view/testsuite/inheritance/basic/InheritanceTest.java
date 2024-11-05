@@ -5,18 +5,24 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.basic;
 
+import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.DocumentBaseView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.NewDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.NewSub1DocumentView;
@@ -27,18 +33,13 @@ import com.blazebit.persistence.view.testsuite.inheritance.basic.model.SimplePer
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.UnusedOldDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.UsedOldDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.basic.model.UsedOldSub1DocumentView;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -212,8 +213,6 @@ public class InheritanceTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // TODO: report that datanucleus thinks a NULL literal is of type Integer and normal integral literals are of type Long
-    @Category({ NoDatanucleus.class })
     public void inheritanceQuery() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");

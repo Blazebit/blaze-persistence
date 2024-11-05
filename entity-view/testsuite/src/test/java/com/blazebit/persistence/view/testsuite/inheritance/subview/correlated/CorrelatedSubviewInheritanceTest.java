@@ -5,23 +5,22 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.subview.correlated;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model.DocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model.DocumentView1;
@@ -41,13 +40,7 @@ import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.mo
 import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model.YoungPersonView2;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model.YoungPersonView3;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.correlated.model.YoungPersonView4;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -122,22 +115,21 @@ public class CorrelatedSubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: Hibernate only supports entity joins from 5.1 onwards
     // NOTE: EclipseLink fails to handle the query because the ON clause contains function expressions CONCAT
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus4.class, NoMSSQL.class })
+    @Category({ NoEclipselink.class, NoMSSQL.class })
     public void inheritanceQueryJoined() {
         inheritanceQuery(DocumentView1.class, PersonBaseView1.class, OldPersonView1.class, YoungPersonView1.class);
     }
 
     @Test
     // NOTE: EclipseLink fails to handle the query because the ON clause contains function expressions CONCAT
-    @Category({ NoEclipselink.class, NoDatanucleus4.class, NoMSSQL.class })
+    @Category({ NoEclipselink.class, NoMSSQL.class })
     public void inheritanceQuerySubselect() {
         inheritanceQuery(DocumentView2.class, PersonBaseView2.class, OldPersonView2.class, YoungPersonView2.class);
     }
 
     @Test
-    @Category({ NoDatanucleus4.class, NoMSSQL.class })
+    @Category({ NoMSSQL.class })
     public void inheritanceQuerySelect() {
         inheritanceQuery(DocumentView3.class, PersonBaseView3.class, OldPersonView3.class, YoungPersonView3.class);
     }
@@ -145,7 +137,7 @@ public class CorrelatedSubviewInheritanceTest extends AbstractEntityViewTest {
     @Test
     // NOTE: This required the VALUES clause which is only supported for Hibernate for now
     // NOTE: For Oracle, we use to_clob in VALUES for cast_string which is problematic
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class, NoMSSQL.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoMSSQL.class, NoOracle.class })
     public void inheritanceQuerySelectBatch() {
         inheritanceQuery(DocumentView4.class, PersonBaseView4.class, OldPersonView4.class, YoungPersonView4.class);
     }
