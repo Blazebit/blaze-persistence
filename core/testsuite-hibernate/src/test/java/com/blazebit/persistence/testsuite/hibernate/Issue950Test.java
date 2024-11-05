@@ -7,12 +7,6 @@ package com.blazebit.persistence.testsuite.hibernate;
 
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
@@ -165,9 +159,7 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Requires Entity joins
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -207,7 +199,7 @@ public class Issue950Test extends AbstractCoreTest {
 
     // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
+    @Category({ NoHibernate.class })
     public void testJoinOrderWithRightNormalJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -245,9 +237,7 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Requires Entity joins
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithIdDereference() {
         transactional(new TxVoidWork() {
             @Override
@@ -296,7 +286,7 @@ public class Issue950Test extends AbstractCoreTest {
 
     // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
+    @Category({ NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithIdDereference() {
         transactional(new TxVoidWork() {
             @Override
@@ -343,9 +333,7 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Requires Entity joins
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithInnerImplicitJoins() {
         transactional(new TxVoidWork() {
             @Override
@@ -394,7 +382,7 @@ public class Issue950Test extends AbstractCoreTest {
 
     // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
+    @Category({ NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithInnerImplicitJoins() {
         transactional(new TxVoidWork() {
             @Override
@@ -441,9 +429,7 @@ public class Issue950Test extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Requires Entity joins
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testJoinOrderWithRightJoinWithNonOptionalAssociationProjections() {
         transactional(new TxVoidWork() {
             @Override
@@ -487,7 +473,7 @@ public class Issue950Test extends AbstractCoreTest {
 
     // NOTE: Hibernate currently doesn't fully respect the join order, but just renders association joins first
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoHibernate.class })
+    @Category({ NoHibernate.class })
     public void testJoinOrderWithRightNormalJoinWithNonOptionalAssociationProjections() {
         transactional(new TxVoidWork() {
             @Override

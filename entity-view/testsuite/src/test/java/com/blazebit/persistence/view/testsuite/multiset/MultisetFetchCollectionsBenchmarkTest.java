@@ -5,16 +5,26 @@
 
 package com.blazebit.persistence.view.testsuite.multiset;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.MutablePersistenceUnitInfo;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
@@ -30,19 +40,7 @@ import com.blazebit.persistence.view.testsuite.multiset.model.multiset.SubviewDo
 import com.blazebit.persistence.view.testsuite.multiset.model.multiset.SubviewPersonForCollectionsMultisetFetchViewMultiset;
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.TestRule;
-
 import jakarta.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -146,9 +144,8 @@ public class MultisetFetchCollectionsBenchmarkTest extends AbstractEntityViewTes
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     @BenchmarkOptions(benchmarkRounds = 5, warmupRounds = 4)
     public void testJoinFetch() {
         testCollections(joinEvm, PersonForCollectionsMultisetFetchNestedViewJoin.class);
@@ -156,9 +153,8 @@ public class MultisetFetchCollectionsBenchmarkTest extends AbstractEntityViewTes
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     @BenchmarkOptions(benchmarkRounds = 5, warmupRounds = 4)
     public void testMultisetFetch() {
         testCollections(multisetEvm, PersonForCollectionsMultisetFetchNestedViewMultiset.class);

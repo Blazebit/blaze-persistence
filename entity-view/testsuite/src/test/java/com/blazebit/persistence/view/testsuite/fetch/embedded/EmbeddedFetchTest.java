@@ -5,24 +5,24 @@
 
 package com.blazebit.persistence.view.testsuite.fetch.embedded;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.ConfigurationProperties;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity2;
 import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityEmbeddable2;
@@ -40,15 +40,7 @@ import com.blazebit.persistence.view.testsuite.fetch.embedded.model.EmbeddableTe
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.EmbeddableTestEntitySimpleFetchView;
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.IntIdEntityFetchSubView;
 import com.blazebit.persistence.view.testsuite.fetch.embedded.model.IntIdEntitySimpleSubView;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Test for #601
@@ -60,7 +52,7 @@ import java.util.Set;
 // NOTE: Element collection fetching of non-roots only got fixed in Hibernate 5.2.3: https://hibernate.atlassian.net/browse/HHH-11140
 //@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class })
 // NOTE: Hibernate 6.3.1 bug
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoHibernate60.class })
+@Category({ NoEclipselink.class, NoHibernate62.class })
 public class EmbeddedFetchTest extends AbstractEntityViewTest {
 
     protected EmbeddableTestEntity2 doc1;
@@ -148,91 +140,83 @@ public class EmbeddedFetchTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryFetchEntity() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewSubquery.class);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedEntitySize2() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewSubquery.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedEntitySize4() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewSubquery.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedEntitySize20() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewSubquery.class, 20);
     }
 
     @Test
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testSubselectFetchEntity() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewSubselect.class);
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinFetchEntity() {
         testCorrelation(EmbeddableTestEntityFetchAsEntityViewJoin.class);
     }
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryFetchView() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewSubquery.class);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedViewSize2() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewSubquery.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedViewSize4() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewSubquery.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedViewSize20() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewSubquery.class, 20);
     }
 
     @Test
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testSubselectFetchView() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewSubselect.class);
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinFetchView() {
         testCorrelation(EmbeddableTestEntityFetchAsViewViewJoin.class);
     }

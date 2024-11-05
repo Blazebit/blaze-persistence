@@ -5,16 +5,17 @@
 
 package com.blazebit.persistence.testsuite;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
@@ -30,11 +31,6 @@ import com.blazebit.persistence.testsuite.entity.Sub2;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 
@@ -47,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.2.0
  */
 // NOTE: No advanced sql support for datanucleus, eclipselink and openjpa yet
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class CollectionRoleUpdateTest extends AbstractCoreTest {
 
     private static final Integer I2_ID = 4;
@@ -156,7 +152,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void updateIndexedImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -186,7 +182,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void updateIndexedMultipleDeepImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -222,7 +218,7 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
     // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: DB2 and Oracle do not support FROM FINAL TABLE or RETURNING with MERGE. Fix this with https://github.com/Blazebit/blaze-persistence/issues/1137
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDB2.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDB2.class, NoOracle.class, NoEclipselink.class })
     public void updateIndexedReturning() {
         transactional(new TxVoidWork() {
             @Override
@@ -460,9 +456,8 @@ public class CollectionRoleUpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
+    @Category({NoEclipselink.class})
     public void updateKeyedWithInlineCte() {
         transactional(new TxVoidWork() {
             @Override

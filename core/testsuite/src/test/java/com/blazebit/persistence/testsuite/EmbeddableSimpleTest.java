@@ -5,22 +5,16 @@
 
 package com.blazebit.persistence.testsuite;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.Order;
 import com.blazebit.persistence.testsuite.entity.OrderPosition;
 import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
 import com.blazebit.persistence.testsuite.entity.OrderPositionHead;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
@@ -86,8 +80,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testCyclicDependencyInOnClauseImplicitJoin2() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
@@ -97,8 +89,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testCyclicDependencyInOnClauseImplicitJoin3() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
@@ -108,9 +99,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    // NOTE: DataNucleus 4 does not seem to support TYPE(x) IN (..)
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus4.class })
+    @Category({ NoEclipselink.class })
     public void testCyclicDependencyInOnClauseImplicitJoin4() {
         CriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "p");
         criteria.leftJoinDefaultOn("p.order", "o")
@@ -120,8 +109,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testCyclicDependencyInOnClauseImplicitJoin5() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -131,8 +118,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testCyclicDependencyInOnClauseImplicitJoin6() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -142,8 +127,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin7() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
@@ -160,8 +143,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin8() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
@@ -179,8 +160,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin9() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
@@ -199,8 +178,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin10() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -220,8 +197,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoin11() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -242,8 +217,6 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class })
     public void testCyclicDependencyInOnClauseImplicitJoinInDisjunction() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -266,8 +239,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testCyclicDependencyInOnClauseImplicitJoinInDisjunction2() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "p")
@@ -299,8 +271,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
     }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testImplicitJoinSingularAttributeInOnClause() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")
@@ -337,8 +308,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
 //    }
 
     @Test
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testSingleValueAssociationIdAccessInOnClause() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefault("o.orderPositions", "p")

@@ -153,7 +153,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <argLine>${surefire.jvm.params}</argLine>
-                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld,${jpa.excludedGroups}</excludedGroups>
+                            <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://${dbHost}:3306/test?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
@@ -385,7 +385,7 @@
         <profile>
             <id>hibernate-6.2</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -447,6 +447,10 @@
                             <annotationProcessors>
                                 <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                             </annotationProcessors>
+                            <!-- ORM 6.2 still added the javax annotation -->
+                            <compilerArgs>
+                                <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
+                            </compilerArgs>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -455,7 +459,7 @@
         <profile>
             <id>hibernate-6.4</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate64</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -525,7 +529,7 @@
         <profile>
             <id>hibernate-6.6</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -811,7 +815,7 @@
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

@@ -5,25 +5,24 @@
 
 package com.blazebit.persistence.view.testsuite.update.singular;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.entity.SingularListEntity;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.singular.model.SingularListEntityView;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import jakarta.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,9 +32,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.6.8
  */
 @RunWith(Parameterized.class)
-// NOTE: Hibernate 4.2 doesn't support attribute converters
-// NOTE: No EclipseLink and Datanucleus support yet
-@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class SingularListUpdateTest extends AbstractEntityViewUpdateTest<SingularListEntityView> {
 
     private SingularListEntity entity1;

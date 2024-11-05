@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.nested;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -24,7 +23,7 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public abstract class AbstractEntityViewUpdateNestedEmbeddableTest<T extends UpdatableEmbeddableEntityViewBase> extends AbstractEntityViewUpdateNestedEmbeddableEntityTest<T> {
 
     public AbstractEntityViewUpdateNestedEmbeddableTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {

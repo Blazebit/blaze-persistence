@@ -6,19 +6,16 @@
 package com.blazebit.persistence.view.testsuite.update.natural;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.update.natural.model.BookIdView;
-import com.blazebit.persistence.view.testsuite.update.natural.model.BookIsbnView;
 import com.blazebit.persistence.view.testsuite.update.natural.model.BookIsbnWithPkView;
 import com.blazebit.persistence.view.testsuite.update.natural.model.BookPkWithIsbnView;
 import com.blazebit.persistence.view.testsuite.update.natural.model.UpdatableBookReferencePkView;
-import com.blazebit.persistence.view.testsuite.update.natural.model.UpdatableBookReferenceView;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -33,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSimpleImmutableSubviewWithPkIdTest extends AbstractBookEntityViewTest<UpdatableBookReferencePkView> {
 
     public EntityViewUpdateSimpleImmutableSubviewWithPkIdTest(FlushMode mode, FlushStrategy strategy, boolean version) {

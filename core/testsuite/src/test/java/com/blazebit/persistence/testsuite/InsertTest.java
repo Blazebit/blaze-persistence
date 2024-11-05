@@ -5,14 +5,8 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.tx.TxWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,22 +14,21 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.DeletePersonCTE;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.testsuite.tx.TxWork;
+import jakarta.persistence.EntityManager;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -74,7 +67,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testSimple() {
         transactional(new TxVoidWork() {
             @Override
@@ -98,7 +91,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testSimpleWithLimit() {
         transactional(new TxVoidWork() {
             @Override
@@ -123,7 +116,7 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testSimpleWithLimitAndOffset() {
         transactional(new TxVoidWork() {
             @Override
@@ -148,9 +141,8 @@ public class InsertTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoHibernate42.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testSimpleWithParameters() {
         transactional(new TxVoidWork() {
             @Override
@@ -177,7 +169,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // NOTE: H2 does not support returning all generated keys
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
     public void testReturningAll() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -206,7 +198,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testReturningLast() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -233,7 +225,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testReturningLastWithParameter() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -262,7 +254,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // TODO: This does not work with sequences for H2 because the next value of the sequence is evaluated regardless of the limit
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testReturningLastWithLimit() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -290,9 +282,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 and MySQL only support returning generated keys
-    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
     public void testReturningLastWithCte() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -331,9 +322,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 and MySQL only support returning generated keys
-    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
     public void testReturningLastWithCteAndLimit() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -372,9 +362,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
-    // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testDeleteReturningWithCteAndLimitInto() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -414,9 +403,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
-    // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testInsertReturningSelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -455,9 +443,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
-    // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testInsertReturningSelectNew() {
         transactional(new TxVoidWork() {
             @Override
@@ -495,9 +482,8 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // Test for #1737
-    // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoOracle.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class })
+    @Category({ NoOracle.class, NoEclipselink.class })
     public void testAssociationParameter() {
         transactional(new TxVoidWork() {
             @Override

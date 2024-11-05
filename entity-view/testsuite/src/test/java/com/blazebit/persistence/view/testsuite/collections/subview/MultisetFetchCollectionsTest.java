@@ -5,34 +5,30 @@
 
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.PersonForCollectionsMultisetFetchNestedView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentCollectionsView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentMultisetFetchView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsMultisetFetchView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewSimpleDocumentMultisetFetchView;
-import com.blazebit.persistence.view.testsuite.collections.subview.model.variations.PersonForCollectionsMasterView;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.PersonForCollectionsMultisetFetchNestedView;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentMultisetFetchView;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsMultisetFetchView;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsView;
+import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewSimpleDocumentMultisetFetchView;
 import jakarta.persistence.EntityManager;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -103,9 +99,8 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     public void testCollections() {
         EntityViewManager evm = build(
                 PersonForCollectionsMultisetFetchNestedView.class,
@@ -140,9 +135,8 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
     // For #2032
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     public void testDynamicFetchCollections() {
         EntityViewManager evm = build(
                 PersonForCollectionsMultisetFetchNestedView.class,

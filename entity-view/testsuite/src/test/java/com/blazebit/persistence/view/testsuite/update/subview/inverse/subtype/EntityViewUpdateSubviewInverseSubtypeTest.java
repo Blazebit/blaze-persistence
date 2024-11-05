@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.subtype;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.FlushMode;
@@ -33,7 +32,7 @@ import java.util.HashSet;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseSubtypeTest extends AbstractEntityViewUpdateDocumentTest<UpdatablePersonView> {
 
     public EntityViewUpdateSubviewInverseSubtypeTest(FlushMode mode, FlushStrategy strategy, boolean version) {

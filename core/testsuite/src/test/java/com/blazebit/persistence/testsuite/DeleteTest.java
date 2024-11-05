@@ -5,10 +5,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,31 +12,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import jakarta.persistence.EntityManager;
-
-import com.blazebit.persistence.ReturningObjectBuilder;
-import com.blazebit.persistence.SimpleReturningBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
+import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.SimpleReturningBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -171,7 +165,7 @@ public class DeleteTest extends AbstractCoreTest {
     
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningAll() {
         transactional(new TxVoidWork() {
             @Override
@@ -194,7 +188,7 @@ public class DeleteTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningAllObjectBuilder() {
         transactional(new TxVoidWork() {
             @Override
@@ -232,7 +226,7 @@ public class DeleteTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLast() {
         transactional(new TxVoidWork() {
             @Override
@@ -254,7 +248,7 @@ public class DeleteTest extends AbstractCoreTest {
     // NOTE: H2 only supports with clause in select statement
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLastWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -286,9 +280,8 @@ public class DeleteTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 only supports with clause in select statement
-    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testSimpleWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -318,7 +311,7 @@ public class DeleteTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testDeleteReturningSelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -352,7 +345,7 @@ public class DeleteTest extends AbstractCoreTest {
     
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testDeleteReturningSelectNew() {
         transactional(new TxVoidWork() {
             @Override

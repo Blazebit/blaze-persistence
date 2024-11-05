@@ -5,7 +5,12 @@
 
 package com.blazebit.persistence.view.testsuite.flat;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObject;
@@ -13,21 +18,16 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 
 /**
  *
@@ -91,9 +91,8 @@ public class UpdatableFlatViewTest extends AbstractEntityViewTest {
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void queryMultiset() {
         test(UpdatableDocumentWithMapsMultisetView.class);
     }

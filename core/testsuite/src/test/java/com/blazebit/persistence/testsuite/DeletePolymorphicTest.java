@@ -5,19 +5,21 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
@@ -28,17 +30,11 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.entity.StringIdCTE;
 import com.blazebit.persistence.testsuite.entity.TPCBase;
-import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.entity.TPCSub1;
+import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -168,9 +164,8 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testTablePerClassWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -201,9 +196,8 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testJoinedWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -234,9 +228,8 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: MySQL does not support CTEs
     // NOTE: H2 only supports with clause in select statement
-    @Category({ NoH2.class, NoMySQLOld.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testSingleTableWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -268,7 +261,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     @Test
     // NOTE: H2 and MySQL only support returning generated keys
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testTablePerClassReturning() {
         transactional(new TxVoidWork() {
             @Override
@@ -290,7 +283,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     @Test
     // NOTE: H2 and MySQL only support returning generated keys
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testJoinedReturning() {
         transactional(new TxVoidWork() {
             @Override
@@ -312,7 +305,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     @Test
     // NOTE: H2 and MySQL only support returning generated keys
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testSingleTableReturning() {
         transactional(new TxVoidWork() {
             @Override
@@ -334,7 +327,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testTablePerClassReturningInCTE() {
         transactional(new TxVoidWork() {
             @Override
@@ -366,7 +359,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testJoinedReturningInCTE() {
         transactional(new TxVoidWork() {
             @Override
@@ -398,7 +391,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testSingleTableReturningInCTE() {
         transactional(new TxVoidWork() {
             @Override
@@ -434,7 +427,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testTablePerClassReturningInCTESelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -468,7 +461,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testJoinedReturningInCTESelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -502,7 +495,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testSingleTableReturningInCTESelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -537,7 +530,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testTablePerClassReturningInCTESelectNew() {
         transactional(new TxVoidWork() {
             @Override
@@ -576,7 +569,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testJoinedReturningInCTESelectNew() {
         transactional(new TxVoidWork() {
             @Override
@@ -615,7 +608,7 @@ public class DeletePolymorphicTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testSingleTableReturningInCTESelectNew() {
         transactional(new TxVoidWork() {
             @Override

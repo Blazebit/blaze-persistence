@@ -5,29 +5,25 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
+import java.util.List;
+
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -39,7 +35,7 @@ import static org.junit.Assert.assertNull;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.4.0
  */
-@Category({NoH2.class, NoMySQL.class, NoMySQLOld.class, NoHibernate.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class})
+@Category({NoH2.class, NoMySQL.class})
 public class FullJoinTest extends AbstractCoreTest {
 
     @Before

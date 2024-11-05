@@ -67,11 +67,6 @@
             <artifactId>blaze-common-utils</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>test</scope>

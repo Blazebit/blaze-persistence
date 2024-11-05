@@ -7,15 +7,10 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import jakarta.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,7 +18,6 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.
@@ -32,8 +26,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
  * @since 1.0.6
  */
 // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-// TODO: report that datanucleus doesn't support element collection in an embeddable
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({NoEclipselink.class})
 public class EmbeddableComplexTest extends AbstractCoreTest {
 
     @Override
@@ -124,8 +117,6 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
-    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.elementCollection");
@@ -136,8 +127,6 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void testSelectEmbeddableElementCollectionArraySyntax() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
                 .select("embeddable.elementCollection['test']");
@@ -148,8 +137,6 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void testSelectEmbeddableElementCollectionArraySyntaxValue() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
                 .select("embeddable.elementCollection['test'].primaryName");
@@ -177,7 +164,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     @Test
     // Test for #598
     // NOTE: Hibernate 6.0 supports this now
-    @Category(NoHibernate60.class)
+    @Category(NoHibernate.class)
     public void testSelectEmbeddableFetchElementCollectionJpaOnly() {
         try {
             em.createQuery("SELECT e.embeddable FROM EmbeddableTestEntity e JOIN FETCH e.embeddable.elementCollection2").getResultList();

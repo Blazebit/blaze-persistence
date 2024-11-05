@@ -4,7 +4,6 @@
  */
 package com.blazebit.persistence.view.testsuite.basic;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
 import com.blazebit.persistence.testsuite.treat.entity.SingleTableBase;
@@ -19,14 +18,11 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.SingleTableBaseAbstractEntityMappingValidationView;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * @author Philipp Eder
  * @since 1.6.0
  */
-// NOTE: DataNucleus
-@Category({ NoDatanucleus.class })
 public class CreatableAbstractEntityTest extends AbstractEntityViewTest {
 
     @Test

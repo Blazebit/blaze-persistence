@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.view.testsuite.update.metamodel;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -42,7 +41,7 @@ import static org.junit.Assert.*;
  * @since 1.2.0
  */
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewMetamodelTest extends AbstractEntityViewTest {
 
     private final EntityViewConfiguration entityViewConfiguration;

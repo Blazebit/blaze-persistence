@@ -5,26 +5,8 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Tuple;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
-import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
-import com.blazebit.persistence.testsuite.entity.Version;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -32,8 +14,19 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.Version;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -368,8 +361,6 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    // Older Hibernate versions don't like fetch joining an element collection at all: https://hibernate.atlassian.net/browse/HHH-11140
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void selectWithFetchElementCollectionOnly() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.select("owner");
@@ -468,7 +459,7 @@ public class JoinTest extends AbstractCoreTest {
     // NOTE: DB2 9.7 which is what we've got on Travis CI does not support subqueries in the on clause. See http://www-01.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.messages.sql.doc/doc/msql00338n.html?cp=SSEPGG_9.7.0
     // NOTE: Hibernate < 5.1 need to refer to other from clause elements which isn't supported until 5.1
     @Test
-    @Category({ NoDB2.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoDB2.class })
     public void testSizeInOnClause() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
@@ -519,7 +510,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     // Only hibernate supports single valued association id expressions without needing to join
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testEntityJoinEmulationReverseJoinDependencyBug() {
         CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
                 .from(Document.class, "d")

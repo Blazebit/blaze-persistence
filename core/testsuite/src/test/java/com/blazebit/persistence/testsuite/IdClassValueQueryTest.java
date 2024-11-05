@@ -5,19 +5,18 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.IdClassEntity;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.IdClassEntity;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -57,7 +56,7 @@ public class IdClassValueQueryTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValueQuery() {
         IdClassEntity e1 = new IdClassEntity(1,"1",  1);
         IdClassEntity e2 = new IdClassEntity(2,"2",  2);

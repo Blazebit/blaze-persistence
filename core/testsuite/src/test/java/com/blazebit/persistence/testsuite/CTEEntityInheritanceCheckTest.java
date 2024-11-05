@@ -5,15 +5,12 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CTE;
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CTE;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
@@ -22,7 +19,7 @@ import jakarta.persistence.PersistenceException;
  * @author Moritz Becker
  * @since 1.4.0
  */
-@Category({NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+@Category({ NoEclipselink.class })
 public class CTEEntityInheritanceCheckTest extends AbstractCoreTest {
 
     @Override

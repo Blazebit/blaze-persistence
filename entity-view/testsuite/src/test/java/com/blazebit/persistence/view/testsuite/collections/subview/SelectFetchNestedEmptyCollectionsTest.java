@@ -5,13 +5,17 @@
 
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
+import java.util.List;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
@@ -21,16 +25,8 @@ import com.blazebit.persistence.view.testsuite.collections.subview.model.Subview
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsSelectFetchView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.variations.PersonForCollectionsMasterView;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
-import static com.blazebit.persistence.view.testsuite.collections.subview.SubviewAssert.assertSubviewEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -89,8 +85,6 @@ public class SelectFetchNestedEmptyCollectionsTest<T extends PersonForCollection
     }
 
     @Test
-    // NOTE: DataNucleus doesn't like CASE WHEN ... THEN '' ELSE NULL END because NULL apparently has a different type for DN..
-    @Category({ NoDatanucleus.class })
     public void testCollections() {
         EntityViewManager evm = build(
                 PersonForCollectionsSelectFetchNestedView.class,

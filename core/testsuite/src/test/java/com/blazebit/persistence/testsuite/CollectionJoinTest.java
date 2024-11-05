@@ -6,13 +6,8 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 
@@ -91,8 +86,6 @@ public class CollectionJoinTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void testElementCollection() {
         CriteriaBuilder<Object[]> criteria = cbf.create(em, Object[].class);
         criteria.from(Root.class, "r");

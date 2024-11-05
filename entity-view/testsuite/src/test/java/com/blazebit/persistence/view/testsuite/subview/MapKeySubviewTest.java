@@ -5,25 +5,20 @@
 
 package com.blazebit.persistence.view.testsuite.subview;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
@@ -32,8 +27,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.Table;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  * @author Moritz Becker
  * @since 1.4.0
  */
-@Category({NoDatanucleus.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoOracle.class, NoDB2.class})//Ignore DB2 until https://hibernate.atlassian.net/browse/HHH-15523 is fixed
+@Category({ NoEclipselink.class, NoOracle.class})
 public class MapKeySubviewTest extends AbstractEntityViewTest {
 
     private MapKeySubviewTest.MapContainer container;

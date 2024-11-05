@@ -5,18 +5,18 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
-import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
  * @author Sayra Ranjha
  * @since 1.4.0
  */
-@Category({ NoMySQLOld.class })
 public class WindowFunctionTest extends AbstractCoreTest {
 
     @Override

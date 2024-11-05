@@ -5,13 +5,19 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.nested.mutable;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
@@ -21,18 +27,11 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.AbstractEntityViewUpdateNestedEmbeddableCollectionsTest;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleEmbeddableEntityView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.mutable.model.UpdatableEmbeddableEntityWithCollectionsView;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -41,8 +40,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
-// NOTE: No Datanucleus support yet
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class })
 public class EntityViewUpdateMutableNestedEmbeddableCollectionsTest extends AbstractEntityViewUpdateNestedEmbeddableCollectionsTest<UpdatableEmbeddableEntityWithCollectionsView> {
 
     public EntityViewUpdateMutableNestedEmbeddableCollectionsTest(FlushMode mode, FlushStrategy strategy, boolean version) {

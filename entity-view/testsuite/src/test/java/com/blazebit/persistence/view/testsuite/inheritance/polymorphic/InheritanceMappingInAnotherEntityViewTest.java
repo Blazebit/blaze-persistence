@@ -5,17 +5,30 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.polymorphic;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.*;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import jakarta.persistence.*;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewInheritance;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertTrue;
 
@@ -24,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  * @author Jan-Willem Gmelig Meyling
  * @since 1.2.0
  */
-@Category({ NoEclipselink.class, NoDatanucleus.class })
+@Category({ NoEclipselink.class })
 public class InheritanceMappingInAnotherEntityViewTest extends AbstractEntityViewTest {
 
     private EntityViewManager evm;

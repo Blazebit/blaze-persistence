@@ -5,35 +5,30 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeSet;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -104,9 +99,8 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     // NOTE: EclipseLink can update neither d.nameObject.intIdEntity nor d.nameObject.intIdEntity.id so associations in embeddables don't work here
-    // NOTE: DN4 also doesn't seem to support this
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus4.class })
+    @Category({ NoEclipselink.class })
     public void testSetEmbeddable() {
         transactional(new TxVoidWork() {
             @Override
@@ -126,7 +120,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -147,7 +141,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testMultipleDeepImplicitJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -176,7 +170,7 @@ public class UpdateTest extends AbstractCoreTest {
     // Test for issue #1615
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesJoin() {
         transactional(new TxVoidWork() {
             @Override
@@ -200,7 +194,7 @@ public class UpdateTest extends AbstractCoreTest {
     // Test for issue #2047
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesJoinInSet() {
         transactional(new TxVoidWork() {
             @Override
@@ -271,7 +265,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningAll() {
         transactional(new TxVoidWork() {
             @Override
@@ -295,7 +289,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLast() {
         transactional(new TxVoidWork() {
             @Override
@@ -318,7 +312,7 @@ public class UpdateTest extends AbstractCoreTest {
     // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLastWithCte() {
         transactional(new TxVoidWork() {
             @Override
@@ -352,7 +346,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testUpdateReturningSelectOld() {
         transactional(new TxVoidWork() {
             @Override
@@ -387,7 +381,7 @@ public class UpdateTest extends AbstractCoreTest {
 
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMSSQL.class, NoMySQL.class, NoEclipselink.class })
     public void testUpdateReturningSelectNew() {
         transactional(new TxVoidWork() {
             @Override
@@ -424,7 +418,7 @@ public class UpdateTest extends AbstractCoreTest {
     // NOTE: H2 and MySQL only support returning generated keys
     // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testQueryCaching() {
         TxVoidWork work = new TxVoidWork() {
             @Override

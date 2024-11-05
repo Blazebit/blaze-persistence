@@ -5,11 +5,15 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.batchsubselect;
 
+import java.util.List;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -24,13 +28,7 @@ import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionDefault
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionElement;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionEmbeddable;
 import com.blazebit.persistence.view.testsuite.entity.LegacyOrderPositionId;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -38,7 +36,7 @@ import java.util.Set;
  * @since 1.6.9
  */
 // NOTE: Requires values clause which currently is only available for Hibernate
-@Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class BatchSubselectSubsetCorrelationTest extends AbstractEntityViewTest {
     @Override
     protected Class<?>[] getEntityClasses() {

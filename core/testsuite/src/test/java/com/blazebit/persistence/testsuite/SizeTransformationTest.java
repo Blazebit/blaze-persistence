@@ -5,24 +5,23 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,8 +32,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class SizeTransformationTest extends AbstractCoreTest {
 
-    // TODO: create datanucleus issue
-    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithElementCollectionIndexed1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
@@ -44,8 +41,6 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: create datanucleus issue
-    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithElementCollectionIndexed2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
@@ -57,8 +52,6 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: create datanucleus issue
-    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithElementCollectionBasic1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
@@ -68,8 +61,6 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: create datanucleus issue
-    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithElementCollectionBasic2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
@@ -148,9 +139,6 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: create datanucleus issue
-    // fails with datanucleus-4
-    @Category(NoDatanucleus4.class)
     @Test
     public void testSizeToCountTransformationWithCollectionBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -160,9 +148,6 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: create datanucleus issue
-    // fails with datanucleus-5
-    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithListBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
@@ -183,9 +168,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // NOTE: DataNucleus renders the literal `(1)` for the byte array parameter on PostgreSQL which is wrong
     @Test
-    @Category({ NoDatanucleus.class })
     public void testDisableCountTransformationWhenParameterUsedInSelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN d.age > 0 THEN d.byteArray ELSE :byteArray END")

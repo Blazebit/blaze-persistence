@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityView;
@@ -42,7 +41,7 @@ import static org.junit.Assert.assertNull;
  * @author Kacper Urbaniec
  * @since 1.6.14
  */
-@Category({NoEclipselink.class, NoDatanucleus.class})
+@Category({NoEclipselink.class})
 public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
     private EntityViewManager evm;

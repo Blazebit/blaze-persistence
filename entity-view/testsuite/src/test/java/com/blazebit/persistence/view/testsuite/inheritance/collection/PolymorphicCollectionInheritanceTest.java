@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
@@ -42,8 +41,8 @@ import static org.junit.Assert.assertNull;
  * @author Christian Beikov
  * @since 1.6.15
  */
-// NOTE: Eclipselink and Datanucleus have no real support for subtype property access
-@Category({ NoEclipselink.class, NoDatanucleus.class })
+// NOTE: Eclipselink has no real support for subtype property access
+@Category({ NoEclipselink.class })
 public class PolymorphicCollectionInheritanceTest extends AbstractEntityViewTest {
 
     private SingleTableSub1 parent;

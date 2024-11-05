@@ -5,24 +5,22 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.hibernate.envers.Audited;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import org.hibernate.envers.Audited;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.metamodel.EntityType;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,10 +37,7 @@ public class EnversTest extends AbstractCoreTest {
         return new Class<?>[]{ A.class };
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 do very strange things to the JPA entity name and also register the audited entities only via the FQN + _AUD
-    // At some point we might fix that in the JoinManager to output compatible HQL, but for now, we just ignore it
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class })
     public void selectEnversEntity() {
         EntityMetamodel metamodel = cbf.getService(EntityMetamodel.class);
         EntityType<?> auditedEntity = getAuditedEntity(metamodel, A.class);

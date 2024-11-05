@@ -5,10 +5,16 @@
 
 package com.blazebit.persistence.view.testsuite.collections.index;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -26,14 +32,7 @@ import com.blazebit.persistence.view.testsuite.collections.index.model.DocumentV
 import com.blazebit.persistence.view.testsuite.collections.index.model.VersionKeyView;
 import com.blazebit.persistence.view.testsuite.collections.index.model.VersionStaticKeyView;
 import com.blazebit.persistence.view.testsuite.collections.index.model.VersionViewWithMappingIndex;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -81,7 +80,7 @@ public class MappingIndexTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSelectBatch2() {
         test(DocumentViewWithMappingIndexSelect.class, 2);
     }
@@ -92,9 +91,8 @@ public class MappingIndexTest extends AbstractEntityViewTest {
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testMultiset() {
         test(DocumentViewWithMappingIndexMultiset.class);
     }

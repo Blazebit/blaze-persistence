@@ -5,7 +5,11 @@
 
 package com.blazebit.persistence.view.testsuite.proxy;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.Collections;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
@@ -14,9 +18,9 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityNestedEmbed
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
+import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.IntIdEntityView;
@@ -27,20 +31,18 @@ import com.blazebit.persistence.view.testsuite.proxy.model.NameObjectView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityNestedEmbeddableView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableEmbeddableTestEntityView;
 import com.blazebit.persistence.view.testsuite.proxy.model.UpdatableNameObjectView;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-import java.util.Collections;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-// NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class ProxyFactoryEmeddableTest extends AbstractEntityViewTest {
 
     @Override

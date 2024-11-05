@@ -6,9 +6,7 @@
 package com.blazebit.persistence.view.testsuite.update.elementcollection;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -19,7 +17,7 @@ import com.blazebit.persistence.view.testsuite.update.elementcollection.model.Do
 import com.blazebit.persistence.view.testsuite.update.elementcollection.model.DocumentForElementCollectionsFlatViewElementsView;
 import com.blazebit.persistence.view.testsuite.update.elementcollection.model.DocumentForElementIdView;
 import com.blazebit.persistence.view.testsuite.update.elementcollection.model.PersonForElementCollectionsView;
-import org.junit.Assume;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -39,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(Parameterized.class)
 // NOTE: No EclipseLink and Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class ElementCollectionUpdateReferenceTest extends AbstractEntityViewUpdateTest<DocumentForElementCollectionsEmbeddableElementsView> {
 
     private static final boolean REPLACE_WITH_REFERENCE_CONTENTS = true;

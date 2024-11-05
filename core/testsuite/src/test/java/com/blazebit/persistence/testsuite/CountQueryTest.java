@@ -5,17 +5,15 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.function.alias.AliasFunction;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 
@@ -130,7 +128,7 @@ public class CountQueryTest extends AbstractCoreTest {
 
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void countQueryWithGroupByAndLimit() {
         CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
                 .from(Document.class, "d")
@@ -150,7 +148,7 @@ public class CountQueryTest extends AbstractCoreTest {
 
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void countQueryFromHavingQuery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("d.id")
@@ -186,7 +184,7 @@ public class CountQueryTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void boundedCountQueryFromSimpleQuery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
@@ -201,7 +199,7 @@ public class CountQueryTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void boundedCountQueryFromCollectionJoinQuery() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class)

@@ -5,15 +5,15 @@
 
 package com.blazebit.persistence.view.testsuite.array;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -28,12 +28,7 @@ import com.blazebit.persistence.view.testsuite.collections.entity.simple.Documen
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollectionsContainer;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsView;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static com.blazebit.persistence.view.testsuite.collections.subview.SubviewAssert.assertSubviewEquals;
 import static org.junit.Assert.assertEquals;
@@ -120,10 +115,8 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     public void testArrayExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         EntityViewManager evm = build(cfg, SubviewDocumentCollectionsView.class, SubviewPersonForCollectionsView.class);
@@ -148,13 +141,10 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
     }
 
     // Test for #2057
-    // MySQL before 8 didn't support lateral joins which are required here
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
-    // NOTE: Needs Hibernate 5.2.8+ for entity joins and group join
     @Test
-    @Category({ NoMySQLOld.class, NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    @Category({  NoDB2.class, NoEclipselink.class })
     public void testArrayExpressionNested() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         EntityViewManager evm = build(cfg, DocumentCollectionsContainerView.class, DocumentCollectionsLimitView.class, SubviewPersonForCollectionsView.class);

@@ -10,7 +10,6 @@ import static org.junit.Assert.assertEquals;
 import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
@@ -80,7 +79,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
-    @Category({ NoEclipselink.class, NoHibernate60.class })
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     // Eclipselink has a result set mapping bug in case of map keys
     public void testEntityViewSettingFilterSubview() {
         EntityViewManager evm = build(

@@ -5,24 +5,22 @@
 
 package com.blazebit.persistence.view.testsuite.predicated.basic;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
-import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
-import com.blazebit.persistence.view.testsuite.predicated.basic.model.BasicPredicatedDocumentCollectionsView;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
+import com.blazebit.persistence.view.testsuite.predicated.basic.model.BasicPredicatedDocumentCollectionsView;
 import jakarta.persistence.EntityManager;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -106,9 +104,8 @@ public class BasicPredicatedTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: DataNucleus renders joins wrong: https://github.com/datanucleus/datanucleus-rdbms/issues/177
     // Apparently EclipseLink just ignores any ON conditions when having join tables...
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void multipleBasicPredicatedCollectionsAreFetchedCorrectly() {
         EntityViewManager evm = build(BasicPredicatedDocumentCollectionsView.class);
 

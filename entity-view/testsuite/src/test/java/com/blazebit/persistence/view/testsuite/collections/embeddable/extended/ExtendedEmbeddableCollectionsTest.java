@@ -5,16 +5,10 @@
 
 package com.blazebit.persistence.view.testsuite.collections.embeddable.extended;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,12 +16,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.collections.embeddable.extended.model.ExtendedEmbeddableDocumentListMapSetView;
 import com.blazebit.persistence.view.testsuite.collections.embeddable.extended.model.ExtendedEmbeddableDocumentListSetMapView;
@@ -38,6 +31,9 @@ import com.blazebit.persistence.view.testsuite.collections.embeddable.extended.m
 import com.blazebit.persistence.view.testsuite.collections.embeddable.simple.model.EmbeddableDocumentCollectionsView;
 import com.blazebit.persistence.view.testsuite.collections.entity.extended.ExtendedDocumentForElementCollections;
 import com.blazebit.persistence.view.testsuite.collections.entity.extended.ExtendedPersonForElementCollections;
+import jakarta.persistence.EntityManager;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -129,8 +125,7 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
     }
 
     @Test
-    // TODO: report that datanucleus doesn't support element collection in an embeddable
-    @Category({NoHibernate.class, NoDatanucleus.class, NoEclipselink.class })
+    @Category({NoHibernate.class, NoEclipselink.class })
     // Eclipselink has a result set mapping bug in case of map keys
     public void testCollections() {
         EntityViewManager evm = build(viewType);

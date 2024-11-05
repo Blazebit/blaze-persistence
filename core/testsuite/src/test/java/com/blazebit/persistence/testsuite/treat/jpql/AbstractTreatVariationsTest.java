@@ -6,11 +6,19 @@
 
 package com.blazebit.persistence.testsuite.treat.jpql;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
+
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.Base;
 import com.blazebit.persistence.testsuite.treat.entity.BaseEmbeddable;
@@ -28,21 +36,12 @@ import com.blazebit.persistence.testsuite.treat.entity.TablePerClassBase;
 import com.blazebit.persistence.testsuite.treat.entity.TablePerClassSub1;
 import com.blazebit.persistence.testsuite.treat.entity.TablePerClassSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.experimental.categories.Category;
-import org.junit.runners.MethodSorters;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 // NOTE: These tests are just for reference and have been copied and adapted form the jpa-treat-variations repository
-@Category({ NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoHibernate.class, NoEclipselink.class })
 public abstract class AbstractTreatVariationsTest extends AbstractCoreTest {
     
     protected final String strategy;

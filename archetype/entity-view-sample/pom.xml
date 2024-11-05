@@ -17,7 +17,7 @@
     <artifactId>blaze-persistence-archetype-entity-view-sample</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Archetype Entity-View Sample Jakarta</name>
+    <name>Blazebit Persistence Archetype Entity-View Sample</name>
 
     <properties>
         <module.name>com.blazebit.persistence.archetype.view.sample</module.name>

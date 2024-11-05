@@ -7,10 +7,11 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertTrue;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ import org.junit.experimental.categories.Category;
  * @since 1.0.0
  */
 // NOTE: Hibernate 6.0 supports this when only a single subtype contains the attribute
-@Category(NoHibernate60.class)
+@Category(NoHibernate.class)
 public class PolymorphicJoinTest extends AbstractCoreTest {
     
     @Override
