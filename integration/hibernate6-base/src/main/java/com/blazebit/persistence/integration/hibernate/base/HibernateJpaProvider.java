@@ -1260,8 +1260,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 break;
             }
         }
-
-        return componentType.getCascadeStyle(propertyIndex).hasOrphanDelete();
+        int index = componentType.getPropertyIndex(propertyParts[propertyIndex]);
+        return componentType.getCascadeStyle(index).hasOrphanDelete();
     }
 
     @Override
