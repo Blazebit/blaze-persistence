@@ -10,7 +10,9 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix missing cascading deletes for deletes that contain joins or CTEs
+* Fix some issues with PostgreSQL and Oracle multiset SQL rendering with Hibernate ORM 6+
+* Fix returning clause rendering for PostgreSQL with Hibernate ORM 6+
 
 ### Backwards-incompatible changes
 

@@ -81,7 +81,7 @@
         <version.weld>5.1.2.Final</version.weld>
         <version.quarkus-3>3.2.12.Final</version.quarkus-3>
         <version.classgraph>4.8.89</version.classgraph>
-        <version.jackson>2.16.2</version.jackson>
+        <version.jackson>2.15.4</version.jackson>
 
         <asmVersion>9.5</asmVersion>
         <version.bnd>6.4.1</version.bnd>

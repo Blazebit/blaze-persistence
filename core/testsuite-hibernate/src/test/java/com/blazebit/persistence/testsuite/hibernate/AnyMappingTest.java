@@ -6,7 +6,7 @@ package com.blazebit.persistence.testsuite.hibernate;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.hibernate6.entity.PropertyHolder;
+import com.blazebit.persistence.testsuite.hibernate.entity.PropertyHolder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;

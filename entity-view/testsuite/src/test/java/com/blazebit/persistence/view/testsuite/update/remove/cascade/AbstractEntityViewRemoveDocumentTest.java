@@ -205,6 +205,9 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
                     .assertDelete().forRelation(Document.class, "peopleListBag").and()
                     .assertDelete().forRelation(Document.class, "peopleCollectionBag").and();
         }
+        if (isQueryStrategy() && !simpleDelete && dbmsDialect.supportsModificationQueryInWithClause()) {
+            return builder;
+        }
         if (supportsNestedEmbeddables()) {
             builder
                     .assertDelete().forRelation(Document.class, "nameContainerMap").and()
@@ -228,7 +231,9 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
                     .assertDelete().forRelation(Person.class, "favoriteDocuments").and()
             ;
         }
-
+        if (isQueryStrategy() && !simpleDelete && dbmsDialect.supportsModificationQueryInWithClause()) {
+            return builder;
+        }
         return builder
                 .assertDelete().forRelation(Person.class, "localized").and()
                 ;

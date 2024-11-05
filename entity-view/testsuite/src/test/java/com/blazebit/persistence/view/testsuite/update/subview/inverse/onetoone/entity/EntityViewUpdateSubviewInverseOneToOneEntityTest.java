@@ -13,6 +13,7 @@ import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentForSimpleOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfoSimple;
@@ -32,7 +33,7 @@ import jakarta.persistence.EntityManager;
  */
 @RunWith(Parameterized.class)
 // NOTE: Hibernate has a bug when selecting inverse one-to-ones: https://hibernate.atlassian.net/browse/HHH-12885
-@Category({ NoEclipselink.class})
+@Category({ NoHibernate.class, NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseOneToOneEntityTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
 
     private DocumentForSimpleOneToOne doc1;
