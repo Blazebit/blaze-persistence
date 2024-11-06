@@ -1,0 +1,24 @@
+= Blaze-Persistence 1.6.14 Release
+Christian Beikov
+2024-11-06 0
+:description: Blaze-Persistence version 1.6.14 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the fourteenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6 integration fixes
+
+Thanks to https://github.com/RustamSultansoy[Rustam Sultansoy, window="_blank"], another Hibernate ORM 6 integration issue
+was fixed in this release which+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++,
+prevented application with embeddables inside element collections to start up.
+
+=== Various bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1614[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
