@@ -514,15 +514,6 @@ public interface JpaProvider {
     /**
      * Indicates if the provider needs associations in the ON clause to use their id.
      * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
-     * <code>alias.association.id</code>.
-     *
-     * @return true if required, else false
-     */
-    public boolean needsAssociationToIdRewriteInOnClause();
-
-    /**
-     * Indicates if the provider needs associations in the ON clause to use their id.
-     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
      * <code>alias.association.id</code> which relies on a <i>broken</i> type check in older Hibernate versions.
      *
      * @return true if required, else false
