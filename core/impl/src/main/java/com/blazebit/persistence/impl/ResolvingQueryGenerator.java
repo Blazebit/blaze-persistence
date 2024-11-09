@@ -292,7 +292,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             final boolean hasLimit = hasFirstResult || hasMaxResults;
             final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
             final boolean hasEntityFunctions = subquery.joinManager.hasEntityFunctions();
-            return !hasLimit && !hasSetOperations && !hasEntityFunctions && !subquery.joinManager.hasLateInlineNodes();
+            return (jpaProvider.supportsSubqueryLimitOffset() || !hasLimit)
+                    && (jpaProvider.supportsSetOperations() || !hasSetOperations)
+                    && !hasEntityFunctions && !subquery.joinManager.hasLateInlineNodes();
         }
         return super.isSimpleSubquery(expression);
     }
@@ -885,35 +887,20 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     public void visit(InPredicate predicate) {
         boolean quantifiedPredicate = this.quantifiedPredicate;
         this.quantifiedPredicate = true;
-        if (predicate.getRight().size() == 1 && jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
-            Expression right = predicate.getRight().get(0);
-            if (right instanceof ParameterExpression) {
-                ParameterExpression parameterExpression = (ParameterExpression) right;
-                @SuppressWarnings("unchecked")
-                Type<?> associationType = getAssociationType(predicate.getLeft(), right);
-                // If the association type is a entity type, we transform it
-                if (associationType instanceof EntityType<?>) {
-                    renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
-                } else {
-                    super.visit(predicate);
-                }
-            } else if (right instanceof PathExpression) {
-                renderEquality(predicate.getLeft(), right, predicate.isNegated(), PredicateQuantifier.ONE);
-            } else {
-                super.visit(predicate);
-            }
+        Expression right;
+        SubqueryExpression subqueryExpression;
+        if (!externalRepresentation
+                && predicate.getRight().size() == 1 && (right = predicate.getRight().get(0)) instanceof SubqueryExpression
+                && (subqueryExpression = (SubqueryExpression) right).getSubquery() instanceof SubqueryInternalBuilder<?>
+                && ((SubqueryInternalBuilder<?>) subqueryExpression.getSubquery()).getMaxResults() == 1) {
+            // This is a special rewrite for databases like e.g. MySQL
+            predicate.getLeft().accept(this);
+            sb.append(predicate.isNegated() ? " <> " : " = ");
+            right.accept(this);
         } else {
             super.visit(predicate);
         }
         this.quantifiedPredicate = quantifiedPredicate;
-    }
-
-    private Type<?> getAssociationType(Expression expression1, Expression expression2) {
-        if (expression1 instanceof PathExpression) {
-            return ((PathExpression) expression1).getPathReference().getType();
-        }
-
-        return ((PathExpression) expression2).getPathReference().getType();
     }
 
     @Override
@@ -938,60 +925,47 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
         Expression expressionToSplit = needsEmbeddableSplitting(left, right);
 
-        if (jpaProvider.needsAssociationToIdRewriteInOnClause() && clauseType == ClauseType.JOIN) {
-            boolean rewritten = renderAssociationIdIfPossible(left);
+        if (expressionToSplit == null || !(left instanceof ParameterExpression) && !(right instanceof ParameterExpression)) {
+            left.accept(this);
             sb.append(operator);
             if (quantifier != PredicateQuantifier.ONE) {
                 sb.append(quantifier.toString());
             }
-            rewritten |= renderAssociationIdIfPossible(right);
-            if (rewritten) {
-                rewriteToIdParam(left);
-                rewriteToIdParam(right);
-            }
+            right.accept(this);
         } else {
-            if (expressionToSplit == null || !(left instanceof ParameterExpression) && !(right instanceof ParameterExpression)) {
-                left.accept(this);
-                sb.append(operator);
-                if (quantifier != PredicateQuantifier.ONE) {
-                    sb.append(quantifier.toString());
-                }
-                right.accept(this);
+            // We split the path and the parameter expression accordingly
+            // TODO: Try to handle map key expressions, although no JPA provider supports de-referencing map keys
+            PathExpression pathExpression = (PathExpression) expressionToSplit;
+            ParameterExpression parameterExpression;
+            if (left instanceof ParameterExpression) {
+                parameterExpression = (ParameterExpression) left;
             } else {
-                // We split the path and the parameter expression accordingly
-                // TODO: Try to handle map key expressions, although no JPA provider supports de-referencing map keys
-                PathExpression pathExpression = (PathExpression) expressionToSplit;
-                ParameterExpression parameterExpression;
-                if (left instanceof ParameterExpression) {
-                    parameterExpression = (ParameterExpression) left;
-                } else {
-                    parameterExpression = (ParameterExpression) right;
-                }
-                PathReference pathReference = pathExpression.getPathReference();
-                EmbeddableType<?> embeddableType = (EmbeddableType<?>) pathReference.getType();
-                String parameterName = parameterExpression.getName();
-                Map<String, List<String>> parameterAccessPaths = new HashMap<>();
-                ParameterManager.ParameterImpl<?> parameter = parameterManager.getParameter(parameterName);
-                sb.append('(');
-                for (Attribute<?, ?> attribute : embeddableType.getAttributes()) {
-                    ((JoinNode) pathReference.getBaseNode()).appendDeReference(sb, pathReference.getField() + "." + attribute.getName(), externalRepresentation);
-                    String embeddedPropertyName = attribute.getName();
-                    String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
-                    sb.append(operator);
-                    sb.append(":").append(subParamName);
-                    if (parameter.getTransformer() == null) {
-                        parameterManager.registerParameterName(subParamName, false, null, null);
-                    }
-                    parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
-
-                    sb.append(" AND ");
-                }
-                sb.setLength(sb.length() - " AND ".length());
-                sb.append(')');
-
+                parameterExpression = (ParameterExpression) right;
+            }
+            PathReference pathReference = pathExpression.getPathReference();
+            EmbeddableType<?> embeddableType = (EmbeddableType<?>) pathReference.getType();
+            String parameterName = parameterExpression.getName();
+            Map<String, List<String>> parameterAccessPaths = new HashMap<>();
+            ParameterManager.ParameterImpl<?> parameter = parameterManager.getParameter(parameterName);
+            sb.append('(');
+            for (Attribute<?, ?> attribute : embeddableType.getAttributes()) {
+                ((JoinNode) pathReference.getBaseNode()).appendDeReference(sb, pathReference.getField() + "." + attribute.getName(), externalRepresentation);
+                String embeddedPropertyName = attribute.getName();
+                String subParamName = "_" + parameterName + "_" + embeddedPropertyName.replace('.', '_');
+                sb.append(operator);
+                sb.append(":").append(subParamName);
                 if (parameter.getTransformer() == null) {
-                    parameter.setTransformer(new SplittingParameterTransformer(parameterManager, entityMetamodel, embeddableType.getJavaType(), parameterAccessPaths));
+                    parameterManager.registerParameterName(subParamName, false, null, null);
                 }
+                parameterAccessPaths.put(subParamName, Arrays.asList(embeddedPropertyName.split("\\.")));
+
+                sb.append(" AND ");
+            }
+            sb.setLength(sb.length() - " AND ".length());
+            sb.append(')');
+
+            if (parameter.getTransformer() == null) {
+                parameter.setTransformer(new SplittingParameterTransformer(parameterManager, entityMetamodel, embeddableType.getJavaType(), parameterAccessPaths));
             }
         }
         setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);

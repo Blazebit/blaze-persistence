@@ -284,7 +284,7 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
         if (!needsCheck) {
             return;
         }
-        boolean enableElementCollectionIdCutoff = collectionAttribute.getJoinTable() != null && !mainQuery.jpaProvider.needsAssociationToIdRewriteInOnClause();
+        boolean enableElementCollectionIdCutoff = collectionAttribute.getJoinTable() != null;
         JpaUtils.expandBindings(setAttributeBindingMap, collectionColumnBindingMap, collectionAttributeEntries, ClauseType.SET, this, keyFunctionExpression, enableElementCollectionIdCutoff);
         super.prepareAndCheck(parentVisitor);
     }

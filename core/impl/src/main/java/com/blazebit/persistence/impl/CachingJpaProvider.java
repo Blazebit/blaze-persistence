@@ -334,11 +334,6 @@ public final class CachingJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsAssociationToIdRewriteInOnClause() {
-        return jpaProvider.needsAssociationToIdRewriteInOnClause();
-    }
-
-    @Override
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
         return jpaProvider.needsBrokenAssociationToIdRewriteInOnClause();
     }

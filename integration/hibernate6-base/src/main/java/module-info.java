@@ -5,6 +5,7 @@
 module com.blazebit.persistence.integration.hibernate.base {
     requires org.hibernate.orm.core;
     requires java.naming;
+	requires jakarta.persistence;
     requires com.blazebit.common.utils;
     requires com.blazebit.persistence.integration.jpa;
     requires com.blazebit.persistence.core;

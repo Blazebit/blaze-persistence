@@ -619,11 +619,6 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean needsAssociationToIdRewriteInOnClause() {
-        return false;
-    }
-
-    @Override
     public boolean needsBrokenAssociationToIdRewriteInOnClause() {
         return false;
     }
