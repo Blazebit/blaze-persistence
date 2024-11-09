@@ -322,16 +322,23 @@ public class JpaMetamodelUtils {
              * with the corresponding primitive type.
              * Note that it also returns just "any" type of an id class attribute in case there is no dedicated id class type.
              */
-            if (entityType.getIdType() != null) {
-                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(entityType.getIdType().getJavaType());
-                if (primitiveIdClass == null) {
-                    // Discover the identifier attributes like this instead for EclipseLink
-                    Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
-                    if (!idTypes.isEmpty()) {
-                        return idTypes;
+            try {
+                if (entityType.getIdType() != null) {
+                    final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(entityType.getIdType().getJavaType());
+                    if (primitiveIdClass == null) {
+                        // Discover the identifier attributes like this instead for EclipseLink
+                        Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
+                        if (!idTypes.isEmpty()) {
+                            return idTypes;
+                        }
+                    } else {
+                        return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(primitiveIdClass));
                     }
-                } else {
-                    return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(primitiveIdClass));
+                }
+            } catch (IllegalArgumentException e2) {
+                // Try again on the super type. Eclipselink is a bit odd in this regard...
+                if (entityType.getSupertype() != null) {
+                    return getIdAttributes(entityType.getSupertype());
                 }
             }
             throw e;
