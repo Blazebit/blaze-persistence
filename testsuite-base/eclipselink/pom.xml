@@ -20,7 +20,7 @@
     <name>Blazebit Persistence Testsuite Base EclipseLink</name>
 
     <properties>
-        <module.name>com.blazebit.persistence.testsuite.base.eclipselink</module.name>
+        <module.name>com.blazebit.persistence.testsuite.base</module.name>
     </properties>
 
     <dependencies>

@@ -18,6 +18,7 @@
         <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
         <version.spring-data>${version.spring-data-3.3}</version.spring-data>
         <version.spring-hateoas>2.2.2</version.spring-hateoas>
+        <version.hibernate>${version.hibernate-6.6}</version.hibernate>
         <main.java.version>17</main.java.version>
     </properties>
 

@@ -39,6 +39,7 @@
             ${surefire.jvm.params.AbstractEntityViewTest}
         </surefire.jvm.params>
         <jpa-api-version>${version.jpa-api}</jpa-api-version>
+        <useModulePath>true</useModulePath>
     </properties>
 
     <dependencies>
@@ -152,6 +153,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:h2:mem:entityview${surefire.forkNumber};DB_CLOSE_DELAY=-1</jdbc.url>
                                 <jdbc.user>admin</jdbc.user>
@@ -194,6 +196,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:mysql://${dbHost}:3306/information_schema?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
@@ -235,6 +238,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:postgresql://${dbHost}:5432/test</jdbc.url>
                                 <jdbc.user>postgres</jdbc.user>
@@ -276,6 +280,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:db2://${dbHost}:50000/test:progressiveStreaming=2;</jdbc.url>
                                 <jdbc.user>db2inst1</jdbc.user>
@@ -319,6 +324,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:oracle:thin:@${dbHost}:1521:XE</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
@@ -367,6 +373,7 @@
                             <test>${test}</test>
                             <forkCount>${surefireForkCount}</forkCount>
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
+                            <useModulePath>${useModulePath}</useModulePath>
                             <systemPropertyVariables>
                                 <jdbc.url>jdbc:sqlserver://${dbHost}:1433;trustServerCertificate=true</jdbc.url>
                                 <jdbc.user>sa</jdbc.user>
@@ -916,6 +923,8 @@
             <id>eclipselink</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink</jpa.excludedGroups>
+                <!-- Looks like EclipseLink isn't really made for running in module mode -->
+                <useModulePath>false</useModulePath>
             </properties>
             <dependencies>
                 <dependency>
@@ -978,6 +987,7 @@
                             </annotationProcessorPaths>
                             <compilerArgs>
                                 <compilerArg>-Aeclipselink.persistencexml=${basedir}/src/test/resources/META-INF/persistence.xml</compilerArg>
+                                <compilerArg>-Aeclipselink.canonicalmodel.use_generated=false</compilerArg>
                             </compilerArgs>
                             <annotationProcessors>
                                 <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>

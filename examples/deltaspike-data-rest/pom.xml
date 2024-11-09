@@ -379,6 +379,7 @@
                             </annotationProcessorPaths>
                             <compilerArgs>
                                 <compilerArg>-Aeclipselink.persistencexml=${basedir}/src/main/resources/META-INF/persistence.xml</compilerArg>
+                                <compilerArg>-Aeclipselink.canonicalmodel.use_generated=false</compilerArg>
                             </compilerArgs>
                             <annotationProcessors>
                                 <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>

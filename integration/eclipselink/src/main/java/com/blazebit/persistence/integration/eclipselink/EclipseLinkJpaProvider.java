@@ -532,10 +532,13 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     private DatabaseMapping getDatabaseMapping(ManagedType<?> type, String attributeName) {
+        ClassDescriptor t = descriptors.get( type.getJavaType() );
+        if (t == null) {
+            return null;
+        }
         if (attributeName.indexOf('.') == -1) {
             return descriptors.get( type.getJavaType() ).getMappingForAttributeName( attributeName );
         }
-        ClassDescriptor t = descriptors.get( type.getJavaType() );
         DatabaseMapping attr = null;
         String[] parts = attributeName.split("\\.");
         for (int i = 0; i < parts.length; i++) {
@@ -553,6 +556,9 @@ public class EclipseLinkJpaProvider implements JpaProvider {
             }
             attr = attribute;
             t = attribute.getReferenceDescriptor();
+            if (t == null && attribute instanceof ForeignReferenceMapping) {
+                t = descriptors.get( ( (ForeignReferenceMapping) attribute).getReferenceClass() );
+            }
         }
 
         return attr;
