@@ -16,8 +16,8 @@ import com.blazebit.persistence.criteria.BlazeWindowFrameMode;
 import com.blazebit.persistence.parser.expression.WindowFrameExclusionType;
 import com.blazebit.persistence.parser.expression.WindowFramePositionType;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

@@ -45,11 +45,11 @@ import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -265,7 +265,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
     }
 
     @Override
-    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Attribute<?, ?> rootAttribute, Annotation mapping, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    public List<ScalarTargetResolvingExpressionVisitor.TargetType> getPossibleTargetTypes(Class<?> entityClass, Attribute<?, ?> rootAttribute, Annotation mapping, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes) {
         ManagedType<?> managedType = entityMetamodel.getManagedType(entityClass);
         String expression;
         if (mapping instanceof Mapping) {
@@ -292,7 +292,7 @@ public class MetamodelBuildingContextImpl implements MetamodelBuildingContext {
             MappingCorrelated m = (MappingCorrelated) mapping;
             CorrelationProviderFactory correlationProviderFactory = CorrelationProviderHelper.getFactory(m.correlator());
             ScalarTargetResolvingExpressionVisitor resolver = new ScalarTargetResolvingExpressionVisitor(entityClass, getEntityMetamodel(), getJpqlFunctions(), rootTypes);
-            javax.persistence.metamodel.Type<?> type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, "_alias", this, resolver);
+            jakarta.persistence.metamodel.Type<?> type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, "_alias", this, resolver);
             if (type == null) {
                 // We can't determine the managed type
                 return Collections.emptyList();

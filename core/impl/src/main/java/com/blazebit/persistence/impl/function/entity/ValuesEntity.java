@@ -7,9 +7,9 @@ package com.blazebit.persistence.impl.function.entity;
 
 import com.blazebit.persistence.CTE;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import java.io.Serializable;
 
 /**

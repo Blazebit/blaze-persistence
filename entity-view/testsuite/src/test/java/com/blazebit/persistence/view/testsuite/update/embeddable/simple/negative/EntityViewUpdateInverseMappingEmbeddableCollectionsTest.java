@@ -5,16 +5,13 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.simple.negative;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.MappingInverse;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,7 +27,7 @@ import static org.junit.Assert.fail;
  * @since 1.2.0
  */
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateInverseMappingEmbeddableCollectionsTest extends AbstractEntityViewTest {
 
     @Test

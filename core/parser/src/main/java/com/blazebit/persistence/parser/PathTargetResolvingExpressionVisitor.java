@@ -50,14 +50,14 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -200,7 +200,8 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
         }
 
         Class<?> baseClass = baseType.getJavaType();
-        if (baseClass != null) {
+        // Hibernate ORM 6+ returns Map.class instead of null for map based entities
+        if (baseClass != null && baseClass != Map.class) {
             Class<?> clazz = JpaMetamodelUtils.resolveFieldClass(baseType.getJavaType(), attribute);
             if (clazz != null) {
                 return metamodel.type(clazz);

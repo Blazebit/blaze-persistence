@@ -9,8 +9,8 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.view.spi.ViewRootJpqlMacro;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

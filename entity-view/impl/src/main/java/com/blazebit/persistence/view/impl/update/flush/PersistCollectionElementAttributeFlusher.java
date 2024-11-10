@@ -8,7 +8,7 @@ package com.blazebit.persistence.view.impl.update.flush;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 
 /**

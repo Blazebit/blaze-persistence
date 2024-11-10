@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  *

@@ -15,7 +15,7 @@ import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.PropertyExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.List;
 

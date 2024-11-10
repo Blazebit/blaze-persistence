@@ -38,8 +38,7 @@ public class OracleToStringJsonFunction extends GroupConcatBasedToStringJsonFunc
             context.addChunk(postChunk);
             context.addChunk(subquery.substring(fromIndex));
         } else {
-            int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
-            if (limitIndex == -1) {
+            if (SqlUtils.indexOfLimit(subquery, orderByIndex) == -1 && SqlUtils.indexOfFetchFirst(subquery, orderByIndex) == -1) {
                 context.addChunk(preChunk);
 
                 StringBuilder sb = new StringBuilder(fromIndex);

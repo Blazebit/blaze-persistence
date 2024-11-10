@@ -5,26 +5,23 @@
 
 package com.blazebit.persistence.view.testsuite.filter.inheritance;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
 import com.blazebit.persistence.testsuite.entity.PrimitiveVersion;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.filter.inheritance.model.AttributeFilterInheritancePrimitiveDocumentView;
 import com.blazebit.persistence.view.testsuite.filter.inheritance.model.AttributeFilterInheritancePrimitiveDocumentViewSub1;
 import com.blazebit.persistence.view.testsuite.filter.inheritance.model.AttributeFilterInheritancePrimitiveDocumentViewSub2;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -82,8 +79,6 @@ public class AttributeFilterTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // DataNucleus apparently thinks NULL has a specific type which isn't the one of other result arms of a CASE WHEN clause
-    @Category({ NoDatanucleus.class })
     public void testAttributeFilterWithInheritance() {
         EntityViewManager evm = build(
                 AttributeFilterInheritancePrimitiveDocumentView.class,

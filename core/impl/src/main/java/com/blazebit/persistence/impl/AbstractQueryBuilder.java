@@ -8,7 +8,7 @@ package com.blazebit.persistence.impl;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.Queryable;

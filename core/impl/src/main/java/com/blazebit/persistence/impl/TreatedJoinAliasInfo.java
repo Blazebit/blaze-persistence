@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * This is the join alias info for "special" join nodes that aren't rendered as joins

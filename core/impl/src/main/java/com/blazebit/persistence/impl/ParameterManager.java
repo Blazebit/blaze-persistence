@@ -14,9 +14,9 @@ import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.AttributeAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -59,7 +59,7 @@ public class ParameterManager {
     private final Map<String, String> valuesParameters = new TreeMap<>();
     private final ParameterRegistrationVisitor parameterRegistrationVisitor;
     private final ParameterUnregistrationVisitor parameterUnregistrationVisitor;
-    private Map<javax.persistence.criteria.ParameterExpression<?>, String> criteriaNameMapping;
+    private Map<jakarta.persistence.criteria.ParameterExpression<?>, String> criteriaNameMapping;
     private int positionalOffset = -1; // Records the last positional parameter index that was used
 
     public ParameterManager(JpaProvider jpaProvider, EntityMetamodel entityMetamodel) {
@@ -183,7 +183,7 @@ public class ParameterManager {
             String parameterName = p.getName();
             // In case of positional parameters, we convert the position to a string and look it up instead
             if (parameterName == null) {
-                if (criteriaNameMapping != null && p instanceof javax.persistence.criteria.ParameterExpression<?>) {
+                if (criteriaNameMapping != null && p instanceof jakarta.persistence.criteria.ParameterExpression<?>) {
                     parameterName = criteriaNameMapping.get(p);
                 } else {
                     parameterName = p.getPosition().toString();
@@ -208,7 +208,7 @@ public class ParameterManager {
             String parameterName = p.getName();
             // In case of positional parameters, we convert the position to a string and look it up instead
             if (parameterName == null) {
-                if (criteriaNameMapping != null && p instanceof javax.persistence.criteria.ParameterExpression<?>) {
+                if (criteriaNameMapping != null && p instanceof jakarta.persistence.criteria.ParameterExpression<?>) {
                     parameterName = criteriaNameMapping.get(p);
                 } else {
                     parameterName = p.getPosition().toString();
@@ -259,7 +259,7 @@ public class ParameterManager {
         return parameters.values();
     }
 
-    public Map<javax.persistence.criteria.ParameterExpression<?>, String> getCriteriaNameMapping() {
+    public Map<jakarta.persistence.criteria.ParameterExpression<?>, String> getCriteriaNameMapping() {
         return criteriaNameMapping;
     }
 
@@ -503,7 +503,7 @@ public class ParameterManager {
         parameter.setParameterType((Class) type);
     }
 
-    public <X> void registerCriteriaParameter(String parameterName, javax.persistence.criteria.ParameterExpression<X> parameterExpression) {
+    public <X> void registerCriteriaParameter(String parameterName, jakarta.persistence.criteria.ParameterExpression<X> parameterExpression) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -540,7 +540,7 @@ public class ParameterManager {
         private final Map<ClauseType, Set<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>>> clauseTypes;
         private boolean usedInImplicitGroupBy;
         private Class<T> parameterType;
-        private javax.persistence.criteria.ParameterExpression<T> criteriaParameter;
+        private jakarta.persistence.criteria.ParameterExpression<T> criteriaParameter;
         private T value;
         private boolean valueSet;
         private ParameterValueTransformer transformer;
@@ -619,11 +619,11 @@ public class ParameterManager {
             this.parameterType = parameterType;
         }
 
-        public javax.persistence.criteria.ParameterExpression<T> getCriteriaParameter() {
+        public jakarta.persistence.criteria.ParameterExpression<T> getCriteriaParameter() {
             return criteriaParameter;
         }
 
-        public void setCriteriaParameter(javax.persistence.criteria.ParameterExpression<T> criteriaParameter) {
+        public void setCriteriaParameter(jakarta.persistence.criteria.ParameterExpression<T> criteriaParameter) {
             this.criteriaParameter = criteriaParameter;
             this.parameterType = criteriaParameter.getParameterType();
         }

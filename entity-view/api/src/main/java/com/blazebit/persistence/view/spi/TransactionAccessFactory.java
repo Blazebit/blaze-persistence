@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view.spi;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A factory for creating a {@link TransactionAccess}.

@@ -9,7 +9,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.PostPersistListener;
 import com.blazebit.persistence.view.ViewListener;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *

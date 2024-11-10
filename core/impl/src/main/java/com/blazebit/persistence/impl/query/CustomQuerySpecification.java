@@ -18,9 +18,9 @@ import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -239,17 +239,9 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                             newSqlSb.append(',');
                         }
 
-                        String originalAlias = SqlUtils.extractAlias(sb);
-                        int aliasPosition = sb.length() - originalAlias.length() - 1;
-                        // Replace the original alias with the new one
-                        if (aliasPosition != -1 && sb.charAt(aliasPosition) == ' ') {
-                            newSqlSb.append(sb, 0, aliasPosition + 1);
-                        } else {
-                            // Append the new alias
-                            newSqlSb.append(sb);
-                            newSqlSb.append(" as ");
-                        }
-
+                        // Append the new alias
+                        newSqlSb.append(sb);
+                        newSqlSb.append(" as ");
                         newSqlSb.append(newAliases[index]);
 
                         return Integer.toString(currentPosition);

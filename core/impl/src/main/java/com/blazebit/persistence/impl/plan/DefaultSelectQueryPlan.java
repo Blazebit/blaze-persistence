@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.impl.plan;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.stream.Stream;
 

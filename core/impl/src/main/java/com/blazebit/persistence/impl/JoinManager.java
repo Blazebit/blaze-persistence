@@ -65,16 +65,16 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 import com.blazebit.persistence.spi.JpaProvider;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2271,7 +2271,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample)) {
                 // If we couldn't render the join node because one of it's parents or dependencies parents isn't rendered yet, we defer the rendering
                 renderedJoins.remove(node);
-                stack.add(Math.max(0, stack.size() - 1), node);
+                int insertionIndex = Math.max( 0, stack.size() - 1 );
+                for (int i = insertionIndex; i < stack.size(); i++) {
+                    JoinNode stackNode = stack.get(i);
+                    if (stackNode.isRootJoinNode()) {
+                        // Mark other root join nodes that will be rendered before this node as cross joins,
+                        // to retain the visibility of the aliases used in the ON clause
+                        stackNode.setCrossJoin();
+                    }
+                }
+                stack.add(insertionIndex, node);
                 return;
             }
         }

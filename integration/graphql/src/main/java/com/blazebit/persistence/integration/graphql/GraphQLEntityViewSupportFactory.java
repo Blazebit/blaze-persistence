@@ -444,7 +444,7 @@ public class GraphQLEntityViewSupportFactory {
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
-        for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
+        for (jakarta.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
             }
@@ -632,7 +632,7 @@ public class GraphQLEntityViewSupportFactory {
         }
 
         Set<String> serializableBasicTypes = new HashSet<>();
-        for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
+        for (jakarta.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
             }
@@ -1920,7 +1920,7 @@ public class GraphQLEntityViewSupportFactory {
     protected boolean isNotNull(SingularAttribute<?, ?> attribute, EntityMetamodel entityMetamodel) {
         if (attribute instanceof MappingAttribute<?, ?> && !attribute.isQueryParameter()) {
             AbstractAttribute<?, ?> attr = (AbstractAttribute<?, ?>) attribute;
-            Map<String, javax.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
+            Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes = attr.getDeclaringType().getEntityViewRootTypes();
             if (rootTypes.isEmpty()) {
                 rootTypes = Collections.singletonMap("this", attr.getDeclaringType().getJpaManagedType());
             } else {
@@ -1963,7 +1963,6 @@ public class GraphQLEntityViewSupportFactory {
                 case "com.blazebit.persistence.integration.graphql.GraphQLNonNull":
                 case "io.leangen.graphql.annotations.GraphQLNonNull":
                 // Also respect common NonNull language annotations
-                case "javax.validation.constraints.NotNull":
                 case "jakarta.validation.constraints.NotNull":
                 case "org.springframework.lang.NonNull":
                 case "lombok.NonNull":

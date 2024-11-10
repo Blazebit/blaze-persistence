@@ -15,7 +15,8 @@ import java.time.Instant;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @EntityView(Document.class)
 public interface DocumentView {

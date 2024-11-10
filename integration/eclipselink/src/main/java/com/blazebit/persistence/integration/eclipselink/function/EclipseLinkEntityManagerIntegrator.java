@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.eclipselink.function;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.eclipselink.EclipseLinkJpaProvider;
 import com.blazebit.persistence.integration.jpa.function.CountStarFunction;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -13,6 +12,7 @@ import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.JpaProviderFactory;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import org.eclipse.persistence.descriptors.ClassDescriptor;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.databaseaccess.FieldTypeDefinition;
 import org.eclipse.persistence.internal.helper.ClassConstants;
@@ -20,11 +20,12 @@ import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceUnitUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceUnitUtil;
 import java.sql.Connection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -34,7 +35,6 @@ import java.util.logging.Logger;
  * @author Christian Beikov
  * @since 1.0.0
  */
-@ServiceProvider(EntityManagerFactoryIntegrator.class)
 public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
@@ -130,11 +130,10 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
         return new JpaProviderFactory() {
             @Override
             public JpaProvider createJpaProvider(EntityManager em) {
-                PersistenceUnitUtil persistenceUnitUtil = entityManagerFactory == null ? null : entityManagerFactory.getPersistenceUnitUtil();
-                if (persistenceUnitUtil == null && em != null) {
-                    persistenceUnitUtil = em.getEntityManagerFactory().getPersistenceUnitUtil();
-                }
-                return new EclipseLinkJpaProvider(persistenceUnitUtil, getDbms(entityManagerFactory));
+                EntityManagerFactory emf = entityManagerFactory == null || em == null ? entityManagerFactory : em.getEntityManagerFactory();
+                PersistenceUnitUtil persistenceUnitUtil = emf == null ? null : emf.getPersistenceUnitUtil();
+                Map<Class<?>, ClassDescriptor> classDescriptors = emf == null ? Collections.emptyMap() : emf.unwrap(JpaEntityManagerFactory.class).getDatabaseSession().getDescriptors();
+                return new EclipseLinkJpaProvider(persistenceUnitUtil, getDbms(entityManagerFactory), classDescriptors);
             }
         };
     }
@@ -254,10 +253,10 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     }
 
     private Map<Class<?>, String> getClassToTypeMap(DatabasePlatform platform) {
-        Map<Class, FieldTypeDefinition> fieldTypes = platform.getFieldTypes();
+        Map<Class<?>, FieldTypeDefinition> fieldTypes = platform.getFieldTypes();
         Map<Class<?>, String> classToTypesMap = new HashMap<>();
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Class, FieldTypeDefinition> entry : fieldTypes.entrySet()) {
+        for (Map.Entry<Class<?>, FieldTypeDefinition> entry : fieldTypes.entrySet()) {
             FieldTypeDefinition fieldTypeDefinition = entry.getValue();
             sb.setLength(0);
             sb.append(fieldTypeDefinition.getName());

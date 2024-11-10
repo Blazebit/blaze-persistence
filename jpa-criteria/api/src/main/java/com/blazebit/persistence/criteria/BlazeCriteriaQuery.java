@@ -7,12 +7,12 @@ package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.CriteriaBuilder;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Selection;
 import java.util.List;
 
 /**
@@ -33,9 +33,9 @@ public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQu
     public CriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager);
 
     /**
-     * The extended JPA {@link javax.persistence.criteria.CriteriaBuilder} associated with this query.
+     * The extended JPA {@link jakarta.persistence.criteria.CriteriaBuilder} associated with this query.
      *
-     * @return The JPA {@link javax.persistence.criteria.CriteriaBuilder}
+     * @return The JPA {@link jakarta.persistence.criteria.CriteriaBuilder}
      */
     public BlazeCriteriaBuilder getCriteriaBuilder();
 

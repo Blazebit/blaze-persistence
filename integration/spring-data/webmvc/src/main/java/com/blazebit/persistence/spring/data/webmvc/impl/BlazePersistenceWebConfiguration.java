@@ -22,16 +22,16 @@ import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 /**
  * @author Christian Beikov
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Configuration
-public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
+public class BlazePersistenceWebConfiguration implements WebMvcConfigurer {
 
     protected final ObjectFactory<ConversionService> conversionService;
     protected final ObjectMapper objectMapper;
@@ -56,8 +56,7 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
     @Bean
     public SortHandlerMethodArgumentResolver blazeWebmvcKeysetSortResolver() {
-        SortHandlerMethodArgumentResolver sortResolver = new SortHandlerMethodArgumentResolver();
-        return sortResolver;
+        return new SortHandlerMethodArgumentResolver();
     }
 
     @Override
@@ -74,7 +73,7 @@ public class BlazePersistenceWebConfiguration extends WebMvcConfigurerAdapter {
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        // Add it to the beginning so it has precedence over the builtin
+        // Add it to the beginning, so it has precedence over the builtin
         converters.add(0, new EntityViewAwareMappingJackson2HttpMessageConverter(entityViewManager, blazeWebmvcIdAttributeAccessor(), objectMapper()));
     }
 

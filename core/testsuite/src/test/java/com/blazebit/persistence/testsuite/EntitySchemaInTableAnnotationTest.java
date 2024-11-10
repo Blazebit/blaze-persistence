@@ -9,7 +9,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.SchemaEntity;
 import org.junit.Test;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.sql.Connection;
 import java.util.Properties;
 

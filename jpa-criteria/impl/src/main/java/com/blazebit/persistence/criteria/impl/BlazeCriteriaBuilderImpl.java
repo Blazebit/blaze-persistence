@@ -56,6 +56,9 @@ import com.blazebit.persistence.criteria.impl.expression.function.CurrentDateFun
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimestampFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalDateFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalDateTimeFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.LocateFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.NullifFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.OrderedSetAggregationFunction;
@@ -74,24 +77,27 @@ import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
 import com.blazebit.persistence.criteria.impl.support.CriteriaBuilderSupport;
 import com.blazebit.persistence.parser.EntityMetamodel;
 
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Predicate.BooleanOperator;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CompoundSelection;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Predicate.BooleanOperator;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -682,6 +688,46 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
+    public Expression<Integer> sign(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Integer.class, "SIGN", x);
+    }
+
+    @Override
+    public <N extends Number> Expression<N> ceiling(Expression<N> x) {
+        return new FunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "CEILING", x);
+    }
+
+    @Override
+    public <N extends Number> Expression<N> floor(Expression<N> x) {
+        return new FunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "FLOOR", x);
+    }
+
+    @Override
+    public Expression<Double> exp(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Double.class, "EXP", x);
+    }
+
+    @Override
+    public Expression<Double> ln(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Double.class, "LN", x);
+    }
+
+    @Override
+    public Expression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
+        return new FunctionExpressionImpl<>(this, Double.class, "POWER", x, y);
+    }
+
+    @Override
+    public Expression<Double> power(Expression<? extends Number> x, Number y) {
+        return new FunctionExpressionImpl<>(this, Double.class, "POWER", x, value(y));
+    }
+
+    @Override
+    public <T extends Number> Expression<T> round(Expression<T> x, Integer n) {
+        return new FunctionExpressionImpl<>(this, (Class<T>) x.getJavaType(), "ROUND", x, value(n));
+    }
+
+    @Override
     public Expression<java.sql.Date> currentDate() {
         return new CurrentDateFunction(this);
     }
@@ -694,6 +740,21 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public Expression<java.sql.Time> currentTime() {
         return new CurrentTimeFunction(this);
+    }
+
+    @Override
+    public Expression<LocalDate> localDate() {
+        return new LocalDateFunction(this);
+    }
+
+    @Override
+    public Expression<LocalDateTime> localDateTime() {
+        return new LocalDateTimeFunction(this);
+    }
+
+    @Override
+    public Expression<LocalTime> localTime() {
+        return new LocalTimeFunction(this);
     }
 
     @Override

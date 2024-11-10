@@ -17,7 +17,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -205,6 +205,9 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
                     .assertDelete().forRelation(Document.class, "peopleListBag").and()
                     .assertDelete().forRelation(Document.class, "peopleCollectionBag").and();
         }
+        if (isQueryStrategy() && !simpleDelete && dbmsDialect.supportsModificationQueryInWithClause()) {
+            return builder;
+        }
         if (supportsNestedEmbeddables()) {
             builder
                     .assertDelete().forRelation(Document.class, "nameContainerMap").and()
@@ -228,7 +231,9 @@ public abstract class AbstractEntityViewRemoveDocumentTest<T> extends AbstractEn
                     .assertDelete().forRelation(Person.class, "favoriteDocuments").and()
             ;
         }
-
+        if (isQueryStrategy() && !simpleDelete && dbmsDialect.supportsModificationQueryInWithClause()) {
+            return builder;
+        }
         return builder
                 .assertDelete().forRelation(Person.class, "localized").and()
                 ;

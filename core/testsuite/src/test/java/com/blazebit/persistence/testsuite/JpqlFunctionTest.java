@@ -5,40 +5,34 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatement;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
-import com.blazebit.persistence.testsuite.entity.DocumentType;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatement;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentType;
 import com.blazebit.persistence.testsuite.entity.Person;
-import org.junit.experimental.categories.Categories;
-import org.junit.experimental.categories.Category;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -162,7 +156,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
+    @Category({ NoPostgreSQL.class, NoDB2.class, NoOracle.class, NoH2.class, NoMSSQL.class, NoEclipselink.class})
     public void testCastFunctionWithTargetTypeOverrideMysql() {
         testCastFunctionWithTargetTypeOverride("unsigned");
     }
@@ -192,7 +186,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoHibernate.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoHibernate.class })
     public void testCastFunctionWithTargetTypeOverrideEclipselink() {
         final String castTypeOverride = "smallint";
         CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class).from(Document.class, "d")

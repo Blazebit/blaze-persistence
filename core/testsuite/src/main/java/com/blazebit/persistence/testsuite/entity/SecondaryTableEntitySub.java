@@ -5,11 +5,11 @@
 
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.SecondaryTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.SecondaryTable;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

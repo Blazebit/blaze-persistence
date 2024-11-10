@@ -9,8 +9,8 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
-import javax.persistence.Parameter;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.criteria.ParameterExpression;
 
 /**
  * @author Christian Beikov

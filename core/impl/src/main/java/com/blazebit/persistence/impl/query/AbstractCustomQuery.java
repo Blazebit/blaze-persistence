@@ -11,10 +11,10 @@ import com.blazebit.persistence.impl.ValuesParameterBinder;
 import com.blazebit.persistence.impl.util.SetView;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;

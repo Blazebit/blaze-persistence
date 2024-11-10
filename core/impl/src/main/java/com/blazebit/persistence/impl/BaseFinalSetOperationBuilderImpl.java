@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -442,6 +442,9 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected boolean needsSqlReplacement(Set<JoinNode> keyRestrictedLeftJoins) {
+        if (isMainQuery && mainQuery.cteManager.hasCtes()) {
+            return true;
+        }
         if (setOperationManager.getStartQueryBuilder().needsSqlReplacement(setOperationManager.getStartQueryBuilder().getKeyRestrictedLeftJoins())) {
             return true;
         }

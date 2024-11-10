@@ -4,11 +4,15 @@
  */
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Function;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.DeletePersonCTE;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
@@ -17,13 +21,7 @@ import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.HashSet;
-import java.util.List;
-import java.util.function.Function;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -81,7 +79,7 @@ public class Issue1114Test extends AbstractCoreTest {
 
     // Test for issue #1114
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoH2.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testLimitedCteWithoutLimitInMainQueryButWithCollectionFetch() {
         Function<Integer, List<Person>> fetchPersonBatch = batch ->
             cbf.create(em, Person.class)

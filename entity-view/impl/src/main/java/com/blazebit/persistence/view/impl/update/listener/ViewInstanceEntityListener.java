@@ -7,7 +7,7 @@ package com.blazebit.persistence.view.impl.update.listener;
 
 import com.blazebit.persistence.view.EntityViewManager;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.lang.reflect.Method;
 
 /**

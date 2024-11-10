@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * CAREFUL, this is an experimental API and will change!

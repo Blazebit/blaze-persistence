@@ -48,17 +48,17 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
@@ -130,7 +130,7 @@ public class InheritanceCorrelationTest {
 
     @EntityView(TicketAggregateCte.class)
     public static interface TicketAggregateView extends Serializable {
-        String getCustomerId();
+        Long getCustomerId();
         @Mapping("coalesce(totalTicketCount, 0L)")
         long getTotalTicketCount();
         @Mapping("coalesce(openTicketCount, 0L)")
@@ -142,7 +142,7 @@ public class InheritanceCorrelationTest {
     @Entity
     public static class TicketAggregateCte implements Serializable {
         @Id
-        String customerId;
+        Long customerId;
         long totalTicketCount;
         long openTicketCount;
     }

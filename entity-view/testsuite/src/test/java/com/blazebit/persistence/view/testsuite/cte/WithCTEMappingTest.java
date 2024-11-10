@@ -7,13 +7,12 @@ package com.blazebit.persistence.view.testsuite.cte;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -22,9 +21,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.CTEProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.cte.model.DocumentOwnersCTE;
 import com.blazebit.persistence.view.testsuite.cte.model.DocumentWithCTE;
@@ -32,9 +29,11 @@ import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocume
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentFullAged;
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentFullAged.FullAgedCTEProvider;
 import com.blazebit.persistence.view.testsuite.cte.model.PersonWithPartnerDocumentUnderAged;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -42,8 +41,7 @@ import static org.junit.Assert.*;
  * @since 1.4.0
  */
 // NOTE: Uses CTEs and entity joins, so only works for a few combinations
-// NOTE: H2 before 1.4.199 does something weird again when join correlating a CTE..
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+@Category({ NoEclipselink.class })
 public class WithCTEMappingTest extends AbstractEntityViewTest {
 
     private Document doc1;

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import com.blazebit.persistence.BaseInsertCriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;

@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import org.junit.Test;

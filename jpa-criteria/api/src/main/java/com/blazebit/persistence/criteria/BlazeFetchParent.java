@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.FetchParent;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.FetchParent;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * An extended version of {@link FetchParent}.

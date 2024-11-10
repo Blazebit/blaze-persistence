@@ -4,9 +4,14 @@
  */
 package com.blazebit.persistence.view.testsuite.basic;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
@@ -14,23 +19,17 @@ import com.blazebit.persistence.testsuite.entity.PrimitiveVersion;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentMultisetView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitivePersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocumentView;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
 
-import javax.persistence.EntityManager;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *
@@ -154,9 +153,8 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testEntityViewMultisetSubviewFetches() {
         EntityViewManager evm = build(
             PrimitiveSimpleDocumentView.class,

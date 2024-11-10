@@ -7,13 +7,14 @@ package com.blazebit.persistence.spring.hateoas.webmvc.config;
 
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import java.util.Properties;
 
 /**
  * @author Moritz Becker
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class CustomLocalContainerEntityManagerFactoryBean extends LocalContainerEntityManagerFactoryBean {
 

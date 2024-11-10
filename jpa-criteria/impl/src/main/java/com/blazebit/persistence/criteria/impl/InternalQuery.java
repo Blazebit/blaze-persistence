@@ -34,17 +34,17 @@ import com.blazebit.persistence.criteria.impl.path.EntityJoin;
 import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.TreatedPath;
 
-import javax.persistence.Tuple;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -615,7 +615,7 @@ public class InternalQuery<T> implements Serializable {
         }
     }
 
-    private JoinType getJoinType(javax.persistence.criteria.JoinType joinType) {
+    private JoinType getJoinType(jakarta.persistence.criteria.JoinType joinType) {
         switch (joinType) {
             case INNER:
                 return JoinType.INNER;

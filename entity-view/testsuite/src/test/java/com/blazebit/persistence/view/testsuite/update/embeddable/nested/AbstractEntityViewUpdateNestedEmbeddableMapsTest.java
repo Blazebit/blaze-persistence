@@ -5,12 +5,9 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.nested;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
-import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleEmbeddableEntityView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleIntIdEntityView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleNameObjectView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.UpdatableEmbeddableEntityWithMapsEmbeddableViewBase;
@@ -28,7 +25,7 @@ import java.util.HashMap;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public abstract class AbstractEntityViewUpdateNestedEmbeddableMapsTest<T extends UpdatableEmbeddableEntityWithMapsViewBase> extends AbstractEntityViewUpdateNestedEmbeddableEntityTest<T> {
 
     public AbstractEntityViewUpdateNestedEmbeddableMapsTest(FlushMode mode, FlushStrategy strategy, boolean version, Class<T> viewType) {

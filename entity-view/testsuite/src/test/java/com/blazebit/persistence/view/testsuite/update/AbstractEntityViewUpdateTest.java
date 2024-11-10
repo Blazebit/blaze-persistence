@@ -23,8 +23,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;

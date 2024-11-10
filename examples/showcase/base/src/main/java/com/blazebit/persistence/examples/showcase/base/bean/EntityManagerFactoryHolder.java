@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.showcase.base.bean;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * @author Christian Beikov

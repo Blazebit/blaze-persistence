@@ -2,7 +2,7 @@
 
 Changes that happened in releases
 
-## 1.6.15-SNAPSHOT
+## 2.0.0-SNAPSHOT
 
 ### New features
 
@@ -10,7 +10,9 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix missing cascading deletes for deletes that contain joins or CTEs
+* Fix some issues with PostgreSQL and Oracle multiset SQL rendering with Hibernate ORM 6+
+* Fix returning clause rendering for PostgreSQL with Hibernate ORM 6+
 
 ### Backwards-incompatible changes
 

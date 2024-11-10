@@ -43,7 +43,7 @@ public class Context {
     private static final Object NULL_OBJECT = new Object();
     private final ProcessingEnvironment pe;
     private final boolean logDebug;
-    private final TypeElement generatedAnnotation;
+    private final String generatedAnnotation;
 
     private final Map<String, MetaEntityView> metaEntityViews = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Boolean> generatedModelClasses = new ConcurrentHashMap<>();
@@ -73,13 +73,7 @@ public class Context {
 
         Map<String, TypeMirror> optionalParameters = new HashMap<>();
         Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
-        TypeElement java8AndBelowGeneratedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.Generated");
-        if (java8AndBelowGeneratedAnnotation != null) {
-            generatedAnnotation = java8AndBelowGeneratedAnnotation;
-        } else {
-            // Using the new name for this annotation in Java 9 and above
-            generatedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.processing.Generated");
-        }
+        generatedAnnotation = "javax.annotation.processing.Generated";
         for (TypeConverter typeConverter : ServiceLoader.load(TypeConverter.class, Context.class.getClassLoader())) {
             typeConverter.addRegistrations(converters);
         }
@@ -201,7 +195,7 @@ public class Context {
         return generatedModelClasses.putIfAbsent(name, Boolean.TRUE) == null;
     }
 
-    public TypeElement getGeneratedAnnotation() {
+    public String getGeneratedAnnotation() {
         return generatedAnnotation;
     }
 

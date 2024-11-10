@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Collection;
 
 /**
@@ -145,7 +145,7 @@ public interface SubqueryInitiator<T> extends FromBaseBuilder<SubqueryBuilder<T>
      * This introduces a parameter named like the given alias.
      *
      * To set the values invoke {@link SubqueryBuilder#setParameter(String, Object)}
-     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     * or {@link jakarta.persistence.Query#setParameter(String, Object)} with the alias and a collection.
      *
      * @param valueClass The class of the basic or managed type for which to create a VALUES clause
      * @param alias The alias for the entity
@@ -161,7 +161,7 @@ public interface SubqueryInitiator<T> extends FromBaseBuilder<SubqueryBuilder<T>
      * This introduces a parameter named like the given alias.
      *
      * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)}
-     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     * or {@link jakarta.persistence.Query#setParameter(String, Object)} with the alias and a collection.
      *
      * @param entityBaseClass The entity class on which the attribute is located
      * @param attributeName The attribute name within the entity class which to use for determining the values type
@@ -180,7 +180,7 @@ public interface SubqueryInitiator<T> extends FromBaseBuilder<SubqueryBuilder<T>
      * In contrast to {@link SubqueryInitiator#fromValues(Class, String, int)} this will only bind the id attribute.
      *
      * To set the values invoke {@link SubqueryBuilder#setParameter(String, Object)}
-     * or {@link javax.persistence.Query#setParameter(String, Object)} with the alias and a collection.
+     * or {@link jakarta.persistence.Query#setParameter(String, Object)} with the alias and a collection.
      *
      * @param valueClass The class of the identifiable type for which to create a VALUES clause
      * @param alias The alias for the entity

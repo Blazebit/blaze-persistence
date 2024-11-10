@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 /**
  * An extended version of {@link Expression}.

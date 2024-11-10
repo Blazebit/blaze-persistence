@@ -83,10 +83,10 @@ public final class Constants {
     public static final String METHOD_MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMapAttribute";
     public static final String METHOD_MULTI_MAP_ATTRIBUTE = "com.blazebit.persistence.view.metamodel.MethodMultiMapAttribute";
 
-    public static final String ENTITY = "javax.persistence.Entity";
-    public static final String ID = "javax.persistence.Id";
-    public static final String EMBEDDED_ID = "javax.persistence.EmbeddedId";
-    public static final String VERSION = "javax.persistence.Version";
+    public static final String ENTITY = "jakarta.persistence.Entity";
+    public static final String ID = "jakarta.persistence.Id";
+    public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
+    public static final String VERSION = "jakarta.persistence.Version";
 
     public static final String CRITERIA_BUILDER = "com.blazebit.persistence.CriteriaBuilder";
     public static final String PAGINATED_CRITERIA_BUILDER = "com.blazebit.persistence.PaginatedCriteriaBuilder";

@@ -10,7 +10,7 @@ import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.LockMode;
 import com.blazebit.persistence.view.ViewTransition;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.lang.reflect.Method;
 import java.util.Map;
 

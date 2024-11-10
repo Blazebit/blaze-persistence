@@ -5,23 +5,22 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import java.util.Properties;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.entity.Version;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.TypedQuery;
-import java.util.Properties;
+import jakarta.persistence.TypedQuery;
 
 /**
  * @author Jan-Willem Gmelig Meyling
@@ -60,7 +59,7 @@ public class CTEQueryResultCachingTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoEclipselink.class, NoMySQL.class })
     public void cteQueryResultCachingTest() {
         TypedQuery<TestCTE> query = cbf.create(em, TestCTE.class).with(TestCTE.class)
                 .from(RecursiveEntity.class, "e")

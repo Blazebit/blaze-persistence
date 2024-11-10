@@ -22,12 +22,12 @@ public enum LockMode {
      */
     OPTIMISTIC,
     /**
-     * The pessimistic read locking mode will acquire a {@link javax.persistence.LockModeType#PESSIMISTIC_READ} for the entity when reading the entity view.
+     * The pessimistic read locking mode will acquire a {@link jakarta.persistence.LockModeType#PESSIMISTIC_READ} for the entity when reading the entity view.
      * This lock mode is only useful within the bounds of a single transaction as the lock is bound to it.
      */
     PESSIMISTIC_READ,
     /**
-     * The pessimistic write locking mode will acquire a {@link javax.persistence.LockModeType#PESSIMISTIC_WRITE} for the entity when reading the entity view.
+     * The pessimistic write locking mode will acquire a {@link jakarta.persistence.LockModeType#PESSIMISTIC_WRITE} for the entity when reading the entity view.
      * This lock mode is only useful within the bounds of a single transaction as the lock is bound to it.
      */
     PESSIMISTIC_WRITE,

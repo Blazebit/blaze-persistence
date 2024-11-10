@@ -12,13 +12,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
@@ -58,11 +57,9 @@ public class Ticket implements Serializable {
 
     Instant creationInstant = Instant.now();
 
-    @OrderBy(TicketComment_.CREATION_INSTANT)
     @OneToMany(mappedBy = TicketComment_.TICKET)
     SortedSet<TicketComment> comments = new TreeSet<>();
 
-    @OrderBy(TicketHistoryItem_.CREATED)
     @OneToMany(mappedBy = TicketHistoryItem_.TICKET)
     @NotAudited
     SortedSet<TicketHistoryItem> history = new TreeSet<>();

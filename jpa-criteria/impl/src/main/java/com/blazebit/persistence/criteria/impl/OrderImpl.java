@@ -7,7 +7,7 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.criteria.BlazeOrder;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Christian Beikov

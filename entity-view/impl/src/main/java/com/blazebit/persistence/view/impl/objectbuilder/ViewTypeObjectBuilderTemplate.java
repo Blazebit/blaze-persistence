@@ -95,9 +95,9 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1251,7 +1251,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (viewRootMapping) {
                 features.add(Feature.SUBQUERY_CORRELATION);
                 viewRootIndex = tupleOffset + mapperBuilder.mapperIndex();
-                javax.persistence.metamodel.SingularAttribute<?, ?> singleIdAttribute = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) viewRoot.getJpaManagedType());
+                jakarta.persistence.metamodel.SingularAttribute<?, ?> singleIdAttribute = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) viewRoot.getJpaManagedType());
                 mapperBuilder.addMapper(createMapper((BasicUserTypeStringSupport<?>) null, singleIdAttribute.getName(), subviewAliasPrefix + "_view_root_id", attributePath, null, null, EMPTY));
             }
         }
@@ -1271,7 +1271,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             }
             if (embeddingViewMapping) {
                 embeddingViewIndex = tupleOffset + mapperBuilder.mapperIndex();
-                javax.persistence.metamodel.SingularAttribute<?, ?> singleIdAttribute = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) viewType.getJpaManagedType());
+                jakarta.persistence.metamodel.SingularAttribute<?, ?> singleIdAttribute = JpaMetamodelUtils.getSingleIdAttribute((IdentifiableType<?>) viewType.getJpaManagedType());
                 mapperBuilder.addMapper(createMapper((BasicUserTypeStringSupport<?>) null, singleIdAttribute.getName(), subviewAliasPrefix + "_embedding_view_id", attributePath, null, null, EMPTY));
             }
         }
@@ -1285,8 +1285,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         ExtendedManagedType<?> managedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, managedTypeClass);
         ExtendedManagedType<?> correlationBasisManagedType = evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, correlationBasisEntity);
 
-        Iterator<? extends javax.persistence.metamodel.SingularAttribute<?, ?>> iterator = managedType.getIdAttributes().iterator();
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = iterator.next();
+        Iterator<? extends jakarta.persistence.metamodel.SingularAttribute<?, ?>> iterator = managedType.getIdAttributes().iterator();
+        jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttribute = iterator.next();
         if (iterator.hasNext()) {
             return false;
         }
@@ -1316,7 +1316,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     || "this".equalsIgnoreCase(right) && correlationKeyAlias.equals(left);
         } else if (correlationBasisExpression.equals(idAttribute.getName())) {
             iterator = correlationBasisManagedType.getIdAttributes().iterator();
-            javax.persistence.metamodel.SingularAttribute<?, ?> correlatedIdAttribute = iterator.next();
+            jakarta.persistence.metamodel.SingularAttribute<?, ?> correlatedIdAttribute = iterator.next();
             if (iterator.hasNext()) {
                 return false;
             }
@@ -1352,7 +1352,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private Class<?> getCorrelationBasisType(Expression correlationBasisExpression, String correlationBasis, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    private Class<?> getCorrelationBasisType(Expression correlationBasisExpression, String correlationBasis, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes) {
         if (correlationBasis.isEmpty()) {
             return managedTypeClass;
         }
@@ -1387,7 +1387,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (correlationBasisEntity == null) {
             return (BasicUserTypeStringSupport<Object>) evm.getMetamodel().getBasicUserType(correlationBasisType);
         }
-        javax.persistence.metamodel.SingularAttribute<?, ?> idAttribute = ((ExtendedManagedType<?>) evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, correlationBasisEntity))
+        jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttribute = ((ExtendedManagedType<?>) evm.getMetamodel().getEntityMetamodel().getManagedType(ExtendedManagedType.class, correlationBasisEntity))
                 .getIdAttributes()
                 .iterator()
                 .next();

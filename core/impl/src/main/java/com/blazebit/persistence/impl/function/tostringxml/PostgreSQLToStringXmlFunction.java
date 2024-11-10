@@ -26,8 +26,7 @@ public class PostgreSQLToStringXmlFunction extends AbstractToStringXmlFunction {
             context.addChunk("))");
             context.addChunk(subquery.substring(fromIndex));
         } else {
-            int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
-            if (limitIndex == -1) {
+            if (SqlUtils.indexOfLimit(subquery, orderByIndex) == -1 && SqlUtils.indexOfFetchFirst(subquery, orderByIndex) == -1) {
                 renderXmlElementArguments(context, fields, selectItemExpressions);
                 context.addChunk("))");
                 context.addChunk(" OVER (");

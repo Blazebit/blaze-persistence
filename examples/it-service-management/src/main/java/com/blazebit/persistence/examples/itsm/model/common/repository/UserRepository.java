@@ -17,10 +17,10 @@ import com.blazebit.persistence.examples.itsm.model.common.entity.User;
 import com.blazebit.persistence.examples.itsm.model.common.entity.User_;
 import com.blazebit.persistence.examples.itsm.model.common.view.UserDetail;
 
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * @author Giovanni Lovato

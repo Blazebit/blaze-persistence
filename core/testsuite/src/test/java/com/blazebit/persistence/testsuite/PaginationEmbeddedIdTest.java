@@ -5,21 +5,23 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.entity.*;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.NameObject;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,8 +31,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.2.0
  */
 // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-// TODO: report that datanucleus doesn't support element collection in an embeddable
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
     @Override

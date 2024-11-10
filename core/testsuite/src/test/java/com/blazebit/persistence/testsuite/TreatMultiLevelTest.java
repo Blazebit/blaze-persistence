@@ -5,8 +5,12 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Parent;
 import com.blazebit.persistence.testsuite.entity.Sub1;
@@ -15,12 +19,9 @@ import com.blazebit.persistence.testsuite.entity.Sub1Sub2;
 import com.blazebit.persistence.testsuite.entity.Sub2;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -43,8 +44,6 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support root treats properly with joined inheritance. Maybe a bug? TODO: report the error
-    @Category({ NoDatanucleus.class })
     public void implicitJoinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(Parent.class, "p");
@@ -54,9 +53,8 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not seem to support this kind of model? TODO: report the error
     // NOTE: EclipseLink is just fundamentally broken in this regard...
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void multiTreatWithDiscriminatorColumn() {
         // Given
         Sub1 sub1 = new Sub1();
@@ -78,9 +76,8 @@ public class TreatMultiLevelTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not seem to support this kind of model? TODO: report the error
     // NOTE: EclipseLink is just fundamentally broken in this regard...
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void treatWithSuperTypeColumnAccess() {
         // Given
         Sub1 sub1 = new Sub1();

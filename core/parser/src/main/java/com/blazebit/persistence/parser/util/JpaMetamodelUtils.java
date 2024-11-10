@@ -8,15 +8,15 @@ package com.blazebit.persistence.parser.util;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -322,16 +322,23 @@ public class JpaMetamodelUtils {
              * with the corresponding primitive type.
              * Note that it also returns just "any" type of an id class attribute in case there is no dedicated id class type.
              */
-            if (entityType.getIdType() != null) {
-                final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(entityType.getIdType().getJavaType());
-                if (primitiveIdClass == null) {
-                    // Discover the identifier attributes like this instead for EclipseLink
-                    Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
-                    if (!idTypes.isEmpty()) {
-                        return idTypes;
+            try {
+                if (entityType.getIdType() != null) {
+                    final Class<?> primitiveIdClass = ReflectionUtils.getPrimitiveClassOfWrapper(entityType.getIdType().getJavaType());
+                    if (primitiveIdClass == null) {
+                        // Discover the identifier attributes like this instead for EclipseLink
+                        Set<SingularAttribute<?, ?>> idTypes = collectIdAttributes(entityType);
+                        if (!idTypes.isEmpty()) {
+                            return idTypes;
+                        }
+                    } else {
+                        return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(primitiveIdClass));
                     }
-                } else {
-                    return Collections.<SingularAttribute<?, ?>>singleton(entityType.getId(primitiveIdClass));
+                }
+            } catch (IllegalArgumentException e2) {
+                // Try again on the super type. Eclipselink is a bit odd in this regard...
+                if (entityType.getSupertype() != null) {
+                    return getIdAttributes(entityType.getSupertype());
                 }
             }
             throw e;

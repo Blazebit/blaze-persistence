@@ -6,7 +6,7 @@
 package com.blazebit.persistence.criteria;
 
 /**
- * An {@link javax.persistence.criteria.Expression} for a window enabled function.
+ * An {@link jakarta.persistence.criteria.Expression} for a window enabled function.
  *
  * @param <X> The target type
  * @author Christian Beikov

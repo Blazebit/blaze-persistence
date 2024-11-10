@@ -102,21 +102,21 @@ import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.spi.SetOperationType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -3452,39 +3452,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 String cteName = cteInfo.cteType.getName();
                 final List<String> columnNames = cteInfo.columnNames;
                 String head;
-                String[] aliases;
 
-                if (mainQuery.dbmsDialect.supportsWithClauseHead()) {
-                    sb.setLength(0);
-                    sb.append(cteName);
-                    sb.append('(');
+                sb.setLength(0);
+                sb.append(cteName);
+                sb.append('(');
 
-                    for (int i = 0; i < columnNames.size(); i++) {
-                        String column = columnNames.get(i);
-                        if (i != 0) {
-                            sb.append(", ");
-                        }
-
-                        sb.append(column);
+                for (int i = 0; i < columnNames.size(); i++) {
+                    String column = columnNames.get(i);
+                    if (i != 0) {
+                        sb.append(", ");
                     }
 
-                    sb.append(')');
-                    head = sb.toString();
+                    sb.append(column);
+                }
+
+                sb.append(')');
+                head = sb.toString();
+
+                String[] aliases;
+                if (mainQuery.dbmsDialect.supportsPaginationInWithClause() || !cteInfo.nonRecursiveCriteriaBuilder.hasLimit()) {
                     aliases = null;
                 } else {
-                    sb.setLength(0);
-                    sb.append(cteName);
-                    List<String> list = new ArrayList<>(columnNames.size());
-
-                    for (int i = 0; i < columnNames.size(); i++) {
-                        String[] columns = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteInfo.cteType.getJavaType()).getAttribute(columnNames.get(i)).getColumnNames();
-                        for (String column : columns) {
-                            list.add(column);
-                        }
-                    }
-
-                    head = sb.toString();
-                    aliases = list.toArray(new String[list.size()]);
+                    aliases = columnNames.toArray(new String[0]);
                 }
 
                 String nonRecursiveWithClauseSuffix = null;

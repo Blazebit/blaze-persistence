@@ -10,9 +10,8 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
@@ -25,10 +24,8 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
 
     public static final String EVM_FIELD_NAME = "ENTITY_VIEW_MANAGER";
     public static final String SERIALIZABLE_EVM_FIELD_NAME = "SERIALIZABLE_ENTITY_VIEW_MANAGER";
-    public static final String SERIALIZABLE_EVM_DELEGATE_FIELD_NAME = "evm";
 
     private final Class<?> entityViewClass;
-    private transient volatile EntityViewManager evm;
 
     /**
      * Creates a new serializable entity view manager.
@@ -38,20 +35,14 @@ public class SerializableEntityViewManager implements EntityViewManager, Seriali
      */
     public SerializableEntityViewManager(Class<?> entityViewClass, EntityViewManager evm) {
         this.entityViewClass = entityViewClass;
-        this.evm = evm;
     }
 
     private EntityViewManager getEvm() {
-        EntityViewManager evm = this.evm;
-        if (evm == null) {
-            try {
-                Field field = entityViewClass.getDeclaredField(EVM_FIELD_NAME);
-                this.evm = evm = (EntityViewManager) field.get(null);
-            } catch (Exception ex) {
-                throw new IllegalStateException("Could not access entity view manager of entity view class: " + entityViewClass.getName(), ex);
-            }
+        try {
+            return (EntityViewManager) entityViewClass.getDeclaredField(EVM_FIELD_NAME).get(null);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Could not access entity view manager of entity view class: " + entityViewClass.getName(), ex);
         }
-        return evm;
     }
 
     @Override

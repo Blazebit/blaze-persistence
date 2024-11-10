@@ -6,18 +6,20 @@
 package com.blazebit.persistence.testsuite.treat.entity;
 
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
-import org.hibernate.annotations.ForeignKey;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,7 +62,7 @@ public class TablePerClassSub1 extends TablePerClassBase implements Sub1<TablePe
     @Override
     @ManyToOne(fetch = FetchType.LAZY)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @ForeignKey(name = "none")
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public TablePerClassBase getParent1() {
         return parent1;
     }
@@ -106,8 +108,7 @@ public class TablePerClassSub1 extends TablePerClassBase implements Sub1<TablePe
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpcs1_list1")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpcs1_list1", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public List<TablePerClassBase> getList1() {
         return list1;
     }
@@ -131,8 +132,7 @@ public class TablePerClassSub1 extends TablePerClassBase implements Sub1<TablePe
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpcs1_map1")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpcs1_map1", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @MapKeyColumn(name = "tpcs1_map1_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap1() {
         return map1;

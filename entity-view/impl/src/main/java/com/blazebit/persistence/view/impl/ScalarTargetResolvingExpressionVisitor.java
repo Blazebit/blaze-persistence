@@ -52,12 +52,12 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.JpqlFunction;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Clob;
@@ -110,15 +110,15 @@ public class ScalarTargetResolvingExpressionVisitor extends PathTargetResolvingE
     private final Map<String, JpqlFunction> functions;
     private boolean parametersAllowed;
 
-    public ScalarTargetResolvingExpressionVisitor(Class<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    public ScalarTargetResolvingExpressionVisitor(Class<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes) {
         this(metamodel.managedType(managedType), metamodel, functions, rootTypes);
     }
 
-    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes) {
         this(managedType, null, metamodel, functions, rootTypes);
     }
 
-    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, Attribute<?, ?> rootAttribute, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, javax.persistence.metamodel.Type<?>> rootTypes) {
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, Attribute<?, ?> rootAttribute, EntityMetamodel metamodel, Map<String, JpqlFunction> functions, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes) {
         super(metamodel, managedType, rootAttribute, null, rootTypes);
         this.managedType = managedType;
         this.functions = functions;

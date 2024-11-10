@@ -14,9 +14,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.Calendar;

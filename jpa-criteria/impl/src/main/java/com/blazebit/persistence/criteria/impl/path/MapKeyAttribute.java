@@ -7,11 +7,11 @@ package com.blazebit.persistence.criteria.impl.path;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.util.Map;

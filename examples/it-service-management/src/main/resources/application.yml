@@ -5,7 +5,7 @@ spring:
       hibernate:
         globally_quoted_identifiers: true
         implicit_naming_strategy: com.blazebit.persistence.examples.itsm.ImplicitNamingStrategyComponentPathJoinTable
-        ejb:
+        jpa:
           metamodel:
             population: enabled
       org.hibernate.envers:

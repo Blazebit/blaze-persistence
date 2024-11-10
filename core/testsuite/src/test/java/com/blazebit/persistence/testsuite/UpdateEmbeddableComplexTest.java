@@ -5,28 +5,23 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
+import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
 
-import javax.persistence.EntityManager;
+import static org.junit.Assert.assertEquals;
 
 /**
  * This kind of mapping is not required to be supported by a JPA implementation.
@@ -55,7 +50,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
     // TODO: report that datanucleus doesn't support element collection in an embeddable
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testUpdateWithReturningEmbeddable(){
         final String newEmbeddableTestEntityIdKey = "newKey";
 
@@ -82,7 +77,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
     // TODO: report that datanucleus doesn't support element collection in an embeddable
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testUpdateWithReturningExplicitId(){
         final String intIdEntity1Key = "1";
 

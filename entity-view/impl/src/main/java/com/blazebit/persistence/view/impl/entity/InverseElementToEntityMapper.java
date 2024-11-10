@@ -8,7 +8,7 @@ package com.blazebit.persistence.view.impl.entity;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.flush.DirtyAttributeFlusher;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  *

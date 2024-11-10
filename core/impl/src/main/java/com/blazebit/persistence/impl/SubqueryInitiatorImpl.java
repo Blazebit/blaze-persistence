@@ -15,7 +15,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.ExpressionFactory;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Arrays;
 import java.util.Collection;
 
