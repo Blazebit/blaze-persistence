@@ -107,9 +107,9 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public boolean supportsWithClauseHead() {
-        // NOTE: For 10g return false
-        return true;
+    public boolean supportsPaginationInWithClause() {
+        // Actually, only need it for Hibernate ORM
+        return false;
     }
 
     @Override

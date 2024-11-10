@@ -15,6 +15,7 @@ import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.function.subquery.SubqueryFunction;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -98,6 +99,8 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM bug: https://hibernate.atlassian.net/browse/HHH-18838
+    @Category({ NoOracle.class })
     public void testSizeToCountTransformationWithList2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.people)")
@@ -123,6 +126,8 @@ public class SizeTransformationTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM bug: https://hibernate.atlassian.net/browse/HHH-18838
+    @Category({ NoOracle.class })
     public void testSizeToCountTransformationWithMap2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)")

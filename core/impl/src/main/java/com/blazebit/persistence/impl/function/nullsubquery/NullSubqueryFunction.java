@@ -17,6 +17,12 @@ public class NullSubqueryFunction implements JpqlFunction {
 
     public static final String FUNCTION_NAME = "null_subquery";
 
+    private final String fromDual;
+
+    public NullSubqueryFunction(String fromDual) {
+        this.fromDual = fromDual;
+    }
+
     @Override
     public boolean hasArguments() {
         return true;
@@ -34,6 +40,10 @@ public class NullSubqueryFunction implements JpqlFunction {
 
     @Override
     public void render(FunctionRenderContext context) {
-        context.addChunk("(select null)");
+        context.addChunk("(select null");
+        if (fromDual != null) {
+            context.addChunk(fromDual);
+        }
+        context.addChunk(")");
     }
 }

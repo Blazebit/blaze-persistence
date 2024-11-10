@@ -9,6 +9,7 @@ import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.reflection.ReflectionUtils;
 import jakarta.persistence.EntityManager;
@@ -156,6 +157,7 @@ import java.util.stream.StreamSupport;
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    private static final String[] KNOWN_STATEMENTS = { "select ", "insert ", "update ", "delete " };
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_62;
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_63;
     private static final RowTransformer ROW_TRANSFORMER_SINGULAR_RETURN;
@@ -1169,20 +1171,48 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
             try {
                 if (modificationBaseQuery != null) {
-                    QuerySqmImpl<?> querySqm = modificationBaseQuery.unwrap( QuerySqmImpl.class );
+                    QuerySqmImpl<?> querySqm = modificationBaseQuery.unwrap(QuerySqmImpl.class);
                     SqmStatement<?> modificationSqmStatement = querySqm.getSqmStatement();
-                    if ( modificationSqmStatement instanceof SqmDmlStatement<?>) {
+                    if (modificationSqmStatement instanceof SqmDmlStatement<?>) {
                         SqmDmlStatement<?> sqmDmlStatement = (SqmDmlStatement<?>) modificationSqmStatement;
-                        BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmDmlStatement );
-                        if ( !dbmsDialect.supportsModificationQueryInWithClause() && sqmDmlStatement instanceof SqmDeleteStatement<?> ) {
+                        BulkOperationCleanupAction.schedule(executionContext.getSession(), sqmDmlStatement);
+                        if (sqmDmlStatement instanceof SqmDeleteStatement<?> && !dbmsDialect.supportsModificationQueryInWithClause()) {
+                            CollectionTableDeleteInfo collectionTableDeletes = getCollectionTableDeletes(querySqm);
+                            List<JdbcOperationQueryMutation> deletes;
+                            int withIndex;
+                            if ((withIndex = finalSql.indexOf("with ")) != -1) {
+                                int end = getCTEEnd(finalSql, withIndex);
+
+                                int maxLength = 0;
+
+                                for (JdbcOperationQueryMutation delete : collectionTableDeletes.deletes) {
+                                    maxLength = Math.max(maxLength, delete.getSqlString().length());
+                                }
+
+                                deletes = new ArrayList<>(collectionTableDeletes.deletes.size());
+                                StringBuilder newSb = new StringBuilder(end + maxLength);
+                                // Prefix properly with cte
+                                StringBuilder withClauseSb = new StringBuilder(end - withIndex);
+                                withClauseSb.append(finalSql, withIndex, end);
+
+                                for (JdbcOperationQueryMutation delete : collectionTableDeletes.deletes) {
+                                    // TODO: The strings should also receive the simple CTE name instead of the complex one
+                                    newSb.append(delete.getSqlString());
+                                    dbmsDialect.appendExtendedSql(newSb, DbmsStatementType.DELETE, false, false, withClauseSb, null, null, null, null, null);
+                                    deletes.add(new JdbcOperationQueryDelete(newSb.toString(), delete.getParameterBinders(), delete.getAffectedTableNames(), delete.getAppliedParameters()));
+                                    newSb.setLength(0);
+                                }
+                            } else {
+                                deletes = collectionTableDeletes.deletes;
+                            }
+
                             Function<String, PreparedStatement> statementCreator = sql -> session.getJdbcCoordinator()
                                     .getStatementPreparer()
-                                    .prepareStatement( sql );
+                                    .prepareStatement(sql);
                             BiConsumer<Integer, PreparedStatement> expectationCheck = (integer, preparedStatement) -> { };
                             SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.usingLockingAndPaging(
-                                    modificationBaseQuery.unwrap( DomainQueryExecutionContext.class ) );
-                            CollectionTableDeleteInfo collectionTableDeletes = getCollectionTableDeletes( querySqm );
-                            for ( JdbcOperationQueryMutation delete : collectionTableDeletes.deletes ) {
+                                    modificationBaseQuery.unwrap(DomainQueryExecutionContext.class));
+                            for (JdbcOperationQueryMutation delete : deletes) {
                                 session.getFactory().getJdbcServices().getJdbcMutationExecutor().execute(
                                         delete,
                                         collectionTableDeletes.parameterBindings,
@@ -1221,6 +1251,38 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
+    }
+
+    private int getCTEEnd(String sql, int start) {
+        int parenthesis = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        boolean started = false;
+
+        int i = start;
+        int end = sql.length();
+        OUTER: while (i < end) {
+            final char c = sql.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    started = true;
+                    parenthesis++;
+                } else if (c == ')') {
+                    parenthesis--;
+                } else if (started && parenthesis == 0 && c != ',' && !Character.isWhitespace(c)) {
+                    for (String statementType : KNOWN_STATEMENTS) {
+                        if (sql.regionMatches(true, i, statementType, 0, statementType.length())) {
+                            break OUTER;
+                        }
+                    }
+                }
+            }
+
+            i++;
+        }
+
+        return i;
     }
 
     private static String[][] getReturningColumns(boolean caseInsensitive, String exampleQuerySql) {

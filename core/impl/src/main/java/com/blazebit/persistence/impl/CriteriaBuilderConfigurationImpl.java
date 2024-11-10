@@ -1671,7 +1671,8 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         // null subquery function
         jpqlFunctionGroup = new JpqlFunctionGroup(NullSubqueryFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new NullSubqueryFunction());
+        jpqlFunctionGroup.add(null, new NullSubqueryFunction(null));
+        jpqlFunctionGroup.add("oracle", new NullSubqueryFunction(" from dual"));
         registerFunction(jpqlFunctionGroup);
 
         // subquery

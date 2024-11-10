@@ -6,6 +6,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -14,6 +15,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -490,6 +492,8 @@ public class DateExtractTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM has a bug: https://hibernate.atlassian.net/browse/HHH-18837
+    @Category({ NoOracle.class })
     public void testDateExtractEpoch() {
         // Set the client timezone
         TimeZone.setDefault(clientTimeZone);

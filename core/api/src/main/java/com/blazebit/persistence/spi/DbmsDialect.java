@@ -39,11 +39,13 @@ public interface DbmsDialect {
     public boolean supportsNonRecursiveWithClause();
 
     /**
-     * Returns true if the dbms supports the with clause head for aliasing, false otherwise.
+     * Returns true if the dbms supports pagination in the with clause directly or needs to alias selection items.
+     * This is only needed for Hibernate ORM which uses Oracles {@code fetch first} syntax,
+     * since that is implemented through a query rewrite that needs aliases.
      *
-     * @return Whether the with clause head is supported by the dbms
+     * @return Whether pagination is supported in the with clause head by the dbms
      */
-    public boolean supportsWithClauseHead();
+    public boolean supportsPaginationInWithClause();
 
     /**
      * Returns the SQL representation for the normal or recursive with clause. 
