@@ -9,6 +9,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -161,6 +163,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testSubqueryViewRootEntityViewSettings() {
         EntityViewManager evm = build(DocumentWithSubqueryViewRoot.class);
 
@@ -192,6 +196,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testSubqueryEmbeddingViewEntityViewSettings() {
         EntityViewManager evm = build(
                 DocumentWithSubqueryEmbeddingView.class,
@@ -228,6 +234,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testDeepSubqueryEmbeddingViewEntityViewSettings() {
         EntityViewManager evm = build(
                 DocumentWithDeepSubqueryEmbeddingView.class,

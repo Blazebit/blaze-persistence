@@ -12,6 +12,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -100,7 +101,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Test
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoEclipselink.class })
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedSingularViewPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -120,7 +122,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Test
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoEclipselink.class })
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedPluralViewPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -140,7 +143,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Test
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoEclipselink.class })
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedSingularBasicPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -160,7 +164,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     @Test
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
-    @Category({ NoEclipselink.class })
+    // NOTE: Hibernate ORM 6.2 has an issue: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedPluralBasicPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 

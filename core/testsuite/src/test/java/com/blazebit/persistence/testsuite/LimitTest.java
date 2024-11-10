@@ -84,8 +84,9 @@ public class LimitTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category(NoEclipselink.class)
+    // MySQL doesn't support limit in subquery of IN predicate
     // TODO: report eclipselink does not support subqueries in functions
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void testSubqueryAndOuterQueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()

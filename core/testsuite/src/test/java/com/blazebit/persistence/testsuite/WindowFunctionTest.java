@@ -12,6 +12,7 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -157,6 +158,8 @@ public class WindowFunctionTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Hibernate ORM bug: https://hibernate.atlassian.net/browse/HHH-18836
+    @Category({ NoMySQL.class })
     public void testWindowBooleanAggregateOverRows() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Person.class, "per")

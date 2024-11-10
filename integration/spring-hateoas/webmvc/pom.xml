@@ -227,6 +227,10 @@
                     <annotationProcessors>
                         <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                     </annotationProcessors>
+                    <!-- ORM 6.2 still added the javax annotation -->
+                    <compilerArgs>
+                        <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>

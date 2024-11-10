@@ -36,6 +36,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.1.0
  */
 // NOTE: Oracle is problematic due to #306
+// Can't run these tests with MySQL
 public class InsertTest extends AbstractCoreTest {
     
     private Person p1;
@@ -67,7 +68,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testSimple() {
         transactional(new TxVoidWork() {
             @Override
@@ -91,7 +92,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testSimpleWithLimit() {
         transactional(new TxVoidWork() {
             @Override
@@ -116,7 +117,7 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testSimpleWithLimitAndOffset() {
         transactional(new TxVoidWork() {
             @Override
@@ -142,7 +143,7 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testSimpleWithParameters() {
         transactional(new TxVoidWork() {
             @Override
@@ -169,7 +170,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // NOTE: H2 does not support returning all generated keys
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningAll() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -198,7 +199,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLast() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -225,7 +226,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLastWithParameter() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -254,7 +255,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // TODO: This does not work with sequences for H2 because the next value of the sequence is evaluated regardless of the limit
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLastWithLimit() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -283,7 +284,7 @@ public class InsertTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
+    @Category({ NoH2.class, NoMySQL.class, NoOracle.class, NoEclipselink.class })
     public void testReturningLastWithCte() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -323,7 +324,7 @@ public class InsertTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoOracle.class, NoEclipselink.class })
+    @Category({ NoH2.class, NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testReturningLastWithCteAndLimit() {
         ReturningResult<Long> result = transactional(new TxWork<ReturningResult<Long>>() {
             @Override
@@ -483,7 +484,7 @@ public class InsertTest extends AbstractCoreTest {
 
     // Test for #1737
     @Test
-    @Category({ NoOracle.class, NoEclipselink.class })
+    @Category({ NoOracle.class, NoMySQL.class, NoEclipselink.class })
     public void testAssociationParameter() {
         transactional(new TxVoidWork() {
             @Override
