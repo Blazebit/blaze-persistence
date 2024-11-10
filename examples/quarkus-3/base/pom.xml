@@ -192,6 +192,10 @@
                                 <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
                                 <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
                             </annotationProcessors>
+                            <!-- ORM 6.2 still added the javax annotation -->
+                            <compilerArgs>
+                                <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
+                            </compilerArgs>
                         </configuration>
                     </plugin>
                 </plugins>

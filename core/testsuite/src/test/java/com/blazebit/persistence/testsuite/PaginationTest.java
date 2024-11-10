@@ -22,6 +22,7 @@ import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Workflow;
@@ -1178,8 +1179,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // MySQL doesn't support limit in subquery of IN predicate
     // TODO: report eclipselink does not support subqueries in functions
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void testExtractIdQueryIntoSubquery() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
                 .from(Document.class, "doc")

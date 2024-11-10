@@ -7,10 +7,10 @@ package com.blazebit.persistence.view.testsuite.subview;
 
 import static org.junit.Assert.assertEquals;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import jakarta.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
 import org.junit.Test;
@@ -78,9 +78,9 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
+	// Eclipselink has a result set mapping bug in case of map keys
     // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
     @Category({ NoEclipselink.class, NoHibernate62.class })
-    // Eclipselink has a result set mapping bug in case of map keys
     public void testEntityViewSettingFilterSubview() {
         EntityViewManager evm = build(
                 DocumentMasterView.class,
@@ -111,9 +111,9 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
+	// Eclipselink does not support VALUE() dereferencing
     // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
     @Category({ NoEclipselink.class, NoHibernate62.class })
-    // Eclipselink does not support VALUE() dereferencing
     public void testEntityViewSettingFilterFilteredSubview() {
         EntityViewManager evm = build(
                 DocumentMasterView.class,
