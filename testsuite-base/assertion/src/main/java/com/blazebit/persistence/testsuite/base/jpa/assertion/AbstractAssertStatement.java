@@ -204,9 +204,11 @@ public abstract class AbstractAssertStatement implements AssertStatement {
             Delete delete = (Delete) statement;
             if (delete.getTables().size() == 1) {
                 Table t = delete.getTables().get(0);
-                for (Join join : delete.getJoins()) {
-                    if (join.getRightItem().getAlias().getName().equals(t.getName())) {
-                        return Collections.singletonList((Table) join.getRightItem());
+                if (delete.getJoins() != null && !delete.getJoins().isEmpty()) {
+                    for (Join join : delete.getJoins()) {
+                        if (join.getRightItem().getAlias().getName().equals(t.getName())) {
+                            return Collections.singletonList((Table) join.getRightItem());
+                        }
                     }
                 }
                 return Collections.singletonList(t);
