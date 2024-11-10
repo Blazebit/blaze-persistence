@@ -87,7 +87,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public boolean supportsWithClauseHead() {
+    public boolean supportsPaginationInWithClause() {
         return supportsWithClause();
     }
 

@@ -52,8 +52,8 @@ public class DelegatingDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public boolean supportsWithClauseHead() {
-        return delegate.supportsWithClauseHead();
+    public boolean supportsPaginationInWithClause() {
+        return delegate.supportsPaginationInWithClause();
     }
 
     @Override

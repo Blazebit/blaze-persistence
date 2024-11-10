@@ -3474,7 +3474,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 head = sb.toString();
 
                 String[] aliases;
-                if (mainQuery.dbmsDialect.supportsWithClauseHead() || !cteInfo.nonRecursiveCriteriaBuilder.hasLimit()) {
+                if (mainQuery.dbmsDialect.supportsPaginationInWithClause() || !cteInfo.nonRecursiveCriteriaBuilder.hasLimit()) {
                     aliases = null;
                 } else {
                     aliases = columnNames.toArray(new String[0]);
