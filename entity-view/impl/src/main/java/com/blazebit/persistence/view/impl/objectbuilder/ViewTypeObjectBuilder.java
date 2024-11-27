@@ -9,6 +9,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
@@ -20,7 +21,6 @@ import java.util.Map;
 import java.util.NavigableSet;
 
 /**
- *
  * @author Christian Beikov
  * @since 1.0.0
  */
@@ -98,7 +98,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             for (int i = 0; i < mappers.length; i++) {
                 TupleElementMapper mapper = mappers[i];
                 String attributePath = mapper.getAttributePath();
-                if (attributePath != null && hasSubFetches(fetches, attributePath)) {
+                if (attributePath != null && (hasSubFetches(fetches, attributePath) || isInheritance(mapper, attributePath))) {
                     mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
                 } else {
                     queryBuilder.select("NULL");
@@ -113,5 +113,13 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         // See EntityViewConfiguration.getFetches(Collection, ManagedViewTypeImplementor)
         String fetchedPath = fetches.ceiling(attributePath);
         return fetchedPath != null && fetchedPath.startsWith(attributePath) && (fetchedPath.length() == attributePath.length() || fetchedPath.charAt(attributePath.length()) == '.');
+    }
+
+    static boolean isInheritance(TupleElementMapper mapper, String attributePath) {
+        // Should fetch discriminator column instead of selecting “NULL”
+        if (!attributePath.isEmpty()) {
+            return false; // Not a discriminator column
+        }
+        return mapper instanceof AliasExpressionTupleElementMapper && ((AliasExpressionTupleElementMapper) mapper).getAlias().endsWith("_class");
     }
 }

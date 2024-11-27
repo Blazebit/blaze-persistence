@@ -159,14 +159,14 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         private Long id;
 
         @Column
-        private String value;
+        private String someValue;
 
-        public String getValue() {
-            return value;
+        public String getSomeValue() {
+            return someValue;
         }
 
-        public void setValue(String value) {
-            this.value = value;
+        public void setSomeValue(String value) {
+            this.someValue = value;
         }
 
     }
@@ -231,9 +231,9 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         @IdMapping
         Long getId();
 
-        @Mapping("value")
-        String getValue();
-        
+        @Mapping("someValue")
+        String getSomeValue();
+
     }
 
     @Override
@@ -254,7 +254,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
             @Override
             public void work(EntityManager em) {
                 Qux fooQux = new Qux();
-                fooQux.setValue("foo");
+                fooQux.setSomeValue("foo");
                 em.persist(fooQux);
                 Foo foo = new Foo();
                 foo.setName("Foo");
@@ -262,7 +262,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
                 em.persist(foo);
 
                 Qux barQux = new Qux();
-                barQux.setValue("bar");
+                barQux.setSomeValue("bar");
                 em.persist(barQux);
                 Bar bar = new Bar();
                 bar.setName("Bar");
@@ -310,8 +310,8 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         EntityViewSetting<BaseView, CriteriaBuilder<BaseView>> setting = EntityViewSetting.create(BaseView.class);
         setting.fetch("id");
         setting.fetch("name");
-        setting.fetch("foo.value");
-        setting.fetch("bar.value");
+        setting.fetch("foo.someValue");
+        setting.fetch("bar.someValue");
         CriteriaBuilder<Base> builder = cbf.create(em, Base.class);
 
         Collection<BaseView> bases = evm.applySetting(setting, builder).getResultList();
@@ -323,11 +323,11 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         FooView foo = firstOrNull(bases, FooView.class);
         assertNotNull(foo);
         assertEquals("Foo", foo.getName());
-        assertEquals("foo", foo.getFoo().getValue());
+        assertEquals("foo", foo.getFoo().getSomeValue());
         BarView bar = firstOrNull(bases, BarView.class);
         assertNotNull(bar);
         assertEquals("Bar", bar.getName());
-        assertEquals("bar", bar.getBar().getValue());
+        assertEquals("bar", bar.getBar().getSomeValue());
     }
 
     @Test
@@ -349,12 +349,12 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         setting.fetch("id");
         setting.fetch("base1.id");
         setting.fetch("base1.name");
-        setting.fetch("base1.foo.value");
-        setting.fetch("base1.bar.value");
+        setting.fetch("base1.foo.someValue");
+        setting.fetch("base1.bar.someValue");
         setting.fetch("base2.id");
         setting.fetch("base2.name");
-        setting.fetch("base2.foo.value");
-        setting.fetch("base2.bar.value");
+        setting.fetch("base2.foo.someValue");
+        setting.fetch("base2.bar.someValue");
         CriteriaBuilder<Container> builder = cbf.create(em, Container.class);
 
         ContainerView container = evm.applySetting(setting, builder).getSingleResult();
@@ -363,11 +363,11 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         assertNotNull(container.getBase1());
         FooView foo = (FooView) container.getBase1();
         assertEquals("Foo", foo.getName());
-        assertEquals("foo", foo.getFoo().getValue());
+        assertEquals("foo", foo.getFoo().getSomeValue());
         assertNotNull(container.getBase2());
         BarView bar = (BarView) container.getBase2();
         assertEquals("Bar", bar.getName());
-        assertEquals("bar", bar.getBar().getValue());
+        assertEquals("bar", bar.getBar().getSomeValue());
     }
 
     @Test
