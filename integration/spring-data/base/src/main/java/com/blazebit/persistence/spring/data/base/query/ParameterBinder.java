@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.spring.data.base.query;
 
+import com.blazebit.persistence.spring.data.base.PageableUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
@@ -163,12 +164,13 @@ public abstract class ParameterBinder {
 
         Query result = bind(query);
 
-        if (!parameters.hasPageableParameter() || getPageable() == null) {
+        Pageable pageable;
+        if (!parameters.hasPageableParameter() || PageableUtil.isUnpaged(pageable = getPageable())) {
             return result;
         }
 
         result.setFirstResult(getOffset());
-        result.setMaxResults(getPageable().getPageSize());
+        result.setMaxResults(pageable.getPageSize());
 
         return result;
     }

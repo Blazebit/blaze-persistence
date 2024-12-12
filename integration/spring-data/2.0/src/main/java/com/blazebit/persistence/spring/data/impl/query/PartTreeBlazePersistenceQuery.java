@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.query.Jpa21Utils;
 import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.JpaQueryExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
@@ -59,9 +58,9 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
     @Override
     protected JpaQueryExecution getExecution() {
         if (getQueryMethod().isSliceQuery()) {
-            return new PartTreeBlazePersistenceQuery.SlicedExecution(getQueryMethod().getParameters());
+            return new PartTreeBlazePersistenceQuery.SlicedExecution();
         } else if (getQueryMethod().isPageQuery()) {
-            return new PartTreeBlazePersistenceQuery.PagedExecution(getQueryMethod().getParameters());
+            return new PartTreeBlazePersistenceQuery.PagedExecution();
         } else if (isDelete()) {
             return new PartTreeBlazePersistenceQuery.DeleteExecution(getEntityManager());
         } else if (isExists()) {
@@ -93,18 +92,12 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
      */
     private static class SlicedExecution extends JpaQueryExecution {
 
-        private final Parameters<?, ?> parameters;
-
-        public SlicedExecution(Parameters<?, ?> parameters) {
-            this.parameters = parameters;
-        }
-
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
             Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, false);
             PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
-            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+            ParameterAccessor accessor = new ParametersParameterAccessor(repositoryQuery.getQueryMethod().getParameters(), values);
             Pageable pageable = accessor.getPageable();
 
             return new KeysetAwareSliceImpl<>(resultList, pageable);
@@ -119,20 +112,19 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
      */
     private static class PagedExecution extends JpaQueryExecution {
 
-        private final Parameters<?, ?> parameters;
-
-        public PagedExecution(Parameters<?, ?> parameters) {
-            this.parameters = parameters;
-        }
-
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
+            ParameterAccessor accessor = new ParametersParameterAccessor(repositoryQuery.getQueryMethod().getParameters(), values);
+            Pageable pageable = accessor.getPageable();
+            if (pageable.isUnpaged()) {
+                List<Object> unpagedResult = ((PartTreeBlazePersistenceQuery) repositoryQuery).createQuery(values).getResultList();
+                return new KeysetAwarePageImpl<>(unpagedResult);
+            }
+
             Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, true);
             PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
             Long total = resultList.getTotalSize();
-            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
-            Pageable pageable = accessor.getPageable();
 
             if (total.equals(0L)) {
                 return new KeysetAwarePageImpl<>(Collections.emptyList(), total, null, pageable);

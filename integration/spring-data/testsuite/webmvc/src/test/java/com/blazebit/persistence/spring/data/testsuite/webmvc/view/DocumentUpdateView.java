@@ -6,6 +6,7 @@
 package com.blazebit.persistence.spring.data.testsuite.webmvc.view;
 
 import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Document;
+import com.blazebit.persistence.spring.data.testsuite.webmvc.entity.Identifiable;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdatableEntityView;
@@ -16,9 +17,10 @@ import com.blazebit.persistence.view.UpdatableEntityView;
  */
 @UpdatableEntityView
 @EntityView(Document.class)
-public interface DocumentUpdateView {
+public interface DocumentUpdateView extends Identifiable<Long> {
 
     @IdMapping
+    @Override
     Long getId();
 
     String getName();

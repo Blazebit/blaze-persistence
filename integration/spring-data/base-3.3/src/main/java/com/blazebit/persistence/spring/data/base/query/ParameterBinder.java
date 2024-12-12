@@ -165,12 +165,13 @@ public abstract class ParameterBinder {
 
         Query result = bind(query);
 
-        if (!parameters.hasPageableParameter() || getPageable() == null) {
+        Pageable pageable;
+        if (!parameters.hasPageableParameter() || (pageable = getPageable()).isUnpaged()) {
             return result;
         }
 
         result.setFirstResult(getOffset());
-        result.setMaxResults(getPageable().getPageSize());
+        result.setMaxResults(pageable.getPageSize());
 
         return result;
     }

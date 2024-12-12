@@ -14,7 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import java.io.Serializable;
 
 /**
  * @author Moritz Becker
@@ -25,7 +24,7 @@ import java.io.Serializable;
     @NamedQuery(name = "findIdOfD1", query = "select d.id from Document d where d.name = 'D1'")
 })
 @Entity
-public class Document implements Serializable {
+public class Document implements Identifiable<Long> {
 
     private Long id;
     private String name;
@@ -43,6 +42,7 @@ public class Document implements Serializable {
 
     @Id
     @GeneratedValue
+    @Override
     public Long getId() {
         return id;
     }

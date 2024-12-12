@@ -526,7 +526,7 @@ For executing tests against a database on a dedicated host you might want to spe
 ## Testing with Jakarta Persistence provider
 
 To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
-and to run tests use ` mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
+and to run tests use `mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
 
 ## Switching JPA provider profiles in IntelliJ
 

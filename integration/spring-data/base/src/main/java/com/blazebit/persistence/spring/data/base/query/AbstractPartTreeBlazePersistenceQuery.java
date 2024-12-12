@@ -367,8 +367,11 @@ public abstract class AbstractPartTreeBlazePersistenceQuery extends AbstractJpaQ
             int pageableIndex;
             if ((sortIndex = parameters.getSortIndex()) >= 0 && (sort = (Sort) values[sortIndex]) != null) {
                 EntityViewSortUtil.applySort(evm, entityViewClass, cb, sort);
-            } else if ((pageableIndex = parameters.getPageableIndex()) >= 0 && (sort = ((Pageable) values[pageableIndex]).getSort()) != null) {
-                EntityViewSortUtil.applySort(evm, entityViewClass, cb, sort);
+            } else if ((pageableIndex = parameters.getPageableIndex()) >= 0) {
+                Pageable pageable = (Pageable) values[pageableIndex];
+                if (pageable != null && (sort = pageable.getSort()) != null) {
+                    EntityViewSortUtil.applySort(evm, entityViewClass, cb, sort);
+                }
             }
             for (Map.Entry<String, Sorter> attributeSorterEntry : evsAttributeSorter.entrySet()) {
                 attributeSorterEntry.getValue().apply((OrderByBuilder) cb, attributeSorterEntry.getKey());

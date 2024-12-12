@@ -9,7 +9,6 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +19,7 @@ import java.util.UUID;
  * @since 1.5.0
  */
 @Entity
-public class Person implements Serializable {
+public class Person implements Identifiable<String> {
     private static final long serialVersionUID = 1L;
 
     private String id;
@@ -38,6 +37,7 @@ public class Person implements Serializable {
     }
 
     @Id
+    @Override
     public String getId() {
         return id;
     }

@@ -25,8 +25,6 @@ import org.springframework.data.jpa.repository.query.JpaEntityGraph;
 import org.springframework.data.jpa.repository.query.JpaParametersParameterAccessor;
 import org.springframework.data.jpa.repository.query.JpaQueryExecution;
 import org.springframework.data.jpa.repository.support.QueryHints;
-import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
@@ -63,9 +61,9 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
     @Override
     protected JpaQueryExecution getExecution() {
         if (getQueryMethod().isSliceQuery()) {
-            return new PartTreeBlazePersistenceQuery.SlicedExecution(getQueryMethod().getParameters());
+            return new PartTreeBlazePersistenceQuery.SlicedExecution();
         } else if (getQueryMethod().isPageQuery()) {
-            return new PartTreeBlazePersistenceQuery.PagedExecution(getQueryMethod().getParameters());
+            return new PartTreeBlazePersistenceQuery.PagedExecution();
         } else if (isDelete()) {
             return new PartTreeBlazePersistenceQuery.DeleteExecution(getEntityManager());
         } else if (isExists()) {
@@ -97,19 +95,12 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
      */
     private static class SlicedExecution extends JpaQueryExecution {
 
-        private final Parameters<?, ?> parameters;
-
-        public SlicedExecution(Parameters<?, ?> parameters) {
-            this.parameters = parameters;
-        }
-
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, JpaParametersParameterAccessor jpaParametersParameterAccessor) {
             Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(jpaParametersParameterAccessor.getValues(), false);
             PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
-            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, jpaParametersParameterAccessor.getValues());
-            Pageable pageable = accessor.getPageable();
+            Pageable pageable = jpaParametersParameterAccessor.getPageable();
 
             return new KeysetAwareSliceImpl<>(resultList, pageable);
         }
@@ -123,20 +114,18 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
      */
     private static class PagedExecution extends JpaQueryExecution {
 
-        private final Parameters<?, ?> parameters;
-
-        public PagedExecution(Parameters<?, ?> parameters) {
-            this.parameters = parameters;
-        }
-
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, JpaParametersParameterAccessor jpaParametersParameterAccessor) {
+            Pageable pageable = jpaParametersParameterAccessor.getPageable();
+            if (pageable.isUnpaged()) {
+                List<Object> unpagedResult = ((PartTreeBlazePersistenceQuery) repositoryQuery).createQuery(jpaParametersParameterAccessor).getResultList();
+                return new KeysetAwarePageImpl<>(unpagedResult);
+            }
+
             Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(jpaParametersParameterAccessor.getValues(), true);
             PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
             Long total = resultList.getTotalSize();
-            ParameterAccessor accessor = new ParametersParameterAccessor(parameters, jpaParametersParameterAccessor.getValues());
-            Pageable pageable = accessor.getPageable();
 
             if (total.equals(0L)) {
                 return new KeysetAwarePageImpl<>(Collections.emptyList(), total, null, pageable);
