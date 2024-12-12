@@ -99,4 +99,6 @@ public interface ReadOnlyDocumentRepository<T> extends EntityViewRepository<T, L
     List<DocumentView> findAllByOrderByNameAsc(Sort sort, EntityViewSettingProcessor<DocumentView> processor);
 
     int countDocumentsByStatus(MyEnum status);
+
+    <V> Page<V> findByName(String name, Class<V> type, Pageable pageable);
 }

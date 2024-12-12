@@ -76,18 +76,6 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     private static final String DELETE_ALL_QUERY_BY_ID_STRING = "delete from %s x where %s in :ids";
     private static final String[] EMPTY = new String[0];
     private static final EscapeCharacter DEFAULT = EscapeCharacter.of('\\');
-    private static final Pageable UNPAGED;
-
-    static {
-        Pageable unpaged = null;
-        try {
-            Method unpagedMethod = Class.forName("org.springframework.data.domain.Pageable").getMethod("unpaged");
-            unpaged = (Pageable) unpagedMethod.invoke(null);
-        } catch (Exception e) {
-            // ignore
-        }
-        UNPAGED = unpaged;
-    }
 
     protected EscapeCharacter escapeCharacter = DEFAULT;
 
@@ -343,7 +331,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
         Class<S> probeType = example.getProbeType();
         TypedQuery<S> query = getQuery(new ExampleSpecification<>(example, escapeCharacter), probeType, pageable);
 
-        return pageable == null || pageable == UNPAGED ? new KeysetAwarePageImpl<>(query.getResultList()) : new KeysetAwarePageImpl<>((PagedList<S>) query.getResultList(), pageable);
+        return pageable == null || pageable.isUnpaged() ? new KeysetAwarePageImpl<>(query.getResultList()) : new KeysetAwarePageImpl<>((PagedList<S>) query.getResultList(), pageable);
     }
 
     public List<E> findAll(Sort sort) {
@@ -351,7 +339,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
     }
 
     public Page<E> findAll(Pageable pageable) {
-        if (pageable == null || pageable == UNPAGED) {
+        if (pageable == null || pageable.isUnpaged()) {
             return (Page<E>) new PageImpl<>(findAll());
         }
 
@@ -561,7 +549,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
     public Page<V> findAll(Specification<E> spec, Pageable pageable) {
         TypedQuery<V> query = getQuery(spec, pageable);
-        if (pageable == null || pageable == UNPAGED) {
+        if (pageable == null || pageable.isUnpaged()) {
             return new KeysetAwarePageImpl<>(query.getResultList());
         }
         PagedList<V> resultList = (PagedList<V>) query.getResultList();
@@ -623,7 +611,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
 
         TypedQuery<V> query;
         if (entityViewClass == null) {
-            if (pageable == null || pageable == UNPAGED) {
+            if (pageable == null || pageable.isUnpaged()) {
                 query = (TypedQuery<V>) cb.getQuery();
             } else {
                 PaginatedCriteriaBuilder<S> paginatedCriteriaBuilder;
@@ -644,7 +632,7 @@ public abstract class AbstractEntityViewAwareRepository<V, E, ID extends Seriali
                 query = (TypedQuery<V>) paginatedCriteriaBuilder.getQuery();
             }
         } else {
-            if (pageable == null || pageable == UNPAGED) {
+            if (pageable == null || pageable.isUnpaged()) {
                 EntityViewSetting<V, CriteriaBuilder<V>> setting = EntityViewSetting.create(entityViewClass);
                 CriteriaBuilder<V> fqb = evm.applySetting(setting, cb);
                 if (sort != null) {
