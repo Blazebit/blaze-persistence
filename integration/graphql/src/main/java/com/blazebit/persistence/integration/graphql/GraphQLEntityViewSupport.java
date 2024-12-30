@@ -647,7 +647,7 @@ public class GraphQLEntityViewSupport {
                         "No type is registered for the name: " + typeName);
                 }
 
-               String mappedFieldPart = typeMapping.get(fieldName);
+                String mappedFieldPart = typeMapping.get(fieldName);
                 if (mappedFieldPart == null) {
                     // fieldName cannot be mapped to an entity view field, probably because it's a non-DB field with a default -> ignore the whole field
                     continue OUTER;
