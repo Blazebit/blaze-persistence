@@ -37,6 +37,11 @@ public class AViewRelation<T, A extends MethodAttribute<?, ?>> extends Attribute
         return attribute == null ? getWrapped().<Integer>get("id") : getWrapped().get(attribute);
     }
 
+    public AttributePath<T, List<Map<String, String>>, List<Map<String, String>>> jsonMap() {
+        MethodSingularAttribute<AView, List<Map<String, String>>> attribute = AView_.jsonMap;
+        return attribute == null ? getWrapped().<List<Map<String, String>>>get("jsonMap") : getWrapped().get(attribute);
+    }
+
     public AttributePath<T, List<Object>, List<Object>> listMappingParameter() {
         MethodSingularAttribute<AView, List<Object>> attribute = AView_.listMappingParameter;
         return attribute == null ? getWrapped().<List<Object>>get("listMappingParameter") : getWrapped().get(attribute);

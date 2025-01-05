@@ -31,6 +31,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     protected int age;
     protected byte[] bytes;
     protected Integer id;
+    protected List<Map<String, String>> jsonMap;
     protected List<Object> listMappingParameter;
     protected Map<String, String> map;
     protected List<Set<String>> multiNames;
@@ -45,6 +46,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         this.age = 0;
         this.bytes = null;
         this.id = null;
+        this.jsonMap = null;
         this.listMappingParameter = (List<Object>) blazePersistenceOptionalParameters.get("listMappingParameter");
         this.map = null;
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
@@ -84,6 +86,16 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
     }
     public BuilderType withId(Integer id) {
         this.id = id;
+        return (BuilderType) this;
+    }
+    public List<Map<String, String>> getJsonMap() {
+        return jsonMap;
+    }
+    public void setJsonMap(List<Map<String, String>> jsonMap) {
+        this.jsonMap = jsonMap;
+    }
+    public BuilderType withJsonMap(List<Map<String, String>> jsonMap) {
+        this.jsonMap = jsonMap;
         return (BuilderType) this;
     }
     public List<Object> getListMappingParameter() {
@@ -268,6 +280,8 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 return (ElementType) (Object) this.bytes;
             case "id":
                 return (ElementType) (Object) this.id;
+            case "jsonMap":
+                return (ElementType) (Object) this.jsonMap;
             case "listMappingParameter":
                 return (ElementType) (Object) this.listMappingParameter;
             case "map":
@@ -309,6 +323,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                 break;
             case "id":
                 this.id = value == null ? null : (Integer) value;
+                break;
+            case "jsonMap":
+                this.jsonMap = value == null ? null : (List<Map<String, String>>) value;
                 break;
             case "listMappingParameter":
                 this.listMappingParameter = value == null ? null : (List<Object>) value;
@@ -557,6 +574,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.id,
                     this.age,
                     this.bytes,
+                    this.jsonMap,
                     this.listMappingParameter,
                     this.map,
                     this.multiNames,
@@ -593,6 +611,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         }
         public Init<X> withId(Integer id) {
             this.id = id;
+            return (Init<X>) this;
+        }
+        public Init<X> withJsonMap(List<Map<String, String>> jsonMap) {
+            this.jsonMap = jsonMap;
             return (Init<X>) this;
         }
         public Init<X> withListMappingParameter(List<Object> listMappingParameter) {
@@ -642,6 +664,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "id":
                     this.id = value == null ? null : (Integer) value;
+                    break;
+                case "jsonMap":
+                    this.jsonMap = value == null ? null : (List<Map<String, String>>) value;
                     break;
                 case "listMappingParameter":
                     this.listMappingParameter = value == null ? null: (List<Object>) value;
@@ -944,6 +969,7 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     this.id,
                     this.age,
                     this.bytes,
+                    this.jsonMap,
                     this.listMappingParameter,
                     this.map,
                     this.multiNames,
@@ -981,6 +1007,10 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
         }
         public Nested<X, BuilderResult> withId(Integer id) {
             this.id = id;
+            return (Nested<X, BuilderResult>) this;
+        }
+        public Nested<X, BuilderResult> withJsonMap(List<Map<String, String>> jsonMap) {
+            this.jsonMap = jsonMap;
             return (Nested<X, BuilderResult>) this;
         }
         public Nested<X, BuilderResult> withListMappingParameter(List<Object> listMappingParameter) {
@@ -1030,6 +1060,9 @@ public abstract class AViewBuilder<X extends Serializable, BuilderType extends E
                     break;
                 case "id":
                     this.id = value == null ? null : (Integer) value;
+                    break;
+                case "jsonMap":
+                    this.jsonMap = value == null ? null : (List<Map<String, String>>) value;
                     break;
                 case "listMappingParameter":
                     this.listMappingParameter = value == null ? null : (List<Object>) value;

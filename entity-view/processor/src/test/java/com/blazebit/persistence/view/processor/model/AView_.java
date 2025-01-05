@@ -22,6 +22,7 @@ public abstract class AView_ {
     public static volatile MethodSingularAttribute<AView, Integer> age;
     public static volatile MethodSingularAttribute<AView, byte[]> bytes;
     public static volatile MethodSingularAttribute<AView, Integer> id;
+    public static volatile MethodSingularAttribute<AView, List<Map<String, String>>> jsonMap;
     public static volatile MethodSingularAttribute<AView, List<Object>> listMappingParameter;
     public static volatile MethodSingularAttribute<AView, Map<String, String>> map;
     public static volatile MethodMultiListAttribute<AView, String, Set<String>> multiNames;
@@ -36,6 +37,7 @@ public abstract class AView_ {
     public static final String AGE = "age";
     public static final String BYTES = "bytes";
     public static final String ID = "id";
+    public static final String JSON_MAP = "jsonMap";
     public static final String LIST_MAPPING_PARAMETER = "listMappingParameter";
     public static final String MAP = "map";
     public static final String MULTI_NAMES = "multiNames";
