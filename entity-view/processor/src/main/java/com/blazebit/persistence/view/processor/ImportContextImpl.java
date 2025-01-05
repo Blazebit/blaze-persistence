@@ -119,10 +119,11 @@ public class ImportContextImpl implements ImportContext {
                     start = i + 1;
                     break;
                 case '<':
-                    currentTypeIdx = 1;
-                    int gtIdx = typeArguments.lastIndexOf('>', i);
+                    sb.append(importType(typeArguments.substring(start, i).trim()));
+                    int gtIdx = typeArguments.lastIndexOf('>', end - 1);
                     sb.append(importTypeArguments(typeArguments, i, gtIdx));
                     start = gtIdx + 1;
+                    i = gtIdx;
                     break;
             }
             //CHECKSTYLE:ON: MissingSwitchDefault

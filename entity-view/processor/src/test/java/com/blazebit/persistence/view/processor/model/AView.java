@@ -48,6 +48,9 @@ public interface AView<X extends Serializable> extends IdHolderView<Integer> {
     @MappingSingular
     Map<String, String> getMap();
 
+    @MappingSingular
+    List<Map<String, String>> getJsonMap();
+
     class TestFilter extends ViewFilterProvider {
 
         private static final String CONSTANT = "myParam";

@@ -23,6 +23,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     private final int age;
     private final byte[] bytes;
     private final Integer id;
+    private final List<Map<String, String>> jsonMap;
     private final List<Object> listMappingParameter;
     private final Map<String, String> map;
     private final List<Set<String>> multiNames;
@@ -36,6 +37,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = 0;
         this.bytes = null;
         this.id = null;
+        this.jsonMap = null;
         this.listMappingParameter = (List<Object>) blazePersistenceOptionalParameters.get("listMappingParameter");
         this.map = null;
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
@@ -51,6 +53,7 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = 0;
         this.bytes = null;
         this.id = id;
+        this.jsonMap = null;
         this.listMappingParameter = null;
         this.map = null;
         this.multiNames = (List<Set<String>>) (java.util.List<?>) AView_.multiNames.getCollectionInstantiator().createCollection(0);
@@ -61,11 +64,12 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.test2 = null;
     }
 
-    public AViewImpl(Integer id, int age, byte[] bytes, List<Object> listMappingParameter, Map<String, String> map, List<Set<String>> multiNames, String name, List<String> names, Optional<BView> optionalValue, List<X> test, X test2) {
+    public AViewImpl(Integer id, int age, byte[] bytes, List<Map<String, String>> jsonMap, List<Object> listMappingParameter, Map<String, String> map, List<Set<String>> multiNames, String name, List<String> names, Optional<BView> optionalValue, List<X> test, X test2) {
         super();
         this.age = age;
         this.bytes = bytes;
         this.id = id;
+        this.jsonMap = jsonMap;
         this.listMappingParameter = listMappingParameter;
         this.map = map;
         this.multiNames = multiNames;
@@ -81,14 +85,15 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + 1];
         this.bytes = (byte[]) tuple[offset + 2];
         this.id = (Integer) tuple[offset + 0];
-        this.listMappingParameter = (List<Object>) tuple[offset + 3];
-        this.map = (Map<String, String>) tuple[offset + 4];
-        this.multiNames = (List<Set<String>>) tuple[offset + 5];
-        this.name = (String) tuple[offset + 6];
-        this.names = (List<String>) tuple[offset + 7];
-        this.optionalValue = (Optional<BView>) tuple[offset + 8];
-        this.test = (List<X>) tuple[offset + 9];
-        this.test2 = (X) tuple[offset + 10];
+        this.jsonMap = (List<Map<String, String>>) tuple[offset + 3];
+        this.listMappingParameter = (List<Object>) tuple[offset + 4];
+        this.map = (Map<String, String>) tuple[offset + 5];
+        this.multiNames = (List<Set<String>>) tuple[offset + 6];
+        this.name = (String) tuple[offset + 7];
+        this.names = (List<String>) tuple[offset + 8];
+        this.optionalValue = (Optional<BView>) tuple[offset + 9];
+        this.test = (List<X>) tuple[offset + 10];
+        this.test2 = (X) tuple[offset + 11];
     }
 
     public AViewImpl(AViewImpl noop, int offset, int[] assignment, Object[] tuple) {
@@ -96,14 +101,15 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
         this.age = (int) tuple[offset + assignment[1]];
         this.bytes = (byte[]) tuple[offset + assignment[2]];
         this.id = (Integer) tuple[offset + assignment[0]];
-        this.listMappingParameter = (List<Object>) tuple[offset + assignment[3]];
-        this.map = (Map<String, String>) tuple[offset + assignment[4]];
-        this.multiNames = (List<Set<String>>) tuple[offset + assignment[5]];
-        this.name = (String) tuple[offset + assignment[6]];
-        this.names = (List<String>) tuple[offset + assignment[7]];
-        this.optionalValue = (Optional<BView>) tuple[offset + assignment[8]];
-        this.test = (List<X>) tuple[offset + assignment[9]];
-        this.test2 = (X) tuple[offset + assignment[10]];
+        this.jsonMap = (List<Map<String, String>>) tuple[offset + assignment[3]];
+        this.listMappingParameter = (List<Object>) tuple[offset + assignment[4]];
+        this.map = (Map<String, String>) tuple[offset + assignment[5]];
+        this.multiNames = (List<Set<String>>) tuple[offset + assignment[6]];
+        this.name = (String) tuple[offset + assignment[7]];
+        this.names = (List<String>) tuple[offset + assignment[8]];
+        this.optionalValue = (Optional<BView>) tuple[offset + assignment[9]];
+        this.test = (List<X>) tuple[offset + assignment[10]];
+        this.test2 = (X) tuple[offset + assignment[11]];
     }
 
     @Override
@@ -119,6 +125,11 @@ public class AViewImpl<X extends Serializable> implements AView<X>, EntityViewPr
     @Override
     public Integer getId() {
         return id;
+    }
+
+    @Override
+    public List<Map<String, String>> getJsonMap() {
+        return jsonMap;
     }
 
     @Override
