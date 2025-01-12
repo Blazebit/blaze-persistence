@@ -6,7 +6,10 @@
 package com.blazebit.persistence.examples.spring.data.graphql;
 
 import com.blazebit.persistence.examples.spring.data.graphql.repository.CatViewRepository;
+import com.blazebit.persistence.examples.spring.data.graphql.view.CatPetView;
 import com.blazebit.persistence.examples.spring.data.graphql.view.CatWithOwnerView;
+import com.blazebit.persistence.examples.spring.data.graphql.view.DogPetView;
+import com.blazebit.persistence.examples.spring.data.graphql.view.HumanWithPetsView;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupportFactory;
 import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
@@ -72,6 +75,18 @@ public class GraphQLProvider {
 
     private RuntimeWiring buildWiring() {
         return RuntimeWiring.newRuntimeWiring()
+            .type( TypeRuntimeWiring.newTypeWiring("PetView")
+                           .typeResolver( env -> {
+                               Object object = env.getObject();
+                               if (object instanceof CatPetView) {
+                                   return env.getSchema().getObjectType( "CatPetView" );
+                               } else if (object instanceof DogPetView) {
+                                   return env.getSchema().getObjectType( "DogPetView" );
+                               } else {
+                                   throw new RuntimeException("Unknown object type: " + object.getClass().getName());
+                               }
+                           } )
+            )
             .type(TypeRuntimeWiring.newTypeWiring("Query")
                     .dataFetcher("catById", new DataFetcher() {
                         @Override
@@ -88,6 +103,14 @@ public class GraphQLProvider {
                                 return new GraphQLRelayConnection<>(Collections.emptyList());
                             }
                             return new GraphQLRelayConnection<>(repository.findAll(setting));
+                        }
+                    })
+                    .dataFetcher("findHumans", new DataFetcher() {
+                        @Override
+                        public Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+                            EntityViewSetting<HumanWithPetsView, ?> setting = graphQLEntityViewSupport.createSetting(dataFetchingEnvironment);
+                            setting.addAttributeSorter("id", Sorters.ascending());
+                            return repository.findAll(setting);
                         }
                     })
             )
