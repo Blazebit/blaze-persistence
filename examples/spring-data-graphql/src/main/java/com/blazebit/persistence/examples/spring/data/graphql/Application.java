@@ -6,6 +6,7 @@
 package com.blazebit.persistence.examples.spring.data.graphql;
 
 import com.blazebit.persistence.examples.spring.data.graphql.model.Cat;
+import com.blazebit.persistence.examples.spring.data.graphql.model.Human;
 import com.blazebit.persistence.examples.spring.data.graphql.model.Person;
 import com.blazebit.persistence.examples.spring.data.graphql.repository.CatJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +43,18 @@ public class Application {
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         List<Person> people = new ArrayList<>();
+        List<Human> humans = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             Person p = new Person("Person " + i);
             people.add(p);
             em.persist(p);
+            Human h = new Human( "Person " + i);
+            humans.add(h);
+            em.persist(h);
         }
         for (int i = 0; i < 100; i++) {
-            Cat c = new Cat("Cat " + i, random.nextInt(20), people.get(random.nextInt(4)));
+            int personIdx = random.nextInt(4);
+            Cat c = new Cat("Cat " + i, random.nextInt(20), people.get(personIdx), humans.get(personIdx));
             catJpaRepository.save(c);
         }
     }

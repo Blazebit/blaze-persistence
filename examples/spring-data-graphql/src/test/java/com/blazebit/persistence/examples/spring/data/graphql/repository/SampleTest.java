@@ -87,4 +87,61 @@ public class SampleTest extends AbstractSampleTest {
                 "}";
         return requestGraphQL;
     }
+
+    @Test
+    public void testInheritance() {
+        String requestGraphQL = "query {\n" +
+                "  findHumans {\n" +
+                "    id" +
+                "    pets {\n" +
+                "      id\n" +
+                "      name\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-type", "application/graphql");
+        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+
+        ArrayNode arrayNode = (ArrayNode) response.getBody().get("data").get("findHumans");
+        List<JsonNode> nodes = arrayNode.findValues("pets");
+
+        assertEquals(4, nodes.size());
+
+        int catCount = 0;
+        for (JsonNode node : nodes) {
+            catCount += ((ArrayNode) node).size();
+        }
+        assertEquals(100, catCount);
+    }
+
+    @Test
+    public void testInheritanceWithSubtypeAttribute() {
+        String requestGraphQL = "query {\n" +
+                "  findHumans {\n" +
+                "    id" +
+                "    pets {\n" +
+                "      id\n" +
+                "      name\n\n" +
+                "      ... on CatPetView {\n" +
+                "        nicknames\n" +
+                "      }" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-type", "application/graphql");
+        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+
+        ArrayNode arrayNode = (ArrayNode) response.getBody().get("data").get("findHumans");
+        List<JsonNode> nodes = arrayNode.findValues("pets");
+
+        assertEquals(4, nodes.size());
+
+        int catCount = 0;
+        for (JsonNode node : nodes) {
+            catCount += ((ArrayNode) node).size();
+        }
+        assertEquals(100, catCount);
+    }
 }

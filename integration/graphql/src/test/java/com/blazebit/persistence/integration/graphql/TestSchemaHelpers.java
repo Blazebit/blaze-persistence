@@ -16,11 +16,13 @@ import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNamedOutputType;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLScalarType;
+import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLUnionType;
 import graphql.schema.SelectedField;
 
@@ -47,9 +49,9 @@ public class TestSchemaHelpers {
     static GraphQLFieldDefinition idFieldDefinition = makeFieldDefinition("id", makeScalarType());
     static GraphQLFieldDefinition nameFieldDefinition = makeFieldDefinition("name", makeScalarType());
 
-    static GraphQLObjectType catObjectType = makeObjectType("Cat", idFieldDefinition, nameFieldDefinition);
-    static GraphQLUnionType animalUnionType = makeUnionType("Animal", catObjectType);
-    static GraphQLFieldDefinition animalFieldDefinition = makeFieldDefinition("animal", animalUnionType);
+    static GraphQLInterfaceType animalInterfaceType = makeInterfaceType( "Animal", idFieldDefinition, nameFieldDefinition);
+    static GraphQLObjectType catObjectType = makeObjectType("Cat", animalInterfaceType, idFieldDefinition, nameFieldDefinition);
+    static GraphQLFieldDefinition animalFieldDefinition = makeFieldDefinition( "animal", animalInterfaceType );
 
     static GraphQLObjectType personObjectType =
             makeObjectType("Person", idFieldDefinition, nameFieldDefinition, animalFieldDefinition);
@@ -72,16 +74,27 @@ public class TestSchemaHelpers {
         return scalarTypeBuilder.build();
     }
 
-    public static GraphQLUnionType makeUnionType(String name, GraphQLObjectType... types) {
-        GraphQLUnionType.Builder builder = new GraphQLUnionType.Builder();
+    public static GraphQLInterfaceType makeInterfaceType(String name, GraphQLFieldDefinition... fields) {
+        GraphQLInterfaceType.Builder builder = new GraphQLInterfaceType.Builder();
         builder.name(name);
-        builder.possibleTypes(types);
+        HashMap<String, GraphQLNamedOutputType> fieldToTypeMapping = new HashMap<>();
+        fieldToTypeMapping.put("__typename", makeScalarType());
+        Arrays.stream(fields).forEach(builder::field);
+        Arrays.stream(fields).forEach(field -> fieldToTypeMapping.put(field.getName(), (GraphQLNamedOutputType) unwrapAll(field.getType())));
+        objectFieldToTypeMapping.put(name, fieldToTypeMapping);
         return builder.build();
     }
 
     public static GraphQLObjectType makeObjectType(String name, GraphQLFieldDefinition... fields) {
+        return makeObjectType(name, null, fields);
+    }
+
+    public static GraphQLObjectType makeObjectType(String name, GraphQLInterfaceType interfaceType, GraphQLFieldDefinition... fields) {
         GraphQLObjectType.Builder objectTypeBuilder = new GraphQLObjectType.Builder();
         objectTypeBuilder.name(name);
+        if (interfaceType != null) {
+            objectTypeBuilder.withInterface(interfaceType);
+        }
         HashMap<String, GraphQLNamedOutputType> fieldToTypeMapping = new HashMap<>();
         fieldToTypeMapping.put("__typename", makeScalarType());
         Arrays.stream(fields).forEach(objectTypeBuilder::field);
@@ -157,8 +170,15 @@ public class TestSchemaHelpers {
 
     public static DataFetchingEnvironment makeMockDataFetchingEnvironment(GraphQLFieldDefinition rootFieldDefinition, DataFetchingFieldSelectionSet selectionSet) {
         DataFetchingEnvironment dfe = mock(DataFetchingEnvironment.class);
+        GraphQLSchema schema = mock(GraphQLSchema.class);
+        when(dfe.getGraphQLSchema()).thenReturn(schema);
         when(dfe.getFieldDefinition()).thenReturn(rootFieldDefinition);
         when(dfe.getSelectionSet()).thenReturn(selectionSet);
+
+        when(schema.getType(documentObjectType.getName())).thenReturn(documentObjectType);
+        when(schema.getType(personObjectType.getName())).thenReturn(personObjectType);
+        when(schema.getType( animalInterfaceType.getName())).thenReturn( animalInterfaceType );
+        when(schema.getType(catObjectType.getName())).thenReturn(catObjectType);
         return dfe;
     }
 

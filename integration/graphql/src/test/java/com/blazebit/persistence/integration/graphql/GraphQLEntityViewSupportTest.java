@@ -8,6 +8,7 @@ package com.blazebit.persistence.integration.graphql;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.integration.graphql.views.AnimalView;
+import com.blazebit.persistence.integration.graphql.views.CatView;
 import com.blazebit.persistence.integration.graphql.views.DocumentView;
 import com.blazebit.persistence.integration.graphql.views.PersonView;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.animalUnionType;
+import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.animalInterfaceType;
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.documentObjectType;
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.getGraphQLEntityViewSupport;
 import static com.blazebit.persistence.integration.graphql.TestSchemaHelpers.makeFieldDefinition;
@@ -65,9 +66,9 @@ public class GraphQLEntityViewSupportTest {
     }
 
     @Test
-    public void testRootUnionInSelectionSet() {
-        GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getAnimal", animalUnionType);
-        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Cat", "name", "[Cat,Animal].__typename");
+    public void testRootInheritanceInSelectionSet() {
+        GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition( "getAnimal", animalInterfaceType );
+        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Cat", "Animal.name", "[Cat,Animal].__typename");
 
         DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
 
@@ -77,7 +78,19 @@ public class GraphQLEntityViewSupportTest {
     }
 
     @Test
-    public void testNestedUnionInSelectionSet() {
+    public void testInheritanceParentInSelectionSet() {
+        GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getPerson", personObjectType);
+        DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Person", "name", "animal", "animal/Animal.name");
+
+        DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
+
+        EntityViewSetting<PersonView, CriteriaBuilder<PersonView>> setting = graphQLEntityViewSupport.createSetting(dfe);
+
+        Assert.assertEquals(new HashSet<>(Arrays.asList("name", "animal.name")), setting.getFetches());
+    }
+
+    @Test
+    public void testNestedInheritanceInSelectionSet() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getPerson", personObjectType);
         DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Person", "name", "animal", "animal/Cat.name");
 
