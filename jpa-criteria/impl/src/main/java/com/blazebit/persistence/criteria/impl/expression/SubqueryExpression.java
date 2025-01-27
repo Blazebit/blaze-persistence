@@ -8,11 +8,13 @@ package com.blazebit.persistence.criteria.impl.expression;
 import com.blazebit.persistence.criteria.BlazeAbstractQuery;
 import com.blazebit.persistence.criteria.BlazeCollectionJoin;
 import com.blazebit.persistence.criteria.BlazeCommonAbstractCriteria;
+import com.blazebit.persistence.criteria.BlazeFullSelectCTECriteria;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeListJoin;
 import com.blazebit.persistence.criteria.BlazeMapJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSelectRecursiveCTECriteria;
 import com.blazebit.persistence.criteria.BlazeSetJoin;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
@@ -59,6 +61,16 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         super(criteriaBuilder, javaType);
         this.parent = parent;
         this.query = new InternalQuery<T>(this, criteriaBuilder);
+    }
+
+    @Override
+    public <X> BlazeFullSelectCTECriteria<X> with(Class<X> clasz) {
+        return null;
+    }
+
+    @Override
+    public <X> BlazeSelectRecursiveCTECriteria<X> withRecursive(Class<X> clasz) {
+        return null;
     }
 
     @Override
