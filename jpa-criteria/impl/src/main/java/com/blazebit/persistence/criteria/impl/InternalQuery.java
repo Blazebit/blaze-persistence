@@ -5,21 +5,7 @@
 
 package com.blazebit.persistence.criteria.impl;
 
-import com.blazebit.persistence.BaseSubqueryBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.FromBuilder;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.GroupByBuilder;
-import com.blazebit.persistence.HavingBuilder;
-import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.MultipleSubqueryInitiator;
-import com.blazebit.persistence.OrderByBuilder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.WhereBuilder;
+import com.blazebit.persistence.*;
 import com.blazebit.persistence.criteria.BlazeAbstractQuery;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
@@ -260,7 +246,7 @@ public class InternalQuery<T> implements Serializable {
 
     /* Rendering */
 
-    public CriteriaBuilder<T> render(CriteriaBuilder<T> cb) {
+    public <X extends BaseCriteriaBuilder<T, ?>> X render(X cb) {
         if (distinct) {
             cb.distinct();
         }
