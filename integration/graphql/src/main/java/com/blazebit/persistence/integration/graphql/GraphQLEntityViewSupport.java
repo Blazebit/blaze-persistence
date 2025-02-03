@@ -25,8 +25,15 @@ import graphql.relay.Edge;
 import graphql.relay.PageInfo;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
+import graphql.schema.GraphQLImplementingType;
+import graphql.schema.GraphQLNamedOutputType;
+import graphql.schema.GraphQLNamedType;
+import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
+import graphql.schema.GraphQLUnionType;
 import graphql.schema.GraphQLUnmodifiedType;
 import graphql.schema.SelectedField;
 
@@ -42,6 +49,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,7 +110,7 @@ public class GraphQLEntityViewSupport {
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
     private final Set<String> serializableBasicTypes;
     private final ConcurrentMap<TypeRootCacheKey, GraphQLUnmodifiedType> typeReferenceCache = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, String> selectedFieldCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, List<String>> selectedFieldCache = new ConcurrentHashMap<>();
 
     private final String pageSizeName;
     private final String offsetName;
@@ -595,12 +603,15 @@ public class GraphQLEntityViewSupport {
      */
     public void applyFetches(DataFetchingEnvironment dataFetchingEnvironment, EntityViewSetting<?, ?> setting, String elementRoot) {
         DataFetchingFieldSelectionSet selectionSet = dataFetchingEnvironment.getSelectionSet();
+        GraphQLSchema graphQLSchema = dataFetchingEnvironment.getGraphQLSchema();
         OUTER:
         for (SelectedField field : selectionSet.getFields()) {
             String fqFieldName = field.getFullyQualifiedName();
-            String resolvedField = selectedFieldCache.get(fqFieldName);
-            if (resolvedField != null) {
-                setting.fetch(resolvedField);
+            List<String> resolvedFields = selectedFieldCache.get(fqFieldName);
+            if (resolvedFields != null) {
+                for (String resolvedField : resolvedFields) {
+                    setting.fetch(resolvedField);
+                }
                 continue;
             }
             if (!isLeaf(field.getType())) {
@@ -614,7 +625,9 @@ public class GraphQLEntityViewSupport {
             }
             String[] fieldParts = fqFieldName.split("/");
             String[] elementRootParts = elementRoot.isEmpty() ? new String[0] : elementRoot.split("/");
-            List<String> mappedFields = new ArrayList<>();
+            List<String> fetches = new ArrayList<>();
+            String currentTypeName = getElementTypeName(dataFetchingEnvironment, elementRoot);
+            GraphQLNamedType currentType = (GraphQLNamedType) graphQLSchema.getType(currentTypeName);
             for (int i = 0; i < fieldParts.length; i++) {
                 String[] fieldPartComponents = fieldParts[i].split("\\.");
                 String typeName = fieldPartComponents[0];
@@ -634,30 +647,109 @@ public class GraphQLEntityViewSupport {
                         // ViewType among them and use its id field to ensure the type info can be obtained from DB.
                         ManagedViewType<?> managedViewType = typeNameToViewType.get(metaFieldTypeName);
                         if (managedViewType instanceof ViewType) {
-                            mappedFields.add(((ViewType<?>) managedViewType).getIdAttribute().getName());
+                            appendPath(fetches, ((ViewType<?>) managedViewType).getIdAttribute().getName());
                             break;
                         }
                     }
                     continue;
                 }
-
-                Map<String, String> typeMapping = typeNameToFieldMapping.get(typeName);
-                if (typeMapping == null) {
-                    throw new IllegalArgumentException(
-                        "No type is registered for the name: " + typeName);
+                GraphQLOutputType fieldType = getFieldType(currentType, fieldName);
+                Map<String, String> fieldMappings;
+                if (typeName.charAt(0) == '[') {
+                    // Union type
+                    if (fieldType == null) {
+                        if (fetches.isEmpty()) {
+                            fetches.add("this");
+                        }
+                        List<String> subtypeFetches = new ArrayList<>(fetches.size() * field.getObjectTypeNames().size());
+                        GraphQLNamedType newType = null;
+                        // Field is within the subtypes
+                        for (String subTypeName : field.getObjectTypeNames()) {
+                            GraphQLImplementingType subtype = (GraphQLImplementingType) graphQLSchema.getType(subTypeName);
+                            GraphQLNamedType type = unwrapAll(subtype.getField(fieldName).getType());
+                            if (newType == null) {
+                                newType = type;
+                            } else if (newType != type) {
+                                throw new IllegalArgumentException("Selection " + fqFieldName + " has multiple result types [" + type + "] and [" + newType + "]");
+                            }
+                            ManagedViewType<?> managedViewType = typeNameToViewType.get(subTypeName);
+                            String mappedFieldPart = typeNameToFieldMapping.get(subTypeName).get(fieldName);
+                            for (String fetch : fetches) {
+                                subtypeFetches.add("treat(" + fetch + " as " + managedViewType.getJavaType().getName() + ")." + mappedFieldPart);
+                            }
+                        }
+                        fetches = subtypeFetches;
+                        currentType = newType;
+                        continue;
+                    } else {
+                        fieldMappings = typeNameToFieldMapping.get(currentTypeName);
+                        currentTypeName = typeName;
+                    }
+                } else {
+                    fieldMappings = typeNameToFieldMapping.get(typeName);
                 }
-
-                String mappedFieldPart = typeMapping.get(fieldName);
+                if (fieldMappings == null) {
+                    throw new IllegalArgumentException(
+                            "No type is registered for the name: " + typeName);
+                }
+                String mappedFieldPart = fieldMappings.get(fieldName);
                 if (mappedFieldPart == null) {
                     // fieldName cannot be mapped to an entity view field, probably because it's a non-DB field with a default -> ignore the whole field
                     continue OUTER;
                 }
-                mappedFields.add(mappedFieldPart);
+                ManagedViewType<?> subtype;
+                if (!typeName.equals(currentTypeName)
+                        && (subtype = typeNameToViewType.get(typeName)) != typeNameToViewType.get(currentTypeName) ) {
+                    // Need to treat the path
+                    if (fetches.isEmpty()) {
+                        fetches.add("this");
+                    }
+                    for (ListIterator<String> iterator = fetches.listIterator(); iterator.hasNext();) {
+                        String fetch = iterator.next();
+                        iterator.set("treat(" + fetch + " as " + subtype.getJavaType().getName() + ")." + mappedFieldPart);
+                    }
+                    fieldType = getFieldType((GraphQLNamedType) graphQLSchema.getType(typeName), fieldName);
+                } else {
+                    appendPath(fetches, mappedFieldPart);
+                }
+                currentType = unwrapAll(fieldType);
+                currentTypeName = currentType.getName();
             }
-            if (!mappedFields.isEmpty()) {
-                resolvedField = String.join(".", mappedFields);
-                setting.fetch(resolvedField);
-                selectedFieldCache.putIfAbsent(fqFieldName, resolvedField);
+            if (!fetches.isEmpty()) {
+                for (String fetch : fetches) {
+                    setting.fetch(fetch);
+                }
+                selectedFieldCache.putIfAbsent(fqFieldName, fetches);
+            }
+        }
+    }
+
+    private GraphQLOutputType getFieldType(GraphQLNamedType currentType, String fieldName) {
+        if (currentType instanceof GraphQLImplementingType) {
+            GraphQLFieldDefinition currentTypeField = ((GraphQLImplementingType) currentType).getField(fieldName);
+            return currentTypeField == null ? null : currentTypeField.getType();
+        } else {
+            GraphQLUnionType currentUnionType = (GraphQLUnionType) currentType;
+            GraphQLOutputType resolvedFieldType = null;
+            for (GraphQLNamedOutputType type : currentUnionType.getTypes()) {
+                GraphQLOutputType fieldType = getFieldType(type, fieldName);
+                if (resolvedFieldType == null) {
+                    resolvedFieldType = fieldType;
+                } else if (fieldType != null && resolvedFieldType != fieldType) {
+                    throw new IllegalArgumentException("GraphQL type [" + currentType.getName() + "] has field [" + fieldName + "] with multiple result types [" + fieldType + "] and [" + resolvedFieldType + "]");
+                }
+            }
+            return resolvedFieldType;
+        }
+    }
+
+    private void appendPath(List<String> fetches, String field) {
+        if (fetches.isEmpty()) {
+            fetches.add(field);
+        } else {
+            for (ListIterator<String> iterator = fetches.listIterator(); iterator.hasNext();) {
+                String fetch = iterator.next();
+                iterator.set(fetch + "." + field);
             }
         }
     }

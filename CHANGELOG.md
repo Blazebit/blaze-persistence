@@ -6,11 +6,11 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Support interface inheritance in GraphQL integration
 
 ### Bug fixes
 
-None yet
+* Fix unpaged Spring Data repository invocation
 
 ### Backwards-incompatible changes
 
