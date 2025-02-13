@@ -24,11 +24,11 @@ public interface PrimitiveSimpleDocumentView {
     @IdMapping
     public long getId();
 
-    @Mapping("id")
-    public long getDocId();
+//    @Mapping("id")
+//    public long getDocId();
 
     public String getName();
 
-    public boolean isDeleted();
+//    public boolean isDeleted();
 
 }

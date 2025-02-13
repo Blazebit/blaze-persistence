@@ -22,4 +22,7 @@ public interface PrimitiveDocumentMultisetView extends PrimitiveDocumentView {
     @Mapping(fetch = FetchStrategy.MULTISET)
     public List<PrimitivePersonView> getPartners();
 
+    @Mapping(fetch = FetchStrategy.MULTISET)
+    public List<PrimitivePersonView> getPeople();
+
 }
