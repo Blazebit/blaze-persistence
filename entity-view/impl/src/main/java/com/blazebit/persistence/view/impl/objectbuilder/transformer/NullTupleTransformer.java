@@ -20,8 +20,20 @@ public class NullTupleTransformer implements TupleTransformer {
     private final int consumeEndIndex;
 
     public NullTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, int startIndex) {
+        this(startIndex, startIndex + template.getMappers().length);
+    }
+
+    private NullTupleTransformer(int startIndex, int endIndex) {
         this.consumeStartIndex = startIndex + 1;
-        this.consumeEndIndex = startIndex + template.getMappers().length;
+        this.consumeEndIndex = endIndex;
+    }
+
+    /**
+     * A multiset fetched subview only consists of a single tuple index. Therefore, the specification of only the
+     * {@code startIndex} is sufficient.
+     */
+    public static NullTupleTransformer forMultiset(int startIndex) {
+        return new NullTupleTransformer(startIndex, startIndex + 1);
     }
 
     @Override

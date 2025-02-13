@@ -94,7 +94,7 @@ public class CollectionMultisetTupleTransformerFactory implements TupleTransform
     @Override
     public TupleTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         if (!entityViewConfiguration.hasSubFetches(attributePath)) {
-            return new NullTupleTransformer(template, startIndex);
+            return NullTupleTransformer.forMultiset(startIndex);
         }
         if (mapping != null) {
             if (parameterHolder instanceof FullQueryBuilder<?, ?>) {
