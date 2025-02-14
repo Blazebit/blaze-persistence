@@ -16,8 +16,8 @@
     </modules>
 
     <properties>
-        <main.java.version>11</main.java.version>
-        <version.jandex>3.0.5</version.jandex>
+        <main.java.version>17</main.java.version>
+        <version.jandex>3.1.6</version.jandex>
         <version.hibernate-orm>${version.hibernate-6.2}</version.hibernate-orm>
     </properties>
 
