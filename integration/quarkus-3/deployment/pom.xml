@@ -194,10 +194,16 @@
     <profiles>
         <profile>
             <id>hibernate-6.2</id>
+            <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <dependencies>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate-6.4}</version>
+                </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
@@ -221,7 +227,7 @@
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
+                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
                                         <processor>
                                             com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
                                         </processor>
@@ -285,11 +291,11 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
-                            <systemPropertyVariables>
+                            <systemProperties>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Required for JDK 16 -->
                                 <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemPropertyVariables>
+                            </systemProperties>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -297,7 +303,7 @@
         </profile>
         <profile>
             <id>hibernate-6.3</id>
-            <!-- Note that we still run against 6.2 because Quarkus doesn't support 6.3 yet -->
+            <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
@@ -305,8 +311,7 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.2}</version>
-<!--                    <version>${version.hibernate-6.3}</version>-->
+                    <version>${version.hibernate-6.4}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -331,7 +336,7 @@
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
+                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
                                         <processor>
                                             com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
                                         </processor>
@@ -407,7 +412,6 @@
         </profile>
         <profile>
             <id>hibernate-6.4</id>
-            <!-- Note that we still run against 6.2 because Quarkus doesn't support 6.4 yet -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
@@ -415,8 +419,7 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.2}</version>
-<!--                    <version>${version.hibernate-6.4}</version>-->
+                    <version>${version.hibernate-6.4}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -517,7 +520,7 @@
         </profile>
         <profile>
             <id>hibernate-6.5</id>
-            <!-- Note that we still run against 6.2 because Quarkus doesn't support 6.5 yet -->
+            <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
@@ -525,8 +528,7 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.2}</version>
-<!--                    <version>${version.hibernate-6.4}</version>-->
+                    <version>${version.hibernate-6.4}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -551,7 +553,7 @@
                                     <!-- source output directory -->
                                     <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
                                     <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
+                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
                                         <processor>
                                             com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
                                         </processor>
@@ -627,16 +629,16 @@
         </profile>
         <profile>
             <id>hibernate-6.6</id>
-            <!-- Note that we still run against 6.2 because Quarkus doesn't support 6.6 yet -->
+            <!-- Note that we run against Quarkus 3.15 as it's the version supporting ORM 6.6 -->
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernatecom.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
+                <version.quarkus-3>${version.quarkus-3.15}</version.quarkus-3>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.2}</version>
-<!--                    <version>${version.hibernate-6.4}</version>-->
+                    <version>${version.hibernate-6.6}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

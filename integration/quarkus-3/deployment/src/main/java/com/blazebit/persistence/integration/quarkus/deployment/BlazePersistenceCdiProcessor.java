@@ -5,8 +5,8 @@
 package com.blazebit.persistence.integration.quarkus.deployment;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceConfiguration;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstance;
-import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceConfiguration;
 import com.blazebit.persistence.integration.quarkus.runtime.BlazePersistenceInstanceUtil;
 import com.blazebit.persistence.integration.quarkus.runtime.EntityViewRecorder;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -21,13 +21,13 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
+import jakarta.enterprise.inject.Default;
+import jakarta.inject.Singleton;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 
-import jakarta.enterprise.inject.Default;
-import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -91,6 +91,7 @@ class BlazePersistenceCdiProcessor {
     @Record(ExecutionTime.RUNTIME_INIT)
     @BuildStep
     void generateBeans(EntityViewRecorder recorder,
+                                 BlazePersistenceConfiguration blazePersistenceConfig,
                                  List<BlazePersistenceInstanceDescriptorBuildItem> blazePersistenceDescriptors,
                                  BuildProducer<AdditionalBeanBuildItem> additionalBeans,
                                  BuildProducer<SyntheticBeanBuildItem> syntheticBeanBuildItemBuildProducer) {
@@ -106,8 +107,8 @@ class BlazePersistenceCdiProcessor {
         if (blazePersistenceDescriptors.size() == 1) {
             BlazePersistenceInstanceDescriptorBuildItem blazePersistenceDescriptor = blazePersistenceDescriptors.get(0);
             String blazePersistenceInstanceName = blazePersistenceDescriptor.getBlazePersistenceInstanceName();
-            BlazePersistenceInstanceConfiguration blazePersistenceConfig = blazePersistenceDescriptor.getBlazePersistenceConfig();
-            String persistenceUnitName = blazePersistenceConfig.persistenceUnit.orElse(PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME);
+            String persistenceUnitName = blazePersistenceConfig.blazePersistenceInstances().get(blazePersistenceInstanceName)
+                    .persistenceUnit().orElse(PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME);
 
             syntheticBeanBuildItemBuildProducer
                     .produce(createSyntheticBean(blazePersistenceInstanceName,
@@ -133,8 +134,8 @@ class BlazePersistenceCdiProcessor {
 
         for (BlazePersistenceInstanceDescriptorBuildItem blazePersistenceDescriptor : blazePersistenceDescriptors) {
             String blazePersistenceInstanceName = blazePersistenceDescriptor.getBlazePersistenceInstanceName();
-            BlazePersistenceInstanceConfiguration blazePersistenceConfig = blazePersistenceDescriptor.getBlazePersistenceConfig();
-            String persistenceUnitName = blazePersistenceConfig.persistenceUnit.orElse(PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME);
+            String persistenceUnitName = blazePersistenceConfig.blazePersistenceInstances().get(blazePersistenceInstanceName)
+                    .persistenceUnit().orElse(PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME);
             boolean defaultBlazePersistenceInstance = BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(blazePersistenceInstanceName);
 
             syntheticBeanBuildItemBuildProducer

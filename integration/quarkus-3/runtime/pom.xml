@@ -13,7 +13,7 @@
     <description>Advanced SQL support for JPA and Entity-Views as efficient DTOs</description>
 
     <properties>
-        <version.graal-sdk>19.3.1</version.graal-sdk>
+        <version.graal-sdk>23.1.2</version.graal-sdk>
         <module.name>com.blazebit.persistence.integration.quarkus</module.name>
     </properties>
 
@@ -58,8 +58,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.graalvm.nativeimage</groupId>
-            <artifactId>svm</artifactId>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>nativeimage</artifactId>
             <version>${version.graal-sdk}</version>
             <scope>provided</scope>
         </dependency>
@@ -115,11 +115,6 @@
                             <goal>process</goal>
                         </goals>
                         <phase>compile</phase>
-                        <configuration>
-                            <optionMap>
-                                <legacyConfigRoot>true</legacyConfigRoot>
-                            </optionMap>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
