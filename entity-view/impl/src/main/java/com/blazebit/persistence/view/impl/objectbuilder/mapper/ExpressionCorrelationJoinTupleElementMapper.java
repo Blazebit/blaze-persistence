@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 
 /**
@@ -37,7 +38,8 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString) {
         String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         viewJpqlMacro.setViewPath(embeddingViewPath);
@@ -77,9 +79,9 @@ public class ExpressionCorrelationJoinTupleElementMapper extends AbstractCorrela
         }
         viewJpqlMacro.setViewPath(oldViewPath);
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
-        if (fetches.length != 0) {
-            for (int i = 0; i < fetches.length; i++) {
-                fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + fetches[i]);
+        if (this.fetches.length != 0) {
+            for (int i = 0; i < this.fetches.length; i++) {
+                fullQueryBuilder.fetch(correlationBuilder.getCorrelationAlias() + "." + this.fetches[i]);
             }
         }
     }

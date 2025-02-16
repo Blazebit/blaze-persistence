@@ -12,6 +12,7 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
+import java.util.NavigableSet;
 
 /**
  *
@@ -24,5 +25,6 @@ public interface TupleElementMapper {
 
     public BasicUserTypeStringSupport<Object> getBasicTypeStringSupport();
 
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString);
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString);
 }

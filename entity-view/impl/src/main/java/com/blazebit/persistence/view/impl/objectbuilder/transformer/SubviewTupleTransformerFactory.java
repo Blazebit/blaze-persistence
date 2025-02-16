@@ -19,13 +19,11 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
  */
 public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
-    private final String attributePath;
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private final boolean updatable;
     private final boolean nullIfEmpty;
 
-    public SubviewTupleTransformerFactory(String attributePath, ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable, boolean nullIfEmpty) {
-        this.attributePath = attributePath;
+    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template, boolean updatable, boolean nullIfEmpty) {
         this.template = template;
         this.updatable = updatable;
         this.nullIfEmpty = nullIfEmpty;

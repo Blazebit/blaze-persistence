@@ -9,12 +9,14 @@ import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
+import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
+import java.util.NavigableSet;
 
 /**
  *
@@ -44,17 +46,24 @@ public class MultisetTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         SubqueryBuilder<?> subqueryBuilder = queryBuilder.selectSubquery("subquery", "TO_MULTISET(subquery)")
                 .from(correlationExpression, multisetResultAlias);
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
-            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+            if (fetches == null || fetches.isEmpty() || ViewTypeObjectBuilder.hasSubFetches(fetches, attributePath + "." + mapper.getAttributePath())) {
+                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro,
+                    embeddingViewJpqlMacro,
+                    fetches, true);
+            } else {
+                subqueryBuilder.select("NULL");
+            }
         }
         if (indexTemplate != null) {
             for (TupleElementMapper mapper : indexTemplate.getMappers()) {
-                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, null, true);
             }
         } else if (indexExpression != null) {
             subqueryBuilder.select(indexExpression);

@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentMultisetView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitivePersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocumentView;
+import com.blazebit.persistence.view.testsuite.basic.model.SelectFetchingPrimitivePersonView;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,9 +60,10 @@ public class PrimitiveViewMultisetTest extends AbstractEntityViewTest {
     @Before
     public void initEvm() {
         evm = build(
+            PrimitivePersonView.class,
             PrimitiveSimpleDocumentView.class,
             PrimitiveDocumentMultisetView.class,
-            PrimitivePersonView.class
+            SelectFetchingPrimitivePersonView.class
         );
     }
 
@@ -120,10 +122,14 @@ public class PrimitiveViewMultisetTest extends AbstractEntityViewTest {
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void entityViewMultisetSubviewFetching() {
+        // Given
         EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);
         fetches.forEach(setting::fetch);
 
+        // When
         PrimitiveDocumentMultisetView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
+
+        // Then
         assertEquals("doc1", view.getName());
         if (fetchesPartners(fetches)) {
             assertEquals(1, view.getPartners().size());
@@ -137,10 +143,6 @@ public class PrimitiveViewMultisetTest extends AbstractEntityViewTest {
         } else {
             assertNull(view.getPeople());
         }
-        // TODO: Should be null instead of empty because it is not fetched.
-        //  Needs changes in collection tuple transformers - only change if easy to do
-        // IndexedTupleListTransformer - for JOIN FETCH
-        // NonIndexedTupleListTransformer - for JOIN FETCH
         assertEquals(Collections.emptyMap(), view.getContacts());
     }
 

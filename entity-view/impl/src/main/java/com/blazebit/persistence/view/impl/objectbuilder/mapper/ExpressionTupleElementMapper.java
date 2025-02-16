@@ -13,6 +13,7 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
+import java.util.NavigableSet;
 
 /**
  *
@@ -49,7 +50,8 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString) {
         String oldViewPath = viewJpqlMacro.getViewPath();
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         viewJpqlMacro.setViewPath(viewPath);
@@ -59,10 +61,10 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
         } else {
             queryBuilder.select(expression);
         }
-        if (fetches.length != 0) {
+        if (this.fetches.length != 0) {
             final FetchBuilder<?> fetchBuilder = (FetchBuilder<?>) queryBuilder;
-            for (int i = 0; i < fetches.length; i++) {
-                fetchBuilder.fetch(fetches[i]);
+            for (int i = 0; i < this.fetches.length; i++) {
+                fetchBuilder.fetch(this.fetches[i]);
             }
         }
         embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);

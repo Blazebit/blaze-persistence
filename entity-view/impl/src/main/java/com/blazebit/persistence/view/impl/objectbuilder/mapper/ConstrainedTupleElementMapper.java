@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.TreeMap;
 
 /**
@@ -61,7 +62,8 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString) {
         StringBuilder sb = new StringBuilder();
         FullQueryBuilder<?, ?> fullQueryBuilder;
         if (queryBuilder instanceof ConstrainedSelectBuilder) {
@@ -80,7 +82,8 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             } else {
                 sb.append(" ELSE ");
             }
-            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, asString);
+            entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                fetches, asString);
         }
         sb.append(" END");
 
@@ -100,7 +103,8 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
             for (Map.Entry<String, TupleElementMapper> entry : subqueryMappers) {
                 selectBuilder.setInitiator(initiator.with(entry.getKey()));
-                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, asString);
+                entry.getValue().applyMapping(selectBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                    fetches, asString);
             }
 
             initiator.end();

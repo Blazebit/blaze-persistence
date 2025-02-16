@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 import com.blazebit.persistence.view.spi.type.BasicUserTypeStringSupport;
 
 import java.util.Map;
+import java.util.NavigableSet;
 
 /**
  *
@@ -51,7 +52,8 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro, boolean asString) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, ViewJpqlMacro viewJpqlMacro, EmbeddingViewJpqlMacro embeddingViewJpqlMacro,
+                             NavigableSet<String> fetches, boolean asString) {
         String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
         embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
         SubqueryInitiator<?> subqueryInitiator = queryBuilder.selectSubquery("subquery", "TO_MULTISET(subquery)");
@@ -60,11 +62,13 @@ public class CorrelationMultisetTupleElementMapper implements TupleElementMapper
         correlationProvider.applyCorrelation(correlationBuilder, correlationBasis);
         SubqueryBuilder<?> subqueryBuilder = correlationBuilder.getSubqueryBuilder();
         for (TupleElementMapper mapper : subviewTemplate.getMappers()) {
-            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+            mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                fetches, true);
         }
         if (indexTemplate != null) {
             for (TupleElementMapper mapper : indexTemplate.getMappers()) {
-                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, true);
+                mapper.applyMapping(subqueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                    fetches, true);
             }
         } else if (indexExpression != null) {
             subqueryBuilder.select(indexExpression);
