@@ -16,7 +16,7 @@ import java.util.Set;
  * @since 1.2.0
  */
 @EntityView(PrimitivePerson.class)
-public interface PrimitivePersonView extends IdHolderView<Long> {
+public interface SelectFetchingPrimitivePersonView extends IdHolderView<Long> {
 
     public String getName();
 

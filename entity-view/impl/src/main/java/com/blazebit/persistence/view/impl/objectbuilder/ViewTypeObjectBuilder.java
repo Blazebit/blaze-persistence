@@ -84,7 +84,8 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
                 }
             }
             for (int i = 0; i < mappers.length; i++) {
-                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
+                mappers[i].applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                    fetches, false);
             }
         } else {
             if (secondaryMappers.length != 0) {
@@ -99,7 +100,8 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
                 TupleElementMapper mapper = mappers[i];
                 String attributePath = mapper.getAttributePath();
                 if (attributePath != null && (hasSubFetches(fetches, attributePath) || isInheritance(mapper, attributePath))) {
-                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro, false);
+                    mapper.applyMapping(queryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro,
+                        fetches, false);
                 } else {
                     queryBuilder.select("NULL");
                 }
@@ -107,7 +109,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
         }
     }
 
-    static boolean hasSubFetches(NavigableSet<String> fetches, String attributePath) {
+    public static boolean hasSubFetches(NavigableSet<String> fetches, String attributePath) {
         // Fetches can never contain a path leading to a view i.e. one for which a dot is allowed to follow.
         // To find a potential match in the fetches, we have to look for an entry that is greater-or-equal to a path
         // See EntityViewConfiguration.getFetches(Collection, ManagedViewTypeImplementor)

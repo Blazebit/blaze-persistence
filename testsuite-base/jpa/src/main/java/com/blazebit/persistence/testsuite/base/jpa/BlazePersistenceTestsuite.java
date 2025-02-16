@@ -125,16 +125,20 @@ public abstract class BlazePersistenceTestsuite {
             try {
                 Method parametersMethod = testClass.getMethod(parametersMethods.get(0).getName());
                 Object parameters = parametersMethod.invoke(null);
-                Object[] firstParameterSet;
-                if (parameters instanceof Collection) {
-                    firstParameterSet = (Object[]) ((Collection<?>) parameters).iterator().next();
+                Object firstParametersOrSingleParameter;
+                if (parameters instanceof Iterable) {
+                    firstParametersOrSingleParameter = ((Collection<?>) parameters).iterator().next();
                 } else {
-                    firstParameterSet = (Object[]) ((Object[]) parameters)[0];
+                    firstParametersOrSingleParameter = ((Object[]) parameters)[0];
                 }
-                Constructor<AbstractJpaPersistenceTest> targetConstructor = (Constructor<AbstractJpaPersistenceTest>) Arrays.stream(testClass.getConstructors())
-                        .filter(constructor -> constructor.getParameterCount() == firstParameterSet.length)
-                        .findFirst().get();
-                testInstance = targetConstructor.newInstance(firstParameterSet);
+                Constructor<AbstractJpaPersistenceTest>[] constructors = (Constructor<AbstractJpaPersistenceTest>[]) testClass.getConstructors();
+                if (constructors.length != 1) {
+                    throw new RuntimeException(String.format("Found more than 1 constructor in test class %s declaring an %s annotated method.",
+                        testClass.getName(), Parameterized.class.getName()));
+                }
+                Object[] firstParameters = firstParametersOrSingleParameter instanceof Object[]
+                    ? (Object[]) firstParametersOrSingleParameter : new Object[]{firstParametersOrSingleParameter};
+                testInstance = constructors[0].newInstance(firstParameters);
             } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
