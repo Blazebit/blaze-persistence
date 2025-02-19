@@ -46,6 +46,7 @@ public class BlazePersistenceConfiguration {
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
     @Lazy(false)
     public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+//        entityViewConfiguration.getProperties().setProperty("com.blazebit.persistence.view.static_implementation_scanning_disabled", "true");
         return entityViewConfiguration.createEntityViewManager(cbf);
     }
 }
