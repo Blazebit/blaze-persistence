@@ -999,9 +999,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return new AbstractMap.SimpleEntry<TypedQuery<T>, ObjectBuilder<T>>(query, objectBuilder);
     }
 
-    private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
+    private TypedQuery<Object> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
-            TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
+            TypedQuery<Object> idQuery = em.createQuery(idQueryString, Object.class);
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(idQuery);
             }
@@ -1014,7 +1014,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             return parameterManager.getCriteriaNameMapping() == null ? idQuery : new TypedQueryWrapper<>(idQuery, parameterManager.getCriteriaNameMapping());
         }
 
-        TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
+        TypedQuery<Object> baseQuery = em.createQuery(idQueryString, Object.class);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS);
@@ -1026,7 +1026,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, mainQuery.getQueryConfiguration().isQueryPlanCacheEnabled(), null
         );
 
-        CustomSQLTypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
+        CustomSQLTypedQuery<Object> idQuery = new CustomSQLTypedQuery<Object>(
                 querySpecification,
                 baseQuery,
                 parameterManager.getCriteriaNameMapping(),

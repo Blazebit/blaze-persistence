@@ -286,6 +286,29 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSelectJoinManyWithParameterForceIdQuery() {
+        String expectedCountQuery = "SELECT " + countTupleDistinct("d.id") + " FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1.name = :param_0";
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1.name = :param_0 GROUP BY d.id ORDER BY d.id ASC";
+        String expectedObjectQuery = "SELECT d FROM Document d WHERE d.id IN :ids ORDER BY d.id ASC";
+        String expectedInlineObjectQuery = "SELECT d, (" + expectedCountQuery + ") FROM Document d"
+            + " WHERE d.id IN (" + expectedIdQuery + " LIMIT 1) ORDER BY d.id ASC";
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+            .select("d")
+            .where("contacts.name").eq("Karl1")
+            .orderByAsc("id")
+            .page(0, 1)
+            .withForceIdQuery(false);
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, cb.withInlineIdQuery(false).withInlineCountQuery(false).getPageIdQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
+        if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
+            assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).withInlineCountQuery(true).getQueryString());
+        }
+        PagedList<Document> result = cb.withInlineIdQuery(false).withInlineCountQuery(false).getResultList();
+        assertEquals(1, result.size());
+    }
+
+    @Test
     public void testSelectEmptyResultList() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("name").isNull()
