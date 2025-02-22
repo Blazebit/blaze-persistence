@@ -5,6 +5,8 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
+import com.blazebit.persistence.impl.util.BoyerMooreCaseInsensitiveAsciiLastPatternFinder;
+import com.blazebit.persistence.impl.util.PatternFinder;
 import com.blazebit.persistence.parser.EntityMetamodel;
 import com.blazebit.persistence.parser.SimpleQueryGenerator;
 import com.blazebit.persistence.parser.expression.Expression;
@@ -46,6 +48,7 @@ import java.util.Set;
 public class TupleElementMapperBuilder implements ServiceProvider {
 
     private static final ExpressionTupleElementMapper NULL_MAPPER = new ExpressionTupleElementMapper(null, "NULL", null, null, null, new String[0]);
+    private static final PatternFinder AS_FINDER = new BoyerMooreCaseInsensitiveAsciiLastPatternFinder(" as ");
     private final int mapperIndex;
     private final String aliasPrefix;
     private final String mappingPrefix;
@@ -181,6 +184,16 @@ public class TupleElementMapperBuilder implements ServiceProvider {
     }
 
     public String getMapping(String mapping) {
+        return getMapping(mappingPrefix, mapping);
+    }
+
+    public String getClassMapping(String mapping) {
+        if (mappingPrefix != null && mappingPrefix.endsWith(")") && mappingPrefix.regionMatches(true, 0, "TREAT(", 0, "TREAT(".length())) {
+            // Skip a treat in the previous mapping expression for class/type mappings
+            // It's unnecessary and the core query builder doesn't support it
+            int asIndex = AS_FINDER.indexIn(mappingPrefix);
+            return getMapping(mappingPrefix.substring("TREAT(".length(), asIndex), mapping);
+        }
         return getMapping(mappingPrefix, mapping);
     }
 
