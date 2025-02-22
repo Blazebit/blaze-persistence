@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
@@ -24,6 +25,7 @@ import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveDocumentView
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitivePersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocumentView;
 import com.blazebit.persistence.view.testsuite.basic.model.SelectFetchingPrimitivePersonView;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.EntityManager;
 import org.junit.Before;
@@ -153,14 +155,17 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         assertEquals("doc1", view.getName());
         assertEquals("pers1", view.getOwner().getName());
         assertEquals("pers1", view.getCorrelatedOwner().getName());
-        assertNull(view.getContacts());
+        assertEquals(Collections.emptyMap(), view.getContacts());
     }
 
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
     public void entityViewMultisetWithNestedSelectFetching() {
         // Given
         EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);
-        setting.fetch("people.ownedDocuments");
+        setting.fetch("people.ownedDocumentsSelectFetched");
 
         // When
         PrimitiveDocumentMultisetView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
@@ -171,7 +176,29 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         assertEquals(0, view.getDocId());
         assertEquals(1, view.getPeople().size());
         SelectFetchingPrimitivePersonView personView = view.getPeople().get(0);
-        assertEquals(1, personView.getOwnedDocuments().size());
+        assertEquals(1, personView.getOwnedDocumentsSelectFetched().size());
+        assertNull(personView.getName());
+    }
+
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    public void entityViewMultisetWithNestedJoinFetching() {
+        // Given
+        EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);
+        setting.fetch("people.ownedDocumentsJoinFetched");
+
+        // When
+        PrimitiveDocumentMultisetView view = evm.applySetting(setting, cbf.create(em, PrimitiveDocument.class).where("id").eq(doc1.getId())).getResultList().get(0);
+
+        // Then
+        assertNull(view.getPartners());
+        assertNull(view.getName());
+        assertEquals(0, view.getDocId());
+        assertEquals(1, view.getPeople().size());
+        SelectFetchingPrimitivePersonView personView = view.getPeople().get(0);
+        assertEquals(1, personView.getOwnedDocumentsJoinFetched().size());
         assertNull(personView.getName());
     }
 }
