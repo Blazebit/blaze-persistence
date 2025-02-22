@@ -20,6 +20,9 @@ public interface SelectFetchingPrimitivePersonView extends IdHolderView<Long> {
 
     public String getName();
 
-    @Mapping(fetch = FetchStrategy.SELECT)
-    public Set<PrimitiveSimpleDocumentView> getOwnedDocuments();
+    @Mapping(value = "ownedDocuments", fetch = FetchStrategy.SELECT)
+    public Set<PrimitiveSimpleDocumentView> getOwnedDocumentsSelectFetched();
+
+    @Mapping(value = "ownedDocuments", fetch = FetchStrategy.JOIN)
+    public Set<PrimitiveSimpleDocumentView> getOwnedDocumentsJoinFetched();
 }
