@@ -220,7 +220,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (inheritanceSubtypeConfiguration.hasSubtypes()) {
             String mapping = inheritanceSubtypeConfiguration.getInheritanceDiscriminatorMapping();
             classMappingIndex = tupleOffset + mainMapperBuilder.mapperIndex();
-            mainMapperBuilder.addMapper(createMapper(IntegerBasicUserType.INSTANCE, mainMapperBuilder.getMapping(mapping), mainMapperBuilder.getAlias("class"), attributePath, mappingPrefix, embeddingViewJpqlMacro.getEmbeddingViewPath(), EMPTY));
+            mainMapperBuilder.addMapper(createMapper(IntegerBasicUserType.INSTANCE, mainMapperBuilder.getClassMapping(mapping), mainMapperBuilder.getAlias("class"), attributePath, mappingPrefix, embeddingViewJpqlMacro.getEmbeddingViewPath(), EMPTY));
         }
 
         if (viewType != null) {
@@ -254,7 +254,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         constraint = null;
                         treatType = null;
                     } else {
-                        String mapping = mainMapperBuilder.getMapping(CASE_WHEN_PREFIX + entry.getConstraint() + CASE_WHEN_SUFFIX);
+                        String mapping;
+                        if (entry.getConstraint().contains("TYPE(this)")) {
+                            mapping = mainMapperBuilder.getClassMapping(CASE_WHEN_PREFIX + entry.getConstraint() + CASE_WHEN_SUFFIX);
+                        } else {
+                            mapping = mainMapperBuilder.getMapping(CASE_WHEN_PREFIX + entry.getConstraint() + CASE_WHEN_SUFFIX);
+                        }
                         constraint = mapping.substring(CASE_WHEN_PREFIX.length(), mapping.length() - CASE_WHEN_SUFFIX.length());
                         treatType = getTreatType(metamodel, managedViewType, attribute.getDeclaringType());
                     }

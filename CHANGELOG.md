@@ -11,6 +11,9 @@ Changes that happened in releases
 ### Bug fixes
 
 * Fix unpaged Spring Data repository invocation
+* Support dynamic fetches also for entity views with inheritance on query root
+* Fix `SELECT`/`SUBSELECT` fetching issues with dynamic fetching
+* Fix `SELECT`/`SUBSELECT` fetching issues with treat mappings
 
 ### Backwards-incompatible changes
 

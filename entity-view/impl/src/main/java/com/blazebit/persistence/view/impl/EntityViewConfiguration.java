@@ -166,6 +166,10 @@ public final class EntityViewConfiguration {
                         if (attribute == null) {
                             // fallback for viewType with @EntityViewInheritance
                             attribute = viewType.getRecursiveAttributes().get(parts[i]);
+
+                            if (attribute == null) {
+                                throw new IllegalArgumentException("Attribute " + parts[i] + " not found in " + managedViewType.getJavaType().getName() + " for fetch " + fetch);
+                            }
                         }
                         if (attribute instanceof PluralAttribute<?, ?, ?>) {
                             t = ((PluralAttribute<?, ?, ?>) attribute).getElementType();

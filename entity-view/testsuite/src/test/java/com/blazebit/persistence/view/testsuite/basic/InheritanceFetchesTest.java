@@ -13,6 +13,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewInheritance;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
@@ -46,7 +47,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
     private EntityViewManager evm;
 
-    @Entity
+    @Entity(name = "Container")
     @Table(name = "test_container_entity")
     public static class Container {
 
@@ -88,7 +89,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
     }
 
-    @Entity
+    @Entity(name = "Base")
     @Table(name = "test_base_entity")
     @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
     public abstract static class Base {
@@ -118,7 +119,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
     }
 
-    @Entity
+    @Entity(name = "Foo")
     public static class Foo extends Base {
 
         @OneToOne(fetch = FetchType.LAZY)
@@ -134,7 +135,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         }
     }
 
-    @Entity
+    @Entity(name = "Bar")
     public static class Bar extends Base {
 
         @OneToOne(fetch = FetchType.LAZY)
@@ -150,7 +151,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         }
     }
 
-    @Entity
+    @Entity(name = "Qux")
     @Table(name = "test_qux_entity")
     public static class Qux {
 
@@ -182,6 +183,20 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
         @Mapping("base2")
         BaseView getBase2();
+
+    }
+
+    @EntityView(Container.class)
+    public interface ContainerWithSelectView {
+
+        @IdMapping
+        Long getId();
+
+        @Mapping(value = "treat(base1 as Foo)", fetch = FetchStrategy.SELECT)
+        FooView getBase1();
+
+        @Mapping(value = "treat(base2 as Bar)", fetch = FetchStrategy.SUBSELECT)
+        BarView getBase2();
 
     }
 
@@ -279,7 +294,7 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
 
     @Before
     public void setUp() {
-        this.evm = build(ContainerView.class, BaseView.class, FooView.class, BarView.class, QuxView.class);
+        this.evm = build(ContainerView.class, ContainerWithSelectView.class, BaseView.class, FooView.class, BarView.class, QuxView.class);
     }
 
     @Test
@@ -402,6 +417,84 @@ public class InheritanceFetchesTest extends AbstractEntityViewTest {
         assertNull(container.getBase1());
         assertNotNull(container.getBase2());
         BarView bar = (BarView) container.getBase2();
+        assertEquals("Bar", bar.getName());
+        assertNull(bar.getBar());
+    }
+
+    // For #1978
+    @Test
+    public void testContainerWithSelectEmpty() {
+        EntityViewSetting<ContainerWithSelectView, CriteriaBuilder<ContainerWithSelectView>> setting = EntityViewSetting.create(ContainerWithSelectView.class);
+        setting.fetch("id");
+        CriteriaBuilder<Container> builder = cbf.create(em, Container.class);
+
+        ContainerWithSelectView container = evm.applySetting(setting, builder).getSingleResult();
+
+        assertNotNull(container);
+        assertNull(container.getBase1());
+        assertNull(container.getBase2());
+    }
+
+    // For #1978
+    @Test
+    public void testContainerWithSelectFullSelection() {
+        EntityViewSetting<ContainerWithSelectView, CriteriaBuilder<ContainerWithSelectView>> setting = EntityViewSetting.create(ContainerWithSelectView.class);
+        setting.fetch("id");
+        setting.fetch("base1.id");
+        setting.fetch("base1.name");
+        setting.fetch("base1.foo.someValue");
+        setting.fetch("base2.id");
+        setting.fetch("base2.name");
+        setting.fetch("base2.bar.someValue");
+        CriteriaBuilder<Container> builder = cbf.create(em, Container.class);
+
+        ContainerWithSelectView container = evm.applySetting(setting, builder).getSingleResult();
+
+        assertNotNull(container);
+        assertNotNull(container.getBase1());
+        FooView foo = container.getBase1();
+        assertEquals("Foo", foo.getName());
+        assertEquals("foo", foo.getFoo().getSomeValue());
+        assertNotNull(container.getBase2());
+        BarView bar = container.getBase2();
+        assertEquals("Bar", bar.getName());
+        assertEquals("bar", bar.getBar().getSomeValue());
+    }
+
+    // For #1978
+    @Test
+    public void testContainerWithSelectPartial1() {
+        EntityViewSetting<ContainerWithSelectView, CriteriaBuilder<ContainerWithSelectView>> setting = EntityViewSetting.create(ContainerWithSelectView.class);
+        setting.fetch("id");
+        setting.fetch("base1.id");
+        setting.fetch("base1.name");
+        CriteriaBuilder<Container> builder = cbf.create(em, Container.class);
+
+        ContainerWithSelectView container = evm.applySetting(setting, builder).getSingleResult();
+
+        assertNotNull(container);
+        assertNull(container.getBase2());
+        assertNotNull(container.getBase1());
+        FooView foo = container.getBase1();
+        assertEquals("Foo", foo.getName());
+        assertNull(foo.getFoo());
+    }
+
+    // For #1978
+    @Test
+    public void testContainerWithSelectPartial2() {
+        EntityViewSetting<ContainerWithSelectView, CriteriaBuilder<ContainerWithSelectView>> setting = EntityViewSetting.create(ContainerWithSelectView.class);
+        setting.fetch("id");
+        setting.fetch("base2.id");
+        setting.fetch("base2.name");
+        CriteriaBuilder<Container> builder = cbf.create(em, Container.class);
+
+        ContainerWithSelectView container = evm.applySetting(setting, builder).getSingleResult();
+
+        assertNotNull(container);
+        assertNull(container.getBase1());
+        assertNotNull(container.getBase2());
+        BarView bar = container.getBase2();
         assertEquals("Bar", bar.getName());
         assertNull(bar.getBar());
     }

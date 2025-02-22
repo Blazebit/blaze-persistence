@@ -399,28 +399,30 @@ public class AbstractCorrelatedSubselectTupleTransformer implements TupleTransfo
 
     @Override
     public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
-        if (collections == null) {
-            prepare();
-        }
-        Object viewKey;
-        if (viewIndex == -1) {
-            viewKey = null;
-        } else {
-            viewKey = tuple[viewIndex];
-        }
-        Map<Object, Object> collectionsByKey = collections.get(viewKey);
         Object correlationValueKey = tuple[startIndex];
         if (correlationValueKey == null) {
             tuple[startIndex] = createDefaultResult();
-        } else if (collectionsByKey == null) {
-            collections.put(viewKey, collectionsByKey = new HashMap<>());
-            collectionsByKey.put(correlationValueKey, tuple[startIndex] = createDefaultResult());
         } else {
-            Object collection = collectionsByKey.get(correlationValueKey);
-            if (collection == null) {
+            if (collections == null) {
+                prepare();
+            }
+            Object viewKey;
+            if (viewIndex == -1) {
+                viewKey = null;
+            } else {
+                viewKey = tuple[viewIndex];
+            }
+            Map<Object, Object> collectionsByKey = collections.get(viewKey);
+            if (collectionsByKey == null) {
+                collections.put(viewKey, collectionsByKey = new HashMap<>());
                 collectionsByKey.put(correlationValueKey, tuple[startIndex] = createDefaultResult());
             } else {
-                tuple[startIndex] = collection;
+                Object collection = collectionsByKey.get(correlationValueKey);
+                if (collection == null) {
+                    collectionsByKey.put(correlationValueKey, tuple[startIndex] = createDefaultResult());
+                } else {
+                    tuple[startIndex] = collection;
+                }
             }
         }
 

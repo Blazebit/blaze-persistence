@@ -2798,6 +2798,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
 
                 result = new JoinResult(baseNode);
+            } else if (pathElements.size() == 1 && elementExpr instanceof TreatExpression) {
+                JoinNode treatNode = implicitJoinTreatExpression( (TreatExpression) elementExpr, joinAllowed, singularJoinAllowed, fromClause, joinType, currentJoinNode, currentlyResolvingAliases, fromSubquery, fromSelectAlias, joinRequired, idRemovable, fetch, reuseExisting );
+                result = new JoinResult(treatNode, null, treatNode.getType(), -1, -1);
             } else {
                 if (singleValuedAssociationNameStartIndex != -1) {
                     String associationName = new PathExpression(pathElements.subList(singleValuedAssociationNameStartIndex, singleValuedAssociationNameEndIndex + 1)).toString();
