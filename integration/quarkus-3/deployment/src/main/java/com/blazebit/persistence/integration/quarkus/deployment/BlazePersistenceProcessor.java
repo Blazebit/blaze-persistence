@@ -105,15 +105,9 @@ class BlazePersistenceProcessor {
     @BuildStep
     void includeArchivesHostingEntityViewPackagesInIndex(BlazePersistenceConfiguration blazePersistenceConfig,
                                                      BuildProducer<AdditionalApplicationArchiveMarkerBuildItem> additionalApplicationArchiveMarkers) {
-        if (blazePersistenceConfig.defaultBlazePersistence.packages.isPresent()) {
-            for (String pakkage : blazePersistenceConfig.defaultBlazePersistence.packages.get()) {
-                additionalApplicationArchiveMarkers
-                        .produce(new AdditionalApplicationArchiveMarkerBuildItem(pakkage.replace('.', '/')));
-            }
-        }
-        for (BlazePersistenceInstanceConfiguration blazePersistenceInstanceConfig : blazePersistenceConfig.blazePersistenceInstances.values()) {
-            if (blazePersistenceInstanceConfig.packages.isPresent()) {
-                for (String pakkage : blazePersistenceInstanceConfig.packages.get()) {
+        for (BlazePersistenceInstanceConfiguration blazePersistenceInstanceConfig : blazePersistenceConfig.blazePersistenceInstances().values()) {
+            if (blazePersistenceInstanceConfig.packages().isPresent()) {
+                for (String pakkage : blazePersistenceInstanceConfig.packages().get()) {
                     additionalApplicationArchiveMarkers
                             .produce(new AdditionalApplicationArchiveMarkerBuildItem(pakkage.replace('.', '/')));
                 }
@@ -149,8 +143,8 @@ class BlazePersistenceProcessor {
                 .filter(pu -> PersistenceUnitUtil.isDefaultPersistenceUnit(pu.getPersistenceUnitName()))
                 .findFirst();
         boolean enableDefaultBlazePersistence = (defaultPersistenceUnit.isPresent()
-                && blazePersistenceConfig.blazePersistenceInstances.isEmpty())
-                || blazePersistenceConfig.defaultBlazePersistence.isAnyPropertySet();
+                && blazePersistenceConfig.namedBlazePersistenceInstances().isEmpty())
+                || blazePersistenceConfig.defaultBlazePersistenceInstance().isAnyPropertySet();
         boolean hasPackagesInQuarkusConfig = hasPackagesInQuarkusConfig(blazePersistenceConfig);
         Collection<AnnotationInstance> packageLevelBlazePersistenceInstanceAnnotations = getPackageLevelBlazePersistenceInstanceAnnotations(
                 indexBuildItem.getIndex()
@@ -159,7 +153,7 @@ class BlazePersistenceProcessor {
         Map<String, Set<String>> entityViewListenerClassesPerBlazePersistenceInstance;
         Set<String> entityViewClassesForDefaultBlazePersistenceInstance;
         Set<String> entityViewListenerClassesForDefaultBlazePersistenceInstance;
-        if (enableDefaultBlazePersistence && blazePersistenceConfig.blazePersistenceInstances.isEmpty() &&
+        if (enableDefaultBlazePersistence && blazePersistenceConfig.namedBlazePersistenceInstances().isEmpty() &&
                 !hasPackagesInQuarkusConfig && packageLevelBlazePersistenceInstanceAnnotations.isEmpty()) {
             // Only the default Blaze-Persistence instance exists and no package or annotation configuration is specified.
             // In this case we just assign all entity views to the default instance.
@@ -193,11 +187,10 @@ class BlazePersistenceProcessor {
         if (enableDefaultBlazePersistence) {
             blazePersistenceDescriptorBuildItemProducer.produce(new BlazePersistenceInstanceDescriptorBuildItem(
                     BlazePersistenceInstanceUtil.DEFAULT_BLAZE_PERSISTENCE_NAME,
-                    blazePersistenceConfig.defaultBlazePersistence,
                     entityViewClassesForDefaultBlazePersistenceInstance,
                     entityViewListenerClassesForDefaultBlazePersistenceInstance));
-        } else if ((!blazePersistenceConfig.defaultBlazePersistence.persistenceUnit.isPresent()
-                        || PersistenceUnitUtil.isDefaultPersistenceUnit(blazePersistenceConfig.defaultBlazePersistence.persistenceUnit.get()))
+        } else if ((!blazePersistenceConfig.defaultBlazePersistenceInstance().persistenceUnit().isPresent()
+                        || PersistenceUnitUtil.isDefaultPersistenceUnit(blazePersistenceConfig.defaultBlazePersistenceInstance().persistenceUnit().get()))
                 && !defaultPersistenceUnit.isPresent()) {
             if (!entityViewClassesForDefaultBlazePersistenceInstance.isEmpty()) {
                 LOG.warn(
@@ -209,16 +202,16 @@ class BlazePersistenceProcessor {
             }
         }
 
-        for (Map.Entry<String, BlazePersistenceInstanceConfiguration> namedInstance : blazePersistenceConfig.blazePersistenceInstances
+        for (Map.Entry<String, BlazePersistenceInstanceConfiguration> namedInstance : blazePersistenceConfig.namedBlazePersistenceInstances()
                 .entrySet()) {
             BlazePersistenceInstanceConfiguration blazePersistenceInstanceConfig = namedInstance.getValue();
-            if (blazePersistenceInstanceConfig.persistenceUnit.isPresent()) {
+            if (blazePersistenceInstanceConfig.persistenceUnit().isPresent()) {
                 persistenceUnitDescriptors.stream()
-                        .filter(descriptor -> blazePersistenceInstanceConfig.persistenceUnit.get().equals(descriptor.getPersistenceUnitName()))
+                        .filter(descriptor -> blazePersistenceInstanceConfig.persistenceUnit().get().equals(descriptor.getPersistenceUnitName()))
                         .findFirst()
                         .orElseThrow(() -> new ConfigurationException(
                                 String.format("The persistence unit '%1$s' is not configured but the Blaze-Persistence instance '%2$s' uses it.",
-                                        blazePersistenceInstanceConfig.persistenceUnit.get(), namedInstance.getKey())));
+                                        blazePersistenceInstanceConfig.persistenceUnit().get(), namedInstance.getKey())));
             } else {
                 if (!BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(namedInstance.getKey())) {
                     // if it's not the default Blaze-Persistence instance, we mandate a persistence unit to prevent common errors
@@ -235,7 +228,6 @@ class BlazePersistenceProcessor {
 
             blazePersistenceDescriptorBuildItemProducer.produce(new BlazePersistenceInstanceDescriptorBuildItem(
                     namedInstance.getKey(),
-                    namedInstance.getValue(),
                     entityViewClassesPerBlazePersistenceInstance.getOrDefault(namedInstance.getKey(), Collections.emptySet()),
                     entityViewListenerClassesPerBlazePersistenceInstance.getOrDefault(namedInstance.getKey(), Collections.emptySet())));
         }
@@ -457,24 +449,11 @@ class BlazePersistenceProcessor {
                         "Mixing Quarkus configuration and @BlazePersistenceInstance annotations to define the Blaze-Persistence instances is not supported. Ignoring the annotations.");
             }
 
-            // handle the default persistence unit
-            if (enableDefaultBlazePersistenceInstance) {
-                if (!blazePersistenceConfig.defaultBlazePersistence.packages.isPresent()) {
-                    throw new ConfigurationException("Packages must be configured for the default Blaze-Persistence instance.");
-                }
-
-                for (String packageName : blazePersistenceConfig.defaultBlazePersistence.packages.get()) {
-                    packageRules.computeIfAbsent(normalizePackage(packageName), p -> new HashSet<>())
-                            .add(BlazePersistenceInstanceUtil.DEFAULT_BLAZE_PERSISTENCE_NAME);
-                }
-            }
-
-            // handle the named Blaze-Persistence instances
-            for (Map.Entry<String, BlazePersistenceInstanceConfiguration> candidateBlazePersistenceInstanceEntry : blazePersistenceConfig.blazePersistenceInstances
+            for (Map.Entry<String, BlazePersistenceInstanceConfiguration> candidateBlazePersistenceInstanceEntry : blazePersistenceConfig.blazePersistenceInstances()
                     .entrySet()) {
                 String candidateBlazePersistenceInstanceName = candidateBlazePersistenceInstanceEntry.getKey();
 
-                Set<String> candidateBlazePersistenceInstancePackages = candidateBlazePersistenceInstanceEntry.getValue().packages
+                Set<String> candidateBlazePersistenceInstancePackages = candidateBlazePersistenceInstanceEntry.getValue().packages()
                         .orElseThrow(() -> new ConfigurationException(String.format(
                                 "Packages must be configured for Blaze-Persistence instance '%s'.", candidateBlazePersistenceInstanceName)));
 
@@ -507,12 +486,8 @@ class BlazePersistenceProcessor {
     }
 
     private static boolean hasPackagesInQuarkusConfig(BlazePersistenceConfiguration blazePersistenceConfig) {
-        if (blazePersistenceConfig.defaultBlazePersistence.packages.isPresent()) {
-            return true;
-        }
-
-        for (BlazePersistenceInstanceConfiguration blazePersistenceInstanceConfig : blazePersistenceConfig.blazePersistenceInstances.values()) {
-            if (blazePersistenceInstanceConfig.packages.isPresent()) {
+        for (BlazePersistenceInstanceConfiguration blazePersistenceInstanceConfig : blazePersistenceConfig.blazePersistenceInstances().values()) {
+            if (blazePersistenceInstanceConfig.packages().isPresent()) {
                 return true;
             }
         }

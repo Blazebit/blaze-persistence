@@ -49,6 +49,25 @@
                 <module>spring-hateoas</module>
                 <module>it-service-management</module>
                 <module>quarkus</module>
+                <module>microprofile-graphql</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>jdk17+</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>showcase</module>
+                <module>deltaspike-data-rest</module>
+                <module>spring-data-webmvc</module>
+                <module>spring-data-webflux</module>
+                <module>spring-data-graphql</module>
+                <module>spring-data-spqr</module>
+                <module>spring-data-dgs</module>
+                <module>spring-hateoas</module>
+                <module>it-service-management</module>
+                <module>quarkus</module>
                 <module>quarkus-3</module>
                 <module>microprofile-graphql</module>
             </modules>

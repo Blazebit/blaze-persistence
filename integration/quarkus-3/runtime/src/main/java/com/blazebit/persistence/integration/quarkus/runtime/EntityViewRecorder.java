@@ -29,10 +29,10 @@ import java.util.function.Supplier;
 @Recorder
 public class EntityViewRecorder {
 
-    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig, String blazePersistenceInstanceName, String persistenceUnitName) {
+    public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceConfiguration blazePersistenceConfig, String blazePersistenceInstanceName, String persistenceUnitName) {
         return () -> {
             CriteriaBuilderConfiguration criteriaBuilderConfiguration = Criteria.getDefault();
-            blazePersistenceConfig.apply(criteriaBuilderConfiguration);
+            blazePersistenceConfig.blazePersistenceInstances().get(blazePersistenceInstanceName).apply(criteriaBuilderConfiguration);
             Annotation[] cbfQualifiers;
             if (BlazePersistenceInstanceUtil.isDefaultBlazePersistenceInstance(blazePersistenceInstanceName)) {
                 cbfQualifiers = new Annotation[] { new Default.Literal() };
@@ -46,7 +46,7 @@ public class EntityViewRecorder {
         };
     }
 
-    public Supplier<EntityViewManager> entityViewManagerSupplier(BlazePersistenceInstanceConfiguration blazePersistenceConfig,
+    public Supplier<EntityViewManager> entityViewManagerSupplier(BlazePersistenceConfiguration blazePersistenceConfig,
                                                                  String blazePersistenceInstanceName,
                                                                  Set<String> entityViewClasses,
                                                                  Set<String> entityViewListenerClasses) {
@@ -71,7 +71,7 @@ public class EntityViewRecorder {
                     throw new RuntimeException(e);
                 }
             }
-            blazePersistenceConfig.apply(entityViewConfiguration);
+            blazePersistenceConfig.blazePersistenceInstances().get(blazePersistenceInstanceName).apply(entityViewConfiguration);
             entityViewConfiguration.setProperty(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, Boolean.FALSE.toString());
 
             Annotation[] cbfQualifiers;
