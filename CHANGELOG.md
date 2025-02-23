@@ -14,6 +14,8 @@ Changes that happened in releases
 * Support dynamic fetches also for entity views with inheritance on query root
 * Fix `SELECT`/`SUBSELECT` fetching issues with dynamic fetching
 * Fix `SELECT`/`SUBSELECT` fetching issues with treat mappings
+* Fix `MULTISET` fetching issues with nested `SELECT`/`SUBSELECT` and dynamic fetching
+* Use jsonb object concat to avoid PostgreSQL 100 function argument limit
 
 ### Backwards-incompatible changes
 
