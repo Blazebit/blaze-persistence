@@ -1001,7 +1001,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private TypedQuery<Object> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
-            TypedQuery<Object> idQuery = em.createQuery(idQueryString, Object.class);
+            TypedQuery<Object> idQuery = (TypedQuery<Object>) em.createQuery(idQueryString);
             if (isCacheable()) {
                 mainQuery.jpaProvider.setCacheable(idQuery);
             }
@@ -1014,7 +1014,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             return parameterManager.getCriteriaNameMapping() == null ? idQuery : new TypedQueryWrapper<>(idQuery, parameterManager.getCriteriaNameMapping());
         }
 
-        TypedQuery<Object> baseQuery = em.createQuery(idQueryString, Object.class);
+        TypedQuery<Object> baseQuery = (TypedQuery<Object>) em.createQuery(idQueryString);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS);
