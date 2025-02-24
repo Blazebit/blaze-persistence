@@ -287,8 +287,10 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testSelectJoinManyWithParameterForceIdQuery() {
-        String expectedCountQuery = "SELECT " + countTupleDistinct("d.id") + " FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1.name = :param_0";
-        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1.name = :param_0 GROUP BY d.id ORDER BY d.id ASC";
+        String expectedCountQuery = "SELECT " + countTupleDistinct("d.id") + " FROM Document d LEFT JOIN d.contacts contacts_1 WHERE "
+            + joinAliasValue("contacts_1", "name") + " = :param_0";
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1 WHERE "
+            + joinAliasValue("contacts_1", "name") + " = :param_0 GROUP BY d.id ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT d FROM Document d WHERE d.id IN :ids ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d, (" + expectedCountQuery + ") FROM Document d"
             + " WHERE d.id IN (" + expectedIdQuery + " LIMIT 1) ORDER BY d.id ASC";
