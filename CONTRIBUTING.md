@@ -76,7 +76,7 @@ If all you wanted to do is create a test case for the issue, then all you are le
 
 In general, the first thing you should do is analyze the problem. If the change required to fix the issue is rather small, just go ahead and try it out.
 If a fix would require massive changes, you should first discuss the findings of your analysis and how you would fix the problem on the issue on GitHub.
-The maintainers will tell you if the solution is appropriate or what you should do differntly. Maybe the massive changes aren't required at all!
+The maintainers will tell you if the solution is appropriate or what you should do differently. Maybe the massive changes aren't required at all!
 
 Other than that, there is not much to say about how to fix an issue. Just make sure your code aligns with our checkstyle rules and everything else will be discussed on a case by case basis.
 
