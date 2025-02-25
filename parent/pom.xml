@@ -136,7 +136,7 @@
 
         <version.weld>3.1.9.Final</version.weld>
         <version.quarkus>1.11.7.Final</version.quarkus>
-        <version.quarkus-3>3.2.9.Final</version.quarkus-3>
+        <version.quarkus-3>3.8.6</version.quarkus-3>
         <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 

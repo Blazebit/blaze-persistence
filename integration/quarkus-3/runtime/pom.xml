@@ -115,11 +115,6 @@
                             <goal>process</goal>
                         </goals>
                         <phase>compile</phase>
-                        <configuration>
-                            <optionMap>
-                                <legacyConfigRoot>true</legacyConfigRoot>
-                            </optionMap>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

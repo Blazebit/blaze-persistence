@@ -112,7 +112,6 @@
                 <module>graphql-dgs</module>
                 <module>querydsl</module>
                 <module>quarkus</module>
-                <module>quarkus-3</module>
 
                 <module>jpa-base-jar</module>
                 <module>openjpa-jar</module>
