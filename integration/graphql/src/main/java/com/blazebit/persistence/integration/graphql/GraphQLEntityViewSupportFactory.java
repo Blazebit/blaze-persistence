@@ -331,6 +331,7 @@ public class GraphQLEntityViewSupportFactory {
         EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
         Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
+        Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings = new HashMap<>();
         List<Type> defaultImplementsTypes;
         if (isImplementRelayNode()) {
             defaultImplementsTypes = Collections.singletonList(new TypeName("Node"));
@@ -374,12 +375,12 @@ public class GraphQLEntityViewSupportFactory {
                     FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
                     fieldDefinitions.add(fieldDefinition);
                     fieldNames.add(fieldName);
-                    addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "", attribute, fieldName);
                     if (isDefineRelayTypes() && isDefineDedicatedRelayNodes()) {
-                        addFieldMapping(typeNameToFieldMapping, typeName + "Node", attribute, fieldName);
+                        addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Node", attribute, fieldName);
                     }
                     valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
-                    addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
                 }
             }
             for (Method method : managedView.getJavaType().getMethods()) {
@@ -471,7 +472,7 @@ public class GraphQLEntityViewSupportFactory {
 
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
-        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes);
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, serializableBasicTypes);
     }
 
     /**
@@ -531,6 +532,7 @@ public class GraphQLEntityViewSupportFactory {
         EntityMetamodel entityMetamodel = entityViewManager.getService(EntityMetamodel.class);
         Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
+        Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings = new HashMap<>();
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
 
         ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema(entityViewManager);
@@ -597,12 +599,12 @@ public class GraphQLEntityViewSupportFactory {
                     } else {
                         objectBuilder.field(fieldBuilder);
                     }
-                    addFieldMapping(typeNameToFieldMapping, typeName, attribute, fieldName);
+                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "", attribute, fieldName);
                     if (isDefineRelayTypes() && isDefineDedicatedRelayNodes()) {
-                        addFieldMapping(typeNameToFieldMapping, typeName + "Node", attribute, fieldName);
+                        addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Node", attribute, fieldName);
                     }
                     inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
-                    addFieldMapping(typeNameToFieldMapping, inputTypeName, attribute, fieldName);
+                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
                 }
             }
             for (Method method : managedView.getJavaType().getMethods()) {
@@ -711,7 +713,7 @@ public class GraphQLEntityViewSupportFactory {
                 schemaBuilder.additionalType(additionalType);
             }
         }
-        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes);
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, serializableBasicTypes);
     }
 
     private ArrayList<ManagedViewType<?>> determineViewsForSchema(EntityViewManager entityViewManager) {
@@ -732,12 +734,100 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLList(elementType);
     }
 
-    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, String typeName, MethodAttribute<?, ?> attribute, String fieldName) {
+    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, ArrayList<ManagedViewType<?>> managedViews, String baseName, String suffix, MethodAttribute<?, ?> attribute, String fieldName) {
+        String typeName = baseName + suffix;
         Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
         if (fieldMapping == null) {
             typeNameToFieldMapping.put(typeName, fieldMapping = new HashMap<>());
         }
         fieldMapping.put(fieldName, attribute.getName());
+        DefaultFetchMapping defaultFetchMapping = determineDefaultFetchMapping(attribute);
+        if (defaultFetchMapping != null) {
+            ArrayList<ManagedViewType<?>> superTypes = getInheritanceSuperTypes(managedViews, attribute.getDeclaringType());
+            if (superTypes != null) {
+                for (ManagedViewType<?> superType : superTypes) {
+                    String superTypeName = getObjectTypeName(superType);
+                    Set<DefaultFetchMapping> defaultFetchMappings = typeNameToDefaultFetchMappings.get(superTypeName);
+                    if (defaultFetchMappings == null) {
+                        typeNameToDefaultFetchMappings.put(superTypeName, defaultFetchMappings = new HashSet<>());
+                    }
+                    defaultFetchMappings.add(defaultFetchMapping);
+                }
+            }
+            //noinspection unchecked
+            Set<ManagedViewType<?>> subtypes = (Set<ManagedViewType<?>>) attribute.getDeclaringType().getInheritanceSubtypes();
+            for (ManagedViewType<?> subtype : subtypes) {
+                String subtypeName = getObjectTypeName(subtype);
+                Set<DefaultFetchMapping> defaultFetchMappings = typeNameToDefaultFetchMappings.get(subtypeName);
+                if (defaultFetchMappings == null) {
+                    typeNameToDefaultFetchMappings.put(subtypeName, defaultFetchMappings = new HashSet<>());
+                }
+                defaultFetchMappings.add(defaultFetchMapping);
+            }
+        }
+    }
+
+    private ArrayList<ManagedViewType<?>> getInheritanceSuperTypes(ArrayList<ManagedViewType<?>> managedViews, ManagedViewType<?> subtype) {
+        ArrayList<ManagedViewType<?>> list = null;
+        for (ManagedViewType<?> managedView : managedViews) {
+            if (managedView != subtype && managedView.getInheritanceSubtypes().contains(subtype)) {
+                if (list == null) {
+                    list = new ArrayList<>();
+                }
+                list.add(managedView);
+            }
+        }
+        return list;
+    }
+
+    protected DefaultFetchMapping determineDefaultFetchMapping(MethodAttribute<?, ?> attribute) {
+        GraphQLDefaultFetch annotation = attribute.getJavaMethod().getAnnotation(GraphQLDefaultFetch.class);
+        if (annotation != null) {
+            return new DefaultFetchMappingImpl(attribute.getName(), annotation.ifFieldSelected());
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.6.15
+     */
+    private static final class DefaultFetchMappingImpl implements DefaultFetchMapping {
+        private final String attributeName;
+        private final String ifFieldSelected;
+
+        private DefaultFetchMappingImpl(String attributeName, String ifFieldSelected) {
+            this.attributeName = attributeName;
+            this.ifFieldSelected = ifFieldSelected;
+        }
+
+        @Override
+        public String getAttributeName() {
+            return attributeName;
+        }
+
+        @Override
+        public String getIfFieldSelected() {
+            return ifFieldSelected;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof DefaultFetchMapping)) {
+                return false;
+            }
+
+            DefaultFetchMapping that = (DefaultFetchMapping) o;
+            return attributeName.equals(that.getAttributeName()) && ifFieldSelected.equals(that.getIfFieldSelected());
+        }
+
+        @Override
+        public int hashCode() {
+            int result = attributeName.hashCode();
+            result = 31 * result + ifFieldSelected.hashCode();
+            return result;
+        }
     }
 
     private <T> T getAnnotationValue(Annotation annotation, String memberName) {

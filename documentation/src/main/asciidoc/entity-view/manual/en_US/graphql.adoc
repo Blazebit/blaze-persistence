@@ -97,6 +97,25 @@ but you can also provide a custom `EntityViewSetting` with a custom entity view 
 In addition, these methods will determine what to fetch according to the `DataFetchingEnvironment.getSelectionList()`.
 This will lead to the optimal query to be generated for the fields that are requested. This is not only about skipping select items, but also about avoiding unnecessary joins!
 
+==== Conditional fetch
+
+The `@GraphQLDefaultFetch` annotation can be used to annotate an entity view attribute that should be added to the
+fetches list of a `EntityViewSetting`, based on the presence of a selection field in the GraphQL selection set.
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatSimpleView {
+    @IdMapping
+    @GraphQLDefaultFetch(ifFieldSelected = "name")
+    Long getId();
+    String getName();
+}
+----
+
+This example will add `id` to the fetches list if the GraphQL field `name` of the type is also selected.
+To ensure an attribute is always fetched if any GraphQL field of the type is selected, leave the member blank.
+
 ==== Plain graphql-java setup
 
 With just graphql-java, you have to provide a schema and do the runtime-wiring. This could look like the following with a sample schema:
