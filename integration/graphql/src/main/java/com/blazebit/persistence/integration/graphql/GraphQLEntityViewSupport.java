@@ -107,9 +107,10 @@ public class GraphQLEntityViewSupport {
 
     private final Map<String, ManagedViewType<?>> typeNameToViewType;
     private final Map<String, Map<String, String>> typeNameToFieldMapping;
+    private final Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings;
     private final Set<String> serializableBasicTypes;
     private final ConcurrentMap<TypeRootCacheKey, GraphQLUnmodifiedType> typeReferenceCache = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, String> selectedFieldCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String[]> selectedFieldCache = new ConcurrentHashMap<>();
 
     private final String pageSizeName;
     private final String offsetName;
@@ -124,7 +125,7 @@ public class GraphQLEntityViewSupport {
      * A default constructor to make this class proxyable.
      */
     GraphQLEntityViewSupport() {
-        this(null, null, null, null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /**
@@ -133,9 +134,11 @@ public class GraphQLEntityViewSupport {
      *
      * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     * @deprecated Use {@link GraphQLEntityViewSupport#GraphQLEntityViewSupport(Map, Map, Map, Set)} instead
      */
+    @Deprecated
     public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Set<String> serializableBasicTypes) {
-        this(typeNameToViewType, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+        this(typeNameToViewType, Collections.emptyMap(), Collections.emptyMap(), serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
     }
 
     /**
@@ -145,9 +148,24 @@ public class GraphQLEntityViewSupport {
      * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
      * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
      * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     * @deprecated Use {@link GraphQLEntityViewSupport#GraphQLEntityViewSupport(Map, Map, Map, Set)} instead
      */
+    @Deprecated
     public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes) {
-        this(typeNameToViewType, typeNameToFieldMapping, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+        this(typeNameToViewType, typeNameToFieldMapping, Collections.emptyMap(), serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
+    }
+
+    /**
+     * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     * It uses the GraphQL Relay specification names for accessing page info fields for paginated settings.
+     *
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
+     * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
+     * @param typeNameToDefaultFetchMappings The mapping from GraphQL type names to a list of default fetch mappings
+     * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     */
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, Set<String> serializableBasicTypes) {
+        this(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, serializableBasicTypes, PAGE_SIZE_NAME, OFFSET_NAME, BEFORE_CURSOR_NAME, AFTER_CURSOR_NAME, TOTAL_COUNT_NAME, EDGES_NAME, EDGE_NODE_NAME, EDGE_CURSOR_NAME);
     }
 
     /**
@@ -163,9 +181,11 @@ public class GraphQLEntityViewSupport {
      * @param pageElementsName The name of the elements field
      * @param pageElementObjectName The name of the element object field within elements
      * @param elementCursorName The name of the cursor field within elements
+     * @deprecated Use {@link GraphQLEntityViewSupport#GraphQLEntityViewSupport(Map, Map, Map, Set, String, String, String, String, String, String, String, String)} instead
      */
+    @Deprecated
     public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
-        this(typeNameToViewType, Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
+        this(typeNameToViewType, Collections.emptyMap(), Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
     }
 
     /**
@@ -182,8 +202,30 @@ public class GraphQLEntityViewSupport {
      * @param pageElementsName The name of the elements field
      * @param pageElementObjectName The name of the element object field within elements
      * @param elementCursorName The name of the cursor field within elements
+     * @deprecated Use {@link GraphQLEntityViewSupport#GraphQLEntityViewSupport(Map, Map, Map, Set, String, String, String, String, String, String, String, String)} instead
      */
+    @Deprecated
     public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
+        this(typeNameToViewType, typeNameToFieldMapping, Collections.emptyMap(), serializableBasicTypes, pageSizeName, offsetName, beforeCursorName, afterCursorName, totalCountName, pageElementsName, pageElementObjectName, elementCursorName);
+    }
+
+    /**
+     * Creates a new {@link GraphQLEntityViewSupport} instance with the given type name to class mapping and serializable basic type whitelist.
+     *
+     * @param typeNameToViewType The mapping from GraphQL type names to entity view metamodels
+     * @param typeNameToFieldMapping The mapping from GraphQL type names to a map from GraphQL field name to entity view attribute name
+     * @param typeNameToDefaultFetchMappings The mapping from GraphQL type names to a list of default fetch mappings
+     * @param serializableBasicTypes The whitelist of allowed serializable basic types to use for cursor deserialization
+     * @param pageSizeName The name of the page size field
+     * @param offsetName The name of the offset field
+     * @param beforeCursorName The name of the beforeCursor field
+     * @param afterCursorName The name of the afterCursor field
+     * @param totalCountName The name of the totalCount field
+     * @param pageElementsName The name of the elements field
+     * @param pageElementObjectName The name of the element object field within elements
+     * @param elementCursorName The name of the cursor field within elements
+     */
+    public GraphQLEntityViewSupport(Map<String, ManagedViewType<?>> typeNameToViewType, Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, Set<String> serializableBasicTypes, String pageSizeName, String offsetName, String beforeCursorName, String afterCursorName, String totalCountName, String pageElementsName, String pageElementObjectName, String elementCursorName) {
         this.pageSizeName = pageSizeName;
         this.offsetName = offsetName;
         this.beforeCursorName = beforeCursorName;
@@ -192,6 +234,7 @@ public class GraphQLEntityViewSupport {
         this.pageElementsName = pageElementsName;
         this.typeNameToViewType = typeNameToViewType;
         this.typeNameToFieldMapping = typeNameToFieldMapping;
+        this.typeNameToDefaultFetchMappings = typeNameToDefaultFetchMappings;
         this.serializableBasicTypes = serializableBasicTypes;
         this.pageElementObjectName = pageElementObjectName;
         this.elementCursorName = elementCursorName;
@@ -606,9 +649,11 @@ public class GraphQLEntityViewSupport {
         OUTER:
         for (SelectedField field : selectionSet.getFields()) {
             String fqFieldName = field.getFullyQualifiedName();
-            String resolvedFetch = selectedFieldCache.get(fqFieldName);
-            if (resolvedFetch != null) {
-                setting.fetch(resolvedFetch);
+            String[] resolvedFetches = selectedFieldCache.get(fqFieldName);
+            if (resolvedFetches != null) {
+                for (String resolvedFetch : resolvedFetches) {
+                    setting.fetch(resolvedFetch);
+                }
                 continue;
             }
             if (!isLeaf(field.getType())) {
@@ -625,6 +670,8 @@ public class GraphQLEntityViewSupport {
             String fetch = "";
             String currentTypeName = getElementTypeName(dataFetchingEnvironment, elementRoot);
             GraphQLNamedType currentType = (GraphQLNamedType) graphQLSchema.getType(currentTypeName);
+            Set<DefaultFetchMapping> defaultFetchMappings = typeNameToDefaultFetchMappings.get(currentTypeName);
+            HashSet<String> fetches = null;
             for (int i = 0; i < fieldParts.length; i++) {
                 String[] fieldPartComponents = fieldParts[i].split("\\.");
                 String typeName = fieldPartComponents[0];
@@ -632,6 +679,20 @@ public class GraphQLEntityViewSupport {
                 if (elementRootParts.length > i && elementRootParts[i].equals(fieldName)) {
                     // ignore the element root prefix
                     continue;
+                }
+                if (defaultFetchMappings != null) {
+                    List<SelectedField> fields = selectionSet.getImmediateFields();
+                    for (int j = 0; j < i; j++) {
+                        fields = getSelectedField(fields, fieldParts[j]).getSelectionSet().getImmediateFields();
+                    }
+                    for (DefaultFetchMapping defaultFetchMapping : defaultFetchMappings) {
+                        if (matches(defaultFetchMapping, fields)) {
+                            if (fetches == null) {
+                                fetches = new HashSet<>();
+                            }
+                            fetches.add(appendPath(fetch, defaultFetchMapping.getAttributeName()));
+                        }
+                    }
                 }
                 if (META_FIELDS.contains(fieldName)) {
                     // If this is a GraphQL meta field (e.g. __typename) then there's no EV mapping for it but still
@@ -692,13 +753,44 @@ public class GraphQLEntityViewSupport {
                 }
                 currentType = unwrapAll(fieldType);
                 currentTypeName = currentType.getName();
+                defaultFetchMappings = typeNameToDefaultFetchMappings.get(currentTypeName);
                 fetch = appendPath(fetch, mappedFieldPart);
             }
             if (!fetch.isEmpty()) {
-                setting.fetch(fetch);
-                selectedFieldCache.putIfAbsent(fqFieldName, fetch);
+                if (fetches == null) {
+                    setting.fetch(fetch);
+                    selectedFieldCache.putIfAbsent(fqFieldName, new String[]{ fetch });
+                } else {
+                    fetches.add(fetch);
+                    for (String f : fetches) {
+                        setting.fetch(f);
+                    }
+                    selectedFieldCache.putIfAbsent(fqFieldName, fetches.toArray(new String[0]));
+                }
             }
         }
+    }
+
+    private SelectedField getSelectedField(List<SelectedField> fields, String qualifiedName) {
+        for (SelectedField field : fields) {
+            if (field.getFullyQualifiedName().equals(qualifiedName)) {
+                return field;
+            }
+        }
+        throw new IllegalArgumentException("No such field: " + qualifiedName + " in " + fields);
+    }
+
+    private static boolean matches(DefaultFetchMapping defaultFetchMapping, List<SelectedField> fields) {
+        if (defaultFetchMapping.getIfFieldSelected().isEmpty()) {
+            return true;
+        }
+        for (SelectedField field : fields) {
+            if (defaultFetchMapping.getIfFieldSelected().equals(field.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private GraphQLOutputType getFieldType(GraphQLNamedType currentType, String fieldName) {

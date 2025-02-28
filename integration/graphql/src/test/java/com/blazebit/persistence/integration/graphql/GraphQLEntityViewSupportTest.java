@@ -66,6 +66,19 @@ public class GraphQLEntityViewSupportTest {
     }
 
     @Test
+    public void testConditionalFetchesInSetting() {
+        GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition("getDocument", documentObjectType);
+        DataFetchingFieldSelectionSet selectionSet =
+                makeMockSelectionSet("Document", "name");
+
+        DataFetchingEnvironment dfe = makeMockDataFetchingEnvironment(rootFieldDefinition, selectionSet);
+
+        EntityViewSetting<DocumentView, CriteriaBuilder<DocumentView>> setting = graphQLEntityViewSupport.createSetting(dfe);
+
+        Assert.assertEquals(new HashSet<>(Arrays.asList("id", "name")), setting.getFetches());
+    }
+
+    @Test
     public void testRootInheritanceInSelectionSet() {
         GraphQLFieldDefinition rootFieldDefinition = makeFieldDefinition( "getAnimal", animalInterfaceType );
         DataFetchingFieldSelectionSet selectionSet = makeMockSelectionSet("Cat", "Animal.name", "[Cat,Animal].__typename");

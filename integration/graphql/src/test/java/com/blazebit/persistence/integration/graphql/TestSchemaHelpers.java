@@ -12,6 +12,7 @@ import com.blazebit.persistence.integration.graphql.views.PersonView;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import graphql.language.SelectionSet;
 import graphql.schema.Coercing;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingFieldSelectionSet;
@@ -30,8 +31,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static graphql.schema.GraphQLTypeUtil.unwrapAll;
@@ -111,34 +114,72 @@ public class TestSchemaHelpers {
     }
 
     public static DataFetchingFieldSelectionSet makeMockSelectionSet(String rootType, String... fields) {
-        List<SelectedField> selectedFields = Arrays.stream(fields).map(field -> {
-            List<String> qualifiedFieldParts = new ArrayList<>();
-            String[] fieldParts = field.split("/");
-            GraphQLNamedOutputType fieldType = null;
-            String baseType = rootType;
-            for (String fieldPart : fieldParts) {
-                if (fieldPart.contains(".")) {
-                    // provided fieldPart is already fully qualified
-                    qualifiedFieldParts.add(fieldPart);
-                    baseType = getBaseTypes(fieldPart)[0];
-                    fieldPart = (fieldPart.split("\\."))[1];
-                } else {
-                    qualifiedFieldParts.add(baseType + "." + fieldPart);
-                }
-                fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
-                baseType = fieldType.getName();
-            }
+        DataFetchingFieldSelectionSet selectionSet = mock(DataFetchingFieldSelectionSet.class);
+        when(selectionSet.getFields()).thenReturn(new ArrayList<>());
+        when(selectionSet.getImmediateFields()).thenReturn(new ArrayList<>());
+
+		for (String field : fields) {
+			List<String> qualifiedFieldParts = new ArrayList<>();
+			String[] fieldParts = field.split("/");
+			GraphQLNamedOutputType fieldType = null;
+			String baseType = rootType;
+
+            DataFetchingFieldSelectionSet parentSelectionSet = selectionSet;
+            SelectedField immediateField = null;
+			for (int i = 0; i < fieldParts.length; i++) {
+				String fieldPart = fieldParts[i];
+				if (fieldPart.contains(".")) {
+					// provided fieldPart is already fully qualified
+					qualifiedFieldParts.add(fieldPart);
+					baseType = getBaseTypes(fieldPart)[0];
+					fieldPart = (fieldPart.split("\\."))[1];
+				} else {
+					qualifiedFieldParts.add(baseType + "." + fieldPart);
+				}
+				fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
+				baseType = fieldType.getName();
+
+				immediateField = findField(parentSelectionSet.getImmediateFields(), qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
+
+				if (immediateField == null) {
+					DataFetchingFieldSelectionSet fieldSelectionSet = mock(DataFetchingFieldSelectionSet.class);
+					when(fieldSelectionSet.getFields()).thenReturn(new ArrayList<>());
+					when(fieldSelectionSet.getImmediateFields()).thenReturn(new ArrayList<>());
+
+					immediateField = mock(SelectedField.class);
+					when(immediateField.getFullyQualifiedName()).thenReturn(qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
+					when(immediateField.getQualifiedName()).thenReturn(fieldPart);
+					when(immediateField.getName()).thenReturn(fieldPart);
+					when(immediateField.getType()).thenReturn(fieldType);
+					when(immediateField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length - 1])));
+					when(immediateField.getSelectionSet()).thenReturn(fieldSelectionSet);
+
+					parentSelectionSet.getImmediateFields().add(immediateField);
+					parentSelectionSet = fieldSelectionSet;
+				}
+				else {
+					parentSelectionSet = immediateField.getSelectionSet();
+				}
+			}
+
             SelectedField selectedField = mock(SelectedField.class);
             when(selectedField.getFullyQualifiedName()).thenReturn(String.join("/", qualifiedFieldParts));
             when(selectedField.getQualifiedName()).thenReturn(String.join("/", fieldParts));
+            when(selectedField.getName()).thenReturn(fieldParts[fieldParts.length - 1]);
             when(selectedField.getType()).thenReturn(fieldType);
-            when(selectedField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length-1])));
-            return selectedField;
-        }).collect(Collectors.toList());
-
-        DataFetchingFieldSelectionSet selectionSet = mock(DataFetchingFieldSelectionSet.class);
-        when(selectionSet.getFields()).thenReturn(selectedFields);
+            when(selectedField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length - 1])));
+            selectionSet.getFields().add(selectedField);
+		}
         return selectionSet;
+    }
+
+    private static SelectedField findField(List<SelectedField> fields, String fieldName) {
+        for (SelectedField selectedField : fields) {
+            if (selectedField.getFullyQualifiedName().equals(fieldName)) {
+                return selectedField;
+            }
+        }
+        return null;
     }
 
     private static String[] getBaseTypes(String fieldPart) {
@@ -156,7 +197,8 @@ public class TestSchemaHelpers {
     public static GraphQLEntityViewSupport setupEntityViewSupport(TypeDef... typeDefs) {
         Map<String, ManagedViewType<?>> typeNameToViewType = new HashMap<>();
         Map<String, Map<String, String>> typeNameToFieldMapping = new HashMap<>();
-
+        Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings = new HashMap<>();
+        typeNameToDefaultFetchMappings.put("Document", new HashSet<>(Arrays.asList(new DefaultFetchMappingImpl( "id", "name"))));
         Arrays.stream(typeDefs).forEach(typeDef -> {
             String name = typeDef.name;
             typeNameToViewType.put(name, typeDef.viewType);
@@ -165,7 +207,49 @@ public class TestSchemaHelpers {
             typeNameToFieldMapping.put(name, fieldMapping);
         });
 
-        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, Collections.emptySet());
+        return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, Collections.emptySet());
+    }
+
+    /**
+     *
+     * @author Christian Beikov
+     * @since 1.6.15
+     */
+    private static final class DefaultFetchMappingImpl implements DefaultFetchMapping {
+        private final String attributeName;
+        private final String ifFieldSelected;
+
+        private DefaultFetchMappingImpl(String attributeName, String ifFieldSelected) {
+            this.attributeName = attributeName;
+            this.ifFieldSelected = ifFieldSelected;
+        }
+
+        @Override
+        public String getAttributeName() {
+            return attributeName;
+        }
+
+        @Override
+        public String getIfFieldSelected() {
+            return ifFieldSelected;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof DefaultFetchMapping)) {
+                return false;
+            }
+
+            DefaultFetchMapping that = (DefaultFetchMapping) o;
+            return attributeName.equals(that.getAttributeName()) && ifFieldSelected.equals(that.getIfFieldSelected());
+        }
+
+        @Override
+        public int hashCode() {
+            int result = attributeName.hashCode();
+            result = 31 * result + ifFieldSelected.hashCode();
+            return result;
+        }
     }
 
     public static DataFetchingEnvironment makeMockDataFetchingEnvironment(GraphQLFieldDefinition rootFieldDefinition, DataFetchingFieldSelectionSet selectionSet) {
@@ -177,7 +261,7 @@ public class TestSchemaHelpers {
 
         when(schema.getType(documentObjectType.getName())).thenReturn(documentObjectType);
         when(schema.getType(personObjectType.getName())).thenReturn(personObjectType);
-        when(schema.getType( animalInterfaceType.getName())).thenReturn( animalInterfaceType );
+        when(schema.getType(animalInterfaceType.getName())).thenReturn(animalInterfaceType);
         when(schema.getType(catObjectType.getName())).thenReturn(catObjectType);
         return dfe;
     }
