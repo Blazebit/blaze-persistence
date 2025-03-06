@@ -18,7 +18,9 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -306,6 +308,31 @@ public class PaginationTest extends AbstractCoreTest {
         if (jpaProvider.supportsSubqueryInFunction() && jpaProvider.supportsSubqueryAliasShadowing()) {
             assertEquals(expectedInlineObjectQuery, cb.withInlineIdQuery(true).withInlineCountQuery(true).getQueryString());
         }
+        PagedList<Document> result = cb.withInlineIdQuery(false).withInlineCountQuery(false).getResultList();
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    public void testSelectJoinWindowCteWithParameterForceIdQuery() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+            .select("d")
+            .innerJoinOnSubquery(DocumentNodeCTE.class, "dn")
+            .from(Document.class, "dd")
+            .bind("id").select("dd.id", "id")
+            .bind("parentId").select("dd.parent.id", "parentId")
+            .end()
+            .on("d.id").eqExpression("dn.id")
+            .end()
+            .leftJoinOn(Version.class, "v")
+            .on("v.document.id").eqExpression("d.id")
+            .end()
+            .where("d.name").eq("doc1")
+            .groupBy("d.id")
+            .orderBy("coalesce(v.url, '')", true, true)
+            .orderBy("d.id", true, false)
+            .page(0, 1)
+            .withForceIdQuery(false);
+
         PagedList<Document> result = cb.withInlineIdQuery(false).withInlineCountQuery(false).getResultList();
         assertEquals(1, result.size());
     }
