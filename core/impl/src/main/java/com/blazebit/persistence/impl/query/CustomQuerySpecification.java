@@ -17,10 +17,6 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.ServiceProvider;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
+import javax.persistence.Query;
 
 /**
  *
@@ -156,7 +155,9 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
         List<Query> participatingQueries = new ArrayList<>();
 
         for (Map.Entry<String, Collection<?>> entry : listParameters.entrySet()) {
-            baseQuery.setParameter(entry.getKey(), entry.getValue());
+            if (!entry.getValue().isEmpty()) {
+                baseQuery.setParameter(entry.getKey(), entry.getValue());
+            }
         }
 
         String sqlQuery = extendedQuerySupport.getSql(em, baseQuery);
