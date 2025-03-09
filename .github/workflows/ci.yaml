@@ -629,7 +629,7 @@ jobs:
 #            jdk: 22-ea
 #            build-jdk: 22-ea
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Update /etc/hosts file
         # /etc/hosts file needs to be updated as a workaround for
         # https://github.com/actions/virtual-environments/issues/3185
@@ -646,13 +646,13 @@ jobs:
           version: 8
           targets: JDK8_HOME;JAVA_HOME
       - name: Set up Requested JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: ${{ matrix.jdk != 8 && !endsWith(matrix.jdk, '-ea') && matrix.jdk != '21' }}
         with:
           java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
       - name: Set up EA JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: ${{ matrix.jdk != 8 && (endsWith(matrix.jdk, '-ea') || matrix.jdk == '21') }}
         with:
           java-version: ${{ matrix.jdk }}
@@ -664,7 +664,7 @@ jobs:
           echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
         shell: bash
       - name: Cache Maven local repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-maven
         with:
           path: |
