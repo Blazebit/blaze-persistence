@@ -19,6 +19,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
@@ -587,7 +588,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             Version.class,
             Person.class,
             Workflow.class,
-            IntIdEntity.class
+            IntIdEntity.class,
+            DocumentNodeCTE.class
         };
     }
 

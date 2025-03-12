@@ -54,9 +54,6 @@ import com.blazebit.persistence.parser.predicate.EqPredicate;
 import com.blazebit.persistence.parser.predicate.InPredicate;
 import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.AttributeAccessor;
-
-import javax.persistence.Parameter;
-import javax.persistence.TypedQuery;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +64,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Parameter;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -1062,6 +1061,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         if (identifierExpressionsToUse.length == 1) {
             parameterListNames.add(ID_PARAM_NAME);
+        } else if (identifierExpressionsToUse.length > 1) {
+            for (Parameter<?> p : baseQuery.getParameters()) {
+                if (p.getName().startsWith(skippedParameterPrefix)) {
+                    parameterManager.registerParameterName(p.getName(), true, null, this);
+                }
+            }
+
+            parameterListNames = parameterManager.getParameterListNames(baseQuery);
         }
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, OBJECT_QUERY_CLAUSE_EXCLUSIONS);

@@ -10,7 +10,7 @@ jobs:
     name: Publish Snapshot
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Update /etc/hosts file
         # /etc/hosts file needs to be updated as a workaround for
         # https://github.com/actions/virtual-environments/issues/3185
@@ -21,7 +21,7 @@ jobs:
           version: 8
           targets: JDK8_HOME;JAVA_HOME
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'temurin'
@@ -32,7 +32,7 @@ jobs:
           echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
         shell: bash
       - name: Cache Maven local repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: cache-maven
         with:
           path: |
