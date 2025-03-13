@@ -56,7 +56,9 @@ public class CTEManager extends CTEBuilderListenerImpl {
                 mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
             }
 
-            ctes.put(entry.getKey(), cteInfo);
+            CTEKey cteKey = new CTEKey(entry.getKey().getName(), joinManagerMapping.get(entry.getKey().getOwner()));
+
+            ctes.put(cteKey, cteInfo);
         }
     }
 
