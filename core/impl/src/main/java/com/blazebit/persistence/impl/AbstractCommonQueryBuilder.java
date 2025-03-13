@@ -370,13 +370,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     abstract AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn> copy(QueryContext queryContext, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext);
 
     ExpressionCopyContext applyFrom(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, boolean copyMainQuery, boolean copySelect, boolean fixedSelect, boolean copyOrderBy, Set<ClauseType> clauseExclusions, Set<JoinNode> alwaysIncludedNodes, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        joinManagerMapping.put(builder.joinManager, joinManager);
+
         if (copyMainQuery) {
             copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager));
             mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
         }
-        copyContext = new ExpressionCopyContextForQuery(copyContext, builder.aliasManager.getAliasedExpressions());
 
-        joinManagerMapping.put(builder.joinManager, joinManager);
+        copyContext = new ExpressionCopyContextForQuery(copyContext, builder.aliasManager.getAliasedExpressions());
         aliasManager.applyFrom(builder.aliasManager);
         Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes, copyContext);
         windowManager.applyFrom(builder.windowManager, copyContext);
