@@ -5,6 +5,8 @@
 
 package com.blazebit.persistence.criteria;
 
+import com.blazebit.persistence.BaseCriteriaBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 
 import javax.persistence.EntityManager;
@@ -31,6 +33,14 @@ public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQu
      * @return A new criteria builder
      */
     public CriteriaBuilder<T> createCriteriaBuilder(EntityManager entityManager);
+
+    /**
+     * Applies this criteria query onto an existing Blaze-Persistence Core {@link BaseCriteriaBuilder}.
+     *
+     * @param criteriaBuilder The criteria builder to apply this criteria query onto
+     * @since 1.6.9
+     */
+    public void applyToCriteriaBuilder(BaseCriteriaBuilder<T, ?> criteriaBuilder);
 
     /**
      * The extended JPA {@link javax.persistence.criteria.CriteriaBuilder} associated with this query.
