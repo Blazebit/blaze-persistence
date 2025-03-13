@@ -8,6 +8,9 @@ package com.blazebit.persistence.examples.spring.data.spqr.resource;
 import com.blazebit.persistence.examples.spring.data.spqr.repository.CatViewRepository;
 import com.blazebit.persistence.examples.spring.data.spqr.view.CatCreateView;
 import com.blazebit.persistence.examples.spring.data.spqr.view.CatWithOwnerView;
+import com.blazebit.persistence.examples.spring.data.spqr.view.ChildInput;
+import com.blazebit.persistence.examples.spring.data.spqr.view.ChildView;
+import com.blazebit.persistence.examples.spring.data.spqr.view.PersonSimpleView;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -64,5 +67,14 @@ public class CatGraphQLApi {
     public Long createCat(@GraphQLArgument(name = "cat") CatCreateView cat) {
         repository.save(cat);
         return cat.getId();
+    }
+
+    @GraphQLMutation
+    public Long addPersonChild(@GraphQLArgument(name = "child") ChildInput childInput, @GraphQLArgument(name = "personId") Long personId) {
+        PersonSimpleView person = repository.findById(EntityViewSetting.create(PersonSimpleView.class), personId);
+        ChildView child = (childInput.getBoy() != null) ? childInput.getBoy() : childInput.getGirl();
+        person.getChildren().add(child);
+        repository.save(person);
+        return child.getId();
     }
 }
