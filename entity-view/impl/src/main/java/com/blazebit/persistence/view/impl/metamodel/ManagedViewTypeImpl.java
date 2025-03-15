@@ -1417,7 +1417,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
         for (ViewRoot viewRoot : viewRoots) {
             String entityViewRootName = viewRoot.getName();
             CorrelationProvider correlationProvider = viewRoot.getCorrelationProviderFactory().create(parameterHolder, optionalParameters);
-            Limiter limiter = createLimiter(expressionFactory, viewPath, viewRoot.getLimitExpression(), viewRoot.getOffsetExpression(), viewRoot.getOrderByItems());
+            Limiter limiter = createLimiter(expressionFactory, "_sub_" + entityViewRootName, viewRoot.getLimitExpression(), viewRoot.getOffsetExpression(), viewRoot.getOrderByItems());
             String correlationAlias;
             if (limiter == null) {
                 correlationAlias = entityViewRootName;

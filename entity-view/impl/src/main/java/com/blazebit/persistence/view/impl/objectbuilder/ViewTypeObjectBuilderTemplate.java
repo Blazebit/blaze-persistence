@@ -1257,7 +1257,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 entityViewRoot.getCorrelationProviderFactory(),
                 entityViewRoot.getJoinType(),
                 entityViewRoot.getFetches(),
-                createLimiter(mapperBuilder, viewPath, entityViewRoot.getLimitExpression(), entityViewRoot.getOffsetExpression(), entityViewRoot.getOrderByItems())
+                createLimiter(mapperBuilder, "_sub_" + entityViewRoot.getName(), entityViewRoot.getLimitExpression(), entityViewRoot.getOffsetExpression(), entityViewRoot.getOrderByItems())
         );
     }
 

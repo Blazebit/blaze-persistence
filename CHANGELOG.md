@@ -17,6 +17,7 @@ Changes that happened in releases
 * Fix `SELECT`/`SUBSELECT` fetching issues with treat mappings
 * Fix `MULTISET` fetching issues with nested `SELECT`/`SUBSELECT` and dynamic fetching
 * Use jsonb object concat to avoid PostgreSQL 100 function argument limit
+* Use the correct `from` alias to prefix `@EntityViewRoot` order by expressions
 
 ### Backwards-incompatible changes
 
