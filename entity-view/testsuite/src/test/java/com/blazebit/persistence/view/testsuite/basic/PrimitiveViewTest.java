@@ -155,7 +155,7 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         assertEquals("doc1", view.getName());
         assertEquals("pers1", view.getOwner().getName());
         assertEquals("pers1", view.getCorrelatedOwner().getName());
-        assertEquals(Collections.emptyMap(), view.getContacts());
+        assertNull(view.getContacts());
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery

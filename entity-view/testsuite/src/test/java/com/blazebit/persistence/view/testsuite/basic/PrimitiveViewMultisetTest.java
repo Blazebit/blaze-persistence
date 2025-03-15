@@ -143,7 +143,7 @@ public class PrimitiveViewMultisetTest extends AbstractEntityViewTest {
         } else {
             assertNull(view.getPeople());
         }
-        assertEquals(Collections.emptyMap(), view.getContacts());
+        assertNull(view.getContacts());
     }
 
     private boolean fetchesPartners(Collection<String> fetches) {

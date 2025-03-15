@@ -20,6 +20,7 @@ Changes that happened in releases
 * Use the correct `from` alias to prefix `@EntityViewRoot` order by expressions
 * Leverage offset encoded within GraphQL cursor when creating `EntityViewSetting`
 * Fix SQL syntax error for inlined CTE with values clause
+* Also produce null for collection with `FetchStrategy.JOIN` that are un-fetched
 
 ### Backwards-incompatible changes
 
