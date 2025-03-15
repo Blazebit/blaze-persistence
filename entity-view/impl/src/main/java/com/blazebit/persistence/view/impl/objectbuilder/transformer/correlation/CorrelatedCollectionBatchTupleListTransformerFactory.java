@@ -44,7 +44,7 @@ public class CorrelatedCollectionBatchTupleListTransformerFactory extends Abstra
     @Override
     public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration config) {
         if (!config.hasSubFetches(attributePath)) {
-            return new NullListTupleTransformer(tupleIndex, correlator.getElementOffset());
+            return new NullListTupleTransformer(tupleIndex, tupleIndex);
         }
         return new CorrelatedCollectionBatchTupleListTransformer(config.getExpressionFactory(), correlator, containerAccumulator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, indexFetches, indexExpression, indexCorrelator, correlatesThis,
                 viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, config, recording);

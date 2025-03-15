@@ -7,6 +7,8 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.List;
 
+import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
+
 /**
  *
  * @author Christian Beikov
@@ -28,6 +30,12 @@ public class NullListTupleTransformer extends TupleListTransformer {
 
     @Override
     public List<Object[]> transform(List<Object[]> tuples) {
+        for (Object[] tuple : tuples) {
+            tuple[startIndex] = null;
+            for (int i = startIndex + 1; i <= valueStartIndex; i++) {
+                tuple[valueStartIndex] = TupleReuse.CONSUMED;
+            }
+        }
         return tuples;
     }
 }

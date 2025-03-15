@@ -31,7 +31,7 @@ public class CorrelatedSingularBatchTupleListTransformerFactory extends Abstract
     @Override
     public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration config) {
         if (!config.hasSubFetches(attributePath)) {
-            return new NullListTupleTransformer(tupleIndex, correlator.getElementOffset());
+            return new NullListTupleTransformer(tupleIndex, tupleIndex);
         }
         return new CorrelatedSingularBatchTupleListTransformer(config.getExpressionFactory(), correlator, viewRootType, embeddingViewType, correlationResult, correlationProviderFactory, attributePath, fetches, correlatesThis, viewRootIndex, embeddingViewIndex, tupleIndex, batchSize, correlationBasisType, correlationBasisEntity, limiter, config);
     }

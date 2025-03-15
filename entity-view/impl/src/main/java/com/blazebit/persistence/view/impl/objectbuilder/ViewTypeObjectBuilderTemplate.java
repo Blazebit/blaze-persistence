@@ -55,8 +55,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMap
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TypeUtils;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.CollectionMultisetTupleTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.NonIndexedTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.NonIndexedTupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SingularMultisetTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.BasicCorrelator;
@@ -551,10 +551,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         if (pluralAttribute.isSorted()) {
                             throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                         } else {
-                            mapperBuilder.addTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, null, valueConverter));
+                            mapperBuilder.addTupleListTransformerFactory(new IndexedTupleListTransformerFactory(attributePath, tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, null, valueConverter));
                         }
                     } else if (mapKey) {
-                        mapperBuilder.addTupleListTransformer(new IndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, keyConverter, valueConverter));
+                        mapperBuilder.addTupleListTransformerFactory(new IndexedTupleListTransformerFactory(attributePath, tupleIdDescriptor.createIdPositions(), startIndex, valueStartIndex, attribute.getContainerAccumulator(), dirtyTracking, keyConverter, valueConverter));
                     } else {
                         switch (pluralAttribute.getCollectionType()) {
                             case COLLECTION:
@@ -574,7 +574,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             default:
                                 throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                         }
-                        mapperBuilder.addTupleListTransformer(new NonIndexedTupleListTransformer(tupleIdDescriptor.createIdPositions(), startIndex, attribute.getCollectionInstantiator(), dirtyTracking, valueConverter));
+                        mapperBuilder.addTupleListTransformerFactory(new NonIndexedTupleListTransformerFactory(attributePath, tupleIdDescriptor.createIdPositions(), startIndex, attribute.getCollectionInstantiator(), dirtyTracking, valueConverter));
                     }
                 }
             } else if (attribute.isQueryParameter()) {
