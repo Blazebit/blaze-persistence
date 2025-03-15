@@ -222,25 +222,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
         }
         String sql = getSql(em, query);
-        final String text = fromElement.getText();
-        final String tableAlias = fromElement.getTableAlias();
-        final int startIndex = sql.indexOf(text);
-        return new SqlFromInfo() {
-            @Override
-            public String getAlias() {
-                return tableAlias;
-            }
-
-            @Override
-            public int getFromStartIndex() {
-                return startIndex;
-            }
-
-            @Override
-            public int getFromEndIndex() {
-                return startIndex + text.length();
-            }
-        };
+        String text = fromElement.getText();
+        int joinIndex = text.indexOf(" join ");
+        if (joinIndex != -1) {
+            text = text.substring(joinIndex + " join ".length());
+        }
+        String tableAlias = fromElement.getTableAlias();
+        int startIndex = sql.indexOf(text);
+        return new SqlFromInfoImpl(tableAlias, startIndex, text);
     }
 
     @Override
@@ -1409,4 +1398,34 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
+    /**
+     * @author Christian Beikov
+     * @since 1.6.15
+     */
+    private static class SqlFromInfoImpl implements SqlFromInfo {
+        private final String tableAlias;
+        private final int startIndex;
+        private final String text;
+
+        public SqlFromInfoImpl(String tableAlias, int startIndex, String text) {
+            this.tableAlias = tableAlias;
+            this.startIndex = startIndex;
+            this.text = text;
+        }
+
+        @Override
+        public String getAlias() {
+            return tableAlias;
+        }
+
+        @Override
+        public int getFromStartIndex() {
+            return startIndex;
+        }
+
+        @Override
+        public int getFromEndIndex() {
+            return startIndex + text.length();
+        }
+    }
 }
