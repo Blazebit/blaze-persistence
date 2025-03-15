@@ -15,6 +15,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.DocumentType;
@@ -23,6 +24,7 @@ import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.NameObjectContainer;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PersonCTE;
+import com.blazebit.persistence.testsuite.entity.StringIdCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -64,7 +66,8 @@ public class ValuesClauseTest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return concat(super.getEntityClasses(), new Class<?>[]{
                 PersonCTE.class,
-                DocumentNodeCTE.class
+                DocumentNodeCTE.class,
+                StringIdCTE.class
         });
     }
 
@@ -703,5 +706,28 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
         assertEquals(p1.getId(), resultList.get(0).get(0));
         assertEquals(p1.getId(), resultList.get(0).get(1));
+    }
+
+    // test for #1975
+    @Test
+    // NOTE: For Oracle, we use to_clob in VALUES for cast_string which is problematic
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoOracle.class })
+    public void testValuesInInlinedCte() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+
+        cb.with(StringIdCTE.class)
+                    .fromValues(String.class, "s", Arrays.asList("p1", "p2"))
+                    .bind("id").select("s")
+                .end()
+                .from(Person.class, "p")
+                .select( "p.id" )
+                .select("p.ownedDocuments.id")
+                .innerJoinOn("p", StringIdCTE.class, "c")
+                    .on("p.name").eqExpression("c.id")
+                .end()
+                .orderByAsc("p.id");
+
+        List<Tuple> resultList = cb.page(0, 1).getResultList();
+        assertEquals(1, resultList.size());
     }
 }

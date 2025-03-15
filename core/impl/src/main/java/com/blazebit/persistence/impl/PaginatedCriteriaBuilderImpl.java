@@ -1385,6 +1385,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 }
                 sbSelectFrom.append(')');
             } else {
+                if (!count) {
+                    sbSelectFrom.append("(");
+                }
                 List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(null, entityFunctions);
                 for (int i = 0; i < entityFunctionNodes.size(); i++) {
                     sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(EntityFunction.FUNCTION_NAME, 1));
@@ -1400,6 +1403,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 sbSelectFrom.append(')');
 
                 finishEntityFunctionNodes(sbSelectFrom, entityFunctionNodes);
+                if (!count) {
+                    sbSelectFrom.append(')');
+                }
             }
         }
     }
