@@ -18,6 +18,7 @@ Changes that happened in releases
 * Fix `MULTISET` fetching issues with nested `SELECT`/`SUBSELECT` and dynamic fetching
 * Use jsonb object concat to avoid PostgreSQL 100 function argument limit
 * Use the correct `from` alias to prefix `@EntityViewRoot` order by expressions
+* Leverage offset encoded within GraphQL cursor when creating `EntityViewSetting`
 
 ### Backwards-incompatible changes
 

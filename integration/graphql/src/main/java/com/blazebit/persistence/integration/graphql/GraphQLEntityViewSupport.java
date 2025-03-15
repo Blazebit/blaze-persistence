@@ -351,6 +351,10 @@ public class GraphQLEntityViewSupport {
         if (keysetPage != null) {
             pageSize = dataFetchingEnvironment.getArgument(pageSizeName);
             offset = dataFetchingEnvironment.getArgument(offsetName);
+            // Apply computed offset if no explicit offset is given and the keyset page is valid
+            if (offset == null && keysetPage.getLowest() != null && keysetPage.getHighest() != null) {
+                offset = keysetPage.getFirstResult() + keysetPage.getMaxResults();
+            }
             last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
         }
         return createPaginatedSetting(entityViewClass, dataFetchingEnvironment, elementRoot, keysetPage, pageSize, last, offset);
@@ -483,6 +487,10 @@ public class GraphQLEntityViewSupport {
         if (keysetPage != null) {
             pageSize = dataFetchingEnvironment.getArgument(pageSizeName);
             offset = dataFetchingEnvironment.getArgument(offsetName);
+            // Apply computed offset if no explicit offset is given and the keyset page is valid
+            if (offset == null && keysetPage.getLowest() != null && keysetPage.getHighest() != null) {
+                offset = keysetPage.getFirstResult() + keysetPage.getMaxResults();
+            }
             last = dataFetchingEnvironment.getArgument(RELAY_LAST_NAME);
         }
         return createSetting(entityViewClass, dataFetchingEnvironment, elementRoot, keysetPage, pageSize, last, offset);
