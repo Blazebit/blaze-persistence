@@ -43,7 +43,7 @@ public class GraphQLRelayPageInfo implements Serializable {
      */
     public GraphQLRelayPageInfo(PagedList<?> data) {
         this.hasPreviousPage = data.getFirstResult() != 0;
-        this.hasNextPage = data.getTotalSize() == -1 || data.getFirstResult() + data.getMaxResults() < data.getTotalSize();
+        this.hasNextPage = data.size() >= data.getMaxResults() && (data.getTotalSize() == -1 || data.getFirstResult() + data.getMaxResults() < data.getTotalSize());
         KeysetPage keysetPage = data.getKeysetPage();
         if (keysetPage != null && keysetPage.getLowest() != null) {
             this.startCursor = Base64.getEncoder().encodeToString(serialize(data.getFirstResult(), data.getMaxResults(), keysetPage.getLowest().getTuple()));
