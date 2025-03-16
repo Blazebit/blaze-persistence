@@ -108,8 +108,8 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 
     @Override
     public boolean supportsWithClauseHead() {
-        // NOTE: For 10g return false
-        return true;
+        // Actually, only need it for Hibernate ORM
+        return false;
     }
 
     @Override
