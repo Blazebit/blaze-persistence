@@ -30,7 +30,8 @@ public class ConstrainedTupleList extends AbstractList<Object[]> {
     public Object[] get(int index) {
         int count = 0;
         for (int i = 0; i < tupleList.size(); i++) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tupleList.get(i)[classMappingIndex]).intValue()) >= 0) {
+            final Number classIndex = (Number) tupleList.get(i)[classMappingIndex];
+            if (classIndex != null && Arrays.binarySearch(subtypeIndexes, classIndex.intValue()) >= 0) {
                 if (count == index) {
                     return tupleList.get(i);
                 }
@@ -44,7 +45,8 @@ public class ConstrainedTupleList extends AbstractList<Object[]> {
     public Object[] set(int index, Object[] element) {
         int count = 0;
         for (int i = 0; i < tupleList.size(); i++) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tupleList.get(i)[classMappingIndex]).intValue()) >= 0) {
+            final Number classIndex = (Number) tupleList.get(i)[classMappingIndex];
+            if (classIndex != null && Arrays.binarySearch(subtypeIndexes, classIndex.intValue()) >= 0) {
                 if (count == index) {
                     return tupleList.set(i, element);
                 }
@@ -58,7 +60,8 @@ public class ConstrainedTupleList extends AbstractList<Object[]> {
     public Object[] remove(int index) {
         int count = 0;
         for (int i = 0; i < tupleList.size(); i++) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tupleList.get(i)[classMappingIndex]).intValue()) >= 0) {
+            final Number classIndex = (Number) tupleList.get(i)[classMappingIndex];
+            if (classIndex != null && Arrays.binarySearch(subtypeIndexes, classIndex.intValue()) >= 0) {
                 if (count == index) {
                     return tupleList.remove(i);
                 }
@@ -72,7 +75,8 @@ public class ConstrainedTupleList extends AbstractList<Object[]> {
     public int size() {
         int count = 0;
         for (int i = 0; i < tupleList.size(); i++) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tupleList.get(i)[classMappingIndex]).intValue()) >= 0) {
+            final Number classIndex = (Number) tupleList.get(i)[classMappingIndex];
+            if (classIndex != null && Arrays.binarySearch(subtypeIndexes, classIndex.intValue()) >= 0) {
                 count++;
             }
         }

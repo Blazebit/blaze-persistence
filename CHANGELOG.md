@@ -22,6 +22,7 @@ Changes that happened in releases
 * Leverage offset encoded within GraphQL cursor when creating `EntityViewSetting`
 * Fix SQL syntax error for inlined CTE with values clause
 * Also produce null for collection with `FetchStrategy.JOIN` that are un-fetched
+* Fix NPE in entity view inheritance scenario with subtypes selecting same named attributes
 
 ### Backwards-incompatible changes
 
