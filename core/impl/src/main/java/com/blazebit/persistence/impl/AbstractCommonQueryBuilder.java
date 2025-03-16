@@ -3453,39 +3453,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 String cteName = cteInfo.cteType.getName();
                 final List<String> columnNames = cteInfo.columnNames;
                 String head;
-                String[] aliases;
 
-                if (mainQuery.dbmsDialect.supportsWithClauseHead()) {
-                    sb.setLength(0);
-                    sb.append(cteName);
-                    sb.append('(');
+                sb.setLength(0);
+                sb.append(cteName);
+                sb.append('(');
 
-                    for (int i = 0; i < columnNames.size(); i++) {
-                        String column = columnNames.get(i);
-                        if (i != 0) {
-                            sb.append(", ");
-                        }
-
-                        sb.append(column);
+                for (int i = 0; i < columnNames.size(); i++) {
+                    String column = columnNames.get(i);
+                    if (i != 0) {
+                        sb.append(", ");
                     }
 
-                    sb.append(')');
-                    head = sb.toString();
+                    sb.append(column);
+                }
+
+                sb.append(')');
+                head = sb.toString();
+
+                String[] aliases;
+                if (mainQuery.dbmsDialect.supportsWithClauseHead() || !cteInfo.nonRecursiveCriteriaBuilder.hasLimit()) {
                     aliases = null;
                 } else {
-                    sb.setLength(0);
-                    sb.append(cteName);
-                    List<String> list = new ArrayList<>(columnNames.size());
-
-                    for (int i = 0; i < columnNames.size(); i++) {
-                        String[] columns = mainQuery.metamodel.getManagedType(ExtendedManagedType.class, cteInfo.cteType.getJavaType()).getAttribute(columnNames.get(i)).getColumnNames();
-                        for (String column : columns) {
-                            list.add(column);
-                        }
-                    }
-
-                    head = sb.toString();
-                    aliases = list.toArray(new String[list.size()]);
+                    aliases = columnNames.toArray(new String[0]);
                 }
 
                 String nonRecursiveWithClauseSuffix = null;

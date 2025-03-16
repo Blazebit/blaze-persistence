@@ -940,7 +940,7 @@ public class SqlUtils {
      * @param sb The string builder containing the select item expression
      * @return The expression part of the select item expression
      */
-    private static String extractExpression(StringBuilder sb) {
+    public static String extractExpression(StringBuilder sb) {
         int asIndex = AS_FINDER.indexIn(sb);
         if (asIndex == -1) {
             return sb.toString();

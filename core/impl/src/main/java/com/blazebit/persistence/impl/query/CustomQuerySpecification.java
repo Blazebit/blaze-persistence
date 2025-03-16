@@ -230,33 +230,40 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
                 // This code path is only relevant for oracle 10g because back then aliases were taken from the select aliases of the query
                 final String[] newAliases = cteInfo.getAliases();
                 final StringBuilder newSqlSb = new StringBuilder(sql.length());
-                String[] endPositions = SqlUtils.getSelectItems(sql, 0, new SqlUtils.SelectItemExtractor() {
+                String wrapperStart = "select * from (";
+                String wrapperEnd;
+                final String sqlToProcess;
+                if (sql.startsWith(wrapperStart)) {
+                    int endIndex = sql.lastIndexOf(')');
+                    wrapperEnd = sql.substring(endIndex);
+                    sqlToProcess = sql.substring(wrapperStart.length(), endIndex);
+                    newSqlSb.append(sql, 0, wrapperStart.length());
+                } else {
+                    wrapperEnd = null;
+                    sqlToProcess = sql;
+                }
+                String[] endPositions = SqlUtils.getSelectItems(sqlToProcess, 0, new SqlUtils.SelectItemExtractor() {
                     @Override
                     public String extract(StringBuilder sb, int index, int currentPosition) {
                         if (index == 0) {
-                            newSqlSb.append(sql, 0, currentPosition - sb.length());
+                            newSqlSb.append(sqlToProcess, 0, currentPosition - sb.length());
                         } else {
                             newSqlSb.append(',');
                         }
 
-                        String originalAlias = SqlUtils.extractAlias(sb);
-                        int aliasPosition = sb.length() - originalAlias.length() - 1;
-                        // Replace the original alias with the new one
-                        if (aliasPosition != -1 && sb.charAt(aliasPosition) == ' ') {
-                            newSqlSb.append(sb, 0, aliasPosition + 1);
-                        } else {
-                            // Append the new alias
-                            newSqlSb.append(sb);
-                            newSqlSb.append(" as ");
-                        }
-
+                        newSqlSb.append(SqlUtils.extractExpression(sb));
+                        // Append the new alias
+                        newSqlSb.append(" as ");
                         newSqlSb.append(newAliases[index]);
 
                         return Integer.toString(currentPosition);
                     }
                 });
 
-                newSqlSb.append(sql, Integer.valueOf(endPositions[endPositions.length - 1]), sql.length());
+                newSqlSb.append(sqlToProcess, Integer.valueOf(endPositions[endPositions.length - 1]), sqlToProcess.length());
+                if (wrapperEnd != null) {
+                    newSqlSb.append(wrapperEnd);
+                }
                 sb.append(newSqlSb);
             } else {
                 sb.append(sql);
