@@ -8,6 +8,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformator;
 import com.blazebit.persistence.ParameterHolder;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.ConstrainedTupleList;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.NullListTupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -61,7 +63,7 @@ public class TupleTransformatorFactory {
         }
     }
 
-    public void add(Map<Integer, Object> consumableIndexes, int classMappingIndex, int[] subtypeIndexes, TupleTransformatorFactory tupleTransformator) {
+    public void add(Set<Integer> consumableIndexes, int classMappingIndex, int[] subtypeIndexes, TupleTransformatorFactory tupleTransformator) {
         if (!tupleTransformator.hasTransformers()) {
             return;
         }
@@ -76,18 +78,18 @@ public class TupleTransformatorFactory {
             for (TupleTransformerFactory tupleTransformerFactory : otherLevel.tupleTransformerFactories) {
                 int consumeEndIndex = tupleTransformerFactory.getConsumeEndIndex();
                 for (int j = tupleTransformerFactory.getConsumeStartIndex(); j < consumeEndIndex; j++) {
-                    consumableIndexes.put(j, j);
+                    consumableIndexes.add(j);
                 }
                 thisLevel.tupleTransformerFactories.add(new ConstrainedTupleTransformerFactory(classMappingIndex, subtypeIndexes, tupleTransformerFactory));
             }
 
             if (otherLevel.tupleListTransformer != null) {
                 thisLevel.tupleListTransformer = new ConstrainedTupleListTransformer(classMappingIndex, subtypeIndexes, otherLevel.tupleListTransformer);
-                consumableIndexes.put(otherLevel.tupleListTransformer.getConsumableIndex(), otherLevel.tupleListTransformer);
+                consumableIndexes.add(otherLevel.tupleListTransformer.getConsumableIndex());
             }
             if (otherLevel.tupleListTransformerFactory != null) {
                 thisLevel.tupleListTransformerFactory = new ConstrainedTupleListTransformerFactory(classMappingIndex, subtypeIndexes, otherLevel.tupleListTransformerFactory);
-                consumableIndexes.put(otherLevel.tupleListTransformerFactory.getConsumableIndex(), otherLevel.tupleListTransformerFactory);
+                consumableIndexes.add(otherLevel.tupleListTransformerFactory.getConsumableIndex());
             }
         }
     }
@@ -121,7 +123,8 @@ public class TupleTransformatorFactory {
 
         @Override
         public Object[] transform(Object[] tuple, UpdatableViewMap updatableViewMap) {
-            if (Arrays.binarySearch(subtypeIndexes, ((Number) tuple[classMappingIndex]).intValue()) >= 0) {
+            final Number classIndex = (Number) tuple[classMappingIndex];
+            if (classIndex != null && Arrays.binarySearch(subtypeIndexes, classIndex.intValue()) >= 0) {
                 return delegate.transform(tuple, updatableViewMap);
             } else {
                 return tuple;
@@ -219,7 +222,12 @@ public class TupleTransformatorFactory {
 
         @Override
         public TupleListTransformer create(ParameterHolder<?> parameterHolder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-            return new ConstrainedTupleListTransformer(classMappingIndex, subtypeIndexes, delegate.create(parameterHolder, optionalParameters, entityViewConfiguration));
+            TupleListTransformer delegateTupleListTransformer = delegate.create(parameterHolder, optionalParameters, entityViewConfiguration);
+            if (delegateTupleListTransformer instanceof NullListTupleTransformer) {
+                // No need to constraint anything here since the results are empty
+                return delegateTupleListTransformer;
+            }
+            return new ConstrainedTupleListTransformer(classMappingIndex, subtypeIndexes, delegateTupleListTransformer);
         }
     }
 

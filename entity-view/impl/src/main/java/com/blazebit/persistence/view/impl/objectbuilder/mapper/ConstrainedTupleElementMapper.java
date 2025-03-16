@@ -24,7 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -113,7 +114,7 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
 
     public static void addMappers(int classMappingIndex, List<TupleElementMapper> mappingList, List<String> parameterMappingList, TupleTransformatorFactory tupleTransformatorFactory, List<ConstrainedTupleElementMapperBuilder> builders) {
         List<List<Map.Entry<String, TupleElementMapper>>> subtypeMappersPerAttribute = new ArrayList<>();
-        Map<Integer, Object> consumableIndexes = new TreeMap<>();
+        Set<Integer> consumableIndexes = new TreeSet<>();
         // Transpose the subtype grouped attribute lists to attribute grouped subtype lists
         for (ConstrainedTupleElementMapperBuilder builderEntry : builders) {
             String constraint = builderEntry.constraint;
@@ -134,11 +135,11 @@ public class ConstrainedTupleElementMapper implements AliasedTupleElementMapper 
             }
         }
 
-        // Add a transformer that consumes all the tuple indexes that need to be consumed to reduce tuples
+        // Remove the special value -1 representing "nothing" which is emitted by e.g. non-indexed transformers
         consumableIndexes.remove(-1);
         final int[] consumableIndexArray = new int[consumableIndexes.size()];
         int i = 0;
-        for (Iterator<Integer> iter = consumableIndexes.keySet().iterator(); iter.hasNext(); i++) {
+        for (Iterator<Integer> iter = consumableIndexes.iterator(); iter.hasNext(); i++) {
             consumableIndexArray[i] = iter.next();
         }
         tupleTransformatorFactory.add(new ConsumingTupleTransformer(consumableIndexArray));
