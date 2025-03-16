@@ -191,12 +191,14 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         if (returningColumns != null) {
             sqlSb.append(" returning ");
 
+            int start = withClause == null ? 0 : withClause.length();
+            String alias = determineAlias(sqlSb, dmlAffectedTable, start, statementType);
             for (int i = 0; i < returningColumns.length; i++) {
                 if (i != 0) {
                     sqlSb.append(",");
                 }
 
-                sqlSb.append(dmlAffectedTable).append('.');
+                sqlSb.append(alias).append('.');
                 sqlSb.append(returningColumns[i]);
             }
         }
@@ -207,7 +209,40 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         
         return null;
     }
-    
+
+    private String determineAlias(StringBuilder sqlSb, String dmlAffectedTable, int start, DbmsStatementType statementType) {
+        int tableIndex = sqlSb.indexOf(" " + dmlAffectedTable + " ", start);
+        int aliasIndex = tableIndex + dmlAffectedTable.length() + 2;
+        if (statementType == DbmsStatementType.UPDATE) {
+            int setIndex = SqlUtils.indexOfSet(sqlSb, aliasIndex);
+            if (setIndex != -1) {
+                return sqlSb.substring(aliasIndex, setIndex);
+            }
+        } else if (statementType == DbmsStatementType.INSERT) {
+            int parenthesisIndex = sqlSb.indexOf("(", aliasIndex);
+            int asIndex = sqlSb.indexOf( " as ", aliasIndex - 1);
+            if (asIndex != -1 && asIndex < parenthesisIndex) {
+                return sqlSb.substring(asIndex + 4, parenthesisIndex).trim();
+            }
+        } else {
+            int whereIndex = SqlUtils.indexOfWhere(sqlSb, start);
+            if (whereIndex != -1) {
+                if (aliasIndex < whereIndex) {
+                    int usingIndex = sqlSb.indexOf( " using ", start );
+                    if (usingIndex == -1) {
+                        return sqlSb.substring(aliasIndex, whereIndex);
+                    }
+                }
+            } else {
+                int nextSpaceIndex = sqlSb.indexOf(" ", aliasIndex + 1);
+                if (nextSpaceIndex != -1 && " returning ".equals(sqlSb.substring(nextSpaceIndex))) {
+                    return sqlSb.substring(aliasIndex, nextSpaceIndex);
+                }
+            }
+        }
+        return dmlAffectedTable;
+    }
+
     @Override
     protected String[] appendSetOperands(StringBuilder sqlSb, SetOperationType setType, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
         boolean first = true;

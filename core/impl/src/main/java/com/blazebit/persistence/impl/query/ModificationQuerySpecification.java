@@ -107,7 +107,12 @@ public class ModificationQuerySpecification<T> extends CustomQuerySpecification<
             affectedDmlTable = sqlQuery.substring(fromIndex + SqlUtils.FROM.length(), endIndex == -1 ? sqlQuery.length() : endIndex);
         } else if (statementType == DbmsStatementType.INSERT) {
             int intoIndex = sqlQuery.indexOf(" into ");
-            affectedDmlTable = sqlQuery.substring(intoIndex + " into ".length(), sqlQuery.indexOf('(', intoIndex + " into ".length() + 1));
+            int intoEndIndex = sqlQuery.indexOf('(', intoIndex + " into ".length() + 1);
+            affectedDmlTable = sqlQuery.substring(intoIndex + " into ".length(), intoEndIndex);
+            int asIndex = affectedDmlTable.indexOf(" as ");
+            if (asIndex != -1) {
+                affectedDmlTable = affectedDmlTable.substring(0, asIndex);
+            }
         } else {
             throw new UnsupportedOperationException("Unsupported statement type: " + statementType);
         }

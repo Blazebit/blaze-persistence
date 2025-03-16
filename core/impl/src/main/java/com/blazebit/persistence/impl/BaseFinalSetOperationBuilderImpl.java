@@ -442,6 +442,10 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     @Override
     protected boolean needsSqlReplacement(Set<JoinNode> keyRestrictedLeftJoins) {
+        if (mainQuery.jpaProvider.supportsSetOperations() && isMainQuery && mainQuery.cteManager.hasCtes()) {
+            // When set operations are supported and CTEs are available, we must replace/insert them in the SQL
+            return true;
+        }
         if (setOperationManager.getStartQueryBuilder().needsSqlReplacement(setOperationManager.getStartQueryBuilder().getKeyRestrictedLeftJoins())) {
             return true;
         }

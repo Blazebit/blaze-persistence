@@ -1636,7 +1636,7 @@ public class HibernateJpaProvider implements JpaProvider {
         if (entity instanceof HibernateProxy) {
             return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
         }
-        return persistenceUnitUtil.getIdentifier(entity);
+        return entity == null ? null : persistenceUnitUtil.getIdentifier(entity);
     }
 
     @Override

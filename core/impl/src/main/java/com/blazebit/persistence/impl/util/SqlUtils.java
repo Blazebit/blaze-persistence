@@ -514,8 +514,8 @@ public class SqlUtils {
         return indexOf(SELECT_FINDER, sql, 0, Math.max(withIndex, 0));
     }
 
-    public static int indexOfSet(CharSequence sql) {
-        return indexOf(SET_FINDER, sql, 0, 0);
+    public static int indexOfSet(CharSequence sql, int start) {
+        return indexOf(SET_FINDER, sql, start, 0);
     }
 
     public static int indexOfFrom(CharSequence sql) {

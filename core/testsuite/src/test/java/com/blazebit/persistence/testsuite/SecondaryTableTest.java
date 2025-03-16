@@ -8,6 +8,7 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.entity.SecondaryTableEntityBase;
 import com.blazebit.persistence.testsuite.entity.SecondaryTableEntitySub;
 import org.junit.Test;
@@ -39,7 +40,8 @@ public class SecondaryTableTest extends AbstractCoreTest {
 
     @Test
     // DataNucleus doesn't handle that properly
-    @Category({ NoDatanucleus.class })
+    // NOTE: Hibernate ORM bug: https://hibernate.atlassian.net/browse/HHH-18813
+    @Category({ NoDatanucleus.class, NoHibernate60.class })
     public void updateSecondaryTableAttribute() {
         SecondaryTableEntitySub b = new SecondaryTableEntitySub();
         b.setB(4L);

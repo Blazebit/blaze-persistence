@@ -10,6 +10,8 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subview.model.SimpleDocumentView;
 import org.junit.Test;
@@ -19,9 +21,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -79,7 +79,8 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate60.class })
     // Eclipselink has a result set mapping bug in case of map keys
     public void testEntityViewSettingFilterSubview() {
         EntityViewManager evm = build(
@@ -111,7 +112,8 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoEclipselink.class, NoHibernate62.class })
     // Eclipselink does not support VALUE() dereferencing
     public void testEntityViewSettingFilterFilteredSubview() {
         EntityViewManager evm = build(

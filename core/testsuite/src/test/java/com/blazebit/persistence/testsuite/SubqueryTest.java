@@ -16,6 +16,7 @@ import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
@@ -492,7 +493,9 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
+    // NOTE: Hibernate ORM doesn't detect that it has to use the join alias column
     @Test
+    @Category({ NoHibernate60.class })
     public void testSubqueryUsesOuterJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")

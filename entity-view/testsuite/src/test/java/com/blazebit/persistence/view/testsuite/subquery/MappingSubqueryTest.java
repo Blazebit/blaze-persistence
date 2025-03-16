@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithDeepSubqueryEmbeddingView;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryEmbeddingView;
@@ -26,9 +27,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -161,6 +160,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testSubqueryViewRootEntityViewSettings() {
         EntityViewManager evm = build(DocumentWithSubqueryViewRoot.class);
 
@@ -192,6 +193,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testSubqueryEmbeddingViewEntityViewSettings() {
         EntityViewManager evm = build(
                 DocumentWithSubqueryEmbeddingView.class,
@@ -228,6 +231,8 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate62.class })
     public void testDeepSubqueryEmbeddingViewEntityViewSettings() {
         EntityViewManager evm = build(
                 DocumentWithDeepSubqueryEmbeddingView.class,
