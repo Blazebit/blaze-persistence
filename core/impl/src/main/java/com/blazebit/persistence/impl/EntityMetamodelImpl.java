@@ -958,18 +958,20 @@ public class EntityMetamodelImpl implements EntityMetamodel {
 
         private final JpaProvider jpaProvider;
         private final Field field;
+        private final boolean isId;
 
         public UnproxyingFieldAttributeAccessor(JpaProvider jpaProvider, Class<?> owner, Attribute<?, ?> attribute) {
             this.jpaProvider = jpaProvider;
             Field field = ReflectionUtils.getField(owner, attribute.getName());
             field.setAccessible(true);
             this.field = field;
+            this.isId = attribute instanceof SingularAttribute<?, ?> && ((SingularAttribute<?, ?>) attribute).isId();
         }
 
         @Override
         public Y get(X entity) {
             try {
-                return (Y) field.get(jpaProvider.unproxy(entity));
+                return (Y) (isId ? jpaProvider.getIdentifier(entity) : field.get(jpaProvider.unproxy(entity)));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Couldn't access the attribute via field!", e);
             }
@@ -981,7 +983,7 @@ public class EntityMetamodelImpl implements EntityMetamodel {
                 return null;
             }
             try {
-                return (Y) field.get(jpaProvider.unproxy(entity));
+                return (Y) (isId ? jpaProvider.getIdentifier(entity) : field.get(jpaProvider.unproxy(entity)));
             } catch (Exception e) {
                 throw new IllegalArgumentException("Couldn't access the attribute via field!", e);
             }
