@@ -8,6 +8,7 @@ Changes that happened in releases
 
 * Support interface inheritance in GraphQL integration
 * Support conditional fetches for entity views based on GraphQL selection set
+* Avoid unproxying identifiable values parameters for identifier fields
 
 ### Bug fixes
 
