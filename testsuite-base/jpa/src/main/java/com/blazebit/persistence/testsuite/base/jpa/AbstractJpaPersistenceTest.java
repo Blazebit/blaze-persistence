@@ -672,6 +672,10 @@ public abstract class AbstractJpaPersistenceTest {
         return true;
     }
 
+    protected boolean supportsCollectionTableCteDelete() {
+        return false;
+    }
+
     protected boolean optimizesUnnecessaryCasts() {
         return false;
     }

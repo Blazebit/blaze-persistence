@@ -2271,7 +2271,16 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!renderReverseDependency(sb, node, aliasPrefix, renderFetches, nodesToFetch, whereConjuncts, placeholderRequiringNodes, externalRepresentation, lateralExample)) {
                 // If we couldn't render the join node because one of it's parents or dependencies parents isn't rendered yet, we defer the rendering
                 renderedJoins.remove(node);
-                stack.add(Math.max(0, stack.size() - 1), node);
+                int insertionIndex = Math.max( 0, stack.size() - 1 );
+                for (int i = insertionIndex; i < stack.size(); i++) {
+                    JoinNode stackNode = stack.get(i);
+                    if (stackNode.isRootJoinNode()) {
+                        // Mark other root join nodes that will be rendered before this node as cross joins,
+                        // to retain the visibility of the aliases used in the ON clause
+                        stackNode.setCrossJoin();
+                    }
+                }
+                stack.add(insertionIndex, node);
                 return;
             }
         }

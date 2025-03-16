@@ -135,9 +135,9 @@ public abstract class ClassWriter implements Runnable {
     public static void writeGeneratedAnnotation(StringBuilder generatedAnnotation, ImportContext importContext, Context context) {
         generatedAnnotation.append("@");
         if (importContext == null) {
-            generatedAnnotation.append(context.getGeneratedAnnotation().getQualifiedName().toString());
+            generatedAnnotation.append(context.getGeneratedAnnotation());
         } else {
-            generatedAnnotation.append(importContext.importType(context.getGeneratedAnnotation().getQualifiedName().toString()));
+            generatedAnnotation.append(importContext.importType(context.getGeneratedAnnotation()));
         }
         generatedAnnotation.append("(value = \"")
             .append(EntityViewAnnotationProcessor.class.getName());

@@ -14,6 +14,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -115,7 +116,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedSingularViewPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -137,7 +139,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedPluralViewPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -159,7 +162,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedSingularBasicPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 
@@ -181,7 +185,8 @@ public class ExpressionCorrelationTest extends AbstractCorrelationTest {
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
     // NOTE: Eclipselink and Datanucleus don't support the single valued id access optimization which causes a cyclic join dependency
 //    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class })
+    // Hibernate ORM 6.2 bug: https://hibernate.atlassian.net/browse/HHH-18272
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class, NoHibernate62.class })
     public void testFilterSortJoinCorrelatedPluralBasicPaginated() {
         EntityViewManager evm = buildEntityViewManagerForFilter();
 

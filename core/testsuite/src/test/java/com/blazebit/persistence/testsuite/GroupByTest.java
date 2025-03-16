@@ -12,6 +12,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
@@ -96,7 +97,9 @@ public class GroupByTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
+    // NOTE: Hibernate ORM doesn't detect that it has to use the join alias column
     @Test
+    @Category({ NoHibernate60.class })
     public void testGroupBySubqueryCorrelatedExpression() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")

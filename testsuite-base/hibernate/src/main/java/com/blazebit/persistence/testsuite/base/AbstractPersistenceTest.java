@@ -201,6 +201,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean supportsCollectionTableCteDelete() {
+        // Hibernate ORM 6 implemented collection table cleanup through CTEs
+        return getJpaProviderMajorVersion() >= 6;
+    }
+
+    @Override
     public boolean supportsTableGroupJoins() {
         String version = org.hibernate.Version.getVersionString();
         String[] versionParts = version.split("[\\.-]");

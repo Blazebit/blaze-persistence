@@ -10,6 +10,7 @@ import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.reflection.ReflectionUtils;
 import jakarta.persistence.EntityManager;
@@ -22,17 +23,23 @@ import jakarta.persistence.criteria.CompoundSelection;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.TupleTransformer;
@@ -59,6 +66,7 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -82,12 +90,16 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -109,6 +121,7 @@ import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -132,6 +145,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -145,6 +159,7 @@ import java.util.stream.StreamSupport;
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    private static final String[] KNOWN_STATEMENTS = { "select ", "insert ", "update ", "delete " };
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_62;
     private static final Constructor<TupleMetadata> TUPLE_METADATA_CONSTRUCTOR_63;
     private static final RowTransformer ROW_TRANSFORMER_SINGULAR_RETURN;
@@ -216,11 +231,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QuerySqmImpl<?> hqlQuery = query.unwrap(QuerySqmImpl.class);
         SessionFactoryImplementor factory = hqlQuery.getSessionFactory();
         CacheableSqmInterpretation interpretation = buildQueryPlan(query);
-        try {
-            return getJdbcOperation(factory, interpretation, hqlQuery).getSqlString();
-        } finally {
-            interpretation.domainParameterXref.clearExpansions();
-        }
+        return getJdbcOperation(factory, interpretation, hqlQuery).getSqlString();
     }
 
     @Override
@@ -230,41 +241,203 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
-        SessionFactoryImplementor sfi = em.unwrap(SessionImplementor.class).getSessionFactory();
         QuerySqmImpl<?> hqlQuery = query.unwrap(QuerySqmImpl.class);
         if (hqlQuery.getSqmStatement() instanceof SqmDeleteStatement<?>) {
-            SqmDeleteStatement<?> deleteStatement = (SqmDeleteStatement<?>) hqlQuery.getSqmStatement();
-            String mutatingEntityName = deleteStatement.getTarget().getModel().getHibernateEntityName();
-            EntityMappingType entityDescriptor = sfi.getMappingMetamodel().getEntityDescriptor(mutatingEntityName);
-            SqlAstTranslatorFactory sqlAstTranslatorFactory = sfi.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
-            List<String> deleteSqls = new ArrayList<>();
-            entityDescriptor.visitConstraintOrderedTables(
-                (tableExpression, tableKeyColumnsVisitationSupplier) -> {
+            List<JdbcOperationQueryMutation> deletes = getCollectionTableDeletes( hqlQuery ).deletes;
 
-                    //                    final TableReference targetTableReference = new TableReference(
-                    //                            tableExpression,
-                    //                            null,
-                    //                            false,
-                    //                            sfi
-                    //                    );
-
-                    final Predicate matchingIdsPredicate = null;//new InSubQueryPredicate();
-                    //                        matchingIdsPredicateProducer.produceRestriction(
-                    //                                ids,
-                    //                                entityDescriptor,
-                    //                                targetTableReference,
-                    //                                tableKeyColumnsVisitationSupplier,
-                    //                                query
-                    //                        );
-
-                    //                    final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( sfi );
-                    //                    final JdbcDelete jdbcOperation = sqlAstTranslator.translate( new DeleteStatement( targetTableReference, matchingIdsPredicate ) );
-                }
-            );
+            List<String> deleteSqls = new ArrayList<>( deletes.size() );
+            for ( JdbcOperationQueryMutation delete : deletes ) {
+                deleteSqls.add( delete.getSqlString() );
+            }
             return deleteSqls;
         }
 
         return Collections.EMPTY_LIST;
+    }
+
+    private static class CollectionTableDeleteInfo {
+        private final List<JdbcOperationQueryMutation> deletes;
+        private final JdbcParameterBindings parameterBindings;
+
+        public CollectionTableDeleteInfo(
+                List<JdbcOperationQueryMutation> deletes,
+                JdbcParameterBindings parameterBindings) {
+            this.deletes = deletes;
+            this.parameterBindings = parameterBindings;
+        }
+    }
+
+    private static CollectionTableDeleteInfo getCollectionTableDeletes(QuerySqmImpl<?> hqlQuery) {
+        SessionFactoryImplementor sfi = hqlQuery.getSessionFactory();
+        SqmDeleteStatement<?> deleteStatement = (SqmDeleteStatement<?>) hqlQuery.getSqmStatement();
+        String mutatingEntityName = deleteStatement.getTarget().getModel().getHibernateEntityName();
+        EntityMappingType entityDescriptor = sfi.getMappingMetamodel().getEntityDescriptor(mutatingEntityName);
+
+        CacheableSqmInterpretation sqmInterpretation = buildQueryPlan( hqlQuery );
+
+        Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+                hqlQuery.getDomainParameterXref(),
+                sqmInterpretation.getSqmTranslation()::getJdbcParamsBySqmParam
+        );
+
+        final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+                hqlQuery.getQueryParameterBindings(),
+                hqlQuery.getDomainParameterXref(),
+                jdbcParamsXref,
+                sfi.getRuntimeMetamodels().getMappingMetamodel(),
+                sqmInterpretation.getSqmTranslation().getFromClauseAccess()::findTableGroup,
+                new SqmParameterMappingModelResolutionAccess() {
+                    @Override @SuppressWarnings("unchecked")
+                    public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+                        return (MappingModelExpressible<T>) sqmInterpretation.getSqmTranslation().getSqmParameterMappingModelTypeResolutions().get(parameter);
+                    }
+                },
+                hqlQuery.getSession()
+        );
+        hqlQuery.getDomainParameterXref().clearExpansions();
+        DeleteStatement sqlAst = (DeleteStatement) sqmInterpretation.getSqmTranslation().getSqlAst();
+        final boolean missingRestriction = sqlAst.getRestriction() == null;
+        return new CollectionTableDeleteInfo( getCollectionTableDeletes(
+                entityDescriptor,
+                (tableReference, attributeMapping) -> {
+                    final TableGroup collectionTableGroup = new MutatingTableReferenceGroupWrapper(
+                            new NavigablePath( attributeMapping.getRootPathName() ),
+                            attributeMapping,
+                            (NamedTableReference) tableReference
+                    );
+
+                    final MutableObject<Predicate> additionalPredicate = new MutableObject<>();
+                    attributeMapping.getCollectionDescriptor().applyBaseRestrictions(
+                            p -> additionalPredicate.set( Predicate.combinePredicates( additionalPredicate.get(), p ) ),
+                            collectionTableGroup,
+                            sfi.getJdbcServices().getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
+                            hqlQuery.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+                            null,
+                            null
+                    );
+
+                    if ( missingRestriction ) {
+                        return additionalPredicate.get();
+                    }
+
+                    final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+                    final Expression fkColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
+                            collectionTableGroup,
+                            fkDescriptor.getKeyPart(),
+                            null,
+                            sfi
+                    );
+
+                    final QuerySpec matchingIdSubQuery = new QuerySpec( false );
+
+                    final MutatingTableReferenceGroupWrapper tableGroup = new MutatingTableReferenceGroupWrapper(
+                            new NavigablePath( attributeMapping.getRootPathName() ),
+                            attributeMapping,
+                            sqlAst.getTargetTable()
+                    );
+                    final Expression fkTargetColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
+                            tableGroup,
+                            fkDescriptor.getTargetPart(),
+                            sqmInterpretation.getSqmTranslation().getSqlExpressionResolver(),
+                            sfi
+                    );
+                    matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, fkTargetColumnExpression ) );
+
+                    matchingIdSubQuery.getFromClause().addRoot(
+                            tableGroup
+                    );
+
+                    matchingIdSubQuery.applyPredicate( sqlAst.getRestriction() );
+
+                    return Predicate.combinePredicates(
+                            additionalPredicate.get(),
+                            new InSubQueryPredicate( fkColumnExpression, matchingIdSubQuery, false )
+                    );
+                },
+                jdbcParameterBindings,
+                SqmJdbcExecutionContextAdapter.usingLockingAndPaging( hqlQuery )
+        ), jdbcParameterBindings);
+    }
+
+    private static List<JdbcOperationQueryMutation> getCollectionTableDeletes(
+            EntityMappingType entityDescriptor,
+            BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
+            JdbcParameterBindings jdbcParameterBindings,
+            ExecutionContext executionContext) {
+        List<PluralAttributeMapping> pluralAttributeMappings = collectCollectionTables( entityDescriptor );
+        List<JdbcOperationQueryMutation> deletes = new ArrayList<>( pluralAttributeMappings.size() );
+        for ( PluralAttributeMapping attributeMapping : pluralAttributeMappings ) {
+            final String separateCollectionTable = attributeMapping.getSeparateCollectionTable();
+
+            final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+            final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+
+            final NamedTableReference tableReference = new NamedTableReference(
+                    separateCollectionTable,
+                    DeleteStatement.DEFAULT_ALIAS,
+                    true
+            );
+
+            final DeleteStatement sqlAstDelete = new DeleteStatement(
+                    tableReference,
+                    restrictionProducer.apply( tableReference, attributeMapping )
+            );
+
+            deletes.add( jdbcServices.getJdbcEnvironment()
+                                 .getSqlAstTranslatorFactory()
+                                 .buildDeleteTranslator( sessionFactory, sqlAstDelete )
+                                 .translate( jdbcParameterBindings, executionContext.getQueryOptions() )
+            );
+        }
+        return deletes;
+    }
+
+    private static List<PluralAttributeMapping> collectCollectionTables(EntityMappingType entityDescriptor) {
+        List<PluralAttributeMapping> pluralAttributeMappings = new ArrayList<>();
+        collectCollectionTables( entityDescriptor, pluralAttributeMappings );
+        return pluralAttributeMappings;
+    }
+
+    private static void collectCollectionTables(EntityMappingType entityDescriptor, List<PluralAttributeMapping> pluralAttributeMappings) {
+        if ( ! entityDescriptor.getEntityPersister().hasCollections() ) {
+            // none to clean-up
+            return;
+        }
+
+        entityDescriptor.visitSubTypeAttributeMappings(
+                attributeMapping -> {
+                    if ( attributeMapping instanceof PluralAttributeMapping ) {
+                        PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+                        if (pluralAttributeMapping.getSeparateCollectionTable() != null) {
+                            pluralAttributeMappings.add( pluralAttributeMapping );
+                        }
+                    } else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+                        collectCollectionTables(
+                                (EmbeddedAttributeMapping) attributeMapping,
+                                pluralAttributeMappings
+                        );
+                    }
+                }
+        );
+    }
+
+    private static void collectCollectionTables(EmbeddedAttributeMapping attributeMapping, List<PluralAttributeMapping> pluralAttributeMappings) {
+        attributeMapping.visitSubParts(
+                modelPart -> {
+                    if ( modelPart instanceof PluralAttributeMapping ) {
+                        PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+                        if (pluralAttributeMapping.getSeparateCollectionTable() != null) {
+                            pluralAttributeMappings.add( pluralAttributeMapping );
+                        }
+                    } else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+                        collectCollectionTables(
+                                (EmbeddedAttributeMapping) modelPart,
+                                pluralAttributeMappings
+                        );
+                    }
+                },
+                null
+        );
     }
 
     @Override
@@ -282,6 +455,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         NavigablePath navigablePath = findNavigablePath(alias, querySpec);
 
         CacheableSqmInterpretation interpretation = buildQuerySpecPlan(query);
+        interpretation.domainParameterXref.clearExpansions();
         TableGroup tableGroup = getTableGroup(interpretation, navigablePath);
         return tableGroup.getPrimaryTableReference().getIdentificationVariable();
     }
@@ -311,12 +485,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         // Note that it is important, this interpretation does not come from a cache,
         // otherwise bad things will happen due to this mutation
         primaryTableReference.setPrunedTableExpression(primaryTableReference.getTableId() + "/**/");
-        String sql;
-        try {
-            sql = getJdbcOperation(sfi, interpretation, hqlQuery).getSqlString();
-        } finally {
-            interpretation.domainParameterXref.clearExpansions();
-        }
+        String sql = getJdbcOperation(sfi, interpretation, hqlQuery).getSqlString();
         int startIndex = sql.indexOf(fakeFromText);
         int endIndex = startIndex + fromText.length();
         return new SqlFromInfo() {
@@ -515,7 +684,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcTranslation translation = getJdbcTranslation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = translation.query;
             if (query == participatingQuery) {
                 // Don't copy over the limit and offset parameters because we need to use the LimitHandler for now
                 JdbcOperationQuerySelect select = (JdbcOperationQuerySelect) jdbcOperation;
@@ -529,26 +699,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-                    interpretation.domainParameterXref,
-                    interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
-            );
-
-            final JdbcParameterBindings tempJdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-                    participatingQuery.unwrap(QuerySqmImpl.class).getQueryParameterBindings(),
-                    interpretation.domainParameterXref,
-                    jdbcParamsXref,
-                    session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-                    interpretation.tableGroupAccess::findTableGroup,
-                    new SqmParameterMappingModelResolutionAccess() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-                            return (MappingModelExpressible<T>) interpretation.sqmTranslation.getSqmParameterMappingModelTypeResolutions().get(parameter);
-                        }
-                    },
-                    session
-            );
+            final JdbcParameterBindings tempJdbcParameterBindings = translation.parameterBindings;
             if (!tempJdbcParameterBindings.getBindings().isEmpty()) {
                 tempJdbcParameterBindings.visitBindings(jdbcParameterBindings::addBinding);
             }
@@ -634,30 +785,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcTranslation translation = getJdbcTranslation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = translation.query;
             parameterBinders.addAll(jdbcOperation.getParameterBinders());
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-                    interpretation.domainParameterXref,
-                    interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
-            );
-
-            final JdbcParameterBindings tempJdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-                    executionContext.getQueryParameterBindings(),
-                    interpretation.domainParameterXref,
-                    jdbcParamsXref,
-                    session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-                    interpretation.tableGroupAccess::findTableGroup,
-                    new SqmParameterMappingModelResolutionAccess() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-                            return (MappingModelExpressible<T>) interpretation.sqmTranslation.getSqmParameterMappingModelTypeResolutions().get(parameter);
-                        }
-                    },
-                    session
-            );
+            final JdbcParameterBindings tempJdbcParameterBindings = translation.parameterBindings;
             if (!tempJdbcParameterBindings.getBindings().isEmpty()) {
                 tempJdbcParameterBindings.visitBindings(jdbcParameterBindings::addBinding);
             }
@@ -678,11 +811,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         try {
             ScrollableResultsImplementor<?> scrollableResults = session.getFactory().getJdbcServices().getJdbcSelectExecutor().scroll(
-                realJdbcSelect,
-                ScrollMode.FORWARD_ONLY,
-                jdbcParameterBindings,
-                new SqmJdbcExecutionContextAdapter(executionContext, realJdbcSelect),
-                rowTransformer
+                    realJdbcSelect,
+                    ScrollMode.FORWARD_ONLY,
+                    jdbcParameterBindings,
+                    new SqmJdbcExecutionContextAdapter(executionContext, realJdbcSelect),
+                    rowTransformer
             );
             ScrollableResultsIterator iterator = new ScrollableResultsIterator<>(scrollableResults);
             Spliterator spliterator = Spliterators.spliteratorUnknownSize(iterator, Spliterator.NONNULL);
@@ -773,8 +906,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 final Map<TupleElement<?>, Integer> tupleElementMap;
                 if (selections.size() == 1 && selections.get(0).getSelectableNode() instanceof CompoundSelection<?>) {
                     final List<? extends JpaSelection<?>> selectionItems = selections.get(0)
-                        .getSelectableNode()
-                        .getSelectionItems();
+                            .getSelectableNode()
+                            .getSelectionItems();
                     tupleElementMap = new IdentityHashMap<>(selectionItems.size());
                     for (int i = 0; i < selectionItems.size(); i++) {
                         tupleElementMap.put(selectionItems.get(i), i);
@@ -879,30 +1012,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcTranslation translation = getJdbcTranslation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = translation.query;
             parameterBinders.addAll(jdbcOperation.getParameterBinders());
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-                    interpretation.domainParameterXref,
-                    interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
-            );
-
-            final JdbcParameterBindings tempJdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-                    participatingQuery.unwrap(DomainQueryExecutionContext.class).getQueryParameterBindings(),
-                    interpretation.domainParameterXref,
-                    jdbcParamsXref,
-                    session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-                    interpretation.tableGroupAccess::findTableGroup,
-                    new SqmParameterMappingModelResolutionAccess() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-                            return (MappingModelExpressible<T>) interpretation.sqmTranslation.getSqmParameterMappingModelTypeResolutions().get(parameter);
-                        }
-                    },
-                    session
-            );
+            final JdbcParameterBindings tempJdbcParameterBindings = translation.parameterBindings;
             if (!tempJdbcParameterBindings.getBindings().isEmpty()) {
                 tempJdbcParameterBindings.visitBindings(jdbcParameterBindings::addBinding);
             }
@@ -987,43 +1102,20 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(0);
         for (Query participatingQuery : participatingQueries) {
             CacheableSqmInterpretation interpretation = buildQueryPlan(participatingQuery);
-            JdbcOperationQuery jdbcOperation = getJdbcOperation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcTranslation translation = getJdbcTranslation(sessionFactory, interpretation, participatingQuery.unwrap(QuerySqmImpl.class));
+            JdbcOperationQuery jdbcOperation = translation.query;
             // Exclude limit/offset parameters from example query
             if (participatingQuery != exampleQuery) {
                 parameterBinders.addAll(jdbcOperation.getParameterBinders());
             }
             affectedTableNames.addAll(jdbcOperation.getAffectedTableNames());
             filterJdbcParameters.addAll(jdbcOperation.getFilterJdbcParameters());
-            final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-                    interpretation.domainParameterXref,
-                    interpretation.getSqmTranslation()::getJdbcParamsBySqmParam
-            );
 
-            final JdbcParameterBindings tempJdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-                    participatingQuery.unwrap(DomainQueryExecutionContext.class).getQueryParameterBindings(),
-                    interpretation.domainParameterXref,
-                    jdbcParamsXref,
-                    session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
-                    interpretation.tableGroupAccess::findTableGroup,
-                    new SqmParameterMappingModelResolutionAccess() {
-                        @Override
-                        @SuppressWarnings("unchecked")
-                        public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-                            return (MappingModelExpressible<T>) interpretation.sqmTranslation.getSqmParameterMappingModelTypeResolutions().get(parameter);
-                        }
-                    },
-                    session
-            );
+            final JdbcParameterBindings tempJdbcParameterBindings = translation.parameterBindings;
             if (!tempJdbcParameterBindings.getBindings().isEmpty()) {
                 tempJdbcParameterBindings.visitBindings(jdbcParameterBindings::addBinding);
             }
         }
-
-        // Create combined query parameters
-        //        List<String> queryStrings = new ArrayList<>(participatingQueries.size());
-        //        Set<String> querySpaces = new HashSet<>();
-        //        QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries, queryStrings, querySpaces);
-        //        QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         // Create plan for example query
         JdbcOperationQuerySelect exampleQueryJdbcOperation = (JdbcOperationQuerySelect) getJdbcOperation(exampleQuery);
@@ -1038,37 +1130,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         try {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
-            //            if (!queryPlanEntry.isFromCache()) {
-            //                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, modificationBaseQuery, true, dbmsDialect);
-            //                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
-            //            }
-            //
-            //            if (queryPlan.getTranslators().length > 1) {
-            //                throw new IllegalArgumentException("No support for multiple translators yet!");
-            //            }
-            //
-            //            QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
-            //
-            //            // If the DBMS doesn't support inclusion of cascading deletes in a with clause, we have to execute them manually
-            //            StatementExecutor executor = getExecutor(queryTranslator, session, modificationBaseQuery);
-            //            List<String> originalDeletes = Collections.emptyList();
-            //
-            //            if (executor != null && executor instanceof DeleteExecutor) {
-            //                originalDeletes = getField(executor, "deletes");
-            //            }
-            //
-            //            // Extract query loader for native listing
-            //            QueryLoader queryLoader = getField(queryTranslator, "queryLoader");
 
             // Do the native list operation with custom session and combined parameters
 
             /*
              * NATIVE LIST START
              */
-            //            hibernateAccess.checkTransactionSynchStatus(session);
-            //            queryParameters.validateParameters();
-            //            autoFlush(querySpaces, session);
-
             List<Object[]> results = Collections.EMPTY_LIST;
             boolean success = false;
 
@@ -1078,7 +1145,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, (SelectStatement) interpretation.getSqmTranslation().getSqlAst())
                     .translate(jdbcParameterBindings, domainQueryExecutionContext.getQueryOptions());
             final JdbcOperationQuerySelect realJdbcSelect = new JdbcOperationQuerySelect(
-                    sqlOverride,
+                    finalSql,
                     parameterBinders,
                     jdbcSelect.getJdbcValuesMappingProducer(),
                     affectedTableNames,
@@ -1101,55 +1168,64 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                     return true;
                 }
             };
-//            ExecutionContext executionContext = new ExecutionContext() {
-//                @Override
-//                public SharedSessionContractImplementor getSession() {
-//                    return domainQueryExecutionContext.getSession();
-//                }
-//
-//                @Override
-//                public QueryOptions getQueryOptions() {
-//                    return domainQueryExecutionContext.getQueryOptions();
-//                }
-//
-//                @Override
-//                public QueryParameterBindings getQueryParameterBindings() {
-//                    return domainQueryExecutionContext.getQueryParameterBindings();
-//                }
-//
-//                @Override
-//                public Callback getCallback() {
-//                    return domainQueryExecutionContext.getCallback();
-//                }
-//
-//                @Override
-//                public String getQueryIdentifier(String sql) {
-//                    return sql;
-//                }
-//
-//                @Override
-//                public boolean hasQueryExecutionToBeAddedToStatistics() {
-//                    return true;
-//                }
-//            };
-
-            // todo: to get subselect fetching work, we need a slight API change in Hibernate because we need to inject our sql override somehow
-            //        final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
-            //                session.getPersistenceContext().getBatchFetchQueue(),
-            //                sqmInterpretation.selectStatement,
-            //                Collections.emptyList(),
-            //                jdbcParameterBindings
-            //        );
 
             session.autoFlushIfRequired(realJdbcSelect.getAffectedTableNames());
 
             try {
-                final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
-                        session.getPersistenceContext().getBatchFetchQueue(),
-                        (SelectStatement) interpretation.sqmTranslation.getSqlAst(),
-                        JdbcParametersList.empty(),
-                        jdbcParameterBindings
-                );
+                if (modificationBaseQuery != null) {
+                    QuerySqmImpl<?> querySqm = modificationBaseQuery.unwrap(QuerySqmImpl.class);
+                    SqmStatement<?> modificationSqmStatement = querySqm.getSqmStatement();
+                    if (modificationSqmStatement instanceof SqmDmlStatement<?>) {
+                        SqmDmlStatement<?> sqmDmlStatement = (SqmDmlStatement<?>) modificationSqmStatement;
+                        BulkOperationCleanupAction.schedule(executionContext.getSession(), sqmDmlStatement);
+                        if (sqmDmlStatement instanceof SqmDeleteStatement<?> && !dbmsDialect.supportsModificationQueryInWithClause()) {
+                            CollectionTableDeleteInfo collectionTableDeletes = getCollectionTableDeletes(querySqm);
+                            List<JdbcOperationQueryMutation> deletes;
+                            int withIndex;
+                            if ((withIndex = finalSql.indexOf("with ")) != -1) {
+                                int end = getCTEEnd(finalSql, withIndex);
+
+                                int maxLength = 0;
+
+                                for (JdbcOperationQueryMutation delete : collectionTableDeletes.deletes) {
+                                    maxLength = Math.max(maxLength, delete.getSqlString().length());
+                                }
+
+                                deletes = new ArrayList<>(collectionTableDeletes.deletes.size());
+                                StringBuilder newSb = new StringBuilder(end + maxLength);
+                                // Prefix properly with cte
+                                StringBuilder withClauseSb = new StringBuilder(end - withIndex);
+                                withClauseSb.append(finalSql, withIndex, end);
+
+                                for (JdbcOperationQueryMutation delete : collectionTableDeletes.deletes) {
+                                    // TODO: The strings should also receive the simple CTE name instead of the complex one
+                                    newSb.append(delete.getSqlString());
+                                    dbmsDialect.appendExtendedSql(newSb, DbmsStatementType.DELETE, false, false, withClauseSb, null, null, null, null, null);
+                                    deletes.add(new JdbcOperationQueryDelete(newSb.toString(), delete.getParameterBinders(), delete.getAffectedTableNames(), delete.getAppliedParameters()));
+                                    newSb.setLength(0);
+                                }
+                            } else {
+                                deletes = collectionTableDeletes.deletes;
+                            }
+
+                            Function<String, PreparedStatement> statementCreator = sql -> session.getJdbcCoordinator()
+                                    .getStatementPreparer()
+                                    .prepareStatement(sql);
+                            BiConsumer<Integer, PreparedStatement> expectationCheck = (integer, preparedStatement) -> { };
+                            SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.usingLockingAndPaging(
+                                    modificationBaseQuery.unwrap(DomainQueryExecutionContext.class));
+                            for (JdbcOperationQueryMutation delete : deletes) {
+                                session.getFactory().getJdbcServices().getJdbcMutationExecutor().execute(
+                                        delete,
+                                        collectionTableDeletes.parameterBindings,
+                                        statementCreator,
+                                        expectationCheck,
+                                        executionContextAdapter
+                                );
+                            }
+                        }
+                    }
+                }
 
                 results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
                         realJdbcSelect,
@@ -1159,7 +1235,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                         ListResultsConsumer.UniqueSemantic.FILTER
                 );
             } catch (HibernateException e) {
-                LOG.severe("Could not execute the following SQL query: " + sqlOverride);
+                LOG.severe("Could not execute the following SQL query: " + finalSql);
                 if (session.getFactory().getSessionFactoryOptions().isJpaBootstrap()) {
                     throw session.getExceptionConverter().convert(e);
                 } else {
@@ -1168,23 +1244,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             } finally {
                 interpretation.domainParameterXref.clearExpansions();
             }
-//            try {
-//                //                for (String delete : originalDeletes) {
-//                //                    hibernateAccess.doExecute(executor, delete, queryParameters, session, queryParametersEntry.specifications);
-//                //                }
-//                results = getResultList(serviceProvider, participatingQueries, exampleQuery, finalSql, queryPlanCacheEnabled, hibernateAccess.wrapExecutionContext(exampleQuery, dbmsDialect, returningColumnTypes, returningResult));
-//                //                results = hibernateAccess.list(queryLoader, wrapSession(session, dbmsDialect, returningColumns, returningColumnTypes, returningResult), queryParameters);
-//                success = true;
-//            } catch (HibernateException e) {
-//                LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-//                if (session.getFactory().getSessionFactoryOptions().isJpaBootstrap()) {
-//                    throw session.getExceptionConverter().convert(e);
-//                } else {
-//                    throw e;
-//                }
-//            } finally {
-//                //                hibernateAccess.afterTransaction(session, success);
-//            }
             /*
              * NATIVE LIST END
              */
@@ -1194,6 +1253,38 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
+    }
+
+    private int getCTEEnd(String sql, int start) {
+        int parenthesis = 0;
+        QuoteMode mode = QuoteMode.NONE;
+        boolean started = false;
+
+        int i = start;
+        int end = sql.length();
+        OUTER: while (i < end) {
+            final char c = sql.charAt(i);
+            mode = mode.onChar(c);
+
+            if (mode == QuoteMode.NONE) {
+                if (c == '(') {
+                    started = true;
+                    parenthesis++;
+                } else if (c == ')') {
+                    parenthesis--;
+                } else if (started && parenthesis == 0 && c != ',' && !Character.isWhitespace(c)) {
+                    for (String statementType : KNOWN_STATEMENTS) {
+                        if (sql.regionMatches(true, i, statementType, 0, statementType.length())) {
+                            break OUTER;
+                        }
+                    }
+                }
+            }
+
+            i++;
+        }
+
+        return i;
     }
 
     private static String[][] getReturningColumns(boolean caseInsensitive, String exampleQuerySql) {
@@ -1314,10 +1405,25 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 //            JdbcSelect jdbcSelect = getField(cacheableSqmInterpretation, "jdbcSelect");
 //            return jdbcSelect;
 //        }
-        return getJdbcOperation(factory, buildQueryPlan(query), hqlQuery);
+        CacheableSqmInterpretation interpretation = buildQueryPlan( query );
+        return getJdbcOperation( factory, interpretation, hqlQuery );
     }
 
     private JdbcOperationQuery getJdbcOperation(SessionFactoryImplementor factory, CacheableSqmInterpretation interpretation, QuerySqmImpl<?> query) {
+        return getJdbcTranslation( factory, interpretation, query ).query;
+    }
+
+    private static class JdbcTranslation {
+        private final JdbcOperationQuery query;
+        private final JdbcParameterBindings parameterBindings;
+
+        public JdbcTranslation(JdbcOperationQuery query, JdbcParameterBindings parameterBindings) {
+            this.query = query;
+            this.parameterBindings = parameterBindings;
+        }
+    }
+
+    private JdbcTranslation getJdbcTranslation(SessionFactoryImplementor factory, CacheableSqmInterpretation interpretation, QuerySqmImpl<?> query) {
         JdbcEnvironment jdbcEnvironment = factory.getJdbcServices().getJdbcEnvironment();
         SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
         SqmTranslation<?> sqmTranslation = interpretation.getSqmTranslation();
@@ -1342,19 +1448,20 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 },
                 query.getSession()
         );
+        interpretation.domainParameterXref.clearExpansions();
 
         if (sqlAst instanceof SelectStatement) {
             SqlAstTranslator<JdbcOperationQuerySelect> translator = sqlAstTranslatorFactory.buildSelectTranslator(factory, (SelectStatement) sqlAst);
-            return translator.translate(jdbcParameterBindings, query.getQueryOptions());
+            return new JdbcTranslation(translator.translate(jdbcParameterBindings, query.getQueryOptions()), jdbcParameterBindings);
         } else if (sqlAst instanceof DeleteStatement) {
             SqlAstTranslator<JdbcOperationQueryDelete> translator = sqlAstTranslatorFactory.buildDeleteTranslator(factory, (DeleteStatement) sqlAst);
-            return translator.translate(jdbcParameterBindings, query.getQueryOptions());
+            return new JdbcTranslation(translator.translate(jdbcParameterBindings, query.getQueryOptions()), jdbcParameterBindings);
         } else if (sqlAst instanceof UpdateStatement) {
             SqlAstTranslator<JdbcOperationQueryUpdate> translator = sqlAstTranslatorFactory.buildUpdateTranslator(factory, (UpdateStatement) sqlAst);
-            return translator.translate(jdbcParameterBindings, query.getQueryOptions());
+            return new JdbcTranslation(translator.translate(jdbcParameterBindings, query.getQueryOptions()), jdbcParameterBindings);
         } else if (sqlAst instanceof InsertStatement) {
             SqlAstTranslator<JdbcOperationQueryInsert> translator = sqlAstTranslatorFactory.buildInsertTranslator(factory, (InsertStatement) sqlAst);
-            return translator.translate(jdbcParameterBindings, query.getQueryOptions());
+            return new JdbcTranslation(translator.translate(jdbcParameterBindings, query.getQueryOptions()), jdbcParameterBindings);
         }
         throw new UnsupportedOperationException();
     }
