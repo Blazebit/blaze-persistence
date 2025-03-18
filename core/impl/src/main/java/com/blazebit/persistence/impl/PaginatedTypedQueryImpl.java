@@ -51,7 +51,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final boolean boundedCount;
     private final int highestOffset;
     private final TypedQuery<?> countQuery;
-    private final TypedQuery<?> idQuery;
+    private final Query idQuery;
     private final TypedQuery<X> objectQuery;
     private final ObjectBuilder<X> objectBuilder;
     private final Map<String, Parameter<?>> parameters;
@@ -71,7 +71,7 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     private final boolean inlinedIdQuery;
     private final boolean inlinedCountQuery;
 
-    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, boolean boundedCount, int highestOffset, TypedQuery<?> countQuery, TypedQuery<?> idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Collection<ParameterManager.ParameterImpl<?>> parameters, Map<ParameterExpression<?>, String> criteriaNameMapping,
+    public PaginatedTypedQueryImpl(boolean withExtractAllKeysets, boolean withCount, boolean boundedCount, int highestOffset, TypedQuery<?> countQuery, Query idQuery, TypedQuery<X> objectQuery, ObjectBuilder<X> objectBuilder, Collection<ParameterManager.ParameterImpl<?>> parameters, Map<ParameterExpression<?>, String> criteriaNameMapping,
                                    Object entityId, int firstResult, int pageSize, int identifierCount, boolean needsNewIdList, int[] keysetToSelectIndexMapping, KeysetMode keysetMode, KeysetPage keysetPage, boolean forceFirstResult, boolean inlinedIdQuery, boolean inlinedCountQuery) {
         this.withExtractAllKeysets = withExtractAllKeysets;
         this.withCount = withCount;

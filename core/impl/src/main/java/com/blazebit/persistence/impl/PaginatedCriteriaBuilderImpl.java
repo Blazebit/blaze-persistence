@@ -41,6 +41,7 @@ import com.blazebit.persistence.impl.query.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.ObjectBuilderTypedQuery;
 import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.QueryWrapper;
 import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
@@ -56,6 +57,7 @@ import com.blazebit.persistence.parser.predicate.Predicate;
 import com.blazebit.persistence.spi.AttributeAccessor;
 
 import javax.persistence.Parameter;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -539,7 +541,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
-        TypedQuery<?> idQuery = null;
+        Query idQuery = null;
         TypedQuery<T> objectQuery;
         ObjectBuilder<T> objectBuilder;
         boolean inlinedIdQuery;
@@ -999,28 +1001,26 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return new AbstractMap.SimpleEntry<TypedQuery<T>, ObjectBuilder<T>>(query, objectBuilder);
     }
 
-    private TypedQuery<?> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
-        Class<?> resultType;
-        if (needsNewIdList || withInlineCountQuery) {
-            resultType = Object[].class;
+    private Query getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins, List<JoinNode> entityFunctions) {
+        Query baseQuery;
+        if (needsNewIdList || withInlineCountQuery || getIdentifierExpressionsToUse().length > 1) {
+            baseQuery = (Query) em.createQuery(idQueryString, Object[].class);
         } else {
-            resultType = Object.class;
+            baseQuery = em.createQuery(idQueryString);
         }
         if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS)) {
-            TypedQuery<?> idQuery = em.createQuery(idQueryString, resultType);
             if (isCacheable()) {
-                mainQuery.jpaProvider.setCacheable(idQuery);
+                mainQuery.jpaProvider.setCacheable(baseQuery);
             }
             if (firstResult < maximumCount && withCountQuery && withInlineCountQuery && maximumCount != Long.MAX_VALUE) {
-                parameterManager.parameterizeQuery(idQuery, getDualNodeAlias());
-                idQuery.setParameter(getDualNodeAlias() + "_value_0", 0L);
+                parameterManager.parameterizeQuery(baseQuery, getDualNodeAlias());
+                baseQuery.setParameter(getDualNodeAlias() + "_value_0", 0L);
             } else {
-                parameterManager.parameterizeQuery(idQuery);
+                parameterManager.parameterizeQuery(baseQuery);
             }
-            return parameterManager.getCriteriaNameMapping() == null ? idQuery : new TypedQueryWrapper<>(idQuery, parameterManager.getCriteriaNameMapping());
+            return parameterManager.getCriteriaNameMapping() == null ? baseQuery : new QueryWrapper(baseQuery, parameterManager.getCriteriaNameMapping());
         }
 
-        TypedQuery<?> baseQuery = em.createQuery(idQueryString, resultType);
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, ID_QUERY_CLAUSE_EXCLUSIONS);
