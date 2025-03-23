@@ -7,6 +7,7 @@ package com.blazebit.persistence.integration.graphql.dgs.fetcher;
 
 import com.blazebit.persistence.integration.graphql.dgs.repository.CatViewRepository;
 import com.blazebit.persistence.integration.graphql.dgs.view.CatCreateView;
+import com.blazebit.persistence.integration.graphql.dgs.view.CatKotlinCreateView;
 import com.blazebit.persistence.integration.graphql.dgs.view.CatWithOwnerView;
 import com.blazebit.persistence.integration.graphql.GraphQLEntityViewSupport;
 import com.blazebit.persistence.integration.graphql.GraphQLRelayConnection;
@@ -47,6 +48,12 @@ public class CatGraphQLApi {
 
     @DgsMutation
     public Long createCat(@InputArgument(name = "cat") CatCreateView cat) {
+        repository.save(cat);
+        return cat.getId();
+    }
+
+    @DgsMutation
+    public Long createKotlinCat(@InputArgument(name = "cat") CatKotlinCreateView cat) {
         repository.save(cat);
         return cat.getId();
     }
