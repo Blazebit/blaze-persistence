@@ -17,6 +17,7 @@ import com.netflix.graphql.dgs.internal.InputObjectMapper;
 
 import java.util.*;
 
+import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KClass;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
@@ -51,7 +52,76 @@ public class EntityViewInputObjectMapper implements InputObjectMapper {
     @NotNull
     @Override
     public <T> T mapToKotlinObject(@NotNull Map<String, ?> map, @NotNull KClass<T> kClass) {
-        return DEFAULT.mapToKotlinObject(map, kClass);
+        Class<T> entityViewClass = JvmClassMappingKt.getJavaClass(kClass);
+        ManagedViewType<T> managedViewType = entityViewManager.getMetamodel().managedView(entityViewClass);
+        if (managedViewType == null) {
+            return DEFAULT.mapToKotlinObject(map, kClass);
+        }
+        boolean updatable = managedViewType.isUpdatable();
+        boolean creatable = managedViewType.isCreatable();
+        T reference = null;
+
+        // Consume (i.e. remove from the payload json tree) the id if we are going to use getReference
+        Object id = retrieveId(map, managedViewType, !creatable || updatable);
+
+        // We create also creatable & updatable views if no id is given
+        // If an id is given in such a case, we create a reference for updates
+        if (creatable && (!updatable || id == null)) {
+            reference = entityViewManager.create(entityViewClass);
+        } else if (id != null) {
+            reference = entityViewManager.getReference(entityViewClass, id);
+        }
+
+        if (reference == null || map.isEmpty()) {
+            return reference;
+        }
+
+        try {
+            for (Map.Entry<String, ?> entry : map.entrySet()) {
+                String attributeName = entry.getKey();
+                Object value = entry.getValue();
+                //noinspection unchecked
+                AbstractMethodAttribute<? super T, ?> attribute = (AbstractMethodAttribute<? super T, ?>) managedViewType.getAttribute(attributeName);
+                Object entityViewValue;
+                if (value != null) {
+                    if (value instanceof Map<?, ?>) {
+                        //noinspection unchecked
+                        entityViewValue = mapToKotlinObject((Map<String, ?>) value, JvmClassMappingKt.getKotlinClass(attribute.getJavaType()));
+                    } else if (value instanceof Collection<?>) {
+                        AbstractMethodPluralAttribute<?, ?, ?> pluralAttribute = (AbstractMethodPluralAttribute<?, ?, ?>) attribute;
+                        Class<?> elementJavaType = pluralAttribute.getElementType().getJavaType();
+                        //noinspection unchecked
+                        Collection<Object> collection = (Collection<Object>) pluralAttribute.getJavaMethod().invoke(reference);
+                        if (elementJavaType.isEnum()) {
+                            for (Object element : (Collection<?>) value) {
+                                //noinspection unchecked,rawtypes
+                                collection.add(Enum.valueOf((Class) elementJavaType, element.toString()));
+                            }
+                        } else if (pluralAttribute.isSubview()) {
+                            for (Object element : (Collection<?>) value) {
+                                //noinspection unchecked
+                                collection.add(mapToKotlinObject((Map<String, ?>) element, JvmClassMappingKt.getKotlinClass(elementJavaType)));
+                            }
+                        } else {
+                            collection.addAll((Collection<?>) value);
+                        }
+                        // No need to invoke the setter since collection was retrieved through the getter
+                        continue;
+                    } else if (attribute.getJavaType().isEnum()) {
+                        //noinspection rawtypes,unchecked
+                        entityViewValue = Enum.valueOf((Class) attribute.getJavaType(), value.toString());
+                    } else {
+                        entityViewValue = value;
+                    }
+                } else {
+                    entityViewValue = null;
+                }
+                attribute.getSetterMethod().invoke(reference, entityViewValue);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Couldn't deserialize entity view", e);
+        }
+        return reference;
     }
 
     @Override

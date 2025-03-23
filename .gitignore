@@ -5,6 +5,7 @@
 .settings/
 .classpath
 .factorypath
+.DS_Store
 target/
 core/.project
 core/.settings/

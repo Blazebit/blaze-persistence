@@ -84,6 +84,30 @@ public class SampleTest extends AbstractSampleTest {
     }
 
     @Test
+    public void testKotlinCreate() {
+        String requestGraphQL = "mutation {\n" +
+                "  createKotlinCat(\n" +
+                "    cat: {\n" +
+                "      name: \"Test\"\n" +
+                "      age: 1\n" +
+                "      owner: {id: 1}\n" +
+                "      kittens: [\n" +
+                "        { name: \"Kitten 1\", age: 1, owner: {id: 1}}\n" +
+                "      ]\n" +
+                "  \t}\n" +
+                "  )\n" +
+                "}";
+        ResponseEntity<JsonNode> response = sendGraphQlRequest(requestGraphQL);
+        int id = response.getBody().get("data").get("createKotlinCat").asInt();
+
+        requestGraphQL = "query { catById(id: " + id + ") { name } }";
+        response = sendGraphQlRequest(requestGraphQL);
+
+        String name = response.getBody().get("data").get("catById").get("name").asText();
+        assertEquals("Test", name);
+    }
+
+    @Test
     public void shouldFindAllWithTypeName() {
         String requestGraphQL =  "query { "
           + "  findAll(first: 3) { "
