@@ -14,7 +14,7 @@ import com.blazebit.persistence.view.UpdatableEntityView
 @UpdatableEntityView
 @EntityView(com.blazebit.persistence.integration.graphql.dgs.model.Cat::class)
 interface CatKotlinUpdateView : CatKotlinSimpleView {
-    fun setName(name: String?)
+    fun setName(name: String)
 
-    var age: Int?
+    var age: Int
 }

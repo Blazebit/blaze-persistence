@@ -15,6 +15,7 @@
     <properties>
         <module.name>com.blazebit.persistence.integration.graphql</module.name>
         <main.java.version>1.8</main.java.version>
+        <kotlin.version>1.7.20</kotlin.version>
     </properties>
 
     <dependencies>
@@ -50,6 +51,12 @@
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <version>7.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
             <scope>provided</scope>
         </dependency>
 

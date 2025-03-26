@@ -16,5 +16,5 @@ import com.blazebit.persistence.view.UpdatableEntityView
 interface CatKotlinUpdateView : CatKotlinSimpleView {
     fun setName(name: String?)
 
-    var age: Int?
+    var age: Int
 }

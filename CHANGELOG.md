@@ -10,6 +10,7 @@ Changes that happened in releases
 * Support conditional fetches for entity views based on GraphQL selection set
 * Avoid unproxying identifiable values parameters for identifier fields
 * Support Kotlin entity views in GraphQL DGS integration
+* Improve GraphQL nullability determination for collections and Kotlin types
 
 ### Bug fixes
 
