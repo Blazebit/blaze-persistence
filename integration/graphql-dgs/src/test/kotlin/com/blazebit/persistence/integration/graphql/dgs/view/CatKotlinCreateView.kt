@@ -14,5 +14,5 @@ import com.blazebit.persistence.view.EntityView
 @CreatableEntityView
 @EntityView(com.blazebit.persistence.integration.graphql.dgs.model.Cat::class)
 interface CatKotlinCreateView : CatKotlinSimpleCreateView {
-    var kittens: Set<CatKotlinSimpleCreateView>?
+    var kittens: Set<CatKotlinSimpleCreateView>
 }

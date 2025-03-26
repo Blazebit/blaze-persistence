@@ -16,5 +16,5 @@ interface CatKotlinSimpleView {
     @get:IdMapping
     val id: Long?
 
-    val name: String?
+    val name: String
 }

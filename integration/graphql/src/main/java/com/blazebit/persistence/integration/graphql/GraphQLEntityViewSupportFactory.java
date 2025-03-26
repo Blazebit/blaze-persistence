@@ -56,6 +56,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -367,8 +368,8 @@ public class GraphQLEntityViewSupportFactory {
                     type = getEntryType(typeRegistry, attribute, getKeyType(typeRegistry, mapAttribute), getElementType(typeRegistry, mapAttribute));
                     inputType = getInputEntryType(typeRegistry, attribute, getInputKeyType(typeRegistry, mapAttribute), getInputElementType(typeRegistry, mapAttribute));
                 } else {
-                    type = new ListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
-                    inputType = new ListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
+                    type = makeNonNull(getListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute)));
+                    inputType = makeNonNull(getListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute)));
                 }
                 if (type != null) {
                     String fieldName = getFieldName(attribute);
@@ -403,13 +404,13 @@ public class GraphQLEntityViewSupportFactory {
                     Type elementType = getElementType(typeRegistry, entityViewManager, elementTypeClass);
                     Type inputElementType = getInputElementType(typeRegistry, entityViewManager, elementTypeClass);
                     AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
-                        keyType = new NonNullType(keyType);
-                        inputKeyType = new NonNullType(inputKeyType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0)) {
+                        keyType = makeNonNull(keyType);
+                        inputKeyType = makeNonNull(inputKeyType);
                     }
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations())) {
-                        elementType = new NonNullType(elementType);
-                        inputElementType = new NonNullType(inputElementType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 1)) {
+                        elementType = makeNonNull(elementType);
+                        inputElementType = makeNonNull(inputElementType);
                     }
                     type = getEntryType(typeRegistry, typeName, fieldName, keyType, elementType);
                     inputType = getInputEntryType(typeRegistry, inputTypeName, fieldName, inputKeyType, inputElementType);
@@ -419,20 +420,20 @@ public class GraphQLEntityViewSupportFactory {
                     Type elementType = getElementType(typeRegistry, entityViewManager, elementTypeClass);
                     Type inputElementType = getInputElementType(typeRegistry, entityViewManager, elementTypeClass);
                     AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
-                        elementType = new NonNullType(elementType);
-                        inputElementType = new NonNullType(inputElementType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0)) {
+                        elementType = makeNonNull(elementType);
+                        inputElementType = makeNonNull(inputElementType);
                     }
-                    type = new ListType(elementType);
-                    inputType = new ListType(inputElementType);
+                    type = makeNonNull(getListType(elementType));
+                    inputType = makeNonNull(getListType(inputElementType));
                 } else {
                     type = getElementType(typeRegistry, entityViewManager, fieldType);
                     inputType = getInputElementType(typeRegistry, entityViewManager, fieldType);
                 }
                 if (type != null) {
                     if (isNotNull(method)) {
-                        type = new NonNullType(type);
-                        inputType = new NonNullType(inputType);
+                        type = makeNonNull(type);
+                        inputType = makeNonNull(inputType);
                     }
                     FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
                     fieldDefinitions.add(fieldDefinition);
@@ -589,8 +590,8 @@ public class GraphQLEntityViewSupportFactory {
                     type = getEntryType(schemaBuilder, attribute, getKeyType(schemaBuilder, mapAttribute, registeredTypeNames), getElementType(schemaBuilder, mapAttribute, registeredTypeNames));
                     inputType = getInputEntryType(schemaBuilder, attribute, getInputKeyType(schemaBuilder, mapAttribute, registeredTypeNames), getInputElementType(schemaBuilder, mapAttribute, registeredTypeNames));
                 } else {
-                    type = new GraphQLList(getElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
-                    inputType = new GraphQLList(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
+                    type = makeNonNull(getListType(getElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames)));
+                    inputType = makeNonNull(getListType(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames)));
                 }
                 if (type != null) {
                     fieldBuilder.type(type);
@@ -629,13 +630,13 @@ public class GraphQLEntityViewSupportFactory {
                     GraphQLOutputType elementType = getElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
                     GraphQLInputType inputElementType = getInputElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
                     AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
-                        keyType = new GraphQLNonNull(keyType);
-                        inputKeyType = new GraphQLNonNull(inputKeyType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0)) {
+                        keyType = makeNonNull(keyType);
+                        inputKeyType = makeNonNull(inputKeyType);
                     }
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations())) {
-                        elementType = new GraphQLNonNull(elementType);
-                        inputElementType = new GraphQLNonNull(inputElementType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 1)) {
+                        elementType = makeNonNull(elementType);
+                        inputElementType = makeNonNull(inputElementType);
                     }
                     type = getEntryType(schemaBuilder, typeName, fieldName, keyType, elementType);
                     inputType = getInputEntryType(schemaBuilder, inputTypeName, fieldName, inputKeyType, inputElementType);
@@ -645,20 +646,20 @@ public class GraphQLEntityViewSupportFactory {
                     GraphQLOutputType elementType = getElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
                     GraphQLInputType inputElementType = getInputElementType(schemaBuilder, entityViewManager, elementTypeClass, registeredTypeNames);
                     AnnotatedParameterizedType annotatedReturnType = (AnnotatedParameterizedType) method.getAnnotatedReturnType();
-                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations())) {
-                        elementType = new GraphQLNonNull(elementType);
-                        inputElementType = new GraphQLNonNull(inputElementType);
+                    if (isNotNull(annotatedReturnType.getAnnotatedActualTypeArguments()[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0)) {
+                        elementType = makeNonNull(elementType);
+                        inputElementType = makeNonNull(inputElementType);
                     }
-                    type = getListType(elementType);
-                    inputType = getListType(inputElementType);
+                    type = makeNonNull(getListType(elementType));
+                    inputType = makeNonNull(getListType(inputElementType));
                 } else {
                     type = getElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
                     inputType = getInputElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
                 }
                 if (type != null) {
                     if (isNotNull(method)) {
-                        type = new GraphQLNonNull(type);
-                        inputType = new GraphQLNonNull(inputType);
+                        type = makeNonNull(type);
+                        inputType = makeNonNull(inputType);
                     }
                     fieldBuilder.type(type);
                     if (objectBuilder == null) {
@@ -732,6 +733,27 @@ public class GraphQLEntityViewSupportFactory {
             return null;
         }
         return new GraphQLList(elementType);
+    }
+
+    private ListType getListType(Type<?> elementType) {
+        if (elementType == null) {
+            return null;
+        }
+        return new ListType(elementType);
+    }
+
+    private GraphQLNonNull makeNonNull(GraphQLType type) {
+        if (type == null || type instanceof GraphQLNonNull) {
+            return (GraphQLNonNull) type;
+        }
+        return new GraphQLNonNull(type);
+    }
+
+    private NonNullType makeNonNull(Type<?> type) {
+        if (type == null || type instanceof NonNullType) {
+            return (NonNullType) type;
+        }
+        return new NonNullType(type);
     }
 
     private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, ArrayList<ManagedViewType<?>> managedViews, String baseName, String suffix, MethodAttribute<?, ?> attribute, String fieldName) {
@@ -1194,7 +1216,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             typeRegistry.add(newObjectTypeDefinition(entryName, fields, null));
         }
-        return new ListType(new TypeName(entryName));
+        return new NonNullType(new ListType(new NonNullType(new TypeName(entryName))));
     }
 
     /**
@@ -1234,7 +1256,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             typeRegistry.add(newObjectTypeDefinition(entryName, fields, null));
         }
-        return new ListType(new TypeName(entryName));
+        return new NonNullType(new ListType(new NonNullType(new TypeName(entryName))));
     }
 
     /**
@@ -1275,7 +1297,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(type);
         }
-        return new GraphQLList(new GraphQLTypeReference(entryName));
+        return new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(new GraphQLTypeReference(entryName))));
     }
 
     /**
@@ -1316,7 +1338,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(type);
         }
-        return new GraphQLList(new GraphQLTypeReference(entryName));
+        return new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(new GraphQLTypeReference(entryName))));
     }
 
     /**
@@ -1596,7 +1618,7 @@ public class GraphQLEntityViewSupportFactory {
             type = getObjectType((ManagedViewType<?>) elementType);
         }
         if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
-            type = new NonNullType(type);
+            type = makeNonNull(type);
         }
         return type;
     }
@@ -1622,7 +1644,7 @@ public class GraphQLEntityViewSupportFactory {
             type = getInputObjectType((ManagedViewType<?>) elementType);
         }
         if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
-            type = new NonNullType(type);
+            type = makeNonNull(type);
         }
         return type;
     }
@@ -1636,11 +1658,30 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected Type getElementType(TypeDefinitionRegistry typeRegistry, PluralAttribute<?, ?, ?> pluralAttribute) {
         com.blazebit.persistence.view.metamodel.Type elementType = pluralAttribute.getElementType();
+        Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(typeRegistry, elementType.getJavaType());
+            type = getScalarType(typeRegistry, elementType.getJavaType());
         } else {
-            return getObjectType((ManagedViewType<?>) elementType);
+            type = getObjectType((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) pluralAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[annotatedArgumentTypes.length - 1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, annotatedArgumentTypes.length - 1))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
+    }
+
+
+    private static AnnotatedType[] getReturnTypeArgumentAnnotations(Method method) {
+        AnnotatedType genericReturnType = method.getAnnotatedReturnType();
+        if (genericReturnType instanceof AnnotatedParameterizedType) {
+            AnnotatedParameterizedType parameterizedType = (AnnotatedParameterizedType) genericReturnType;
+            return parameterizedType.getAnnotatedActualTypeArguments();
+        }
+        return new AnnotatedType[0];
     }
 
     /**
@@ -1669,11 +1710,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected Type getInputElementType(TypeDefinitionRegistry typeRegistry, PluralAttribute<?, ?, ?> pluralAttribute) {
         com.blazebit.persistence.view.metamodel.Type elementType = pluralAttribute.getElementType();
+        Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(typeRegistry, elementType.getJavaType());
+            type = getScalarType(typeRegistry, elementType.getJavaType());
         } else {
-            return getInputObjectType((ManagedViewType<?>) elementType);
+            type = getInputObjectType((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) pluralAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[annotatedArgumentTypes.length - 1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, annotatedArgumentTypes.length - 1))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1714,7 +1764,7 @@ public class GraphQLEntityViewSupportFactory {
             type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
         if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
-            type = new GraphQLNonNull(type);
+            type = makeNonNull(type);
         }
         return type;
     }
@@ -1740,7 +1790,7 @@ public class GraphQLEntityViewSupportFactory {
             type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
         if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
-            type = new GraphQLNonNull(type);
+            type = makeNonNull(type);
         }
         return type;
     }
@@ -1754,11 +1804,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected GraphQLOutputType getElementType(GraphQLSchema.Builder schemaBuilder, PluralAttribute<?, ?, ?> pluralAttribute, Map<Class<?>, String> registeredTypeNames) {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = pluralAttribute.getElementType();
+        GraphQLOutputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            type = getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
-            return getObjectTypeReference((ManagedViewType<?>) elementType);
+            type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) pluralAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[annotatedArgumentTypes.length - 1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, annotatedArgumentTypes.length - 1))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1787,11 +1846,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected GraphQLInputType getInputElementType(GraphQLSchema.Builder schemaBuilder, PluralAttribute<?, ?, ?> pluralAttribute, Map<Class<?>, String> registeredTypeNames) {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = pluralAttribute.getElementType();
+        GraphQLInputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            type = (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
-            return getInputObjectTypeReference((ManagedViewType<?>) elementType);
+            type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) pluralAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[annotatedArgumentTypes.length - 1].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, annotatedArgumentTypes.length - 1))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1820,11 +1888,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected Type getKeyType(TypeDefinitionRegistry typeRegistry, MapAttribute<?, ?, ?> mapAttribute) {
         com.blazebit.persistence.view.metamodel.Type elementType = mapAttribute.getKeyType();
+        Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(typeRegistry, elementType.getJavaType());
+            type = getScalarType(typeRegistry, elementType.getJavaType());
         } else {
-            return getObjectType((ManagedViewType<?>) elementType);
+            type = getObjectType((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) mapAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1853,11 +1930,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected Type getInputKeyType(TypeDefinitionRegistry typeRegistry, MapAttribute<?, ?, ?> mapAttribute) {
         com.blazebit.persistence.view.metamodel.Type elementType = mapAttribute.getKeyType();
+        Type type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(typeRegistry, elementType.getJavaType());
+            type = getScalarType(typeRegistry, elementType.getJavaType());
         } else {
-            return getInputObjectType((ManagedViewType<?>) elementType);
+            type = getInputObjectType((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) mapAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1886,11 +1972,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected GraphQLOutputType getKeyType(GraphQLSchema.Builder schemaBuilder, MapAttribute<?, ?, ?> mapAttribute, Map<Class<?>, String> registeredTypeNames) {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = mapAttribute.getKeyType();
+        GraphQLOutputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            type = getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
-            return getObjectTypeReference((ManagedViewType<?>) elementType);
+            type = getObjectTypeReference((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) mapAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1919,11 +2014,20 @@ public class GraphQLEntityViewSupportFactory {
      */
     protected GraphQLInputType getInputKeyType(GraphQLSchema.Builder schemaBuilder, MapAttribute<?, ?, ?> mapAttribute, Map<Class<?>, String> registeredTypeNames) {
         com.blazebit.persistence.view.metamodel.Type<?> elementType = mapAttribute.getKeyType();
+        GraphQLInputType type;
         if (elementType.getMappingType() == com.blazebit.persistence.view.metamodel.Type.MappingType.BASIC) {
-            return (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
+            type = (GraphQLInputType) getScalarType(schemaBuilder, elementType.getJavaType(), registeredTypeNames);
         } else {
-            return getInputObjectTypeReference((ManagedViewType<?>) elementType);
+            type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
+        Method method = ((MethodAttribute<?, ?>) mapAttribute).getJavaMethod();
+        if (type != null) {
+            AnnotatedType[] annotatedArgumentTypes = getReturnTypeArgumentAnnotations(method);
+            if (annotatedArgumentTypes.length != 0 && (isNotNull(annotatedArgumentTypes[0].getAnnotations()) || KotlinSupport.isKotlinTypeArgumentNotNull(method, 0))) {
+                type = makeNonNull(type);
+            }
+        }
+        return type;
     }
 
     /**
@@ -1967,7 +2071,7 @@ public class GraphQLEntityViewSupportFactory {
             Class<?> rawType = (Class<?>) parameterizedType.getRawType();
             if (Collection.class.isAssignableFrom(rawType)) {
                 Class<?> elementType = ReflectionUtils.resolveType(ownerType, parameterizedType.getActualTypeArguments()[0]);
-                return new ListType(getScalarType(typeRegistry, elementType));
+                return getListType(getScalarType(typeRegistry, elementType));
             } else {
                 javaType = rawType;
             }
@@ -2026,7 +2130,7 @@ public class GraphQLEntityViewSupportFactory {
             Class<?> rawType = (Class<?>) parameterizedType.getRawType();
             if (Collection.class.isAssignableFrom(rawType)) {
                 Class<?> elementType = ReflectionUtils.resolveType(ownerType, parameterizedType.getActualTypeArguments()[0]);
-                return new GraphQLList(getScalarType(schemaBuilder, elementType, registeredTypeNames));
+                return getListType(getScalarType(schemaBuilder, elementType, registeredTypeNames));
             } else {
                 javaType = rawType;
             }
@@ -2110,10 +2214,9 @@ public class GraphQLEntityViewSupportFactory {
      * @since 1.6.8
      */
     protected boolean isNotNull(Method method) {
-        if (method.getReturnType().isPrimitive()) {
-            return true;
-        }
-        return isNotNull(method.getAnnotations());
+        return method.getReturnType().isPrimitive()
+                || KotlinSupport.isKotlinNotNull(method)
+                || isNotNull(method.getAnnotations());
     }
 
     /**
