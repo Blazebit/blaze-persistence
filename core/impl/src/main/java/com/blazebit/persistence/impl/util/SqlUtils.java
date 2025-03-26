@@ -113,10 +113,10 @@ public class SqlUtils {
                 }
 
                 // If the table name is a subquery, we have to respect that and scan back to the start parenthesis
-                if (sb.charAt(tableNameIndexRange[0]) == ')') {
+                if (sb.charAt(tableNameIndexRange[1] - 1) == ')') {
                     int parenthesis = 1;
                     QuoteMode mode = QuoteMode.NONE;
-                    for (int i = tableNameIndexRange[0] - 1; i >= 0; i--) {
+                    for (int i = tableNameIndexRange[1] - 2; i >= 0; i--) {
                         char c = sb.charAt(i);
                         mode = mode.onCharBackwards(c);
 
