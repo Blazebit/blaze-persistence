@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-deltaspike-data-rest</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.15-SNAPSHOT</version>
+        <version>1.6.15</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
