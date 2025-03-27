@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-core</artifactId>
-        <version>1.6.15</version>
+        <version>1.6.16-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
