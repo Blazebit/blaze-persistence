@@ -21,10 +21,10 @@
 
     <properties>
         <!-- The current stable version -->
-        <stable.version>1.6.14</stable.version>
+        <stable.version>1.6.15</stable.version>
         <series.version>1.6</series.version>
         <!-- The current snapshot version -->
-        <snapshot.version>1.6.15-SNAPSHOT</snapshot.version>
+        <snapshot.version>1.6.16-SNAPSHOT</snapshot.version>
 
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>

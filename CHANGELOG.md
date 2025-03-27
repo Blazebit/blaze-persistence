@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.15-SNAPSHOT
+## 1.6.16-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.15
+
+27/03/2025 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.15) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.15+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 

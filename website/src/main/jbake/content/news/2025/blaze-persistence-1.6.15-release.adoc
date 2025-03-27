@@ -1,0 +1,29 @@
+= Blaze-Persistence 1.6.15 Release
+Christian Beikov
+2025-03-27 0
+:description: Blaze-Persistence version 1.6.15 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the fifteenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 6 integration fixes
+
+As part of the preparation for Blaze-Persistence 2.0, which will require JPA 3.1+ and hence Hibernate ORM 6.2+,
+a few integration issues were discovered because of more extensive testing i.e. on more databases.
+The bug fixes for the Hibernate ORM 6.2+ integration were+++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+now backported.
+
+=== Various bug fixes
+
+Thanks to the sponsoring of https://github.com/maxhov[Max Hovens, window="_blank"] from https://tidalcontrol.com/[Tidal Control, window="_blank"]
+and https://github.com/EugenMayer[Eugen Mayer, window="_blank"] from https://kontextwork.de/[KontextWork, window="_blank"],
+lots of bug fixes and improvements were implemented in this release. Thank you for your continued support!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1615[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
