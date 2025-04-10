@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -133,6 +134,46 @@ public class MultisetFetchCollectionsTest extends AbstractEntityViewTest {
         assertSubviewEquals(pers2.getPartnerDocument(), results.get(1).getPartnerDocument());
         assertSubviewCollectionEquals(pers2.getOwnedDocuments(), results.get(1).getOwnedDocuments());
         assertSubviewEquals(pers2.getPartnerDocument(), results.get(1).getCorrelatedPartnerDocument());
+        assertSimpleSubviewCollectionEquals(pers2.getOwnedDocuments(), results.get(1).getCorrelatedOwnedDocuments());
+    }
+
+    // For #2032
+    // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
+    @Test
+    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class })
+    public void testDynamicFetchCollections() {
+        EntityViewManager evm = build(
+                PersonForCollectionsMultisetFetchNestedView.class,
+                SubviewSimpleDocumentMultisetFetchView.class,
+                SubviewDocumentMultisetFetchView.class,
+                SubviewPersonForCollectionsMultisetFetchView.class,
+                SubviewPersonForCollectionsView.class
+        );
+
+        CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
+                .where("id").in(pers1.getId(), pers2.getId())
+                .orderByAsc("id");
+        EntityViewSetting<PersonForCollectionsMultisetFetchNestedView, CriteriaBuilder<PersonForCollectionsMultisetFetchNestedView>> setting = EntityViewSetting.create(PersonForCollectionsMultisetFetchNestedView.class);
+        setting.fetch("name");
+        setting.fetch("correlatedOwnedDocuments");
+        CriteriaBuilder<PersonForCollectionsMultisetFetchNestedView> cb = evm.applySetting(setting, criteria);
+        List<PersonForCollectionsMultisetFetchNestedView> results = cb.getResultList();
+
+        assertEquals(2, results.size());
+        // Pers1
+        assertEquals(pers1.getName(), results.get(0).getName());
+        assertNull(results.get(0).getPartnerDocument());
+        assertNull(results.get(0).getOwnedDocuments());
+        assertNull(results.get(0).getCorrelatedPartnerDocument());
+        assertSimpleSubviewCollectionEquals(pers1.getOwnedDocuments(), results.get(0).getCorrelatedOwnedDocuments());
+
+        // Pers2
+        assertEquals(pers2.getName(), results.get(1).getName());
+        assertNull(results.get(1).getPartnerDocument());
+        assertNull(results.get(1).getOwnedDocuments());
+        assertNull(results.get(1).getCorrelatedPartnerDocument());
         assertSimpleSubviewCollectionEquals(pers2.getOwnedDocuments(), results.get(1).getCorrelatedOwnedDocuments());
     }
 
