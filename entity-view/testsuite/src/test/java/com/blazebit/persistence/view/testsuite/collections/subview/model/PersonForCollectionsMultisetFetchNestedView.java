@@ -10,7 +10,6 @@ import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingCorrelatedSimple;
-import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
 
@@ -21,7 +20,6 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.5.0
  */
-@UpdatableEntityView
 @EntityView(PersonForCollections.class)
 public interface PersonForCollectionsMultisetFetchNestedView {
 

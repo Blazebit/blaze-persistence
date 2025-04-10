@@ -1075,7 +1075,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, viewRootAlias, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewTupleIdDescriptor, subviewIdDescriptor,
                     startIndex, endTupleElementsToAdd, viewJpqlMacro, embeddingViewJpqlMacro, inheritanceSubtypeMappings, evm, ef, managedViewType, null, proxyFactory);
             if (attribute.getFetchStrategy() == FetchStrategy.MULTISET) {
-                mapperBuilder.addMapper(new CorrelationMultisetTupleElementMapper(template, factory, correlationBasis, correlationExternalAlias, subviewAttributePath, mapperBuilder.getMapping(), indexExpression, indexTemplate, limiter));
+                mapperBuilder.addMapper(new CorrelationMultisetTupleElementMapper(template, factory, correlationBasis, correlationExternalAlias, attributePath, mapperBuilder.getMapping(), indexExpression, indexTemplate, limiter));
             } else {
                 mapperBuilder.addMappers(template.mappers);
                 mapperBuilder.addSecondaryMappers(template.secondaryMappers);
