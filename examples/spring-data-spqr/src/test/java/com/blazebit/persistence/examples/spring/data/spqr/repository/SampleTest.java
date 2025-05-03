@@ -88,11 +88,12 @@ public class SampleTest extends AbstractSampleTest {
 
         int id = response.getBody().get("data").get("createCat").asInt();
 
-        requestGraphQL = "query { catById(id: " + id + ") { name owner { __typename } } }";
+        requestGraphQL = "query { catById(id: " + id + ") { name owner { children { ... on Boy { name } } } } }";
         response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
         String name = response.getBody().get("data").get("catById").get("name").asText();
         assertEquals("Test", name);
         assertEquals("PersonSimpleView", response.getBody().get("data").get("catById").get("owner").get("__typename").asText());
+        assertEquals("Boy 0", response.getBody().get("data").get("catById").get("owner").get("children").get(0).get("name").asText());
     }
 
     static String request(int first, String after) {
