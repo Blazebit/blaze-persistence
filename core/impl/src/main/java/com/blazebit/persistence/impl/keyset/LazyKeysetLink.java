@@ -33,7 +33,7 @@ public class LazyKeysetLink extends AbstractKeysetLink {
         Serializable[] tuple = new Serializable[orderByExpressions.size()];
 
         for (int i = 0; i < tuple.length; i++) {
-            String expressionString = orderByExpressions.get(0).getExpression().toString();
+            String expressionString = orderByExpressions.get(i).getExpression().toString();
             Object value = keysetValues.get(expressionString);
 
             if (value == null) {
