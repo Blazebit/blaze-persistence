@@ -1160,6 +1160,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerTimestampIsoFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTimestampIsoFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTimestampIsoFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTimestampIsoFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup( DateIsoFunction.FUNCTION_NAME, false );
@@ -1169,6 +1170,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerDateIsoFunction());
         jpqlFunctionGroup.add("mysql", new MySQLDateIsoFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLDateIsoFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLDateIsoFunction());
         registerFunction(jpqlFunctionGroup);
 
         jpqlFunctionGroup = new JpqlFunctionGroup( TimeIsoFunction.FUNCTION_NAME, false );
@@ -1178,6 +1180,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerTimeIsoFunction());
         jpqlFunctionGroup.add("mysql", new MySQLTimeIsoFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLTimeIsoFunction());
+        jpqlFunctionGroup.add("mariadb", new MySQLTimeIsoFunction());
         registerFunction(jpqlFunctionGroup);
     }
 
