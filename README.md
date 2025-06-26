@@ -468,6 +468,7 @@ By default, a Maven build `mvn clean install` will test against H2 and Hibernate
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
+  * `hibernate-7.0` + the `jakarta` profile
   * `hibernate-6.6` + the `jakarta` profile
   * `hibernate-6.5` + the `jakarta` profile
   * `hibernate-6.4` + the `jakarta` profile

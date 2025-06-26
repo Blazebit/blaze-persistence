@@ -59,6 +59,11 @@ if [[ "$JPAPROVIDER" == hibernate-6* ]]; then
   ADDITIONAL_PROFILES=,jakarta
 fi
 
+if [[ "$JPAPROVIDER" == hibernate-7* ]]; then
+  # We don't have a Spring Data integration that supports Hibernate ORM 7.0 yet
+  PROPERTIES="$PROPERTIES -pl !integration/spring-data/testsuite/webmvc-jakarta-runner"
+fi
+
 if [[ "$NATIVE" == "true" ]]; then
   exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9},native${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
 else

@@ -24,10 +24,10 @@ public class Hibernate6TransactionAccessFactory implements TransactionAccessFact
     @Override
     public TransactionAccess createTransactionAccess(EntityManager entityManager) {
         try {
-            return new Hibernate6EntityTransactionSynchronizationStrategy(entityManager.getTransaction(), entityManager);
+            return new Hibernate6EntityTransactionSynchronizationStrategy( entityManager.getTransaction(), entityManager);
         } catch (IllegalStateException ex) {
             JtaPlatform jtaPlatform = getHibernateJtaPlatform(entityManager);
-            return new Hibernate6JtaPlatformTransactionSynchronizationStrategy(jtaPlatform);
+            return new Hibernate6JtaPlatformTransactionSynchronizationStrategy( jtaPlatform);
         }
     }
 

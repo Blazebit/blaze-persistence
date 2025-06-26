@@ -12,6 +12,8 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70;
+
 import org.hibernate.annotations.ForeignKey;
 import org.junit.Assume;
 import org.junit.Before;
@@ -70,7 +72,8 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     @Test
     @Category({
             // Although unused, this test dependent on the availability of group join support introduced in Hibernate 5.2.8
-            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class
+            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class,
+            NoHibernate70.class // @ForeignKey(name = "none") doesn't work anymore, but due to ORM 4.2 support can't add @JoinColumn(foreignKey = @javax.persistence.ForeignKey(ConstraintMode.NO_CONSTRAINT))
     })
     public void testRootTypeJoinWithGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
@@ -112,7 +115,8 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     @Test
     @Category({
             NoHibernate50.class, NoHibernate43.class, NoHibernate42.class, // Entity join required for fallback
-            NoHibernate52.class, NoHibernate53.class // Optimize with group joins instead
+            NoHibernate52.class, NoHibernate53.class, // Optimize with group joins instead
+            NoHibernate70.class // @ForeignKey(name = "none") doesn't work anymore, but due to ORM 4.2 support can't add @JoinColumn(foreignKey = @javax.persistence.ForeignKey(ConstraintMode.NO_CONSTRAINT))
     })
     public void testRootTypeJoinWithoutGroupJoins() {
         Assume.assumeFalse(supportsTableGroupJoins());
@@ -168,7 +172,8 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     @Test
     @Category({
             // This test requires group joins introduced in Hibernate 5.2.8
-            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class
+            NoHibernate42.class, NoHibernate43.class, NoHibernate51.class,
+            NoHibernate70.class // @ForeignKey(name = "none") doesn't work anymore, but due to ORM 4.2 support can't add @JoinColumn(foreignKey = @javax.persistence.ForeignKey(ConstraintMode.NO_CONSTRAINT))
     })
     public void testSubTypeJoinWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
@@ -210,7 +215,8 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
     @Test
     @Category({
             NoHibernate50.class, NoHibernate43.class, NoHibernate42.class, // Entity join required for fallback
-            NoHibernate52.class, NoHibernate53.class // Optimize with group joins instead
+            NoHibernate52.class, NoHibernate53.class, // Optimize with group joins instead
+            NoHibernate70.class // @ForeignKey(name = "none") doesn't work anymore, but due to ORM 4.2 support can't add @JoinColumn(foreignKey = @javax.persistence.ForeignKey(ConstraintMode.NO_CONSTRAINT))
     })
     public void testSubTypeJoinWithoutTableGroupJoins() {
         Assume.assumeFalse(supportsTableGroupJoins());
@@ -268,6 +274,7 @@ public class DereferenceManyToOneAssociationInJoinedInheritanceHierarchyTest ext
 
         @ForeignKey(name = "none")
         @ManyToOne(targetEntity = Super.class, fetch = FetchType.LAZY)
+//        @JoinColumn(foreignKey = @javax.persistence.ForeignKey(ConstraintMode.NO_CONSTRAINT))
         SubType parent;
 
     }

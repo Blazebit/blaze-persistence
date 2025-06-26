@@ -238,35 +238,11 @@ class BlazePersistenceProcessor {
                     BuildProducer<ReflectiveClassBuildItem> reflectionProducer) {
         reflectionProducer.produce(new ReflectiveClassBuildItem(true, true, ValuesEntity.class));
         reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, ConcurrentHashMapExpressionCache.class));
-        reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, "com.blazebit.persistence.integration.hibernate.CustomOneToManyPersister"));
-        reflectionProducer.produce(new ReflectiveClassBuildItem(true, false, false, "com.blazebit.persistence.integration.hibernate.CustomBasicCollectionPersister"));
-        // Needed by AbstractHibernateEntityManagerFactoryIntegrator
-        reflectionProducer.produce(ReflectiveClassBuildItem.builder("org.hibernate.dialect.function.SQLFunctionRegistry")
-                .fields(true)
-                .finalFieldsWritable(true)
-                .build()
-        );
-        reflectionProducer.produce(ReflectiveClassBuildItem.builder("org.hibernate.dialect.Dialect")
-                .fields(true)
-                .finalFieldsWritable(true)
-                .build()
-        );
         // Needed by HibernateExtendedQuerySupport
         reflectionProducer.produce(ReflectiveClassBuildItem.builder(
-                "org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor",
-                "org.hibernate.hql.internal.ast.exec.BasicExecutor",
-                "org.hibernate.hql.internal.ast.exec.DeleteExecutor",
-                "org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor",
-                "org.hibernate.hql.internal.ast.exec.IdSubselectUpdateExecutor",
-                "org.hibernate.hql.internal.ast.exec.SimpleUpdateExecutor",
-                "org.hibernate.hql.internal.ast.exec.InsertExecutor")
-                .fields(true)
-                .finalFieldsWritable(true)
-                .build()
-        );
-        reflectionProducer.produce(ReflectiveClassBuildItem.builder(
-                "org.hibernate.hql.internal.classic.QueryTranslatorImpl",
-                "org.hibernate.hql.internal.ast.QueryTranslatorImpl")
+                "org.hibernate.query.sqm.internal.SimpleDeleteQueryPlan",
+                "org.hibernate.query.sqm.internal.SimpleUpdateQueryPlan",
+                "org.hibernate.sql.exec.spi.AbstractJdbcOperationQuery")
                 .fields(true)
                 .build()
         );

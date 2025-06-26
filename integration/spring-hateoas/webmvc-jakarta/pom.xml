@@ -74,12 +74,6 @@
             <version>2.17.1</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-3.1-api}</version>
-            <scope>provided</scope>
-        </dependency>
 
         <!-- At runtime the user is going to need all dependencies anyway, so let's just give them through transitively -->
         <dependency>
@@ -108,6 +102,28 @@
             <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>${version.jpa}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${version.hibernate}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate-${version.hibernate-integration}</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-testsuite-base-hibernate${version.hibernate-testsuite}</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
@@ -124,17 +140,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${version.hibernate-6.2}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -302,19 +307,28 @@
             for ORM 5.6 + JDK 17 testing
             -->
             <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+                <version.hibernate-integration>6.2</version.hibernate-integration>
+                <version.hibernate-testsuite>6</version.hibernate-testsuite>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.2</id>
             <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+                <version.hibernate-integration>6.2</version.hibernate-integration>
+                <version.hibernate-testsuite>6</version.hibernate-testsuite>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.4</id>
             <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
                 <version.hibernate>${version.hibernate-6.4}</version.hibernate>
+                <version.hibernate-integration>6.2</version.hibernate-integration>
+                <version.hibernate-testsuite>6</version.hibernate-testsuite>
             </properties>
         </profile>
         <profile>
@@ -323,13 +337,28 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
                 <version.hibernate>${version.hibernate-6.5}</version.hibernate>
+                <version.hibernate-integration>6.2</version.hibernate-integration>
+                <version.hibernate-testsuite>6</version.hibernate-testsuite>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.6</id>
             <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
+                <version.hibernate-integration>6.2</version.hibernate-integration>
+                <version.hibernate-testsuite>6</version.hibernate-testsuite>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-7.0</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
+                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate-integration>7.0</version.hibernate-integration>
+                <version.hibernate-testsuite>7</version.hibernate-testsuite>
             </properties>
         </profile>
         <profile>

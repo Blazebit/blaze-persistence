@@ -5,13 +5,16 @@
 
 package com.blazebit.persistence.integration.hibernate.base;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.Table;
+
 /**
  *
  * @author Christian Beikov
  * @since 1.6.7
  */
-public interface CustomCollectionPersister {
+public interface TableNameFormatter  {
 
-    public String getMappedByProperty();
+    public String getQualifiedTableName(Dialect dialect, Table table);
 
 }

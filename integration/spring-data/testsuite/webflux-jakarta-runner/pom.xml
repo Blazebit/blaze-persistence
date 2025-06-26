@@ -56,11 +56,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-3.1-api}</version>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-common-utils</artifactId>
         </dependency>
@@ -149,17 +144,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
             <version>${version.spring-boot}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -254,18 +238,72 @@
             <properties>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>hibernate-6.2</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>hibernate-6.4</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.4}</version.hibernate>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>hibernate-6.5</id>
@@ -275,12 +313,72 @@
             <properties>
                 <version.hibernate>${version.hibernate-6.5}</version.hibernate>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>hibernate-6.6</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate6</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hibernate-7.0</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.2-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-7.0</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate7</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
         </profile>
         <profile>
             <id>spring-data-2.7.x</id>

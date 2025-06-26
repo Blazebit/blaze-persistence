@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -14,20 +14,20 @@ import java.lang.reflect.Method;
  * @author Christian Beikov
  * @since 1.6.7
  */
-public class Hibernate62SessionFactoryInvocationHandler implements InvocationHandler {
+public class Hibernate7ExecutionContextInvocationHandler implements InvocationHandler {
 
-    private final SessionFactoryImplementor delegate;
-    private final Object dialect;
+    private final ExecutionContext delegate;
+    private final Object session;
 
-    public Hibernate62SessionFactoryInvocationHandler(SessionFactoryImplementor delegate, Object dialect) {
+    public Hibernate7ExecutionContextInvocationHandler(ExecutionContext delegate, Object session) {
         this.delegate = delegate;
-        this.dialect = dialect;
+        this.session = session;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if ("getDialect".equals(method.getName())) {
-            return dialect;
+        if ("getSession".equals(method.getName())) {
+            return session;
         }
         
         return method.invoke(delegate, args);
