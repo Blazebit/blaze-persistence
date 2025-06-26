@@ -29,10 +29,12 @@
 
         <module>jpa-jakarta</module>
         <module>hibernate-jakarta</module>
+<!--        <module>hibernate6</module>-->
+<!--        <module>hibernate7</module>-->
     </modules>
 
-    <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
     <profiles>
+        <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
         <profile>
             <id>jdk11+</id>
             <activation>
@@ -48,6 +50,26 @@
                 <module>jpa-jakarta</module>
                 <module>hibernate-jakarta</module>
                 <module>hibernate6</module>
+<!--                <module>hibernate7</module>-->
+            </modules>
+        </profile>
+        <!-- Hibernate 7 is compiled with JDK 17, so we can only compile it, if we the build is running on a JDK 17 -->
+        <profile>
+            <id>jdk17+</id>
+            <activation>
+                <jdk>[17,)</jdk>
+            </activation>
+            <modules>
+                <module>jpa</module>
+                <module>hibernate</module>
+                <module>datanucleus</module>
+                <module>eclipselink</module>
+                <module>openjpa</module>
+
+                <module>jpa-jakarta</module>
+                <module>hibernate-jakarta</module>
+                <module>hibernate6</module>
+                <module>hibernate7</module>
             </modules>
         </profile>
     </profiles>

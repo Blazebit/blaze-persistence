@@ -545,7 +545,7 @@ public class HibernateJpaProvider implements JpaProvider {
         CollectionPersister persister = getCollectionPersister(ownerType, attributeName);
         if (persister != null) {
             if (persister.isInverse()) {
-                return getMappedBy(persister);
+                return persister.getMappedByProperty();
             } else if (persister instanceof OneToManyPersister) {
                 // A one-to-many association without a join table is like an inverse association
                 return "";
@@ -678,14 +678,6 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return set;
-    }
-
-    protected String getMappedBy(CollectionPersister persister) {
-        if (persister instanceof CustomCollectionPersister) {
-            return ((CustomCollectionPersister) persister).getMappedByProperty();
-        }
-
-        throw new IllegalStateException("Custom persister configured that doesn't implement the CustomCollectionPersister interface: " + persister);
     }
 
     @Override
@@ -1501,7 +1493,7 @@ public class HibernateJpaProvider implements JpaProvider {
                 Collection<String> targetAttributeNames = joinTable == null ? null : joinTable.getTargetAttributeNames();
                 if (targetAttributeNames == null) {
                     collectPropertyNames(identifierOrUniqueKeyPropertyNames, null, elementType, factory);
-                    String mappedBy = getMappedBy(getCollectionPersister(owner, attributeName));
+                    String mappedBy = getCollectionPersister(owner, attributeName).getMappedByProperty();
                     if (mappedBy == null || mappedBy.isEmpty()) {
                         // Not sure if this can happen. If we can't determine targetAttributeNames or don't have a join table
                         // but also no mapped by attribute, I don't know if that is even a valid/possible mapping

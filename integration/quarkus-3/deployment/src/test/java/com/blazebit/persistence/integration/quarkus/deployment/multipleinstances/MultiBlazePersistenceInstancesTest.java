@@ -104,7 +104,7 @@ public class MultiBlazePersistenceInstancesTest {
     @Transactional
     public void testCarWithDeskPuPersist() {
         Car car = new Car("BMW");
-        assertThatThrownBy(() -> deskEntityManager.persist(car)).hasMessageContaining("Unable to locate persister");
+        assertThatThrownBy(() -> deskEntityManager.persist(car)).hasMessageContaining(Car.class.getName());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class MultiBlazePersistenceInstancesTest {
     @Transactional
     public void testDeskWithCarPuPersist() {
         Desk desk = new Desk("Wooden desk");
-        assertThatThrownBy(() -> carEntityManager.persist(desk)).hasMessageContaining("Unable to locate persister");
+        assertThatThrownBy(() -> carEntityManager.persist(desk)).hasMessageContaining(Desk.class.getName());
     }
 
     @Test

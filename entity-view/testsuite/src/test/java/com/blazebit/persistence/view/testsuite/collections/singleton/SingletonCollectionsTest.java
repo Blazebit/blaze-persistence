@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.collections.singleton;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -19,7 +18,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -79,9 +77,7 @@ public class SingletonCollectionsTest extends AbstractEntityViewTest {
         doc4 = cbf.create(em, Document.class).where("name").eq("doc4").getSingleResult();
     }
 
-    // NOTE: Hibernate ORM 6.6.1 has a bug: https://hibernate.atlassian.net/browse/HHH-18773
     @Test
-    @Category(NoHibernate66.class)
     public void testSingletonCollections() {
         EntityViewManager evm = build(
                 SingletonDocumentCollectionsView.class,

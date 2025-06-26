@@ -12,6 +12,8 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.quarkus.deployment</module.name>
+        <hibernate.integration-base>6</hibernate.integration-base>
+        <hibernate.integration-version>6.2</hibernate.integration-version>
     </properties>
 
     <dependencies>
@@ -37,12 +39,6 @@
             <scope>provided</scope>
         </dependency>
         <!-- Override the scope so that the Quarkus class loader doesn't put this on the DEV class loader -->
-        <dependency>
-            <groupId>jakarta.persistence</groupId>
-            <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-3.1-api}</version>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api-jakarta</artifactId>
@@ -75,12 +71,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate6-base</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate${hibernate.integration-base}-base</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-${hibernate.integration-version}</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -200,6 +196,12 @@
             </properties>
             <dependencies>
                 <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
@@ -309,6 +311,12 @@
             </properties>
             <dependencies>
                 <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
@@ -416,6 +424,12 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                    <scope>compile</scope>
+                </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
@@ -525,6 +539,12 @@
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
             </properties>
             <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                    <scope>compile</scope>
+                </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
@@ -636,9 +656,133 @@
             </properties>
             <dependencies>
                 <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.1-api}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.6}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <version>${project.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.bsc.maven</groupId>
+                        <artifactId>maven-processor-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>process-test</id>
+                                <goals>
+                                    <goal>process-test</goal>
+                                </goals>
+                                <phase>generate-test-sources</phase>
+                                <configuration>
+                                    <!-- source output directory -->
+                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+                                    <processors>
+<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
+                                        <processor>
+                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
+                                        </processor>
+                                    </processors>
+                                    <optionMap>
+                                        <strictCascadingCheck>false</strictCascadingCheck>
+                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
+                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
+                                    </optionMap>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.xml.bind</groupId>
+                                <artifactId>jakarta.xml.bind-api</artifactId>
+                                <version>${version.jakarta-jaxb-api}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>com.sun.xml.bind</groupId>
+                                <artifactId>jaxb-impl</artifactId>
+                                <version>${version.jakarta-jaxb}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.transaction</groupId>
+                                <artifactId>jakarta.transaction-api</artifactId>
+                                <version>${version.jakarta-jta}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>jakarta.activation</groupId>
+                                <artifactId>jakarta.activation-api</artifactId>
+                                <version>${version.jakarta-activation}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>add-test-source-metamodel</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.build.directory}/test-metamodel</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                            <systemProperties>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <!-- Required for JDK 16 -->
+                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>hibernate-7.0</id>
+            <!-- Note that we run against Quarkus 3.24 as it's the version supporting ORM 7.0 -->
+            <properties>
+                <version.quarkus-3>${version.quarkus-3.24}</version.quarkus-3>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+                <hibernate.integration-base>7</hibernate.integration-base>
+                <hibernate.integration-version>7.0</hibernate.integration-version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.2-api}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate-7.0}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

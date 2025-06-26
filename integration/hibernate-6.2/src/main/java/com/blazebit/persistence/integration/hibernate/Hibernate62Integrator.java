@@ -18,7 +18,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.ArrayList;
@@ -71,7 +70,6 @@ public class Hibernate62Integrator implements Integrator {
             throw new RuntimeException(sb.toString());
         }
 
-        serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
         TableNameFormatter formatter = new NativeTableNameFormatter(sessionFactory.getJdbcServices().getJdbcEnvironment().getQualifiedObjectNameFormatter());
         serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(getTableIterator(metadata.getDatabase().getNamespaces()), metadata.getDatabase().getTypeConfiguration(), sessionFactory.getJdbcServices().getDialect(), formatter, metadata));
     }

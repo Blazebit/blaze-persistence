@@ -47,6 +47,12 @@ jobs:
           - rdbms: h2
             component: hibernate-6.6
             jdk: 17
+################################################
+# hibernate-7.0
+################################################
+          - rdbms: h2
+            component: hibernate-7.0
+            jdk: 17
     steps:
       - uses: actions/checkout@v4
       - name: Update /etc/hosts file

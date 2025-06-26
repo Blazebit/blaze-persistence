@@ -1682,18 +1682,4 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
-    private static void setField(Object object, String field, Object value) {
-        setField(object, object.getClass(), field, value);
-    }
-
-    private static void setField(Object object, Class<?> clazz, String field, Object value) {
-        try {
-            Field f = ReflectionUtils.getField(clazz, field);
-            f.setAccessible(true);
-            f.set(object, value);
-        } catch (Exception e1) {
-            throw new RuntimeException(e1);
-        }
-    }
-
 }

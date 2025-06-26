@@ -23,6 +23,7 @@
         <module>jpa-base</module>
         <module>hibernate-base</module>
 <!--        <module>hibernate6-base</module>-->
+<!--        <module>hibernate7-base</module>-->
         <module>hibernate-4.2</module>
         <module>hibernate-4.3</module>
         <module>hibernate-5</module>
@@ -32,6 +33,7 @@
         <module>hibernate-5.5</module>
         <module>hibernate-5.6</module>
 <!--        <module>hibernate-6.2</module>-->
+<!--        <module>hibernate-7.0</module>-->
         <module>datanucleus</module>
         <module>datanucleus-5.1</module>
         <module>eclipselink</module>
@@ -83,6 +85,7 @@
                 <module>jpa-base</module>
                 <module>hibernate-base</module>
                 <module>hibernate6-base</module>
+<!--                <module>hibernate7-base</module>-->
                 <module>hibernate-4.2</module>
                 <module>hibernate-4.3</module>
                 <module>hibernate-5</module>
@@ -92,6 +95,7 @@
                 <module>hibernate-5.5</module>
                 <module>hibernate-5.6</module>
                 <module>hibernate-6.2</module>
+<!--                <module>hibernate-7.0</module>-->
                 <module>datanucleus</module>
                 <module>datanucleus-5.1</module>
                 <module>eclipselink</module>
@@ -142,6 +146,7 @@
                 <module>jpa-base</module>
                 <module>hibernate-base</module>
                 <module>hibernate6-base</module>
+                <module>hibernate7-base</module>
                 <module>hibernate-4.2</module>
                 <module>hibernate-4.3</module>
                 <module>hibernate-5</module>
@@ -151,6 +156,7 @@
                 <module>hibernate-5.5</module>
                 <module>hibernate-5.6</module>
                 <module>hibernate-6.2</module>
+                <module>hibernate-7.0</module>
                 <module>datanucleus</module>
                 <module>datanucleus-5.1</module>
                 <module>eclipselink</module>

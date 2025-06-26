@@ -18,6 +18,7 @@
     <properties>
         <main.java.version>17</main.java.version>
         <version.jandex>3.1.6</version.jandex>
+        <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
         <version.hibernate-orm>${version.hibernate-6.2}</version.hibernate-orm>
     </properties>
 
@@ -33,9 +34,20 @@
             <dependency>
                 <groupId>jakarta.persistence</groupId>
                 <artifactId>jakarta.persistence-api</artifactId>
-                <version>${version.jakarta-jpa-3.1-api}</version>
+                <version>${version.jpa}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>hibernate-7.0</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
+                <version.hibernate-orm>${version.hibernate-7.0}</version.hibernate-orm>
+                <version.quarkus-3>${version.quarkus-3.24}</version.quarkus-3>
+            </properties>
+        </profile>
+    </profiles>
 </project>
