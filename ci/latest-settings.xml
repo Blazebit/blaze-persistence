@@ -11,9 +11,9 @@
          <id>latest</id>
          <repositories>
             <repository>
-               <id>sonatype-nexus-snapshots</id>
+               <id>central</id>
                <name>Sonatype Nexus Snapshots</name>
-               <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+               <url>https://central.sonatype.com/repository/maven-snapshots/</url>
             </repository>
          </repositories>
       </profile>

@@ -425,7 +425,7 @@ you need to define the following repository in a profile of your project or the 
 <repository>
   <id>sonatype-snapshots</id>
   <name>Sonatype Snapshots</name>
-  <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+  <url>https://central.sonatype.com/repository/maven-snapshots/</url>
 </repository>
 ```
 
