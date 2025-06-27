@@ -6,11 +6,12 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Add `blaze-persistence-integration-hibernate-7.0` for Hibernate ORM 7.0+ support 
 
 ### Bug fixes
 
-None yet
+* Fix issue in `LazyKeysetLink` preventing use of the `afterKeyset()`/`beforeKeyset()` methods
+* Use MySQL date/time functions also on MariaDB
 
 ### Backwards-incompatible changes
 
