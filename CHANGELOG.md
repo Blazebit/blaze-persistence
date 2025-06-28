@@ -12,6 +12,7 @@ Changes that happened in releases
 
 * Fix issue in `LazyKeysetLink` preventing use of the `afterKeyset()`/`beforeKeyset()` methods
 * Use MySQL date/time functions also on MariaDB
+* Allow adding custom GraphQL deserialization types and auto-add `java.time.Ser` for time types 
 
 ### Backwards-incompatible changes
 

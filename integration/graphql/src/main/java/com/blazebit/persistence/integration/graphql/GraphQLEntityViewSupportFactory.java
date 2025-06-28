@@ -64,11 +64,18 @@ import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.Period;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,6 +100,22 @@ public class GraphQLEntityViewSupportFactory {
 
     private static final Map<Class<?>, String> BASIC_TYPES;
     private static final Map<Class<?>, String> SUPPORTED_TYPES;
+    private static final String[] JAVA_TIME_SER_TYPES = {
+        Duration.class.getName(),
+        Instant.class.getName(),
+        LocalDate.class.getName(),
+        LocalDateTime.class.getName(),
+        LocalTime.class.getName(),
+        ZonedDateTime.class.getName(),
+        ZoneOffset.class.getName(),
+        "java.time.ZoneRegion",
+        OffsetTime.class.getName(),
+        OffsetDateTime.class.getName(),
+        Year.class.getName(),
+        YearMonth.class.getName(),
+        MonthDay.class.getName(),
+        Period.class.getName()
+    };
 
     static {
         Map<Class<?>, String> types = new HashMap<>();
@@ -152,6 +175,7 @@ public class GraphQLEntityViewSupportFactory {
     private Pattern typeFilterPattern;
     private Map<String, GraphQLScalarType> scalarTypeMap;
     private Set<String> registeredScalarTypeNames;
+    private Set<String> additionalSerializableBasicTypes;
 
     /**
      * Creates a new entity view support factory with the given configuration.
@@ -321,6 +345,26 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Returns the additional serializable basic types to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @return the additional serializable basic types
+     * @since 1.6.16
+     */
+    public Set<String> getAdditionalSerializableBasicTypes() {
+        return additionalSerializableBasicTypes;
+    }
+
+    /**
+     * Sets the additional serializable basic types to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @param additionalSerializableBasicTypes the additional serializable basic types
+     * @since 1.6.16
+     */
+    public void setAdditionalSerializableBasicTypes(Set<String> additionalSerializableBasicTypes) {
+        this.additionalSerializableBasicTypes = additionalSerializableBasicTypes;
+    }
+
+    /**
      * Returns a new {@link GraphQLEntityViewSupport} after registering the entity view types from {@link EntityViewManager}
      * on the given {@link TypeDefinitionRegistry}.
      *
@@ -462,7 +506,7 @@ public class GraphQLEntityViewSupportFactory {
             addObjectTypeDefinition(typeRegistry, typeNameToViewType, managedView, typeDefinition, newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
         }
 
-        Set<String> serializableBasicTypes = new HashSet<>();
+        Set<String> serializableBasicTypes = new HashSet<>(this.additionalSerializableBasicTypes == null ? Collections.emptySet() : this.additionalSerializableBasicTypes);
         for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
@@ -473,7 +517,17 @@ public class GraphQLEntityViewSupportFactory {
 
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
+        addSerializableBasicTypes(serializableBasicTypes);
         return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, serializableBasicTypes);
+    }
+
+    protected void addSerializableBasicTypes(Set<String> serializableBasicTypes) {
+        for (String javaTimeSerType : JAVA_TIME_SER_TYPES) {
+            if (serializableBasicTypes.contains(javaTimeSerType)) {
+                serializableBasicTypes.add("java.time.Ser");
+                break;
+            }
+        }
     }
 
     /**
@@ -692,7 +746,7 @@ public class GraphQLEntityViewSupportFactory {
             addObjectTypeDefinition(schemaBuilder, typeNameToViewType, managedView, type, inputBuilder.build());
         }
 
-        Set<String> serializableBasicTypes = new HashSet<>();
+        Set<String> serializableBasicTypes = new HashSet<>(this.additionalSerializableBasicTypes == null ? Collections.emptySet() : this.additionalSerializableBasicTypes);
         for (javax.persistence.metamodel.Type<?> basicType : entityMetamodel.getBasicTypes()) {
             for (Class<?> superType : ReflectionUtils.getSuperTypes(basicType.getJavaType())) {
                 serializableBasicTypes.add(superType.getName());
@@ -703,6 +757,7 @@ public class GraphQLEntityViewSupportFactory {
 
         serializableBasicTypes.add(Serializable[].class.getName());
         serializableBasicTypes.add(GraphQLCursor.class.getName());
+        addSerializableBasicTypes(serializableBasicTypes);
         for (GraphQLType additionalType : additionalTypes) {
             String typeName;
             if (additionalType instanceof GraphQLNamedType) {

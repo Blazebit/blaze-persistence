@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +31,23 @@ public class GraphQLDeserializerTest {
         allowedTypes.add(Serializable[].class.getName());
 
         Serializable[] array = new Serializable[]{ 1 };
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(array);
+        }
+
+        Serializable[] readObject = (Serializable[]) new GraphQLCursorObjectInputStream(new ByteArrayInputStream(baos.toByteArray()), allowedTypes).readObject();
+        Assert.assertArrayEquals(array, readObject);
+    }
+
+    @Test
+    public void testValid2() throws Exception {
+        Set<String> allowedTypes = new HashSet<>();
+        allowedTypes.add(Instant.class.getName());
+        allowedTypes.add("java.time.Ser");
+        allowedTypes.add(Serializable[].class.getName());
+
+        Serializable[] array = new Serializable[]{ Instant.now() };
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(array);
