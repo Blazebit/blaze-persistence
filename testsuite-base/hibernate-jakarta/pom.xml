@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-testsuite-base-hibernate-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Testsuite Base Hibernate Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.testsuite.base.hibernate</module.name>
     </properties>

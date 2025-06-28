@@ -15,6 +15,7 @@
     </parent>
 
     <artifactId>blaze-persistence-integration-spring-data-testsuite-webmvc-jakarta</artifactId>
+    <name>Blazebit Persistence Integration Spring-Data and Spring Web MVC Testsuite Jakarta</name>
     <packaging>jar</packaging>
 
     <properties>

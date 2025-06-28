@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-testsuite-base-jpa-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Testsuite Base JPA Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.testsuite.base.jpa</module.name>
     </properties>

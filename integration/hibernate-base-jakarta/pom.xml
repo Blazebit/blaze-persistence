@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-hibernate-base-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration Hibernate Base Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate.base</module.name>
     </properties>

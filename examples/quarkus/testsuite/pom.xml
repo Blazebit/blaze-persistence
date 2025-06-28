@@ -9,6 +9,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite</artifactId>
+    <name>Blazebit Persistence Examples Quarkus Testsuite</name>
+
     <packaging>pom</packaging>
     <modules>
         <module>base</module>

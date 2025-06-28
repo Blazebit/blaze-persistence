@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-jpa-criteria-testsuite-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence JPA-Criteria Testsuite Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.criteria.testsuite</module.name>
     </properties>

@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-entity-view-api-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Entity-View API JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.view</module.name>
     </properties>

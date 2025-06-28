@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-openjpa-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration OpenJPA JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.openjpa</module.name>
     </properties>

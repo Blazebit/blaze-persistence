@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration JPA Base Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.jpa</module.name>
     </properties>

@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-jpa-criteria-impl-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence JPA-Criteria Impl JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.criteria.impl</module.name>
     </properties>

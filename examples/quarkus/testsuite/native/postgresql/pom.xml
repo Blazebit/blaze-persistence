@@ -9,6 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native-postgresql</artifactId>
+    <name>Blazebit Persistence Examples Quarkus Testsuite Native PostgreSQL</name>
 
     <properties>
         <module.name>com.blazebit.persistence.quarkustestsuitenativepostgresql</module.name>

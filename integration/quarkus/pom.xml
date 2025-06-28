@@ -9,6 +9,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-integration-quarkus-parent</artifactId>
+    <name>Blazebit Persistence Integration Quarkus Parent</name>
+
     <packaging>pom</packaging>
     <modules>
         <module>runtime</module>

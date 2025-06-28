@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-core-testsuite-jakarta-runner</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Core Testsuite Jakarta Runner</name>
+
     <properties>
         <module.name>com.blazebit.persistence.core.testsuite</module.name>
         <!-- We use Java 8 for a few tests -->

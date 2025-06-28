@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration Hibernate 5.5 Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate</module.name>
     </properties>

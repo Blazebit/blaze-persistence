@@ -9,6 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native-mssql</artifactId>
+    <name>Blazebit Persistence Examples Quarkus Testsuite Native MSSQL</name>
 
     <properties>
         <module.name>com.blazebit.persistence.quarkustestsuitenativemssql</module.name>

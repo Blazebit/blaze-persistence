@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-entity-view-cdi-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration Entity-View CDI JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.view.cdi</module.name>
     </properties>

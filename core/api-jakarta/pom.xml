@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-core-api-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Core API Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.core</module.name>
     </properties>

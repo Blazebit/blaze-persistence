@@ -15,6 +15,7 @@
     </parent>
 
     <artifactId>blaze-persistence-integration-spring-data-testsuite-webflux-jakarta</artifactId>
+    <name>Blazebit Persistence Integration Spring-Data and Spring WebFlux Testsuite Jakarta</name>
     <packaging>jar</packaging>
 
     <properties>

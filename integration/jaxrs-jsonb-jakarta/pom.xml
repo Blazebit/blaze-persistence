@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-jaxrs-jsonb-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration JAX-RS JSONB Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.jaxrs.jsonb</module.name>
     </properties>

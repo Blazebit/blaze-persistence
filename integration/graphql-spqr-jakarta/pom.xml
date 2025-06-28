@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-graphql-spqr-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration GraphQL SPQR Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.graphql.spqr</module.name>
     </properties>

@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-jpa-criteria-testsuite-jakarta-runner</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence JPA-Criteria Testsuite Jakarta Runner</name>
+
     <properties>
         <module.name>com.blazebit.persistence.criteria.testsuite.runner</module.name>
         <!-- We use Java 8 for a few tests -->

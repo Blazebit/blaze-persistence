@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-core-parser-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Core Parser JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.core.parser</module.name>
     </properties>

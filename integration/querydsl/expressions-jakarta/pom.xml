@@ -15,6 +15,7 @@
     </parent>
 
     <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
+    <name>Blazebit Persistence Integration QueryDSL Expressions Jakarta</name>
     <packaging>jar</packaging>
 
     <properties>

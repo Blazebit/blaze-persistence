@@ -9,6 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native-h2</artifactId>
+    <name>Blazebit Persistence Examples Quarkus Testsuite Native H2</name>
 
     <properties>
         <module.name>com.blazebit.persistence.quarkustestsuitenativeh2</module.name>

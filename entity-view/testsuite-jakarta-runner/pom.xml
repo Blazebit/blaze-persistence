@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-entity-view-testsuite-jakarta-runner</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Entity-View Testsuite Jakarta Runner</name>
+
     <properties>
         <module.name>com.blazebit.persistence.view.testsuite.runner</module.name>
         <!-- We use Java 8 for a few tests -->

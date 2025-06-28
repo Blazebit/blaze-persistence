@@ -9,6 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-integration-quarkus-3-deployment</artifactId>
+    <name>Blazebit Persistence Integration Quarkus 3 Deployment</name>
 
     <properties>
         <module.name>com.blazebit.persistence.integration.quarkus.deployment</module.name>

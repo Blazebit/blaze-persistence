@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration JAX-RS Jackson Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.jaxrs.jackson</module.name>
     </properties>

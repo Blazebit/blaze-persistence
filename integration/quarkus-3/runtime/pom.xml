@@ -9,6 +9,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
+    <name>Blazebit Persistence Integration Quarkus 3</name>
 
     <description>Advanced SQL support for JPA and Entity-Views as efficient DTOs</description>
 

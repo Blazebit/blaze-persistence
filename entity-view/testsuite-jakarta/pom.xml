@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-entity-view-testsuite-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Entity-View Testsuite Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.view.testsuite</module.name>
     </properties>

@@ -11,6 +11,8 @@
     <artifactId>blaze-persistence-core-testsuite-hibernate6</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Core Testsuite Hibernate 6</name>
+
     <properties>
         <!-- We use Java 8 for a few tests -->
         <test.java.version>11</test.java.version>

@@ -10,6 +10,7 @@
 
     <artifactId>blaze-persistence-integration-quarkus</artifactId>
 
+    <name>Blazebit Persistence Integration Quarkus</name>
     <description>Advanced SQL support for JPA and Entity-Views as efficient DTOs</description>
 
     <properties>

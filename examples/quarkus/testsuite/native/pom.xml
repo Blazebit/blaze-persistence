@@ -11,6 +11,8 @@
     <artifactId>blaze-persistence-examples-quarkus-testsuite-native</artifactId>
     <packaging>pom</packaging>
 
+    <name>Blazebit Persistence Examples Quarkus Testsuite Native</name>
+
     <profiles>
         <profile>
             <id>postgresql</id>

@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-integration-jsonb-jakarta</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Integration JSONB Jakarta</name>
+
     <properties>
         <module.name>com.blazebit.persistence.integration.jsonb</module.name>
     </properties>

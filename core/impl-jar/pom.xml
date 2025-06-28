@@ -17,6 +17,8 @@
     <artifactId>blaze-persistence-core-impl-jar</artifactId>
     <packaging>jar</packaging>
 
+    <name>Blazebit Persistence Core Impl JAR</name>
+
     <properties>
         <module.name>com.blazebit.persistence.core.impl</module.name>
     </properties>
