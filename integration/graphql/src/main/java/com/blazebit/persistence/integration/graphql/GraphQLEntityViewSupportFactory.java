@@ -818,28 +818,28 @@ public class GraphQLEntityViewSupportFactory {
             typeNameToFieldMapping.put(typeName, fieldMapping = new HashMap<>());
         }
         fieldMapping.put(fieldName, attribute.getName());
-        DefaultFetchMapping defaultFetchMapping = determineDefaultFetchMapping(attribute);
-        if (defaultFetchMapping != null) {
+        DefaultFetchMapping[] defaultFetchMappings = determineDefaultFetchMappings(attribute);
+        for (DefaultFetchMapping defaultFetchMapping : defaultFetchMappings) {
             ArrayList<ManagedViewType<?>> superTypes = getInheritanceSuperTypes(managedViews, attribute.getDeclaringType());
             if (superTypes != null) {
                 for (ManagedViewType<?> superType : superTypes) {
                     String superTypeName = getObjectTypeName(superType);
-                    Set<DefaultFetchMapping> defaultFetchMappings = typeNameToDefaultFetchMappings.get(superTypeName);
-                    if (defaultFetchMappings == null) {
-                        typeNameToDefaultFetchMappings.put(superTypeName, defaultFetchMappings = new HashSet<>());
+                    Set<DefaultFetchMapping> existingDefaultFetchMappings = typeNameToDefaultFetchMappings.get(superTypeName);
+                    if (existingDefaultFetchMappings == null) {
+                        typeNameToDefaultFetchMappings.put(superTypeName, existingDefaultFetchMappings = new HashSet<>());
                     }
-                    defaultFetchMappings.add(defaultFetchMapping);
+                    existingDefaultFetchMappings.add(defaultFetchMapping);
                 }
             }
             //noinspection unchecked
             Set<ManagedViewType<?>> subtypes = (Set<ManagedViewType<?>>) attribute.getDeclaringType().getInheritanceSubtypes();
             for (ManagedViewType<?> subtype : subtypes) {
                 String subtypeName = getObjectTypeName(subtype);
-                Set<DefaultFetchMapping> defaultFetchMappings = typeNameToDefaultFetchMappings.get(subtypeName);
-                if (defaultFetchMappings == null) {
-                    typeNameToDefaultFetchMappings.put(subtypeName, defaultFetchMappings = new HashSet<>());
+                Set<DefaultFetchMapping> existingDefaultFetchMappings = typeNameToDefaultFetchMappings.get(subtypeName);
+                if (existingDefaultFetchMappings == null) {
+                    typeNameToDefaultFetchMappings.put(subtypeName, existingDefaultFetchMappings = new HashSet<>());
                 }
-                defaultFetchMappings.add(defaultFetchMapping);
+                existingDefaultFetchMappings.add(defaultFetchMapping);
             }
         }
     }
@@ -857,12 +857,16 @@ public class GraphQLEntityViewSupportFactory {
         return list;
     }
 
-    protected DefaultFetchMapping determineDefaultFetchMapping(MethodAttribute<?, ?> attribute) {
-        GraphQLDefaultFetch annotation = attribute.getJavaMethod().getAnnotation(GraphQLDefaultFetch.class);
-        if (annotation != null) {
-            return new DefaultFetchMappingImpl(attribute.getName(), annotation.ifFieldSelected());
+    protected DefaultFetchMapping[] determineDefaultFetchMappings(MethodAttribute<?, ?> attribute) {
+        GraphQLDefaultFetch[] annotations = attribute.getJavaMethod().getAnnotationsByType(GraphQLDefaultFetch.class);
+        if (annotations.length != 0) {
+            DefaultFetchMapping[] defaultFetchMappings = new DefaultFetchMapping[annotations.length];
+            for (int i = 0; i < annotations.length; i++) {
+                defaultFetchMappings[i] = new DefaultFetchMappingImpl(attribute.getName(), annotations[i].ifFieldSelected());
+            }
+            return defaultFetchMappings;
         }
-        return null;
+        return DefaultFetchMappingImpl.EMPTY;
     }
 
     /**
@@ -871,6 +875,7 @@ public class GraphQLEntityViewSupportFactory {
      * @since 1.6.15
      */
     private static final class DefaultFetchMappingImpl implements DefaultFetchMapping {
+        private static final DefaultFetchMapping[] EMPTY = new DefaultFetchMapping[0];
         private final String attributeName;
         private final String ifFieldSelected;
 
