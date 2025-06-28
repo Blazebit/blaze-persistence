@@ -1047,7 +1047,7 @@ public class JPQLNextExpressions {
             OrderSpecifier<?> orderSpecifier = orderSpecifiers[i];
             int expressionIndex = i * 2 + 2;
             int orderIndex = expressionIndex + 1;
-            template.append(", {").append(expressionIndex).append("}, {").append(orderIndex).append("s}");
+            template.append(", {").append(expressionIndex).append("}, '{").append(orderIndex).append("s}'");
             arguments[expressionIndex] = orderSpecifier.getTarget();
             arguments[orderIndex] = ConstantImpl.create(orderSpecifier.getOrder().name());
         }
