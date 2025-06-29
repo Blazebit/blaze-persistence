@@ -20,6 +20,7 @@ Changes that happened in releases
 * Prefer `PersistenceUnitUtil#getIdentifier()` for id field access to avoid lazy loading on entity view create/update
 * Don't infer non-nullness from database schema for GraphQL input views
 * Scope `SynchronizationRegistry` to the current transaction to support transaction suspension
+* Fix invalid table alias reference error for updates with references to joins in `SET` clause on MySQL 
 
 ### Backwards-incompatible changes
 

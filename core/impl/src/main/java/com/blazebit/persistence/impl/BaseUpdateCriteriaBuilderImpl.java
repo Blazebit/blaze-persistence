@@ -254,25 +254,14 @@ public abstract class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCrite
                         sbSelectFrom.append(')');
                     } else {
                         sbSelectFrom.setLength(0);
-                        if (mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.MERGE || mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.REFERENCE) {
-                            // We have to build a query that puts the set clause expressions into the group by to align with the parameter positions in the final SQL
-                            sbSelectFrom.append("SELECT 1");
-                            List<String> whereClauseConjuncts = new ArrayList<>();
-                            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
-                            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
-                            sbSelectFrom.append(" GROUP BY ");
-                            appendSetElementsAsCaseExpressions(sbSelectFrom);
-                        } else {
-                            sbSelectFrom.append("SELECT ");
-                            appendSetElementsAsCaseExpressions(sbSelectFrom);
+                        sbSelectFrom.append("SELECT ");
+                        appendSetElementsAsCaseExpressions(sbSelectFrom);
 
-                            List<String> whereClauseConjuncts = new ArrayList<>();
-                            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
+                        List<String> whereClauseConjuncts = new ArrayList<>();
+                        List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
 
-                            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
-                        }
+                        appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
                     }
                 } finally {
                     queryGenerator.setExternalRepresentation(originalExternalRepresentation);
