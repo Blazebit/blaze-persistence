@@ -25,4 +25,28 @@ public class IndexedNode2 {
     private Root2 parent;
     @Column(name = "list_index")
     private Integer index;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Root2 getParent() {
+        return parent;
+    }
+
+    public void setParent(Root2 parent) {
+        this.parent = parent;
+    }
+
+    public Integer getIndex() {
+        return index;
+    }
+
+    public void setIndex(Integer index) {
+        this.index = index;
+    }
 }

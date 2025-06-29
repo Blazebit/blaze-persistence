@@ -16,6 +16,7 @@ Changes that happened in releases
 * Allow adding custom GraphQL deserialization types and auto-add `java.time.Ser` for time types
 * Add missing quotes around order direction rendering of `JPQLNextExpressions.groupConcat()`
 * Ensure dynamic fetching of correlated collections works with multiset fetching
+* Prefer `PersistenceUnitUtil#getIdentifier()` for id field access to avoid lazy loading on entity view create/update
 
 ### Backwards-incompatible changes
 
