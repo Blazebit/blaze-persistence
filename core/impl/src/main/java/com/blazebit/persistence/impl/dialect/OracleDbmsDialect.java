@@ -79,7 +79,7 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
         types.put(Character.class, "char(1)");
         types.put(Character.TYPE, "char(1)");
 
-        types.put(String.class, "clob");
+        types.put(String.class, "varchar2(4000)");
         types.put(BigInteger.class, "number");
         types.put(BigDecimal.class, "decimal");
 

@@ -239,38 +239,17 @@ public abstract class AbstractUpdateCollectionCriteriaBuilder<T, X extends BaseU
                     String rootNodeDeReferenceFunction = rootNode.getDeReferenceFunction();
                     String collectionNodeDeReferenceFunction = collectionTreeNode.getDefaultNode().getDeReferenceFunction();
                     try {
-                        if (mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.MERGE || mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.REFERENCE) {
-                            sbSelectFrom.append("SELECT 1");
-                            // We don't need the special function for the FROM and WHERE part because that is isolated
-                            rootNode.setDeReferenceFunction(null);
-                            collectionTreeNode.getDefaultNode().setDeReferenceFunction(null);
+                        // We don't need the special function for the this strategy
+                        rootNode.setDeReferenceFunction(null);
+                        collectionTreeNode.getDefaultNode().setDeReferenceFunction(null);
+                        sbSelectFrom.append("SELECT ");
+                        appendSetElementsAsCaseExpressions(sbSelectFrom);
 
-                            // We have to build a query that puts the set clause expressions into the group by to align with the parameter positions in the final SQL
-                            List<String> whereClauseConjuncts = new ArrayList<>();
-                            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
-                            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
-                            sbSelectFrom.append(" GROUP BY ");
+                        List<String> whereClauseConjuncts = new ArrayList<>();
+                        List<String> optionalWhereClauseConjuncts = new ArrayList<>();
+                        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
 
-                            // For the SET clause we need it because in that clause, a reference to the driving table is possible which we need to replace
-                            rootNode.setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
-                            collectionTreeNode.getDefaultNode().setDeReferenceFunction(mainQuery.jpaProvider.getCustomFunctionInvocation(CollectionDmlSupportFunction.FUNCTION_NAME, 1));
-                            appendSetElementsAsCaseExpressions(sbSelectFrom);
-                        } else if (mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.FROM || mainQuery.dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.FROM_ALIAS) {
-                            // We don't need the special function for the this strategy
-                            rootNode.setDeReferenceFunction(null);
-                            collectionTreeNode.getDefaultNode().setDeReferenceFunction(null);
-                            sbSelectFrom.append("SELECT ");
-                            appendSetElementsAsCaseExpressions(sbSelectFrom);
-
-                            List<String> whereClauseConjuncts = new ArrayList<>();
-                            List<String> optionalWhereClauseConjuncts = new ArrayList<>();
-                            joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation, false, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, nodesToFetch, Collections.<JoinNode>emptySet(), null, true);
-
-                            appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
-                        } else {
-                            throw new UnsupportedOperationException("Unsupported update join strategy: " + mainQuery.dbmsDialect.getUpdateJoinStyle());
-                        }
+                        appendWhereClause(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, lateralJoinNode);
                     } finally {
                         rootNode.setDeReferenceFunction(rootNodeDeReferenceFunction);
                         collectionTreeNode.getDefaultNode().setDeReferenceFunction(collectionNodeDeReferenceFunction);

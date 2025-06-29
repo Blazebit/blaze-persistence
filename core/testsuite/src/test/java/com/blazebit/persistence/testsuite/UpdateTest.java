@@ -197,6 +197,32 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
+    // Test for issue #2047
+    // NOTE: This requires advanced SQL support
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesJoinInSet() {
+        transactional(new TxVoidWork() {
+            @Override
+            public void work(EntityManager em) {
+                final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+                cb.fromValues(IdHolderCTE.class, "i", Arrays.asList(new IdHolderCTE(doc1.getId()), new IdHolderCTE(doc2.getId())));
+                cb.setExpression("name", "CONCAT(d.name,CAST_STRING(i.id))");
+                cb.where("d.id").eqExpression("i.id");
+                String expected = "UPDATE Document d SET d.name = CONCAT(d.name,cast_string(i.id)) " +
+                        "FROM Document d, IdHolderCTE(2 VALUES) i " +
+                        "WHERE d.id = i.id";
+
+                assertEquals(expected, cb.getQueryString());
+
+                int updateCount = cb.executeUpdate();
+                assertEquals(2, updateCount);
+                assertEquals("D1" + doc1.getId(), em.find(Document.class, doc1.getId()).getName());
+                assertEquals("D2" + doc2.getId(), em.find(Document.class, doc2.getId()).getName());
+            }
+        });
+    }
+
     @Test
     public void testParameterExpression() {
         transactional(new TxVoidWork() {

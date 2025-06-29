@@ -66,7 +66,7 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
             tableToUpdate = sql.substring(sql.indexOf(' ') + 1, sql.indexOf(' ', sql.indexOf(' ') + 1));
         } else {
             int fromIndex = SqlUtils.indexOfFrom(sql);
-            int groupByIndex;
+            List<String> setItems = Arrays.asList(SqlUtils.getSelectItemExpressions(sql, 0));
             switch (dbmsDialect.getUpdateJoinStyle()) {
                 case FROM:
                 case FROM_ALIAS:
@@ -77,7 +77,14 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
                         sb.append(tableToUpdate);
                     }
                     sb.append(" set ");
-                    applySetClause(sb, Arrays.asList(SqlUtils.getSelectItemExpressions(sql, 0)));
+                    for (int i = 0; i < setItems.size(); i++) {
+                        if (i != 0) {
+                            sb.append(", ");
+                        }
+                        String item = setItems.get(i);
+                        sb.append(setColumns.get(i)).append(" = ");
+                        sb.append(item, item.indexOf('=') + 1, item.lastIndexOf(" then "));
+                    }
                     sb.append(sql, fromIndex, sql.length());
                     if (dbmsDialect.getUpdateJoinStyle() == UpdateJoinStyle.FROM) {
                         sb.append(" and ").append(tableToUpdate).append('.').append(idColumns[0]).append(" = ").append(tableAlias).append(".").append(idColumns[0]);
@@ -88,7 +95,6 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
                     }
                     break;
                 case REFERENCE:
-                    groupByIndex = SqlUtils.indexOfGroupBy(sql, fromIndex);
                     sb.append("update ");
                     sb.append(tableToUpdate);
 
@@ -96,12 +102,25 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
                     for (Map.Entry<String, String> entry : aliasMapping.entrySet()) {
                         sb.append(entry.getKey()).append(" as ").append(entry.getValue(), entry.getValue().indexOf('.') + 1, entry.getValue().length()).append(", ");
                     }
+                    for (int i = 0; i < setItems.size(); i++) {
+                        String item = setItems.get(i);
+                        sb.append("coalesce(nullif(").append(tableAlias).append( '.' ).append(setColumns.get(i));
+                        sb.append(",").append(tableAlias).append('.').append(setColumns.get(i)).append("),");
+                        sb.append(item, item.indexOf('=') + 1, item.lastIndexOf(" then "));
+                        sb.append(") as c").append(aliasMapping.size() + i).append( ", " );
+                    }
                     sb.setLength(sb.length() - 2);
-                    sb.append(sql, fromIndex, groupByIndex);
+                    sb.append(sql, fromIndex, sql.length());
                     sb.append(") tmp ");
 
                     sb.append("set ");
-                    applySetClause(sb, SqlUtils.getExpressionItems(sql, groupByIndex + SqlUtils.GROUP_BY.length(), sql.length()));
+                    for (int i = 0; i < setItems.size(); i++) {
+                        if (i != 0) {
+                            sb.append(", ");
+                        }
+                        sb.append(setColumns.get(i)).append(" = ");
+                        sb.append("tmp.c").append(aliasMapping.size() + i);
+                    }
 
                     sb.append(" where ");
                     sb.append(tableToUpdate).append('.').append(idColumns[0]).append(" = tmp.c0");
@@ -112,7 +131,6 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
 
                     break;
                 case MERGE:
-                    groupByIndex = SqlUtils.indexOfGroupBy(sql, fromIndex);
                     sb.append("merge into ");
                     sb.append(tableToUpdate);
 
@@ -120,8 +138,15 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
                     for (Map.Entry<String, String> entry : aliasMapping.entrySet()) {
                         sb.append(entry.getKey()).append(" as ").append(entry.getValue(), entry.getValue().indexOf('.') + 1, entry.getValue().length()).append(", ");
                     }
+                    for (int i = 0; i < setItems.size(); i++) {
+                        String item = setItems.get(i);
+                        sb.append("coalesce(nullif(").append(tableAlias).append( '.' ).append(setColumns.get(i));
+                        sb.append(",").append(tableAlias).append('.').append(setColumns.get(i)).append("),");
+                        sb.append(item, item.indexOf('=') + 1, item.lastIndexOf(" then "));
+                        sb.append(") as c").append(aliasMapping.size() + i).append( ", " );
+                    }
                     sb.setLength(sb.length() - 2);
-                    sb.append(sql, fromIndex, groupByIndex);
+                    sb.append(sql, fromIndex, sql.length());
                     sb.append(") tmp on (");
                     sb.append(tableToUpdate).append('.').append(idColumns[0]).append(" = tmp.c0");
                     for (int i = 1; i < idColumns.length; i++) {
@@ -129,7 +154,13 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
                         sb.append(" and ").append(tableToUpdate).append('.').append(idColumn).append(" = tmp.c").append(i);
                     }
                     sb.append(") when matched then update set ");
-                    applySetClause(sb, SqlUtils.getExpressionItems(sql, groupByIndex + SqlUtils.GROUP_BY.length(), sql.length()));
+                    for (int i = 0; i < setItems.size(); i++) {
+                        if (i != 0) {
+                            sb.append(", ");
+                        }
+                        sb.append(setColumns.get(i)).append(" = ");
+                        sb.append("tmp.c").append(aliasMapping.size() + i);
+                    }
 
                     break;
                 default:
@@ -156,16 +187,5 @@ public class UpdateModificationQuerySpecification<T> extends ModificationQuerySp
         this.participatingQueries = participatingQueries;
         this.addedCtes = addedCtes;
         this.dirty = false;
-    }
-
-    private void applySetClause(StringBuilder sb, List<String> selectItemExpressions) {
-        for (int i = 0; i < selectItemExpressions.size(); i++) {
-            if (i != 0) {
-                sb.append(", ");
-            }
-            String item = selectItemExpressions.get(i);
-            sb.append(setColumns.get(i)).append(" = ");
-            sb.append(item, item.indexOf('=') + 1, item.lastIndexOf(" then "));
-        }
     }
 }
