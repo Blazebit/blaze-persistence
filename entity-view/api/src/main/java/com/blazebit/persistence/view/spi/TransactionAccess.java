@@ -23,6 +23,13 @@ public interface TransactionAccess {
     public boolean isActive();
 
     /**
+     * Returns the current transaction object.
+     *
+     * @return the current transaction object
+     */
+    public Object getTransaction();
+
+    /**
      * Mark the current transaction as rollback only.
      */
     public void markRollbackOnly();

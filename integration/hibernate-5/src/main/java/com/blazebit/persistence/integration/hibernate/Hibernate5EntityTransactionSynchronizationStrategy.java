@@ -41,6 +41,11 @@ public class Hibernate5EntityTransactionSynchronizationStrategy implements Trans
     }
 
     @Override
+    public Object getTransaction() {
+        return tx;
+    }
+
+    @Override
     public void markRollbackOnly() {
         tx.setRollbackOnly();
     }

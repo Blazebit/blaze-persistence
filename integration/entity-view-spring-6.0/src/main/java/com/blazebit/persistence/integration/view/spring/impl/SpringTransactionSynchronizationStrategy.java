@@ -31,6 +31,15 @@ public class SpringTransactionSynchronizationStrategy implements TransactionAcce
     }
 
     @Override
+    public Object getTransaction() {
+        Object transaction = TransactionSynchronizationManager.getResource(INSTANCE);
+        if (transaction == null) {
+            TransactionSynchronizationManager.bindResource(INSTANCE, transaction = new Object());
+        }
+        return transaction;
+    }
+
+    @Override
     public void markRollbackOnly() {
         TransactionInterceptor.currentTransactionStatus().setRollbackOnly();
     }
