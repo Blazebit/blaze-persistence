@@ -413,7 +413,10 @@ public class GraphQLEntityViewSupportFactory {
                     inputType = getInputEntryType(typeRegistry, attribute, getInputKeyType(typeRegistry, mapAttribute), getInputElementType(typeRegistry, mapAttribute));
                 } else {
                     type = makeNonNull(getListType(getElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute)));
-                    inputType = makeNonNull(getListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute)));
+                    inputType = getListType(getInputElementType(typeRegistry, (PluralAttribute<?, ?, ?>) attribute));
+                    if (inputType != null && isNotNull(attribute.getJavaMethod())) {
+                        inputType = makeNonNull(inputType);
+                    }
                 }
                 if (type != null) {
                     String fieldName = getFieldName(attribute);
@@ -469,7 +472,7 @@ public class GraphQLEntityViewSupportFactory {
                         inputElementType = makeNonNull(inputElementType);
                     }
                     type = makeNonNull(getListType(elementType));
-                    inputType = makeNonNull(getListType(inputElementType));
+                    inputType = getListType(inputElementType);
                 } else {
                     type = getElementType(typeRegistry, entityViewManager, fieldType);
                     inputType = getInputElementType(typeRegistry, entityViewManager, fieldType);
@@ -645,7 +648,10 @@ public class GraphQLEntityViewSupportFactory {
                     inputType = getInputEntryType(schemaBuilder, attribute, getInputKeyType(schemaBuilder, mapAttribute, registeredTypeNames), getInputElementType(schemaBuilder, mapAttribute, registeredTypeNames));
                 } else {
                     type = makeNonNull(getListType(getElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames)));
-                    inputType = makeNonNull(getListType(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames)));
+                    inputType = getListType(getInputElementType(schemaBuilder, (PluralAttribute<?, ?, ?>) attribute, registeredTypeNames));
+                    if (inputType != null && isNotNull(attribute.getJavaMethod())) {
+                        inputType = makeNonNull(type);
+                    }
                 }
                 if (type != null) {
                     fieldBuilder.type(type);
@@ -705,7 +711,7 @@ public class GraphQLEntityViewSupportFactory {
                         inputElementType = makeNonNull(inputElementType);
                     }
                     type = makeNonNull(getListType(elementType));
-                    inputType = makeNonNull(getListType(inputElementType));
+                    inputType = getListType(inputElementType);
                 } else {
                     type = getElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
                     inputType = getInputElementType(schemaBuilder, entityViewManager, fieldType, registeredTypeNames);
@@ -1292,7 +1298,11 @@ public class GraphQLEntityViewSupportFactory {
         if (key == null || value == null) {
             return null;
         }
-        return getInputEntryType(typeRegistry, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+        Type type = getInputEntryType(typeRegistry, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+        if (type != null && isNotNull(attribute.getJavaMethod())) {
+            type = makeNonNull(type);
+        }
+        return type;
     }
 
     /**
@@ -1316,7 +1326,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             typeRegistry.add(newObjectTypeDefinition(entryName, fields, null));
         }
-        return new NonNullType(new ListType(new NonNullType(new TypeName(entryName))));
+        return new ListType(new NonNullType(new TypeName(entryName)));
     }
 
     /**
@@ -1373,7 +1383,11 @@ public class GraphQLEntityViewSupportFactory {
         if (key == null || value == null) {
             return null;
         }
-        return getInputEntryType(schemaBuilder, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+        GraphQLInputType type = getInputEntryType(schemaBuilder, getObjectTypeName(attribute.getDeclaringType()), attribute.getName(), key, value);
+        if (type != null && isNotNull(attribute.getJavaMethod())) {
+            type = makeNonNull(type);
+        }
+        return type;
     }
 
     /**
@@ -1398,7 +1412,7 @@ public class GraphQLEntityViewSupportFactory {
         if (isDefineNormalTypes()) {
             schemaBuilder.additionalType(type);
         }
-        return new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(new GraphQLTypeReference(entryName))));
+        return new GraphQLList(new GraphQLNonNull(new GraphQLTypeReference(entryName)));
     }
 
     /**
@@ -1703,7 +1717,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getInputObjectType((ManagedViewType<?>) elementType);
         }
-        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
+        if (type != null && (singularAttribute.isId() || isNotNull(((MethodAttribute<?, ?>) singularAttribute).getJavaMethod()))) {
             type = makeNonNull(type);
         }
         return type;
@@ -1849,7 +1863,7 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             type = getInputObjectTypeReference((ManagedViewType<?>) elementType);
         }
-        if (type != null && (singularAttribute.isId() || isNotNull(singularAttribute, entityMetamodel))) {
+        if (type != null && (singularAttribute.isId() || isNotNull(((MethodAttribute<?, ?>) singularAttribute).getJavaMethod()))) {
             type = makeNonNull(type);
         }
         return type;
