@@ -590,14 +590,14 @@ jobs:
           - rdbms: h2
             provider: hibernate-6.6
             jdk: 17
-            spring-data: spring-data-3.3.x
+            spring-data: spring-data-3.4.x
 ################################################
 # hibernate-7.0
 ################################################
           - rdbms: h2
             provider: hibernate-7.0
             jdk: 17
-            spring-data: spring-data-3.3.x
+            spring-data: spring-data-3.5.x
 ################################################
 # LTS JDKs
 ################################################
