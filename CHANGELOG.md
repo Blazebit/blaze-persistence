@@ -8,6 +8,7 @@ Changes that happened in releases
 
 * Add `blaze-persistence-integration-hibernate-7.0` for Hibernate ORM 7.0+ support
 * Add `GraphQLDefaultFetches` annotation to allow specifying multiple fields that can trigger a default fetch
+* Add support for Spring Boot/Data 3.4 and 3.5
 
 ### Bug fixes
 

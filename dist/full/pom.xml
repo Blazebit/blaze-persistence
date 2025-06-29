@@ -214,6 +214,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-webmvc</artifactId>
         </dependency>
         <dependency>

@@ -22,9 +22,9 @@
         <module.name>com.blazebit.persistence.integration.spring.data.testsuite.webflux.runner</module.name>
         <test.java.version>17</test.java.version>
         <main.java.version>${test.java.version}</main.java.version>
-        <version.spring>${version.spring-data-3.3-spring}</version.spring>
-        <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
-        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring-boot>${version.spring-data-3.5-spring-boot}</version.spring-boot>
+        <version.spring-data>${version.spring-data-3.5}</version.spring-data>
         <version.hibernate>${version.hibernate-6.2}</version.hibernate>
         <version.h2>${h2-2.version}</version.h2>
         <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60</jpa.excludedGroups>
@@ -98,11 +98,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -432,9 +427,6 @@
         </profile>
         <profile>
             <id>spring-data-3.3.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-3.3-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
@@ -444,6 +436,39 @@
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-3.4.x</id>
+            <properties>
+                <version.spring>${version.spring-data-3.4-spring}</version.spring>
+                <version.spring-boot>${version.spring-data-3.4-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.4}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-3.5.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
+                <version.spring-boot>${version.spring-data-3.5-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-3.5}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
