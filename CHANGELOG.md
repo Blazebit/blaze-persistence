@@ -19,6 +19,7 @@ Changes that happened in releases
 * Ensure dynamic fetching of correlated collections works with multiset fetching
 * Prefer `PersistenceUnitUtil#getIdentifier()` for id field access to avoid lazy loading on entity view create/update
 * Don't infer non-nullness from database schema for GraphQL input views
+* Scope `SynchronizationRegistry` to the current transaction to support transaction suspension
 
 ### Backwards-incompatible changes
 

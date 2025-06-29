@@ -38,6 +38,15 @@ public class Hibernate7JtaPlatformTransactionSynchronizationStrategy implements 
     }
 
     @Override
+    public Object getTransaction() {
+        try {
+            return jtaTransactionManager.getTransaction();
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void markRollbackOnly() {
         try {
             jtaTransactionManager.setRollbackOnly();

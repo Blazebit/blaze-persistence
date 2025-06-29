@@ -125,7 +125,6 @@
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60EntityManagerFactoryIntegrator;
                                         provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory;
                                         provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate60Integrator;
-                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
                                         provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor;
                                         provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate60ServiceContributor;
                                         exports com.blazebit.persistence.integration.hibernate;
