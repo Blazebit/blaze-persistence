@@ -23,25 +23,45 @@ import java.util.concurrent.ConcurrentMap;
 public class SynchronizationRegistry implements Synchronization, TransactionAccess {
 
     // We don't use a thread local because a TX could be rolled back from a different thread
-    private static final ConcurrentMap<Thread, SynchronizationRegistry> REGISTRY = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Thread, List<SynchronizationRegistry>> REGISTRY = new ConcurrentHashMap<>();
+    private final Object transaction;
     private final TransactionAccess transactionAccess;
     private final List<Synchronization> synchronizations;
     private final Thread key;
 
     public SynchronizationRegistry(TransactionAccess transactionAccess) {
         this.transactionAccess = transactionAccess;
+        this.transaction = transactionAccess.getTransaction();
         this.synchronizations = new ArrayList<>(1);
         this.key = Thread.currentThread();
         transactionAccess.registerSynchronization(this);
-        REGISTRY.put(key, this);
+        List<SynchronizationRegistry> synchronizationRegistries = new ArrayList<>(1);
+        List<SynchronizationRegistry> existingSynchronizationRegistries = REGISTRY.putIfAbsent(key, synchronizationRegistries);
+        if (existingSynchronizationRegistries != null) {
+            synchronizationRegistries = existingSynchronizationRegistries;
+        }
+        synchronizationRegistries.add(SynchronizationRegistry.this);
     }
 
     public static SynchronizationRegistry getRegistry() {
-        return REGISTRY.get(Thread.currentThread());
+        List<SynchronizationRegistry> synchronizationRegistries = REGISTRY.get(Thread.currentThread());
+        if (synchronizationRegistries != null) {
+            for (SynchronizationRegistry registry : synchronizationRegistries) {
+                if (registry.transactionAccess.getTransaction() == registry.getTransaction()) {
+                    return registry;
+                }
+            }
+        }
+        return null;
     }
 
     public TransactionAccess getTransactionAccess() {
         return transactionAccess;
+    }
+
+    @Override
+    public Object getTransaction() {
+        return transaction;
     }
 
     @Override
@@ -91,6 +111,7 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
     @Override
     public void afterCompletion(int status) {
         List<Exception> suppressedExceptions = null;
+        List<SynchronizationRegistry> synchronizationRegistries;
         switch (status) {
             // We don't care about these statuses, only about committed and rolled back
             case Status.STATUS_ACTIVE:
@@ -101,7 +122,13 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
             case Status.STATUS_PREPARING:
                 break;
             case Status.STATUS_COMMITTED:
-                REGISTRY.remove(key);
+                synchronizationRegistries = REGISTRY.get(key);
+                if (synchronizationRegistries != null) {
+                    synchronizationRegistries.remove(this);
+                    if (synchronizationRegistries.isEmpty()) {
+                        REGISTRY.remove(key);
+                    }
+                }
                 for (int i = 0; i < synchronizations.size(); i++) {
                     Synchronization synchronization = synchronizations.get(i);
                     try {
@@ -119,7 +146,14 @@ public class SynchronizationRegistry implements Synchronization, TransactionAcce
             // We assume unknown means rolled back as Hibernate behaves this way with a local transaction coordinator
             case Status.STATUS_UNKNOWN:
             default:
-                if (REGISTRY.remove(key) != null) {
+                synchronizationRegistries = REGISTRY.get(key);
+                if (synchronizationRegistries != null) {
+                    synchronizationRegistries.remove(this);
+                    if (synchronizationRegistries.isEmpty()) {
+                        REGISTRY.remove(key);
+                    }
+                }
+                if (synchronizationRegistries != null) {
                     for (int i = synchronizations.size() - 1; i >= 0; i--) {
                         Synchronization synchronization = synchronizations.get(i);
                         try {
