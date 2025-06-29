@@ -17,6 +17,7 @@ Changes that happened in releases
 * Add missing quotes around order direction rendering of `JPQLNextExpressions.groupConcat()`
 * Ensure dynamic fetching of correlated collections works with multiset fetching
 * Prefer `PersistenceUnitUtil#getIdentifier()` for id field access to avoid lazy loading on entity view create/update
+* Don't infer non-nullness from database schema for GraphQL input views
 
 ### Backwards-incompatible changes
 
