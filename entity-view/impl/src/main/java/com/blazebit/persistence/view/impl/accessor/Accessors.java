@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -257,6 +258,11 @@ public final class Accessors {
     private static AttributeAccessor forEntityAttribute(EntityViewManagerImpl evm, Class<?> entityClass, Attribute<?, ?> attribute, Class<?> targetType) {
         Member member = attribute.getJavaMember();
         if (member instanceof Field) {
+            if (attribute instanceof javax.persistence.metamodel.SingularAttribute<?, ?>
+                    && ((javax.persistence.metamodel.SingularAttribute<?, ?>) attribute).isId()
+                    && ((IdentifiableType<?>) attribute.getDeclaringType()).hasSingleIdAttribute()) {
+                return new EntityIdFieldAttributeAccessor(evm.getJpaProvider(), (Field) member, targetType);
+            }
             return new EntityFieldAttributeAccessor(evm.getJpaProvider(), (Field) member, targetType);
         } else if (member instanceof Method) {
             Method getter = ReflectionUtils.getGetter(entityClass, attribute.getName());
