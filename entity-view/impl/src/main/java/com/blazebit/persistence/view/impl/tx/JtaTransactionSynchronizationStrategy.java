@@ -11,6 +11,7 @@ import com.blazebit.persistence.view.spi.TransactionSupport;
 
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.TransactionSynchronizationRegistry;
@@ -37,6 +38,15 @@ public class JtaTransactionSynchronizationStrategy implements TransactionAccess,
     @Override
     public boolean isActive() {
         return synchronizationRegistry.getTransactionStatus() == Status.STATUS_ACTIVE;
+    }
+
+    @Override
+    public Object getTransaction() {
+        try {
+            return tm.getTransaction();
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

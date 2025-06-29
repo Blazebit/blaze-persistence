@@ -335,31 +335,36 @@ class BlazePersistenceProcessor {
     @BuildStep
     ServiceProviderBuildItem hibernateAccess() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.integration.hibernate.base.HibernateAccess",
-            "com.blazebit.persistence.integration.hibernate.Hibernate62Access");
+            "com.blazebit.persistence.integration.hibernate.Hibernate62Access",
+            "com.blazebit.persistence.integration.hibernate.Hibernate7Access");
     }
 
     @BuildStep
     ServiceProviderBuildItem entityManagerFactoryIntegrator() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.spi.EntityManagerFactoryIntegrator",
-            "com.blazebit.persistence.integration.hibernate.Hibernate62EntityManagerFactoryIntegrator");
+            "com.blazebit.persistence.integration.hibernate.Hibernate62EntityManagerFactoryIntegrator",
+            "com.blazebit.persistence.integration.hibernate.Hibernate7EntityManagerFactoryIntegrator");
     }
 
     @BuildStep
     ServiceProviderBuildItem transactionAccessFactory() {
         return new ServiceProviderBuildItem("com.blazebit.persistence.view.spi.TransactionAccessFactory",
-            "com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory");
+            "com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory",
+            "com.blazebit.persistence.integration.hibernate.Hibernate7TransactionAccessFactory");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateAdditionalMappingContributor() {
         return new ServiceProviderBuildItem("org.hibernate.boot.spi.AdditionalMappingContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate62AdditionalMappingContributor");
+                "com.blazebit.persistence.integration.hibernate.Hibernate62AdditionalMappingContributor",
+                "com.blazebit.persistence.integration.hibernate.Hibernate7AdditionalMappingContributor");
     }
 
     @BuildStep
     ServiceProviderBuildItem hibernateTypeContributor() {
         return new ServiceProviderBuildItem("org.hibernate.metamodel.spi.TypeContributor",
-                "com.blazebit.persistence.integration.hibernate.Hibernate62Integrator");
+                "com.blazebit.persistence.integration.hibernate.Hibernate62Integrator",
+                "com.blazebit.persistence.integration.hibernate.Hibernate7Integrator");
     }
 
     private static Map<String, Set<String>> buildClassesToBlazePersistenceInstanceMapping(Map<String, Set<String>> blazePersistenceInstanceToPackageMapping,

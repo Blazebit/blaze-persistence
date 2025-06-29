@@ -121,13 +121,12 @@
                                         requires com.blazebit.persistence.core;
                                         requires transitive com.blazebit.persistence.integration.hibernate.base;
                                         requires static com.blazebit.persistence.view;
-                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate60Access;
-                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60EntityManagerFactoryIntegrator;
-                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory;
-                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate60Integrator;
-                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
-                                        provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor;
-                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate60ServiceContributor;
+                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate7Access;
+                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate7EntityManagerFactoryIntegrator;
+                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate7TransactionAccessFactory;
+                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate7Integrator;
+                                        provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate7MetadataContributor;
+                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate7ServiceContributor;
                                         exports com.blazebit.persistence.integration.hibernate;
                                     }
                                 </moduleInfoSource>

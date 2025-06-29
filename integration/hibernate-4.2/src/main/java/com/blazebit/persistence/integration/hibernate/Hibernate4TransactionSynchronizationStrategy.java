@@ -41,6 +41,11 @@ public class Hibernate4TransactionSynchronizationStrategy implements Transaction
     }
 
     @Override
+    public Object getTransaction() {
+        return tx;
+    }
+
+    @Override
     public void markRollbackOnly() {
         tx.setRollbackOnly();
     }
