@@ -66,7 +66,7 @@ None yet
 
 ### New features
 
-None yet
+* Introduce SelectNewBuilder interface
 
 ### Bug fixes
 
