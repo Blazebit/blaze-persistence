@@ -13,6 +13,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
@@ -169,6 +170,7 @@ public class GraphQLEntityViewSupportFactory {
 
     private boolean defineNormalTypes;
     private boolean defineRelayTypes;
+    private boolean defineNonInputTypesForUpdatableOrCreatableEntityViews;
     private Boolean implementRelayNode;
     private boolean defineRelayNodeIfNotExist;
     private boolean defineDedicatedRelayNodes;
@@ -222,6 +224,24 @@ public class GraphQLEntityViewSupportFactory {
      */
     public void setDefineRelayTypes(boolean defineRelayTypes) {
         this.defineRelayTypes = defineRelayTypes;
+    }
+
+    /**
+     * Returns <code>true</code> if non-input types should be defined for updatable or creatable entity views.
+     *
+     * @return <code>true</code> if non-input types should be defined for updatable or creatable entity views
+     */
+    public boolean isDefineNonInputTypesForUpdatableOrCreatableEntityViews() {
+        return defineNonInputTypesForUpdatableOrCreatableEntityViews;
+    }
+
+    /**
+     * Sets whether non-input types should be defined for updatable or creatable entity views.
+     *
+     * @param defineNonInputTypesForUpdatableOrCreatableEntityViews Whether non-input types should be defined for updatable or creatable entity views
+     */
+    public void setDefineNonInputTypesForUpdatableOrCreatableEntityViews(boolean defineNonInputTypesForUpdatableOrCreatableEntityViews) {
+        this.defineNonInputTypesForUpdatableOrCreatableEntityViews = defineNonInputTypesForUpdatableOrCreatableEntityViews;
     }
 
     /**
@@ -383,7 +403,8 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             defaultImplementsTypes = Collections.emptyList();
         }
-        ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema( entityViewManager );
+        ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema(entityViewManager);
+        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineUsageGraph(managedViews);
         for (ManagedViewType<?> managedView : managedViews) {
             String typeName = getObjectTypeName(managedView);
             String inputTypeName = typeName + "Input";
@@ -427,8 +448,10 @@ public class GraphQLEntityViewSupportFactory {
                     if (isDefineRelayTypes() && isDefineDedicatedRelayNodes()) {
                         addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Node", attribute, fieldName);
                     }
-                    valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
-                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
+                    if (needsDefinitionInInputType(attribute)) {
+                        valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                        addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
+                    }
                 }
             }
             for (Method method : managedView.getJavaType().getMethods()) {
@@ -439,6 +462,7 @@ public class GraphQLEntityViewSupportFactory {
                 if (!fieldNames.add(fieldName)) {
                     continue;
                 }
+                boolean isWritable = ReflectionUtils.getSetter(managedView.getJavaType(), fieldName) != null;
                 Class<?> fieldType = ReflectionUtils.resolveType(managedView.getJavaType(), method.getGenericReturnType());
                 Type type;
                 Type inputType;
@@ -484,7 +508,9 @@ public class GraphQLEntityViewSupportFactory {
                     }
                     FieldDefinition fieldDefinition = new FieldDefinition(fieldName, type);
                     fieldDefinitions.add(fieldDefinition);
-                    valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                    if (isWritable) {
+                        valueDefinitions.add(new InputValueDefinition(fieldName, inputType));
+                    }
                 }
             }
             List<Type> implementsTypes;
@@ -506,7 +532,7 @@ public class GraphQLEntityViewSupportFactory {
             } else {
                 typeDefinition = newObjectTypeDefinition(typeName, implementsTypes, fieldDefinitions, description);
             }
-            addObjectTypeDefinition(typeRegistry, typeNameToViewType, managedView, typeDefinition, newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
+            addObjectTypeDefinition(typeRegistry, typeNameToViewType, usageGraph, managedView, typeDefinition, newInputObjectTypeDefinition(inputTypeName, valueDefinitions, description));
         }
 
         Set<String> serializableBasicTypes = new HashSet<>(this.additionalSerializableBasicTypes == null ? Collections.emptySet() : this.additionalSerializableBasicTypes);
@@ -594,6 +620,7 @@ public class GraphQLEntityViewSupportFactory {
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
 
         ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema(entityViewManager);
+        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineUsageGraph(managedViews);
         for (ManagedViewType<?> managedView : managedViews) {
             String typeName = getObjectTypeName(managedView);
             String inputTypeName = getInputObjectTypeName(managedView);
@@ -664,8 +691,10 @@ public class GraphQLEntityViewSupportFactory {
                     if (isDefineRelayTypes() && isDefineDedicatedRelayNodes()) {
                         addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Node", attribute, fieldName);
                     }
-                    inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
-                    addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
+                    if (needsDefinitionInInputType(attribute)) {
+                        inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                        addFieldMapping(typeNameToFieldMapping, typeNameToDefaultFetchMappings, managedViews, typeName, "Input", attribute, fieldName);
+                    }
                 }
             }
             for (Method method : managedView.getJavaType().getMethods()) {
@@ -673,9 +702,10 @@ public class GraphQLEntityViewSupportFactory {
                     continue;
                 }
                 String fieldName = getFieldName(method);
-                if (inputBuilder.hasField(fieldName)) {
+                if (objectBuilder != null && objectBuilder.hasField(fieldName) || interfaceBuilder != null && interfaceBuilder.hasField(fieldName)) {
                     continue;
                 }
+                boolean isWritable = ReflectionUtils.getSetter(managedView.getJavaType(), fieldName) != null;
                 GraphQLFieldDefinition.Builder fieldBuilder = GraphQLFieldDefinition.newFieldDefinition();
                 Class<?> fieldType = ReflectionUtils.resolveType(managedView.getJavaType(), method.getGenericReturnType());
                 fieldBuilder.name(fieldName);
@@ -727,7 +757,9 @@ public class GraphQLEntityViewSupportFactory {
                     } else {
                         objectBuilder.field(fieldBuilder);
                     }
-                    inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                    if (isWritable) {
+                        inputBuilder.field(GraphQLInputObjectField.newInputObjectField().name(fieldName).type(inputType).build());
+                    }
                 }
             }
             if (managedView.getInheritanceMapping() != null) {
@@ -749,7 +781,7 @@ public class GraphQLEntityViewSupportFactory {
             } else {
                 type = objectBuilder.build();
             }
-            addObjectTypeDefinition(schemaBuilder, typeNameToViewType, managedView, type, inputBuilder.build());
+            addObjectTypeDefinition(schemaBuilder, typeNameToViewType, usageGraph, managedView, type, inputBuilder.build());
         }
 
         Set<String> serializableBasicTypes = new HashSet<>(this.additionalSerializableBasicTypes == null ? Collections.emptySet() : this.additionalSerializableBasicTypes);
@@ -787,6 +819,32 @@ public class GraphQLEntityViewSupportFactory {
             }
         }
         return managedViews;
+    }
+
+    private HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> determineUsageGraph(ArrayList<ManagedViewType<?>> managedViews) {
+        HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = new HashMap<>();
+        for (ManagedViewType<?> managedView : managedViews) {
+            for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
+                if (attribute.isSubview()) {
+                    if (attribute instanceof SingularAttribute<?, ?>) {
+                        addUsage(attribute, (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType(), usageGraph);
+                    } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
+                        addUsage(attribute, (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType(), usageGraph);
+                        if (attribute instanceof MapAttribute<?, ?, ?>) {
+                            com.blazebit.persistence.view.metamodel.Type<?> keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
+                            if (keyType instanceof ManagedViewType<?>) {
+                                addUsage(attribute, (ManagedViewType<?>) keyType, usageGraph);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return usageGraph;
+    }
+
+    private static void addUsage(MethodAttribute<?, ?> attribute, ManagedViewType<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
+        usageGraph.computeIfAbsent(usedType, k -> new HashSet<>()).add(attribute);
     }
 
     private GraphQLList getListType(GraphQLType elementType) {
@@ -999,16 +1057,29 @@ public class GraphQLEntityViewSupportFactory {
                 .build();
     }
 
+    /**
+     * @deprecated Use {@link #addObjectTypeDefinition(TypeDefinitionRegistry, Map, Map, ManagedViewType, ImplementingTypeDefinition, InputObjectTypeDefinition)} instead
+     */
+    @Deprecated
     protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, ImplementingTypeDefinition<?> objectTypeDefinition, InputObjectTypeDefinition inputObjectTypeDefinition) {
-        registerManagedViewType(typeRegistry, typeNameToViewType, managedView, objectTypeDefinition);
-        if (isDefineNormalTypes()) {
-            typeRegistry.add(objectTypeDefinition);
+        addObjectTypeDefinition(typeRegistry, typeNameToViewType, null, managedView, objectTypeDefinition, inputObjectTypeDefinition);
+    }
+
+    protected void addObjectTypeDefinition(TypeDefinitionRegistry typeRegistry, Map<String, ManagedViewType<?>> typeNameToViewType, Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph, ManagedViewType<?> managedView, ImplementingTypeDefinition<?> objectTypeDefinition, InputObjectTypeDefinition inputObjectTypeDefinition) {
+        if (!(managedView.isUpdatable() || managedView.isCreatable()) || isDefineNonInputTypesForUpdatableOrCreatableEntityViews() || needsNormalType(usageGraph, managedView)) {
+            registerManagedViewType(typeRegistry, typeNameToViewType, managedView, objectTypeDefinition);
+            if (isDefineNormalTypes()) {
+                typeRegistry.add(objectTypeDefinition);
+            }
         }
-        if (inputObjectTypeDefinition != null) {
+        if (needsInputType(usageGraph, managedView)) {
             registerManagedViewType(typeRegistry, typeNameToViewType, managedView, inputObjectTypeDefinition);
             if (isDefineNormalTypes()) {
                 typeRegistry.add(inputObjectTypeDefinition);
             }
+        }
+        if ((managedView.isUpdatable() || managedView.isCreatable()) && !isDefineNonInputTypesForUpdatableOrCreatableEntityViews()) {
+            return;
         }
         String nodeTypeName;
         ObjectTypeDefinition nodeType;
@@ -1062,16 +1133,29 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
+    /**
+     * @deprecated Use {@link #addObjectTypeDefinition(GraphQLSchema.Builder, Map, Map, ManagedViewType, GraphQLNamedType, GraphQLInputObjectType)}  instead
+     */
+    @Deprecated
     protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, GraphQLNamedType objectType, GraphQLInputObjectType inputObjectType) {
-        typeNameToViewType.put(objectType.getName(), managedView);
-        if (isDefineNormalTypes()) {
-            schemaBuilder.additionalType(objectType);
+        addObjectTypeDefinition(schemaBuilder, typeNameToViewType, null, managedView, objectType, inputObjectType);
+    }
+
+    protected void addObjectTypeDefinition(GraphQLSchema.Builder schemaBuilder, Map<String, ManagedViewType<?>> typeNameToViewType, Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph, ManagedViewType<?> managedView, GraphQLNamedType objectType, GraphQLInputObjectType inputObjectType) {
+        if (!(managedView.isUpdatable() || managedView.isCreatable()) || isDefineNonInputTypesForUpdatableOrCreatableEntityViews() || needsNormalType(usageGraph, managedView)) {
+            typeNameToViewType.put(objectType.getName(), managedView);
+            if (isDefineNormalTypes()) {
+                schemaBuilder.additionalType(objectType);
+            }
         }
-        if (managedView.isUpdatable() || managedView.isCreatable()) {
+        if (needsInputType(usageGraph, managedView)) {
             typeNameToViewType.put(inputObjectType.getName(), managedView);
             if (isDefineNormalTypes()) {
                 schemaBuilder.additionalType(inputObjectType);
             }
+        }
+        if ((managedView.isUpdatable() || managedView.isCreatable()) && !isDefineNonInputTypesForUpdatableOrCreatableEntityViews()) {
+            return;
         }
         String nodeTypeName;
         String edgeTypeName;
@@ -1154,6 +1238,74 @@ public class GraphQLEntityViewSupportFactory {
             schemaBuilder.additionalType(edgeType.build());
             schemaBuilder.additionalType(connectionType.build());
         }
+    }
+
+    private boolean needsInputType(Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph, ManagedViewType<?> managedView) {
+        if (managedView.isUpdatable() || managedView.isCreatable() || usageGraph == null) {
+            return true;
+        }
+        Set<MethodAttribute<?, ?>> usedInAttributes = usageGraph.get(managedView);
+        if (usedInAttributes != null) {
+            for (MethodAttribute<?, ?> attribute : usedInAttributes) {
+                ManagedViewType<?> declaringType = attribute.getDeclaringType();
+                if (declaringType.isCreatable() || declaringType.isUpdatable() || isPartOfUpdatableSubviewId(usageGraph, attribute)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean needsNormalType(Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph, ManagedViewType<?> managedView) {
+        if (usageGraph == null) {
+            return true;
+        }
+        Set<MethodAttribute<?, ?>> usedInAttributes = usageGraph.get(managedView);
+        if (usedInAttributes != null) {
+            for (MethodAttribute<?, ?> attribute : usedInAttributes) {
+                ManagedViewType<?> declaringType = attribute.getDeclaringType();
+                if (!(declaringType.isCreatable() || declaringType.isUpdatable()) || needsInputType(usageGraph, declaringType)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isPartOfUpdatableSubviewId(Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph, MethodAttribute<?, ?> attribute) {
+        ManagedViewType<?> declaringType = attribute.getDeclaringType();
+        if (attribute instanceof SingularAttribute<?, ?>) {
+            Set<MethodAttribute<?, ?>> usedInAttributes = usageGraph.get(declaringType);
+            if (usedInAttributes != null) {
+                if (((SingularAttribute<?, ?>) attribute).isId()) {
+                    // When the attribute is an id, attributes referring to its declaring type must be updatable
+                    // and their declaring types must be creatable/updatable
+                    for (MethodAttribute<?, ?> declaringTypeAttributeReferrer : usedInAttributes) {
+                        ManagedViewType<?> referrerDeclaringType = declaringTypeAttributeReferrer.getDeclaringType();
+                        if (declaringTypeAttributeReferrer.isUpdatable() && (referrerDeclaringType.isCreatable() || referrerDeclaringType.isUpdatable())) {
+                            return true;
+                        }
+                    }
+                } else if (declaringType instanceof FlatViewType<?>) {
+                    // The attribute could be a nested flat view of an id view
+                    for (MethodAttribute<?, ?> declaringTypeAttributeReferrer : usedInAttributes) {
+                        if (isPartOfUpdatableSubviewId(usageGraph, declaringTypeAttributeReferrer)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean needsDefinitionInInputType(MethodAttribute<?, ?> attribute) {
+        // Updatable attributes obviously need to be included in the input type
+        return attribute.isUpdatable()
+                // Attributes in flat views could be part of an id, which is checked later
+                || attribute.getDeclaringType() instanceof FlatViewType<?>
+                // If the attribute is an id attribute, also include it
+                || attribute instanceof SingularAttribute<?, ?> && ((SingularAttribute<?, ?>) attribute).isId();
     }
 
     protected void registerManagedViewType(TypeDefinitionRegistry typeRegistry, Map<String, ManagedViewType<?>> typeNameToViewType, ManagedViewType<?> managedView, TypeDefinition<?> objectTypeDefinition) {
