@@ -741,4 +741,33 @@ public class SubqueryTest extends AbstractCoreTest {
         final List<Long> results = cb.getResultList();
         assertTrue(results.isEmpty());
     }
+
+    // Test for #2031
+    @Test
+    public void testExistingCorrelatedImplicitJoinInSubquery() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.from(Document.class, "doc");
+        cb.selectSubquery()
+                .from(Person.class, "p")
+                // It's important to create the JoinTreeNode for partnerDocument through this select
+                .select("p.partnerDocument.name")
+                .whereExists()
+                    .from( "p.ownedDocuments", "d" )
+                    .where( "p.partnerDocument.nameObject.primaryName" ).eq("test")
+                .end()
+                .end();
+
+        String subquery;
+        if (jpaProvider.needsCorrelationPredicateWhenCorrelatingWithWhereClause()) {
+            subquery = "Document d, Document p_partnerDocument_nameObject_base WHERE d.owner.id = p.id AND partnerDocument_1.id = p_partnerDocument_nameObject_base.id AND p_partnerDocument_nameObject_base.";
+        } else {
+            subquery = "p.ownedDocuments d, Document p_partnerDocument_nameObject_base WHERE partnerDocument_1.id = p_partnerDocument_nameObject_base.id AND p_partnerDocument_nameObject_base.";
+        }
+
+        final String expectedQuery = "SELECT (SELECT partnerDocument_1.name " +
+                "FROM Person p LEFT JOIN p.partnerDocument partnerDocument_1 " +
+                "WHERE EXISTS (SELECT 1 FROM " + subquery + "nameObject.primaryName = :param_0)) FROM Document doc";
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
 }

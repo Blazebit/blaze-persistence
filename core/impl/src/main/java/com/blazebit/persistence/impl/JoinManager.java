@@ -821,7 +821,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 } else {
                     result = new JoinResult(defaultJoin);
                 }
-                start++;
+                if (!result.hasField()) {
+                    start++;
+                }
             }
             result = implicitJoin(result.baseNode, currentPathExpression, null, implicitCorrelation ? JoinType.LEFT : JoinType.INNER, null, new HashSet<String>(), start, pathElements.size() - 1, true, true, true, false);
             JoinResult finalNode;
@@ -962,6 +964,7 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
 
         boolean implicit = implicitCorrelation || !finalOperation;
         JoinNode correlationRootNode;
+        String resultField = null;
         // We can't correlate array expressions as that would alter the subquery cardinality when applying the predicate as WHERE condition
         // Lateral roots/joins are special i.e. we push the array index expression into the subquery/cte, so we don't have to handle this here
         if ((!(correlatedAttributeExpr instanceof ArrayExpression) || lateral) && (rootNodes.isEmpty() || finalOperation)) {
@@ -1022,6 +1025,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                 }
                 implicitJoin(pathExpression, true, true, true, treatType == null ? null : treatType.getName(), ClauseType.JOIN, null, false, false, true, false);
                 correlationRootNode = (JoinNode) pathExpression.getBaseNode();
+                if (pathExpression.getField() != null) {
+                    resultField = pathExpression.getField();
+                }
             } else {
                 JoinResult node = createOrUpdateNode(joinNode, Collections.singletonList(correlatedAttribute), treatType == null ? null : treatType.getName(), rootAlias, JoinType.INNER, null, false, false, true, true);
                 correlationRootNode = node.baseNode;
@@ -1033,7 +1039,11 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             }
         }
 
-        return new JoinResult(correlationRootNode);
+        JoinResult correlationJoinResult = new JoinResult(correlationRootNode);
+        if (resultField != null) {
+            return correlationJoinResult.withField(resultField);
+        }
+        return correlationJoinResult;
     }
 
 
