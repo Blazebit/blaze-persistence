@@ -22,6 +22,9 @@ Changes that happened in releases
 * Scope `SynchronizationRegistry` to the current transaction to support transaction suspension
 * Fix invalid table alias reference error for updates with references to joins in `SET` clause on MySQL
 * Fix implicit correlation issue in subquery referring to already joined path on parent query
+* Stop creating GraphQL input type fields for non-updatable entity view attributes
+* Stop defining unnecessary GraphQL non-input types for creatable/updatable views
+* Stop defining unnecessary GraphQL input types for read-only entity views
 
 ### Backwards-incompatible changes
 

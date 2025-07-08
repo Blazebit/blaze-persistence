@@ -7,5 +7,3 @@ type Mutation {
     createCat(cat: CatCreateViewInput): Int
     createKotlinCat(cat: CatKotlinCreateViewInput): Int
 }
-
-scalar Long
