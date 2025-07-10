@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CTEBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
@@ -114,9 +113,6 @@ public abstract class AbstractCorrelatedBatchTupleListTransformer extends Abstra
         }
 
         this.criteriaBuilder = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), Object[].class);
-        if (queryBuilder instanceof CTEBuilder<?>) {
-            this.criteriaBuilder.withCtesFrom((CTEBuilder<?>) queryBuilder);
-        }
         this.viewRootJpqlMacro = new CorrelatedSubqueryViewRootJpqlMacro(criteriaBuilder, optionalParameters, viewRootExpression != null, viewRootEntityClass, viewRootIdAttributePath, viewRootExpression);
         this.embeddingViewJpqlMacro = new CorrelatedSubqueryEmbeddingViewJpqlMacro(criteriaBuilder, optionalParameters, embeddingViewExpression != null, embeddingViewEntityClass, embeddingViewIdAttributePath, embeddingViewExpression, batchedIdValues, viewRootJpqlMacro);
         this.criteriaBuilder.registerMacro("view", new MutableViewJpqlMacro(correlationResult));

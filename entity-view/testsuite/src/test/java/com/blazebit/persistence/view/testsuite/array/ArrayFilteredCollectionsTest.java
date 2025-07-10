@@ -12,6 +12,8 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.ConfigurationProperties;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -19,8 +21,11 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.array.model.DocumentCollectionsContainerView;
+import com.blazebit.persistence.view.testsuite.array.model.DocumentCollectionsLimitView;
 import com.blazebit.persistence.view.testsuite.array.model.SubviewDocumentCollectionsView;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollectionsContainer;
 import com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForCollectionsView;
 import org.junit.Before;
@@ -32,6 +37,7 @@ import java.util.List;
 
 import static com.blazebit.persistence.view.testsuite.collections.subview.SubviewAssert.assertSubviewEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *
@@ -40,12 +46,14 @@ import static org.junit.Assert.assertEquals;
  */
 public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
 
+    private DocumentForCollectionsContainer docContainer1;
     private DocumentForCollections doc1;
     private DocumentForCollections doc2;
 
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
+            DocumentForCollectionsContainer.class,
             DocumentForCollections.class,
             PersonForCollections.class
         };
@@ -57,6 +65,7 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
         transactional(new TxVoidWork() {
             @Override
             public void work(EntityManager em) {
+                docContainer1 = new DocumentForCollectionsContainer("docs");
                 doc1 = new DocumentForCollections("doc1");
                 doc2 = new DocumentForCollections("doc2");
 
@@ -94,12 +103,17 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
 
                 em.persist(doc1);
                 em.persist(doc2);
+
+                docContainer1.getDocuments().add(doc1);
+                docContainer1.getDocuments().add(doc2);
+                em.persist(docContainer1);
             }
         });
     }
 
     @Before
     public void setUp() {
+        docContainer1 = cbf.create(em, DocumentForCollectionsContainer.class).where("containerName").eq("docs").getSingleResult();
         doc1 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc1").getSingleResult();
         doc2 = cbf.create(em, DocumentForCollections.class).where("name").eq("doc2").getSingleResult();
     }
@@ -112,8 +126,6 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
     @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
     public void testArrayExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.setProperty(ConfigurationProperties.PROXY_EAGER_LOADING, "true");
-        cfg.setProperty(ConfigurationProperties.UPDATER_EAGER_LOADING, "true");
         EntityViewManager evm = build(cfg, SubviewDocumentCollectionsView.class, SubviewPersonForCollectionsView.class);
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
@@ -133,5 +145,34 @@ public class ArrayFilteredCollectionsTest extends AbstractEntityViewTest {
         assertSubviewEquals(doc2.getContacts(), results.get(1).getContacts());
         assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
         assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
+    }
+
+    // Test for #2057
+    // MySQL before 8 didn't support lateral joins which are required here
+    // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
+    // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
+    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
+    // NOTE: Needs Hibernate 5.2.8+ for entity joins and group join
+    @Test
+    @Category({ NoMySQLOld.class, NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    public void testArrayExpressionNested() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        EntityViewManager evm = build(cfg, DocumentCollectionsContainerView.class, DocumentCollectionsLimitView.class, SubviewPersonForCollectionsView.class);
+        // Assert that the attribute isn't named "name", as that is vital to trigger the bug
+        assertNotNull(emf.getMetamodel().entity(DocumentForCollectionsContainer.class).getAttribute("containerName"));
+
+        CriteriaBuilder<DocumentForCollectionsContainer> criteria = cbf.create(em, DocumentForCollectionsContainer.class, "d");
+        CriteriaBuilder<DocumentCollectionsContainerView> cb = evm.applySetting(EntityViewSetting.create(DocumentCollectionsContainerView.class), criteria);
+        List<DocumentCollectionsContainerView> results = cb.getResultList();
+
+        assertEquals(1, results.size());
+
+        assertEquals(docContainer1.getContainerName(), results.get(0).getContainerName());
+
+        // Doc1
+        assertEquals(doc1.getName(), results.get(0).getFirstDocument().getName());
+        assertSubviewEquals(doc1.getContacts(), results.get(0).getFirstDocument().getContacts());
+        assertSubviewEquals(doc1.getPartners(), results.get(0).getFirstDocument().getPartners());
+        assertSubviewEquals(doc1.getPersonList(), results.get(0).getFirstDocument().getPersonList());
     }
 }

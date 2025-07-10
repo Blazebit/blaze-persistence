@@ -90,9 +90,9 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
             String oldViewPath = viewJpqlMacro.getViewPath();
             String oldEmbeddingViewPath = embeddingViewJpqlMacro.getEmbeddingViewPath();
 
+            viewJpqlMacro.setViewPath(joinBase);
             // If this uses a static path, we need to avoid setting the embedding view path etc.
             if (!(provider instanceof StaticPathCorrelationProvider)) {
-                viewJpqlMacro.setViewPath(correlationBuilder.getCorrelationAlias());
                 embeddingViewJpqlMacro.setEmbeddingViewPath(embeddingViewPath);
             }
 
@@ -107,8 +107,8 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
 
             correlationBuilder.finish();
 
+            viewJpqlMacro.setViewPath(oldViewPath);
             if (!(provider instanceof StaticPathCorrelationProvider)) {
-                viewJpqlMacro.setViewPath(oldViewPath);
                 embeddingViewJpqlMacro.setEmbeddingViewPath(oldEmbeddingViewPath);
             }
 

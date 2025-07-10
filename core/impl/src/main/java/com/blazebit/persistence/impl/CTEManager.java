@@ -45,20 +45,38 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
     }
 
-    void applyFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+    void applyNonLateralFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
         if (cteManager.recursive) {
             recursive = true;
         }
         for (Map.Entry<CTEKey, CTEInfo> entry : cteManager.ctes.entrySet()) {
-            CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping, copyContext);
-            mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
-            if (cteInfo.recursive) {
-                mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
+            if (entry.getKey().getOwner() == null) {
+                CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping, copyContext);
+                mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
+                if (cteInfo.recursive) {
+                    mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
+                }
+
+                CTEKey cteKey = new CTEKey(entry.getKey().getName(), null);
+
+                ctes.put(cteKey, cteInfo);
             }
+        }
+    }
 
-            CTEKey cteKey = new CTEKey(entry.getKey().getName(), joinManagerMapping.get(entry.getKey().getOwner()));
+    void applyLateralFrom(CTEManager cteManager, Map<JoinManager, JoinManager> joinManagerMapping, ExpressionCopyContext copyContext) {
+        for (Map.Entry<CTEKey, CTEInfo> entry : cteManager.ctes.entrySet()) {
+            if (entry.getKey().getOwner() != null) {
+                CTEInfo cteInfo = entry.getValue().copy(this, joinManagerMapping, copyContext);
+                mainQuery.parameterManager.collectParameterRegistrations(cteInfo.nonRecursiveCriteriaBuilder, ClauseType.CTE);
+                if (cteInfo.recursive) {
+                    mainQuery.parameterManager.collectParameterRegistrations(cteInfo.recursiveCriteriaBuilder, ClauseType.CTE);
+                }
 
-            ctes.put(cteKey, cteInfo);
+                CTEKey cteKey = new CTEKey(entry.getKey().getName(), joinManagerMapping.get(entry.getKey().getOwner()));
+
+                ctes.put(cteKey, cteInfo);
+            }
         }
     }
 

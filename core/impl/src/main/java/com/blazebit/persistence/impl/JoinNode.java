@@ -239,7 +239,8 @@ public class JoinNode implements From, ExpressionModifier, BaseNode {
             newNode = createRootNode((EntityType<?>) nodeType, aliasInfo);
         } else {
             JoinAliasInfo parentAliasInfo = (JoinAliasInfo) aliasInfo.getAliasOwner().getAliasInfo(correlationParent.getAlias());
-            newNode = createCorrelationRootNode(parentAliasInfo.getJoinNode(), correlationPath, parentTreeNode.getAttribute(), nodeType, treatType, aliasInfo, false);
+            newNode = createCorrelationRootNode(parentAliasInfo.getJoinNode(), correlationPath, parentTreeNode.getAttribute(), nodeType, treatType, aliasInfo, lateral);
+            newNode.joinType = joinType;
         }
 
         newNode.getClauseDependencies().addAll(clauseDependencies);

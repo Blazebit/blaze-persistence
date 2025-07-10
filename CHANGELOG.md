@@ -27,6 +27,7 @@ Changes that happened in releases
 * Scope `SynchronizationRegistry` to the current transaction to support transaction suspension
 * Fix invalid table alias reference error for updates with references to joins in `SET` clause on MySQL
 * Fix implicit correlation issue in subquery referring to already joined path on parent query
+* Fix issue with `VIEW` macro referring to the wrong type in correlated join mapping
 
 ### Backwards-incompatible changes
 
