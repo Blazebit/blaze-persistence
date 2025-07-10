@@ -1,0 +1,40 @@
+= Blaze-Persistence 1.6.16 Release
+Christian Beikov
+2025-07-10 0
+:description: Blaze-Persistence version 1.6.16 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the sixteenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 7 integration
+
+Hibernate ORM 7.0 was released and had some breaking changes in SPIs which required a new integration `blaze-persistence-integration-hibernate-7.0` to be written.
+Luckily, the necessary changes were minimal and the ORM 6 integration could mostly be reused/copied.
+
+=== Spring Boot/Data 3.4 and 3.5
+
+Some users have been running into trouble with the Spring Data 3.3 integration when running on 3.4 and later.
+The problems were identified and +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+a new integration module `blaze-persistence-integration-spring-data-3.4` was created.
+
+=== GraphQL enhancements
+
+A new `@GraphQLDefaultFetches` annotation was added to specify multiple GraphQL fields that can trigger a default fetch.
+The generated GraphQL schema was cleaned up such that it only generated GraphQL types that actually make sense.
+A new type filter mechanism based on a `Predicate` was added to `GraphQLEntityViewSupportFactory`. Also, missing types
+are now auto-discovered from these root types, making it easier to get rid of unused entity views in the GraphQL schema.
+
+=== Various bug fixes
+
+Thanks to the sponsoring of https://github.com/maxhov[Max Hovens, window="_blank"] from https://tidalcontrol.com/[Tidal Control, window="_blank"]
+and https://github.com/EugenMayer[Eugen Mayer, window="_blank"] from https://kontextwork.de/[KontextWork, window="_blank"],
+lots of bug fixes and improvements were implemented in this release. Thank you for your continued support!
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1616[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!

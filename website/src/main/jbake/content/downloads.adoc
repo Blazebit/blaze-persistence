@@ -9,7 +9,7 @@
 
 [.releases]
 |===
-| 1.6.15        | 2025-03-27     | https://github.com/Blazebit/blaze-persistence/releases/download/1.6.15/blaze-persistence-dist-1.6.15.zip[*Download*, window="_blank"] | link:news/2025/blaze-persistence-1.6.15-release.html[More...]
+| 1.6.16        | 2025-07-10     | https://github.com/Blazebit/blaze-persistence/releases/download/1.6.16/blaze-persistence-dist-1.6.16.zip[*Download*, window="_blank"] | link:news/2025/blaze-persistence-1.6.16-release.html[More...]
 | 1.5.1         | 2020-09-14     | https://github.com/Blazebit/blaze-persistence/releases/download/1.5.1/blaze-persistence-dist-1.5.1.zip[*Download*, window="_blank"] | link:news/2020/blaze-persistence-1.5.1-release.html[More...]
 | 1.4.1         | 2020-01-28     | https://github.com/Blazebit/blaze-persistence/releases/download/1.4.1/blaze-persistence-dist-1.4.1.zip[*Download*, window="_blank"] | link:news/2020/blaze-persistence-1.4.1-release.html[More...]
 | 1.3.2         | 2019-02-26     | https://github.com/Blazebit/blaze-persistence/releases/download/1.3.2/blaze-persistence-dist-1.3.2.zip[*Download*, window="_blank"] | link:news/2019/blaze-persistence-1.3.2-release.html[More...]
