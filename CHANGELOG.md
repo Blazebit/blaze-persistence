@@ -13,6 +13,7 @@ Changes that happened in releases
 * Stop defining unnecessary GraphQL non-input types for creatable/updatable views
 * Stop defining unnecessary GraphQL input types for read-only entity views
 * Add type filter predicate support for GraphQL and auto-add referenced entity view types
+* Allow GraphQL field selections even if the type mapping is missing
 
 ### Bug fixes
 
