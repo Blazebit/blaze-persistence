@@ -747,8 +747,11 @@ public class GraphQLEntityViewSupport {
                     fieldMappings = typeNameToFieldMapping.get(typeName);
                 }
                 if (fieldMappings == null) {
-                    throw new IllegalArgumentException(
-                            "No type is registered for the name: " + typeName);
+                    // The type of the GraphQL field is not of the expected type, which could mean that we messed up
+                    // in the schema building (unlikely), or that the user overwrote the type in a custom schema.
+                    // In that case, let's just fetch the attribute fully as it is, since the user probably wrote a
+                    // data fetcher to fetch the desired representation based on this data
+                    break;
                 }
                 String mappedFieldPart = fieldMappings.get(fieldName);
                 if (mappedFieldPart == null) {
