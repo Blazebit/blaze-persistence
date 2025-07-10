@@ -9,6 +9,10 @@ Changes that happened in releases
 * Add `blaze-persistence-integration-hibernate-7.0` for Hibernate ORM 7.0+ support
 * Add `GraphQLDefaultFetches` annotation to allow specifying multiple fields that can trigger a default fetch
 * Add support for Spring Boot/Data 3.4 and 3.5
+* Stop creating GraphQL input type fields for non-updatable entity view attributes
+* Stop defining unnecessary GraphQL non-input types for creatable/updatable views
+* Stop defining unnecessary GraphQL input types for read-only entity views
+* Add type filter predicate support for GraphQL and auto-add referenced entity view types
 
 ### Bug fixes
 
@@ -22,9 +26,6 @@ Changes that happened in releases
 * Scope `SynchronizationRegistry` to the current transaction to support transaction suspension
 * Fix invalid table alias reference error for updates with references to joins in `SET` clause on MySQL
 * Fix implicit correlation issue in subquery referring to already joined path on parent query
-* Stop creating GraphQL input type fields for non-updatable entity view attributes
-* Stop defining unnecessary GraphQL non-input types for creatable/updatable views
-* Stop defining unnecessary GraphQL input types for read-only entity views
 
 ### Backwards-incompatible changes
 

@@ -89,6 +89,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -175,6 +176,7 @@ public class GraphQLEntityViewSupportFactory {
     private boolean defineRelayNodeIfNotExist;
     private boolean defineDedicatedRelayNodes;
     private Pattern typeFilterPattern;
+    private Predicate<ManagedViewType<?>> typeInclusionPredicate;
     private Map<String, GraphQLScalarType> scalarTypeMap;
     private Set<String> registeredScalarTypeNames;
     private Set<String> additionalSerializableBasicTypes;
@@ -365,6 +367,26 @@ public class GraphQLEntityViewSupportFactory {
     }
 
     /**
+     * Returns the type inclusion predicate to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @return the type inclusion predicate
+     * @since 1.6.16
+     */
+    public Predicate<ManagedViewType<?>> getTypeInclusionPredicate() {
+        return typeInclusionPredicate;
+    }
+
+    /**
+     * Sets the type inclusion predicate to use during {@code GraphQLEntityViewSupportFactory.create}.
+     *
+     * @param typeInclusionPredicate the type inclusion predicate
+     * @since 1.6.16
+     */
+    public void setTypeInclusionPredicate(Predicate<ManagedViewType<?>> typeInclusionPredicate) {
+        this.typeInclusionPredicate = typeInclusionPredicate;
+    }
+
+    /**
      * Returns the additional serializable basic types to use during {@code GraphQLEntityViewSupportFactory.create}.
      *
      * @return the additional serializable basic types
@@ -403,8 +425,8 @@ public class GraphQLEntityViewSupportFactory {
         } else {
             defaultImplementsTypes = Collections.emptyList();
         }
-        ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema(entityViewManager);
-        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineUsageGraph(managedViews);
+        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineViewsForSchema(entityViewManager);
+        Collection<ManagedViewType<?>> managedViews = usageGraph.keySet();
         for (ManagedViewType<?> managedView : managedViews) {
             String typeName = getObjectTypeName(managedView);
             String inputTypeName = typeName + "Input";
@@ -619,8 +641,8 @@ public class GraphQLEntityViewSupportFactory {
         Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings = new HashMap<>();
         Map<Class<?>, String> registeredTypeNames = new HashMap<>();
 
-        ArrayList<ManagedViewType<?>> managedViews = determineViewsForSchema(entityViewManager);
-        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineUsageGraph(managedViews);
+        Map<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = determineViewsForSchema(entityViewManager);
+        Collection<ManagedViewType<?>> managedViews = usageGraph.keySet();
         for (ManagedViewType<?> managedView : managedViews) {
             String typeName = getObjectTypeName(managedView);
             String inputTypeName = getInputObjectTypeName(managedView);
@@ -810,41 +832,45 @@ public class GraphQLEntityViewSupportFactory {
         return new GraphQLEntityViewSupport(typeNameToViewType, typeNameToFieldMapping, typeNameToDefaultFetchMappings, serializableBasicTypes);
     }
 
-    private ArrayList<ManagedViewType<?>> determineViewsForSchema(EntityViewManager entityViewManager) {
-        ArrayList<ManagedViewType<?>> managedViews = new ArrayList<>();
+    private HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> determineViewsForSchema(EntityViewManager entityViewManager) {
+        HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = new HashMap<>();
         for (ManagedViewType<?> managedView : entityViewManager.getMetamodel().getManagedViews()) {
             if ((typeFilterPattern == null || typeFilterPattern.matcher(managedView.getJavaType().getName()).matches())
+                    && (typeInclusionPredicate == null || typeInclusionPredicate.test(managedView))
                     && !isIgnored(managedView.getJavaType())) {
-                managedViews.add(managedView);
-            }
-        }
-        return managedViews;
-    }
-
-    private HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> determineUsageGraph(ArrayList<ManagedViewType<?>> managedViews) {
-        HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph = new HashMap<>();
-        for (ManagedViewType<?> managedView : managedViews) {
-            for (MethodAttribute<?, ?> attribute : managedView.getAttributes()) {
-                if (attribute.isSubview()) {
-                    if (attribute instanceof SingularAttribute<?, ?>) {
-                        addUsage(attribute, (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType(), usageGraph);
-                    } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
-                        addUsage(attribute, (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType(), usageGraph);
-                        if (attribute instanceof MapAttribute<?, ?, ?>) {
-                            com.blazebit.persistence.view.metamodel.Type<?> keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
-                            if (keyType instanceof ManagedViewType<?>) {
-                                addUsage(attribute, (ManagedViewType<?>) keyType, usageGraph);
-                            }
-                        }
-                    }
-                }
+                // Build up the attribute usage graph recursively
+                addUsage(managedView, usageGraph);
             }
         }
         return usageGraph;
     }
 
+    private static void addUsage(ManagedViewType<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
+        if (usageGraph.containsKey(usedType)) {
+            // Already discovered this type
+            return;
+        }
+        usageGraph.put(usedType, new HashSet<>());
+        for (MethodAttribute<?, ?> attribute : usedType.getAttributes()) {
+            if (attribute.isSubview()) {
+                if (attribute instanceof SingularAttribute<?, ?>) {
+                    addUsage(attribute, (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType(), usageGraph);
+                } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
+                    addUsage(attribute, (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType(), usageGraph);
+                    if (attribute instanceof MapAttribute<?, ?, ?>) {
+                        com.blazebit.persistence.view.metamodel.Type<?> keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
+                        if (keyType instanceof ManagedViewType<?>) {
+                            addUsage(attribute, (ManagedViewType<?>) keyType, usageGraph);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private static void addUsage(MethodAttribute<?, ?> attribute, ManagedViewType<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
-        usageGraph.computeIfAbsent(usedType, k -> new HashSet<>()).add(attribute);
+        addUsage(usedType, usageGraph);
+        usageGraph.get(usedType).add(attribute);
     }
 
     private GraphQLList getListType(GraphQLType elementType) {
@@ -875,7 +901,7 @@ public class GraphQLEntityViewSupportFactory {
         return new NonNullType(type);
     }
 
-    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, ArrayList<ManagedViewType<?>> managedViews, String baseName, String suffix, MethodAttribute<?, ?> attribute, String fieldName) {
+    private void addFieldMapping(Map<String, Map<String, String>> typeNameToFieldMapping, Map<String, Set<DefaultFetchMapping>> typeNameToDefaultFetchMappings, Collection<ManagedViewType<?>> managedViews, String baseName, String suffix, MethodAttribute<?, ?> attribute, String fieldName) {
         String typeName = baseName + suffix;
         Map<String, String> fieldMapping = typeNameToFieldMapping.get(typeName);
         if (fieldMapping == null) {
@@ -908,7 +934,7 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    private ArrayList<ManagedViewType<?>> getInheritanceSuperTypes(ArrayList<ManagedViewType<?>> managedViews, ManagedViewType<?> subtype) {
+    private ArrayList<ManagedViewType<?>> getInheritanceSuperTypes(Collection<ManagedViewType<?>> managedViews, ManagedViewType<?> subtype) {
         ArrayList<ManagedViewType<?>> list = null;
         for (ManagedViewType<?> managedView : managedViews) {
             if (managedView != subtype && managedView.getInheritanceSubtypes().contains(subtype)) {
