@@ -46,7 +46,7 @@ public class SpringTransactionSynchronizationStrategy implements TransactionAcce
 
     @Override
     public void registerSynchronization(Synchronization synchronization) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationWrapper(synchronization));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationWrapper(synchronization, TransactionSynchronizationManager.getResource(INSTANCE)));
     }
 
     /**
@@ -57,19 +57,21 @@ public class SpringTransactionSynchronizationStrategy implements TransactionAcce
     private static class TransactionSynchronizationWrapper implements TransactionSynchronization {
 
         private final Synchronization synchronization;
+        private final Object transaction;
 
-        public TransactionSynchronizationWrapper(Synchronization synchronization) {
+        public TransactionSynchronizationWrapper(Synchronization synchronization, Object transaction) {
             this.synchronization = synchronization;
+            this.transaction = transaction;
         }
 
         @Override
         public void suspend() {
-            // No-op
+            TransactionSynchronizationManager.unbindResource(INSTANCE);
         }
 
         @Override
         public void resume() {
-            // No-op
+            TransactionSynchronizationManager.bindResource(INSTANCE, transaction);
         }
 
         @Override
@@ -105,7 +107,11 @@ public class SpringTransactionSynchronizationStrategy implements TransactionAcce
                     status = Status.STATUS_UNKNOWN;
                     break;
             }
-            synchronization.afterCompletion(status);
+            try {
+                synchronization.afterCompletion(status);
+            } finally {
+                TransactionSynchronizationManager.unbindResource(INSTANCE);
+            }
         }
     }
 
