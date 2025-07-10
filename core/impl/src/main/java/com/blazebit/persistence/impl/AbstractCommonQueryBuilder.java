@@ -374,18 +374,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (copyMainQuery) {
             copyContext = new ExpressionCopyContextMap(parameterManager.copyFrom(builder.parameterManager));
-            mainQuery.cteManager.applyFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
+            mainQuery.cteManager.applyNonLateralFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
         }
 
-        copyContext = new ExpressionCopyContextForQuery(copyContext, builder.aliasManager.getAliasedExpressions());
+        ExpressionCopyContextForQuery queryCopyContext = new ExpressionCopyContextForQuery(copyContext, builder.aliasManager.getAliasedExpressions());
         aliasManager.applyFrom(builder.aliasManager);
-        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes, copyContext);
-        windowManager.applyFrom(builder.windowManager, copyContext);
-        whereManager.applyFrom(builder.whereManager, copyContext);
-        havingManager.applyFrom(builder.havingManager, copyContext);
-        groupByManager.applyFrom(builder.groupByManager, clauseExclusions, copyContext);
+        Map<JoinNode, JoinNode> nodeMapping = joinManager.applyFrom(builder.joinManager, clauseExclusions, alwaysIncludedNodes, queryCopyContext);
+        if (copyMainQuery) {
+            mainQuery.cteManager.applyLateralFrom(builder.mainQuery.cteManager, joinManagerMapping, copyContext);
+        }
+        windowManager.applyFrom(builder.windowManager, queryCopyContext);
+        whereManager.applyFrom(builder.whereManager, queryCopyContext);
+        havingManager.applyFrom(builder.havingManager, queryCopyContext);
+        groupByManager.applyFrom(builder.groupByManager, clauseExclusions, queryCopyContext);
         if (copyOrderBy) {
-            orderByManager.applyFrom(builder.orderByManager, copyContext);
+            orderByManager.applyFrom(builder.orderByManager, queryCopyContext);
         }
 
         setFirstResult(builder.firstResult);
@@ -395,14 +398,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // TODO: set operations?
 
         if (copySelect) {
-            selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos(), copyContext);
+            selectManager.setDefaultSelect(nodeMapping, builder.selectManager.getSelectInfos(), queryCopyContext);
             if (fixedSelect) {
                 selectManager.unsetDefaultSelect();
             }
         }
         // No need to copy the finalSetOperationBuilder as that is only necessary for further builders which isn't possible after copying
         collectParameters();
-        return copyContext;
+        return queryCopyContext;
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
@@ -615,7 +618,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             prepareForModification(ClauseType.CTE);
             ExpressionCopyContext copyContext = new ExpressionCopyContextMap(this.parameterManager.copyFrom(mainQuery.parameterManager));
-            this.mainQuery.cteManager.applyFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>(), copyContext);
+            this.mainQuery.cteManager.applyNonLateralFrom(mainQuery.cteManager, new IdentityHashMap<JoinManager, JoinManager>(), copyContext);
         }
         return (BuilderType) this;
     }

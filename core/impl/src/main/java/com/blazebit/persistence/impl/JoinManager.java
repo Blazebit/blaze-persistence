@@ -178,6 +178,10 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         aliasManager.registerAliasInfoOnly(rootAliasInfo);
         nodeMapping.put(node, rootNode);
 
+        if (node.getOnPredicate() != null) {
+            rootNode.setOnPredicate(subqueryInitFactory.reattachSubqueries(node.getOnPredicate().copy(copyContext), ClauseType.JOIN));
+        }
+
         for (JoinTreeNode treeNode : node.getNodes().values()) {
             applyFrom(nodeMapping, rootNode, treeNode, clauseExclusions, alwaysIncludedNodes, copyContext);
         }
