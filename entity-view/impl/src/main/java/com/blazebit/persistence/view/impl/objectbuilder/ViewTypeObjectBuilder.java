@@ -91,7 +91,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             if (secondaryMappers.length != 0) {
                 FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) queryBuilder;
                 for (SecondaryMapper viewRoot : secondaryMappers) {
-                    if (hasSubFetches(fetches, viewRoot.getAttributePath())) {
+                    if (viewRoot.getAttributePath().isEmpty() || hasSubFetches(fetches, viewRoot.getAttributePath())) {
                         viewRoot.apply(fullQueryBuilder, parameterHolder, optionalParameters, viewJpqlMacro, embeddingViewJpqlMacro);
                     }
                 }
