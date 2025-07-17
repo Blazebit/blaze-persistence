@@ -233,6 +233,9 @@ public final class EntityViewSettingHelper {
             do {
                 String path = attributePath.substring(0, dotIndex);
                 AbstractMethodAttribute<?, ?> methodAttribute = recursiveAttributes.get(path);
+                if (methodAttribute == null) {
+                    throw new IllegalArgumentException("The attribute with the name '" + path + "' couldn't be found on the view type '" + managedView.getJavaType().getName() + "'");
+                }
                 // If we encounter a non-mapping attribute, we must fetch it so that we can later filter/sort based on the alias
                 // For mapping attributes we are able to build a mapping expression but for others, that's not possible
                 if (methodAttribute.getCorrelationProviderFactory() != null || methodAttribute.getSubqueryProviderFactory() != null) {
