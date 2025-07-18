@@ -13,6 +13,7 @@ import com.blazebit.persistence.view.CreatableEntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.impl.metamodel.AbstractAttribute;
+import com.blazebit.persistence.view.impl.metamodel.ManagedViewTypeImplementor;
 import com.blazebit.persistence.view.metamodel.FlatViewType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -839,13 +840,13 @@ public class GraphQLEntityViewSupportFactory {
                     && (typeInclusionPredicate == null || typeInclusionPredicate.test(managedView))
                     && !isIgnored(managedView.getJavaType())) {
                 // Build up the attribute usage graph recursively
-                addUsage(managedView, usageGraph);
+                addUsage((ManagedViewTypeImplementor<?>) managedView, usageGraph);
             }
         }
         return usageGraph;
     }
 
-    private static void addUsage(ManagedViewType<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
+    private static void addUsage(ManagedViewTypeImplementor<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
         if (usageGraph.containsKey(usedType)) {
             // Already discovered this type
             return;
@@ -854,13 +855,13 @@ public class GraphQLEntityViewSupportFactory {
         for (MethodAttribute<?, ?> attribute : usedType.getAttributes()) {
             if (attribute.isSubview()) {
                 if (attribute instanceof SingularAttribute<?, ?>) {
-                    addUsage(attribute, (ManagedViewType<?>) ((SingularAttribute<?, ?>) attribute).getType(), usageGraph);
+                    addUsage(attribute, (ManagedViewTypeImplementor<?>) ((SingularAttribute<?, ?>) attribute).getType(), usageGraph);
                 } else if (attribute instanceof PluralAttribute<?, ?, ?>) {
-                    addUsage(attribute, (ManagedViewType<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType(), usageGraph);
+                    addUsage(attribute, (ManagedViewTypeImplementor<?>) ((PluralAttribute<?, ?, ?>) attribute).getElementType(), usageGraph);
                     if (attribute instanceof MapAttribute<?, ?, ?>) {
                         com.blazebit.persistence.view.metamodel.Type<?> keyType = ((MapAttribute<?, ?, ?>) attribute).getKeyType();
-                        if (keyType instanceof ManagedViewType<?>) {
-                            addUsage(attribute, (ManagedViewType<?>) keyType, usageGraph);
+                        if (keyType instanceof ManagedViewTypeImplementor<?>) {
+                            addUsage(attribute, (ManagedViewTypeImplementor<?>) keyType, usageGraph);
                         }
                     }
                 }
@@ -868,9 +869,10 @@ public class GraphQLEntityViewSupportFactory {
         }
     }
 
-    private static void addUsage(MethodAttribute<?, ?> attribute, ManagedViewType<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
-        addUsage(usedType, usageGraph);
-        usageGraph.get(usedType).add(attribute);
+    private static void addUsage(MethodAttribute<?, ?> attribute, ManagedViewTypeImplementor<?> usedType, HashMap<ManagedViewType<?>, Set<MethodAttribute<?, ?>>> usageGraph) {
+        ManagedViewTypeImplementor<?> realType = usedType.getRealType();
+        addUsage(realType, usageGraph);
+        usageGraph.get(realType).add(attribute);
     }
 
     private GraphQLList getListType(GraphQLType elementType) {

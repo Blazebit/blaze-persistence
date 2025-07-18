@@ -2,7 +2,23 @@
 
 Changes that happened in releases
 
-## 1.6.16-SNAPSHOT
+## 1.6.17-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+* Fix duplicate GraphQL type error when using converted view types through e.g. `Optional` wrapper
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.16
+
+10/07/2025 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.16) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.16+is%3Aclosed+sort%3Aupdated-desc)
 
 ### New features
 
