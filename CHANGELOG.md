@@ -11,6 +11,7 @@ None yet
 ### Bug fixes
 
 * Fix duplicate GraphQL type error when using converted view types through e.g. `Optional` wrapper
+* Fix unpaged Spring Data repository invocation with `Slice` return type
 
 ### Backwards-incompatible changes
 

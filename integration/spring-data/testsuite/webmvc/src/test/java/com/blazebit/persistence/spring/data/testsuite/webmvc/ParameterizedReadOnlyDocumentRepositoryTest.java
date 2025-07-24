@@ -36,7 +36,6 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
 
-import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -844,20 +843,60 @@ public class ParameterizedReadOnlyDocumentRepositoryTest extends AbstractSpringT
     }
 
     @Test
-    public void testUnpaged() {
+    public void testUnpagedWithPage() {
         // Given
         final Document d1 = createDocument("D1");
         final Document d2 = createDocument("D2");
 
         // When
+        Specification<Document> specification = (root, query, criteriaBuilder) -> null;
         Page<DocumentAccessor> result = DocumentAccessors.of(readOnlyDocumentRepository.findAll(
-            new Specification<Document>() {
-                @Override
-                public Predicate toPredicate(Root<Document> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-                    return null;
-                }
-            },
+            specification,
             UNPAGED
+        ));
+
+        // Then
+        List<Long> actualIds = getIdsFromViews(result);
+
+        // Then
+        assertEquals(2, actualIds.size());
+        assertTrue(actualIds.contains(d1.getId()));
+        assertTrue(actualIds.contains(d2.getId()));
+    }
+
+    @Test
+    public void testUnpagedWithList() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Specification<Document> specification = (root, query, criteriaBuilder) -> null;
+        List<DocumentAccessor> result = DocumentAccessors.of(readOnlyDocumentRepository.findListBy(
+                specification,
+                UNPAGED
+        ));
+
+        // Then
+        List<Long> actualIds = getIdsFromViews(result);
+
+        // Then
+        assertEquals(2, actualIds.size());
+        assertTrue(actualIds.contains(d1.getId()));
+        assertTrue(actualIds.contains(d2.getId()));
+    }
+
+    @Test
+    public void testUnpagedWithSlice() {
+        // Given
+        final Document d1 = createDocument("D1");
+        final Document d2 = createDocument("D2");
+
+        // When
+        Specification<Document> specification = (root, query, criteriaBuilder) -> null;
+        Slice<DocumentAccessor> result = DocumentAccessors.of(readOnlyDocumentRepository.findSliceBy(
+                specification,
+                UNPAGED
         ));
 
         // Then

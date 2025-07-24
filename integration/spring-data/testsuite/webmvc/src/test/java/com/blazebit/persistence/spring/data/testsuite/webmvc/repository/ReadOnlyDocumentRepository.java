@@ -101,4 +101,8 @@ public interface ReadOnlyDocumentRepository<T> extends EntityViewRepository<T, L
     int countDocumentsByStatus(MyEnum status);
 
     <V> Page<V> findByName(String name, Class<V> type, Pageable pageable);
+
+    List<DocumentView> findListBy(Specification<Document> specification, Pageable pageable);
+
+    Slice<DocumentView> findSliceBy(Specification<Document> specification, Pageable pageable);
 }
