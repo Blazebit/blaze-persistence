@@ -95,10 +95,15 @@ public class PartTreeBlazePersistenceQuery extends AbstractPartTreeBlazePersiste
         @Override
         @SuppressWarnings("unchecked")
         protected Object doExecute(AbstractJpaQuery repositoryQuery, Object[] values) {
-            Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, false);
-            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
             ParameterAccessor accessor = new ParametersParameterAccessor(repositoryQuery.getQueryMethod().getParameters(), values);
             Pageable pageable = accessor.getPageable();
+            if (pageable == null) {
+                List<Object> unpagedResult = ((PartTreeBlazePersistenceQuery) repositoryQuery).createQuery(values).getResultList();
+                return new KeysetAwareSliceImpl<>(unpagedResult);
+            }
+
+            Query paginatedCriteriaBuilder = ((PartTreeBlazePersistenceQuery) repositoryQuery).createPaginatedQuery(values, false);
+            PagedList<Object> resultList = (PagedList<Object>) paginatedCriteriaBuilder.getResultList();
 
             return new KeysetAwareSliceImpl<>(resultList, pageable);
         }

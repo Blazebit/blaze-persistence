@@ -53,32 +53,31 @@ public class DocumentAccessors {
         return new PageImpl<>(of(page.getContent()), getPageable(page), page.getTotalElements());
     }
 
-    private static Pageable getPageable(Page<?> page) {
+    private static Pageable getPageable(Slice<?> slice) {
         try {
             return (Pageable) Class.forName("org.springframework.data.domain.Slice").getMethod("getPageable")
-                .invoke(page);
+                .invoke(slice);
         } catch (Exception e) {
             // Ignore
         }
-        if (page.getSize() < 1) {
+        if (slice == null || slice.getSize() < 1) {
             return null;
         }
-        return new PageRequest(page.getNumber(), page.getSize());
+        return new PageRequest(slice.getNumber(), slice.getSize());
     }
 
     public static KeysetAwarePage<DocumentAccessor> of(KeysetAwarePage<?> page) {
         KeysetPageRequest keysetPageRequest;
         if (getPageable(page) == unpaged()) {
             keysetPageRequest = new KeysetPageRequest(page.getKeysetPage(), page.getSort(), 0, page.getSize());
-        }
-        else {
+        } else {
             keysetPageRequest = new KeysetPageRequest(page.getKeysetPage(), page.getSort(), page.getNumber() * page.getSize(), page.getSize());
         }
         return new KeysetAwarePageImpl<>(of(page.getContent()), (int) page.getTotalElements(), page.getKeysetPage(), keysetPageRequest);
     }
 
     public static Slice<DocumentAccessor> of(Slice<?> slice) {
-        return new SliceImpl<>(of(slice.getContent()), new PageRequest(slice.getNumber() * slice.getSize(), slice.getSize()), slice.hasNext());
+        return new SliceImpl<>(of(slice.getContent()), getPageable(slice), slice.hasNext());
     }
 
     private static Pageable unpaged() {
@@ -97,7 +96,6 @@ public class DocumentAccessors {
         public DocumentEntityAccessor(Document document) {
             this.document = document;
         }
-
 
         @Override
         public Long getId() {
