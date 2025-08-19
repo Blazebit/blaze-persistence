@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Christian Beikov
@@ -93,6 +94,22 @@ public class SampleTest extends AbstractSampleTest {
         String name = response.getBody().get("data").get("catById").get("name").asText();
         assertEquals("Test", name);
         assertEquals("PersonSimpleView", response.getBody().get("data").get("catById").get("owner").get("__typename").asText());
+    }
+
+    @Test
+    public void testCreateInheritance() {
+        String requestGraphQL = "mutation {\n" +
+                "  addPersonChild(\n" +
+                "    child: {\n" +
+                "      boy: { name: \"Test\" }\n" +
+                "    },\n" +
+                "    personId: 3\n" +
+                "  )\n" +
+                "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("content-type", "application/graphql");
+        ResponseEntity<JsonNode> response = this.restTemplate.postForEntity("/graphql", new HttpEntity<>(requestGraphQL, headers), JsonNode.class);
+        assertNull(response.getBody().get("errors"));
     }
 
     static String request(int first, String after) {
