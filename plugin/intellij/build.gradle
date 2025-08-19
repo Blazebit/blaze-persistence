@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '0.4.10'
+}
+
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'org.jetbrains.intellij'
+
+sourceCompatibility = 1.8
+group = 'com.blazebit'
+version = '1.4.0-SNAPSHOT'
+def intellijVersion = '192.5728.98' // 2019.2
+
+repositories {
+    mavenLocal()
+    maven { url 'target/dependencies' }
+    maven { url "https://www.jetbrains.com/intellij-repository/releases" }
+    maven { url "https://jetbrains.bintray.com/intellij-third-party-dependencies" }
+}
+
+dependencies {
+    compile "$group:blaze-persistence-core-parser:$version"
+    compile "$group:blaze-persistence-plugin-antlr:$version"
+    compileOnly "com.jetbrains.intellij.java:java:$intellijVersion"
+    compileOnly "com.jetbrains.intellij.platform:lang-injection:$intellijVersion"
+}
+
+intellij {
+    version System.getenv().getOrDefault('IDEA_VERSION', ideaVersion)
+    type ideaType
+    downloadSources Boolean.valueOf(sources)
+    sameSinceUntilBuild Boolean.valueOf(isEAP)
+    alternativeIdePath idePath
+    updateSinceUntilBuild false
+    pluginName 'Blaze-Persistence Support'
+    if ( !(version.startsWith('2018') || version.startsWith('2019.1'))) {
+        plugins 'java'
+    }
+}
+
+tasks.register('javadocJar', Jar) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+    dependsOn javadoc
+}
+
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+    dependsOn classes
+}
+
+assemble.dependsOn javadocJar
+assemble.dependsOn sourcesJar
