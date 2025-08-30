@@ -33,6 +33,18 @@
 <!--        <module>hibernate7</module>-->
     </modules>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
         <profile>
