@@ -14,7 +14,7 @@ import javax.persistence.TypedQuery;
  * @author Christian Beikov
  * @since 1.0.0
  */
-public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, PaginatedCriteriaBuilder<T>> {
+public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, PaginatedCriteriaBuilder<T>>, CTEBuilder<PaginatedCriteriaBuilder<T>> {
 
     /**
      * Returns the paginated typed query for the built query.
