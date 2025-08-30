@@ -168,6 +168,33 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires transitive com.blazebit.persistence.view;
+                                        requires com.blazebit.common.utils;
+                                        requires com.fasterxml.jackson.annotation;
+                                        requires com.fasterxml.jackson.databind;
+                                        requires com.fasterxml.jackson.core;
+                                        exports com.blazebit.persistence.integration.jackson;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

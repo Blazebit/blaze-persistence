@@ -156,6 +156,41 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires jakarta.persistence;
+                                        requires org.hibernate.orm.core;
+                                        requires com.blazebit.persistence.core;
+                                        requires transitive com.blazebit.persistence.integration.hibernate.base;
+                                        requires static com.blazebit.persistence.view;
+                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate56Access;
+                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate56EntityManagerFactoryIntegrator;
+                                        provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate5TransactionAccessFactory;
+                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate56Integrator;
+                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
+                                        provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate56MetadataContributor;
+                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate56ServiceContributor;
+                                        exports com.blazebit.persistence.integration.hibernate;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

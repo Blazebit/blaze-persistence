@@ -164,6 +164,36 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires transitive com.blazebit.persistence.core;
+                                        requires jakarta.transaction;
+                                        exports com.blazebit.persistence.view;
+                                        exports com.blazebit.persistence.view.change;
+                                        exports com.blazebit.persistence.view.filter;
+                                        exports com.blazebit.persistence.view.metamodel;
+                                        exports com.blazebit.persistence.view.spi;
+                                        exports com.blazebit.persistence.view.spi.type;
+                                        uses com.blazebit.persistence.view.spi.EntityViewConfigurationProvider;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

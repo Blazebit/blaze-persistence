@@ -160,6 +160,33 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires transitive com.blazebit.persistence.core;
+                                        requires transitive com.blazebit.persistence.view;
+                                        requires static jdk.compiler;
+                                        provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;
+                                        provides com.blazebit.persistence.view.processor.convert.TypeConverter with com.blazebit.persistence.view.processor.convert.OptionalTypeConverter;
+                                        uses com.blazebit.persistence.view.processor.convert.TypeConverter;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

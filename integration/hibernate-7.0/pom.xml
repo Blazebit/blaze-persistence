@@ -121,6 +121,7 @@
                                         requires com.blazebit.persistence.core;
                                         requires transitive com.blazebit.persistence.integration.hibernate.base;
                                         requires static com.blazebit.persistence.view;
+                                        requires jakarta.transaction;
                                         provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate7Access;
                                         provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate7EntityManagerFactoryIntegrator;
                                         provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate7TransactionAccessFactory;

@@ -172,6 +172,159 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires jakarta.persistence;
+                                        requires com.blazebit.common.utils;
+                                        requires com.blazebit.persistence.core;
+                                        requires com.blazebit.persistence.core.parser;
+                                        exports com.blazebit.persistence.impl;
+                                        exports com.blazebit.persistence.impl.builder.expression;
+                                        exports com.blazebit.persistence.impl.builder.object;
+                                        exports com.blazebit.persistence.impl.builder.predicate;
+                                        exports com.blazebit.persistence.impl.dialect;
+                                        exports com.blazebit.persistence.impl.function;
+                                        exports com.blazebit.persistence.impl.function.alias;
+                                        exports com.blazebit.persistence.impl.function.base64;
+                                        exports com.blazebit.persistence.impl.function.cast;
+                                        exports com.blazebit.persistence.impl.function.chr;
+                                        exports com.blazebit.persistence.impl.function.colldml;
+                                        exports com.blazebit.persistence.impl.function.coltrunc;
+                                        exports com.blazebit.persistence.impl.function.concat;
+                                        exports com.blazebit.persistence.impl.function.count;
+                                        exports com.blazebit.persistence.impl.function.countwrapper;
+                                        exports com.blazebit.persistence.impl.function.dateadd;
+                                        exports com.blazebit.persistence.impl.function.dateadd.day;
+                                        exports com.blazebit.persistence.impl.function.dateadd.hour;
+                                        exports com.blazebit.persistence.impl.function.dateadd.microseconds;
+                                        exports com.blazebit.persistence.impl.function.dateadd.milliseconds;
+                                        exports com.blazebit.persistence.impl.function.dateadd.minute;
+                                        exports com.blazebit.persistence.impl.function.dateadd.month;
+                                        exports com.blazebit.persistence.impl.function.dateadd.quarter;
+                                        exports com.blazebit.persistence.impl.function.dateadd.second;
+                                        exports com.blazebit.persistence.impl.function.dateadd.week;
+                                        exports com.blazebit.persistence.impl.function.dateadd.year;
+                                        exports com.blazebit.persistence.impl.function.datediff;
+                                        exports com.blazebit.persistence.impl.function.datediff.day;
+                                        exports com.blazebit.persistence.impl.function.datediff.hour;
+                                        exports com.blazebit.persistence.impl.function.datediff.microsecond;
+                                        exports com.blazebit.persistence.impl.function.datediff.millisecond;
+                                        exports com.blazebit.persistence.impl.function.datediff.minute;
+                                        exports com.blazebit.persistence.impl.function.datediff.month;
+                                        exports com.blazebit.persistence.impl.function.datediff.quarter;
+                                        exports com.blazebit.persistence.impl.function.datediff.second;
+                                        exports com.blazebit.persistence.impl.function.datediff.week;
+                                        exports com.blazebit.persistence.impl.function.datediff.year;
+                                        exports com.blazebit.persistence.impl.function.datetime.day;
+                                        exports com.blazebit.persistence.impl.function.datetime.dayofweek;
+                                        exports com.blazebit.persistence.impl.function.datetime.dayofyear;
+                                        exports com.blazebit.persistence.impl.function.datetime.epoch;
+                                        exports com.blazebit.persistence.impl.function.datetime.epochday;
+                                        exports com.blazebit.persistence.impl.function.datetime.epochmicro;
+                                        exports com.blazebit.persistence.impl.function.datetime.epochmilli;
+                                        exports com.blazebit.persistence.impl.function.datetime.hour;
+                                        exports com.blazebit.persistence.impl.function.datetime.isodayofweek;
+                                        exports com.blazebit.persistence.impl.function.datetime.isoweek;
+                                        exports com.blazebit.persistence.impl.function.datetime.microsecond;
+                                        exports com.blazebit.persistence.impl.function.datetime.millisecond;
+                                        exports com.blazebit.persistence.impl.function.datetime.minute;
+                                        exports com.blazebit.persistence.impl.function.datetime.month;
+                                        exports com.blazebit.persistence.impl.function.datetime.quarter;
+                                        exports com.blazebit.persistence.impl.function.datetime.second;
+                                        exports com.blazebit.persistence.impl.function.datetime.week;
+                                        exports com.blazebit.persistence.impl.function.datetime.year;
+                                        exports com.blazebit.persistence.impl.function.datetime.yearofweek;
+                                        exports com.blazebit.persistence.impl.function.datetime.yearweek;
+                                        exports com.blazebit.persistence.impl.function.entity;
+                                        exports com.blazebit.persistence.impl.function.every;
+                                        exports com.blazebit.persistence.impl.function.exist;
+                                        exports com.blazebit.persistence.impl.function.greatest;
+                                        exports com.blazebit.persistence.impl.function.groupconcat;
+                                        exports com.blazebit.persistence.impl.function.grouping;
+                                        exports com.blazebit.persistence.impl.function.groupingsets;
+                                        exports com.blazebit.persistence.impl.function.jsonget;
+                                        exports com.blazebit.persistence.impl.function.jsonset;
+                                        exports com.blazebit.persistence.impl.function.least;
+                                        exports com.blazebit.persistence.impl.function.limit;
+                                        exports com.blazebit.persistence.impl.function.literal;
+                                        exports com.blazebit.persistence.impl.function.nullfn;
+                                        exports com.blazebit.persistence.impl.function.nullsubquery;
+                                        exports com.blazebit.persistence.impl.function.oragg;
+                                        exports com.blazebit.persistence.impl.function.pageposition;
+                                        exports com.blazebit.persistence.impl.function.param;
+                                        exports com.blazebit.persistence.impl.function.querywrapper;
+                                        exports com.blazebit.persistence.impl.function.repeat;
+                                        exports com.blazebit.persistence.impl.function.replace;
+                                        exports com.blazebit.persistence.impl.function.rowvalue;
+                                        exports com.blazebit.persistence.impl.function.set;
+                                        exports com.blazebit.persistence.impl.function.stringjsonagg;
+                                        exports com.blazebit.persistence.impl.function.stringxmlagg;
+                                        exports com.blazebit.persistence.impl.function.subquery;
+                                        exports com.blazebit.persistence.impl.function.tomultiset;
+                                        exports com.blazebit.persistence.impl.function.tostringjson;
+                                        exports com.blazebit.persistence.impl.function.tostringxml;
+                                        exports com.blazebit.persistence.impl.function.treat;
+                                        exports com.blazebit.persistence.impl.function.trunc;
+                                        exports com.blazebit.persistence.impl.function.trunc.day;
+                                        exports com.blazebit.persistence.impl.function.trunc.hour;
+                                        exports com.blazebit.persistence.impl.function.trunc.microseconds;
+                                        exports com.blazebit.persistence.impl.function.trunc.milliseconds;
+                                        exports com.blazebit.persistence.impl.function.trunc.minute;
+                                        exports com.blazebit.persistence.impl.function.trunc.month;
+                                        exports com.blazebit.persistence.impl.function.trunc.quarter;
+                                        exports com.blazebit.persistence.impl.function.trunc.second;
+                                        exports com.blazebit.persistence.impl.function.trunc.week;
+                                        exports com.blazebit.persistence.impl.function.trunc.year;
+                                        exports com.blazebit.persistence.impl.function.window;
+                                        exports com.blazebit.persistence.impl.function.window.avg;
+                                        exports com.blazebit.persistence.impl.function.window.count;
+                                        exports com.blazebit.persistence.impl.function.window.cumedist;
+                                        exports com.blazebit.persistence.impl.function.window.denserank;
+                                        exports com.blazebit.persistence.impl.function.window.every;
+                                        exports com.blazebit.persistence.impl.function.window.first;
+                                        exports com.blazebit.persistence.impl.function.window.groupconcat;
+                                        exports com.blazebit.persistence.impl.function.window.lag;
+                                        exports com.blazebit.persistence.impl.function.window.last;
+                                        exports com.blazebit.persistence.impl.function.window.lead;
+                                        exports com.blazebit.persistence.impl.function.window.max;
+                                        exports com.blazebit.persistence.impl.function.window.min;
+                                        exports com.blazebit.persistence.impl.function.window.nth;
+                                        exports com.blazebit.persistence.impl.function.window.ntile;
+                                        exports com.blazebit.persistence.impl.function.window.oragg;
+                                        exports com.blazebit.persistence.impl.function.window.percentrank;
+                                        exports com.blazebit.persistence.impl.function.window.rank;
+                                        exports com.blazebit.persistence.impl.function.window.row;
+                                        exports com.blazebit.persistence.impl.function.window.sum;
+                                        exports com.blazebit.persistence.impl.keyset;
+                                        exports com.blazebit.persistence.impl.plan;
+                                        exports com.blazebit.persistence.impl.query;
+                                        exports com.blazebit.persistence.impl.transform;
+                                        exports com.blazebit.persistence.impl.util;
+                                        opens com.blazebit.persistence.impl.function.entity to org.hibernate.orm.core, eclipselink;
+                                        uses com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+                                        uses com.blazebit.persistence.spi.ExtendedQuerySupport;
+                                        uses com.blazebit.persistence.spi.CriteriaBuilderConfigurationContributor;
+                                        provides com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider with com.blazebit.persistence.impl.CriteriaBuilderConfigurationProviderImpl;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

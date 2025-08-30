@@ -60,7 +60,9 @@
                                 <moduleInfoSource>
                                     module ${module.name} {
                                         requires transitive com.blazebit.persistence.core;
+                                        requires java.persistence;
                                         exports com.blazebit.persistence.criteria;
+                                        exports com.blazebit.persistence.criteria.spi;
                                     }
                                 </moduleInfoSource>
                             </module>

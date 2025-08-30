@@ -169,6 +169,35 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires com.graphqljava;
+                                        requires com.blazebit.persistence.core.parser;
+                                        requires com.blazebit.persistence.view.impl;
+                                        requires com.blazebit.persistence.view;
+                                        requires com.blazebit.persistence.core.impl;
+                                        requires com.blazebit.common.utils;
+                                        requires jakarta.persistence;
+                                        exports com.blazebit.persistence.integration.graphql;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

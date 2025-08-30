@@ -120,13 +120,15 @@
                                         requires org.hibernate.orm.core;
                                         requires com.blazebit.persistence.core;
                                         requires transitive com.blazebit.persistence.integration.hibernate.base;
-                                        requires static com.blazebit.persistence.view;
-                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate60Access;
-                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate60EntityManagerFactoryIntegrator;
+                                        requires com.blazebit.persistence.view;
+                                        requires jakarta.transaction;
+                                        provides com.blazebit.persistence.integration.hibernate.base.HibernateAccess with com.blazebit.persistence.integration.hibernate.Hibernate62Access;
+                                        provides com.blazebit.persistence.spi.EntityManagerFactoryIntegrator with com.blazebit.persistence.integration.hibernate.Hibernate62EntityManagerFactoryIntegrator;
                                         provides com.blazebit.persistence.view.spi.TransactionAccessFactory with com.blazebit.persistence.integration.hibernate.Hibernate6TransactionAccessFactory;
-                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate60Integrator;
-                                        provides org.hibernate.boot.spi.MetadataContributor with com.blazebit.persistence.integration.hibernate.Hibernate60MetadataContributor;
-                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate60ServiceContributor;
+                                        provides org.hibernate.integrator.spi.Integrator with com.blazebit.persistence.integration.hibernate.Hibernate62Integrator;
+                                        provides org.hibernate.persister.spi.PersisterClassResolver with com.blazebit.persistence.integration.hibernate.CustomPersisterClassResolver;
+                                        provides org.hibernate.boot.spi.AdditionalMappingContributor with com.blazebit.persistence.integration.hibernate.Hibernate62AdditionalMappingContributor;
+                                        provides org.hibernate.service.spi.ServiceContributor with com.blazebit.persistence.integration.hibernate.Hibernate62ServiceContributor;
                                         exports com.blazebit.persistence.integration.hibernate;
                                     }
                                 </moduleInfoSource>

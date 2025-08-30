@@ -176,6 +176,37 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires transitive com.blazebit.persistence.view;
+                                        requires com.blazebit.common.utils;
+                                        requires com.blazebit.persistence.integration.jackson;
+                                        requires com.blazebit.persistence.integration.jaxrs;
+                                        requires com.fasterxml.jackson.core;
+                                        requires com.fasterxml.jackson.databind;
+                                        requires jakarta.cdi;
+                                        requires jakarta.inject;
+                                        requires jakarta.ws.rs;
+                                        exports com.blazebit.persistence.integration.jaxrs.jackson;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

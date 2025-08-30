@@ -160,6 +160,33 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires jakarta.persistence;
+                                        requires jakarta.cdi;
+                                        requires com.blazebit.persistence.view;
+                                        exports com.blazebit.persistence.integration.view.cdi;
+                                        provides jakarta.enterprise.inject.spi.Extension with com.blazebit.persistence.integration.view.cdi.EntityViewExtension;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

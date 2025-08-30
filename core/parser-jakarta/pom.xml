@@ -164,6 +164,37 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <module>
+                                <moduleInfoSource>
+                                    module ${module.name} {
+                                        requires java.sql;
+                                        requires jakarta.persistence;
+                                        requires com.blazebit.common.utils;
+                                        requires org.antlr.antlr4.runtime;
+                                        exports com.blazebit.persistence.parser;
+                                        exports com.blazebit.persistence.parser.expression;
+                                        exports com.blazebit.persistence.parser.expression.modifier;
+                                        exports com.blazebit.persistence.parser.predicate;
+                                        exports com.blazebit.persistence.parser.util;
+                                        uses com.blazebit.persistence.parser.util.TypeConverterContributor;
+                                    }
+                                </moduleInfoSource>
+                            </module>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
