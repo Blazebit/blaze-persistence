@@ -150,37 +150,37 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.3</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.4</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.5</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
         <profile>
             <id>hibernate-6.6</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
     </profiles>

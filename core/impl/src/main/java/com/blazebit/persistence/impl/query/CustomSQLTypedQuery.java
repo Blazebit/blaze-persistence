@@ -7,6 +7,8 @@ package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -36,17 +38,44 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements Ty
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    public Query getDelegate() {
+        return delegate;
+    }
+
+    @Override
     public List<X> getResultList() {
         bindParameters();
         return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public X getSingleResult() {
         bindParameters();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
+    }
+
+    @Override
+    public X getSingleResultOrNull() {
+        bindParameters();
+        return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResultOrNull();
+    }
+
+    @Override
+    public TypedQuery<X> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheRetrieveMode(cacheRetrieveMode);
+        return this;
+    }
+
+    @Override
+    public TypedQuery<X> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheStoreMode(cacheStoreMode);
+        return this;
+    }
+
+    @Override
+    public TypedQuery<X> setTimeout(Integer timeout) {
+        ((jakarta.persistence.Query) getDelegate()).setTimeout(timeout);
+        return this;
     }
 
     @Override

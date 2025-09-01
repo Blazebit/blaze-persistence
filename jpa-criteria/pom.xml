@@ -23,6 +23,7 @@
         <module>api</module>
         <module>impl</module>
         <module>jpa-2-compatibility</module>
+        <module>jpa-3.2-compatibility</module>
         <module>testsuite</module>
 
         <module>api-jar</module>

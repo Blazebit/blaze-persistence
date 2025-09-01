@@ -20,8 +20,9 @@
     <properties>
         <main.java.version>17</main.java.version>
         <version.jandex>3.1.6</version.jandex>
-        <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
-        <version.hibernate-orm>${version.hibernate-6.2}</version.hibernate-orm>
+        <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
+        <version.hibernate-orm>${version.hibernate-7.1}</version.hibernate-orm>
+        <version.quarkus>${version.quarkus-3.26}</version.quarkus>
     </properties>
 
     <dependencyManagement>
@@ -29,7 +30,7 @@
             <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-bom</artifactId>
-                <version>${version.quarkus-3}</version>
+                <version>${version.quarkus}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -44,11 +45,38 @@
 
     <profiles>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-6.2</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
+                <version.hibernate-orm>${version.hibernate-6.2}</version.hibernate-orm>
+                <version.quarkus>${version.quarkus-3}</version.quarkus>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.4</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
+                <version.hibernate-orm>${version.hibernate-6.4}</version.hibernate-orm>
+                <version.quarkus>${version.quarkus-3}</version.quarkus>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.6</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.1-api}</version.jpa>
+                <version.hibernate-orm>${version.hibernate-6.6}</version.hibernate-orm>
+                <version.quarkus>${version.quarkus-3.15}</version.quarkus>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-7.1</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
-                <version.hibernate-orm>${version.hibernate-7.0}</version.hibernate-orm>
-                <version.quarkus-3>${version.quarkus-3.24}</version.quarkus-3>
+                <version.hibernate-orm>${version.hibernate-7.1}</version.hibernate-orm>
+                <version.quarkus>${version.quarkus-3.26}</version.quarkus>
             </properties>
         </profile>
     </profiles>

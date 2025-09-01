@@ -34,6 +34,6 @@ public interface DocumentView {
     String getOptionalParameter();
 
     default Instant getSomeInstant() {
-        return Instant.now();
+        return Instant.EPOCH;
     }
 }

@@ -56,6 +56,9 @@ import com.blazebit.persistence.criteria.impl.expression.function.CurrentDateFun
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CurrentTimestampFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalDateFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalDateTimeFunction;
+import com.blazebit.persistence.criteria.impl.expression.function.LocalTimeFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.LocateFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.NullifFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.OrderedSetAggregationFunction;
@@ -73,6 +76,9 @@ import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
 import com.blazebit.persistence.criteria.impl.support.CriteriaBuilderSupport;
 import com.blazebit.persistence.parser.EntityMetamodel;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.TemporalField;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
@@ -81,6 +87,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -92,6 +99,10 @@ import javax.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -290,6 +301,26 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         return new OrderImpl(x, false, nullsFirst);
     }
 
+    @Override
+    public Order asc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls) {
+        return new OrderImpl((Expression<?>) x, true, nulls == Nulls.FIRST);
+    }
+
+    @Override
+    public Order desc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls) {
+        return new OrderImpl((Expression<?>) x, false, nulls == Nulls.FIRST);
+    }
+
+    @Override
+    public BlazeOrder asc(Expression<?> x, Nulls nulls) {
+        return new OrderImpl(x, true, nulls == Nulls.FIRST);
+    }
+
+    @Override
+    public BlazeOrder desc(Expression<?> x, Nulls nulls) {
+        return new OrderImpl(x, false, nulls == Nulls.FIRST);
+    }
+
     /**********************
      * Predicates
      **********************/
@@ -324,9 +355,21 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         return new CompoundPredicate(this, BooleanOperator.AND, restrictions);
     }
 
+    public Predicate and(List<Predicate> restrictions) {
+        List<Expression<Boolean>> list = new ArrayList<>(restrictions.size());
+        list.addAll(restrictions);
+        return new CompoundPredicate(this, BooleanOperator.AND, list);
+    }
+
     @Override
     public Predicate or(Predicate... restrictions) {
         return new CompoundPredicate(this, BooleanOperator.OR, restrictions);
+    }
+
+    public Predicate or(List<Predicate> restrictions) {
+        List<Expression<Boolean>> list = new ArrayList<>(restrictions.size());
+        list.addAll(restrictions);
+        return new CompoundPredicate(this, BooleanOperator.OR, list);
     }
 
     @Override
@@ -694,6 +737,54 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public Expression<java.sql.Time> currentTime() {
         return new CurrentTimeFunction(this);
+    }
+
+    public Expression<LocalDate> localDate() {
+        return new LocalDateFunction(this);
+    }
+
+    public Expression<LocalDateTime> localDateTime() {
+        return new LocalDateTimeFunction(this);
+    }
+
+    public Expression<LocalTime> localTime() {
+        return new LocalTimeFunction(this);
+    }
+
+    public <N,T extends Temporal> Expression<N> extract(TemporalField<N,T> field, Expression<T> temporal) {
+        Class<?> resultType = Integer.class;
+        final String functionName;
+        switch (field.toString()) {
+            case "year":
+                functionName = "year";
+                break;
+            case "quarter":
+                functionName = "quarter";
+                break;
+            case "month":
+                functionName = "month";
+                break;
+            case "week":
+                functionName = "week";
+                break;
+            case "day":
+                functionName = "day";
+                break;
+            case "hour":
+                functionName = "hour";
+                break;
+            case "minute":
+                functionName = "minute";
+                break;
+            case "second":
+                functionName = "second";
+                resultType = Double.class;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid temporal field [" + field + "]");
+        }
+        //noinspection unchecked
+        return function(functionName, (Class<N>) resultType, temporal);
     }
 
     @Override
@@ -1364,5 +1455,34 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public BlazeOrderedSetAggregateFunctionExpression<String> listaggDistinct(Expression<String> expression, Expression<String> separator) {
         return new OrderedSetAggregationFunction<>(this, String.class, "LISTAGG", true, expression, separator);
+    }
+
+    @Override
+    public <X> Expression<X> cast(Expression<?> expression, Class<X> type) {
+        return function( "CAST_" + type.getSimpleName().toLowerCase(), type, expression);
+    }
+
+    public <T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+        throw new UnsupportedOperationException();
     }
 }

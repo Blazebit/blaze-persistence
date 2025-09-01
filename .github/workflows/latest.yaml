@@ -48,10 +48,10 @@ jobs:
             component: hibernate-6.6
             jdk: 17
 ################################################
-# hibernate-7.0
+# hibernate-7.1
 ################################################
           - rdbms: h2
-            component: hibernate-7.0
+            component: hibernate-7.1
             jdk: 17
     steps:
       - uses: actions/checkout@v4

@@ -55,7 +55,6 @@
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
-            <version>${version.jakarta-jpa-3.1-api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -204,6 +204,15 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
         return this;
     }
 
+    public BlazeSubquery<T> where(List<Predicate> restrictions) {
+        if (restrictions == null || restrictions.isEmpty()) {
+            query.setRestriction(null);
+        } else {
+            query.setRestriction(criteriaBuilder.and(restrictions));
+        }
+        return this;
+    }
+
     /* Group by */
 
     @Override
@@ -244,6 +253,11 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
 
     @Override
     public BlazeSubquery<T> having(Predicate... restrictions) {
+        query.setHaving(criteriaBuilder.and(restrictions));
+        return this;
+    }
+
+    public BlazeSubquery<T> having(List<Predicate> restrictions) {
         query.setHaving(criteriaBuilder.and(restrictions));
         return this;
     }

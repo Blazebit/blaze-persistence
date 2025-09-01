@@ -42,8 +42,8 @@ public class HibernateJpqlFunctionAdapter extends AbstractSqmSelfRenderingFuncti
 
     private final JpqlFunction function;
 
-    public HibernateJpqlFunctionAdapter(SessionFactoryImplementor sfi, JpqlFunctionKind kind, JpqlFunction function) {
-        super(null, determineFunctionKind(kind), null, new FunctionReturnTypeResolver() {
+    public HibernateJpqlFunctionAdapter(String functionName, SessionFactoryImplementor sfi, JpqlFunctionKind kind, JpqlFunction function) {
+        super(functionName, determineFunctionKind(kind), null, new FunctionReturnTypeResolver() {
 
             public ReturnableType<?> resolveFunctionReturnType(
                     ReturnableType<?> impliedType,

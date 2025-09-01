@@ -13,41 +13,40 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.quarkus.deployment</module.name>
-        <hibernate.integration-base>6</hibernate.integration-base>
-        <hibernate.integration-version>6.2</hibernate.integration-version>
+        <hibernate.integration-base>7</hibernate.integration-base>
+        <hibernate.integration-version>7.1</hibernate.integration-version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-core-deployment</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc-deployment</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-deployment</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-extension-processor</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Override the scope so that the Quarkus class loader doesn't put this on the DEV class loader -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api-jakarta</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -57,48 +56,13 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate${hibernate.integration-base}-base</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-${hibernate.integration-version}</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <!-- test dependencies -->
@@ -110,31 +74,31 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-jackson</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5-internal</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2-deployment</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-bootstrap-core</artifactId>
-            <version>${version.quarkus-3}</version>
+            <version>${version.quarkus}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -152,6 +116,41 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jaxrs</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate${hibernate.integration-base}-base</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate-${hibernate.integration-version}</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -194,18 +193,21 @@
             <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <hibernate.integration-base>6</hibernate.integration-base>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>compile</scope>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -309,18 +311,21 @@
             <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <hibernate.integration-base>6</hibernate.integration-base>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>compile</scope>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -423,18 +428,21 @@
             <id>hibernate-6.4</id>
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <hibernate.integration-base>6</hibernate.integration-base>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>compile</scope>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -538,18 +546,21 @@
             <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
+                <hibernate.integration-base>6</hibernate.integration-base>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>compile</scope>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.4}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -652,8 +663,9 @@
             <id>hibernate-6.6</id>
             <!-- Note that we run against Quarkus 3.15 as it's the version supporting ORM 6.6 -->
             <properties>
-                <version.quarkus-3>${version.quarkus-3.15}</version.quarkus-3>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
+                <hibernate.integration-base>6</hibernate.integration-base>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
@@ -666,6 +678,7 @@
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                     <version>${version.hibernate-6.6}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -765,25 +778,25 @@
             </build>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
-            <!-- Note that we run against Quarkus 3.24 as it's the version supporting ORM 7.0 -->
+            <id>hibernate-7.1</id>
+            <!-- Note that we run against Quarkus 3.26 as it's the version supporting ORM 7.1 -->
             <properties>
-                <version.quarkus-3>${version.quarkus-3.24}</version.quarkus-3>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
                 <hibernate.integration-base>7</hibernate.integration-base>
-                <hibernate.integration-version>7.0</hibernate.integration-version>
+                <hibernate.integration-version>7.1</hibernate.integration-version>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.2-api}</version>
-                    <scope>compile</scope>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-7.0}</version>
+                    <version>${version.hibernate-7.1}</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

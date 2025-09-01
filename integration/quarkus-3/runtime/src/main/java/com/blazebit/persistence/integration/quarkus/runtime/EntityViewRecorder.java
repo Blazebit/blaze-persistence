@@ -19,6 +19,8 @@ import io.quarkus.runtime.annotations.Recorder;
 import jakarta.enterprise.inject.Default;
 import jakarta.persistence.EntityManagerFactory;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -28,6 +30,22 @@ import java.util.function.Supplier;
  */
 @Recorder
 public class EntityViewRecorder {
+
+    private static final Method GET_ENTITY_MANAGER_FACTORY;
+
+    static {
+        Method method;
+        try {
+            method = JPAConfig.class.getMethod("getEntityManagerFactory", String.class);
+        } catch (NoSuchMethodException e) {
+            try {
+                method = JPAConfig.class.getMethod("getEntityManagerFactory", String.class, boolean.class);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException("Unable to find method to access EntityManagerFactory. Please report this issue.", e2);
+            }
+        }
+        GET_ENTITY_MANAGER_FACTORY = method;
+    }
 
     public Supplier<CriteriaBuilderFactory> criteriaBuilderFactorySupplier(BlazePersistenceConfiguration blazePersistenceConfig, String blazePersistenceInstanceName, String persistenceUnitName) {
         return () -> {
@@ -41,8 +59,14 @@ public class EntityViewRecorder {
             }
 
             Arc.container().beanManager().getEvent().select(CriteriaBuilderConfiguration.class, cbfQualifiers).fire(criteriaBuilderConfiguration);
-            EntityManagerFactory emf = Arc.container().instance(JPAConfig.class, new Annotation[0]).get().getEntityManagerFactory(persistenceUnitName);
-            return criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
+            JPAConfig jpaConfig = Arc.container().instance(JPAConfig.class, new Annotation[0]).get();
+            Object[] args = GET_ENTITY_MANAGER_FACTORY.getParameterCount() == 1 ? new Object[]{ persistenceUnitName } : new Object[]{ persistenceUnitName, false };
+            try {
+                EntityManagerFactory emf = (EntityManagerFactory) GET_ENTITY_MANAGER_FACTORY.invoke(jpaConfig, args);
+                return criteriaBuilderConfiguration.createCriteriaBuilderFactory(emf);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException("Unable to find method to access EntityManagerFactory. Please report this issue.", e);
+            }
         };
     }
 

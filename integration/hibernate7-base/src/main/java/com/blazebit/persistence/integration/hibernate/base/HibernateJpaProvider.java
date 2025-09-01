@@ -1100,7 +1100,12 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 SessionFactoryImplementor sfi = persister.getFactory();
                 Database database = sfi.getServiceRegistry().locateServiceBinding(Database.class).getService();
-                Table[] tables = new Table[]{getTable(database, persister.getTableName())};
+                Table[] tables;
+                if (persister.hasPhysicalIndexColumn()) {
+                    tables = new Table[]{getTable(database, persister.getTableName())};
+                } else {
+                    tables = new Table[]{getTable(database, persister.getElementPersister().getTableName())};
+                }
                 keyColumnMapping.put(indexColumnNames[0], indexColumnNames[0]);
                 keyColumnTypes.put(indexColumnNames[0], getColumnTypesForColumnNames(persister.getRole(), persister.getIndexColumnNames(), tables)[0]);
             }

@@ -40,6 +40,13 @@ public class DefaultSelectQueryPlan<T> implements SelectQueryPlan<T> {
         return (T) query.getSingleResult();
     }
 
+    @Override
+    public T getSingleResultOrNull() {
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+        return (T) ((jakarta.persistence.Query) query).getSingleResultOrNull();
+    }
+
     public Stream<T> getResultStream() {
         query.setFirstResult(firstResult);
         query.setMaxResults(maxResults);

@@ -6,6 +6,7 @@
 package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.criteria.BlazeOrder;
+import jakarta.persistence.criteria.Nulls;
 
 import javax.persistence.criteria.Expression;
 
@@ -52,6 +53,10 @@ public class OrderImpl implements BlazeOrder {
     @Override
     public Expression<?> getExpression() {
         return expression;
+    }
+
+    public Nulls getNullPrecedence() {
+        return nullsFirst ? Nulls.FIRST : Nulls.LAST;
     }
 
 }

@@ -13,6 +13,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.examples.quarkus.testsuite.base</module.name>
+        <hibernate.integration-version>7.1</hibernate.integration-version>
     </properties>
 
     <dependencies>
@@ -43,6 +44,11 @@
             <version>${asmVersion}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-hibernate-${hibernate.integration-version}</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -68,6 +74,33 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>hibernate-6.2</id>
+            <properties>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.4</id>
+            <properties>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-6.6</id>
+            <properties>
+                <hibernate.integration-version>6.2</hibernate.integration-version>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-7.1</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <hibernate.integration-version>7.1</hibernate.integration-version>
+            </properties>
+        </profile>
         <profile>
             <id>postgresql</id>
             <dependencies>
