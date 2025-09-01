@@ -16,8 +16,8 @@
         <test.argLine />
         <main.java.version>1.8</main.java.version>
 
-        <version.spring>${version.spring-data-2.0-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
+        <version.spring>${version.spring-data-2.1-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
     </properties>
 
     <dependencyManagement>
@@ -516,18 +516,22 @@
         <profile>
             <id>hibernate</id>
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43</jpa.excludedGroups>
                 <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
+                <!--
+                Have to test with Hibernate ORM 4.3 here, because we require Spring Framework 5.1 / Spring Data 2.1
+                as minimum version for Spring WebFlux, and Spring 5.1 doesn't support Hibernate ORM 4.2 anymore.
+                -->
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-entitymanager</artifactId>
-                    <version>${version.hibernate-4.2}</version>
+                    <version>${version.hibernate-4.3}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -535,16 +539,11 @@
                     <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
                     <scope>compile</scope>
                 </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-                    <scope>compile</scope>
-                </dependency>
                 <!-- IntelliJ apparently needs the annotation processor here -->
                 <dependency>
                     <groupId>org.hibernate</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>1.3.0.Final</version>
+                    <version>${version.hibernate-4.3}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -574,7 +573,7 @@
                             <dependency>
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>1.3.0.Final</version>
+                                <version>${version.hibernate-4.3}</version>
                             </dependency>
                             <dependency>
                                 <groupId>jakarta.xml.bind</groupId>
@@ -2027,7 +2026,7 @@
             </build>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <!-- Note that we compile the test suite against Hibernate 5.6 because this testsuite will be jakarta-transformed -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>
@@ -2987,24 +2986,19 @@
         <profile>
             <id>spring-data-1.11.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-orm</artifactId>
-                    <version>${version.spring-data-1.x-spring}</version>
-                </dependency>
-                <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-1.x}</version>
+                    <version>${version.spring-data-2.1}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-1.x</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -3018,19 +3012,19 @@
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.0-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.1-spring-boot}</version.spring.boot>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-2.0}</version>
+                    <version>${version.spring-data-2.1}</version>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -3303,7 +3297,7 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.3 -->
+            <!-- It makes no sense to run these tests with Spring Boot 3.4 -->
             <build>
                 <plugins>
                     <plugin>
@@ -3336,7 +3330,40 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.3 -->
+            <!-- It makes no sense to run these tests with Spring Boot 3.5 -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>spring-data-4.0.x</id>
+            <!-- Default to compile this module with Spring Boot 2.7 -->
+            <properties>
+                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-jpa</artifactId>
+                    <version>${version.spring-data-2.7}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <!-- It makes no sense to run these tests with Spring Boot 4.0 -->
             <build>
                 <plugins>
                     <plugin>

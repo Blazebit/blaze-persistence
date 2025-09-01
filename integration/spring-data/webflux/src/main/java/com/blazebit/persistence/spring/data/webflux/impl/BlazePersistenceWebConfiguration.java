@@ -70,7 +70,7 @@ public class BlazePersistenceWebConfiguration implements WebFluxConfigurer {
 
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        configurer.customCodecs().reader(new EntityViewTypedDecoderHttpMessageReader<>(new EntityViewAwareJackson2JsonDecoder(entityViewManager, (EntityViewIdValueAccessorImpl) blazeWebfluxIdAttributeAccessor())));
+        configurer.customCodecs().register(new EntityViewTypedDecoderHttpMessageReader<>(new EntityViewAwareJackson2JsonDecoder(entityViewManager, (EntityViewIdValueAccessorImpl) blazeWebfluxIdAttributeAccessor())));
     }
 
     @Bean

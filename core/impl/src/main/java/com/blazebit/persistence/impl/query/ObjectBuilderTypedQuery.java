@@ -48,6 +48,20 @@ public class ObjectBuilderTypedQuery<X> extends TypedQueryWrapper<X> {
     }
 
     @Override
+    public X getSingleResultOrNull() {
+        List<X> list = getResultList();
+
+        switch (list.size()) {
+            case 0:
+                return null;
+            case 1:
+                return list.get(0);
+            default:
+                throw new NonUniqueResultException("Expected a single result for query: " + delegate);
+        }
+    }
+
+    @Override
     public List<X> getResultList() {
         List<X> list = super.getResultList();
         int size = list.size();

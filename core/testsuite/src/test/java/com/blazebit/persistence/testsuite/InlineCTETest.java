@@ -15,6 +15,7 @@ import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
@@ -534,8 +535,9 @@ public class InlineCTETest extends AbstractCoreTest {
 
     // NOTE: Entity joins are only supported on Hibernate 5.1+
     // NOTE: Hibernate 5.1 renders t.id = tSub.id rather than t = tSub
+	// NOTE: Hibernate 7.1.0 suffers from: https://hibernate.atlassian.net/browse/HHH-19745
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate70.class })
     public void testMultipleInlineEntityWithLimitJoin() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromEntitySubquery(RecursiveEntity.class, "t")

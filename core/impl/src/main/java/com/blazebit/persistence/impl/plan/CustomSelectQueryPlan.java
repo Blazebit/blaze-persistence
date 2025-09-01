@@ -8,6 +8,7 @@ package com.blazebit.persistence.impl.plan;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.stream.Stream;
@@ -51,6 +52,15 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
     public T getSingleResult() {
         extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
         return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
+    }
+
+    @Override
+    public T getSingleResultOrNull() {
+        try {
+            return getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Override

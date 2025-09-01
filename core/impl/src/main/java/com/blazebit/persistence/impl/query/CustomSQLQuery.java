@@ -30,6 +30,11 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
         this.delegate = delegate;
     }
 
+    @Override
+    public Query getDelegate() {
+        return delegate;
+    }
+
     public Map<String, String> getAddedCtes() {
         return querySpecification.getAddedCtes();
     }
@@ -43,6 +48,11 @@ public class CustomSQLQuery extends AbstractCustomQuery<Object> {
     @Override
     public Object getSingleResult() {
         throw new IllegalArgumentException("Can not call getSingleResult on a modification query!");
+    }
+
+    @Override
+    public Object getSingleResultOrNull() {
+        throw new IllegalArgumentException("Can not call getSingleResultOrNull on a modification query!");
     }
 
     @Override

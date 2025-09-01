@@ -124,7 +124,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-7.0</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -167,6 +167,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-base-3.3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-base-4.0</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -215,6 +219,10 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

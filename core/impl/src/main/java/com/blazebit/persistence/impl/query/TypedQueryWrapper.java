@@ -17,6 +17,9 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+
 /**
  *
  * @author Christian Beikov
@@ -41,6 +44,26 @@ public class TypedQueryWrapper<X> extends QueryWrapper implements TypedQuery<X> 
     @Override
     public X getSingleResult() {
         return (X) delegate.getSingleResult();
+    }
+
+    @Override
+    public X getSingleResultOrNull() {
+        return (X) ((jakarta.persistence.Query) delegate).getSingleResultOrNull();
+    }
+
+    public TypedQuery<X> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        ((jakarta.persistence.Query) delegate).setCacheRetrieveMode(cacheRetrieveMode);
+        return this;
+    }
+
+    public TypedQuery<X> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        ((jakarta.persistence.Query) delegate).setCacheStoreMode(cacheStoreMode);
+        return this;
+    }
+
+    public TypedQuery<X> setTimeout(Integer timeout) {
+        ((jakarta.persistence.Query) delegate).setTimeout(timeout);
+        return this;
     }
 
     @Override

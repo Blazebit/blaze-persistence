@@ -8,11 +8,14 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
@@ -33,6 +36,11 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     }
 
     @Override
+    public Query getDelegate() {
+        return delegate;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public List<ReturningResult<T>> getResultList() {
         bindParameters();
@@ -44,6 +52,31 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
     public ReturningResult<T> getSingleResult() {
         bindParameters();
         return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public ReturningResult<T> getSingleResultOrNull() {
+        bindParameters();
+        return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResultOrNull();
+    }
+
+    @Override
+    public TypedQuery<ReturningResult<T>> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheRetrieveMode(cacheRetrieveMode);
+        return this;
+    }
+
+    @Override
+    public TypedQuery<ReturningResult<T>> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheStoreMode(cacheStoreMode);
+        return this;
+    }
+
+    @Override
+    public TypedQuery<ReturningResult<T>> setTimeout(Integer timeout) {
+        ((jakarta.persistence.Query) getDelegate()).setTimeout(timeout);
+        return this;
     }
 
     @Override

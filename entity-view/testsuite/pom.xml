@@ -2015,7 +2015,7 @@
             </build>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <!-- Note that we compile the test suite against Hibernate 5.6 because this testsuite will be jakarta-transformed -->
             <properties>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate66</jpa.excludedGroups>

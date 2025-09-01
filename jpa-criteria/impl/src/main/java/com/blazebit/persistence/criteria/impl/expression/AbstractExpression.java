@@ -160,6 +160,26 @@ public abstract class AbstractExpression<T> extends AbstractSelection<T> impleme
         return new InPredicate<T>(criteriaBuilder, this, valueList);
     }
 
+    public Predicate equalTo(Expression<?> value) {
+        return criteriaBuilder.equal(this, value);
+    }
+
+    public Predicate equalTo(Object value) {
+        return criteriaBuilder.equal(this, value);
+    }
+
+    public Predicate notEqualTo(Expression<?> value) {
+        return criteriaBuilder.notEqual(this, value);
+    }
+
+    public Predicate notEqualTo(Object value) {
+        return criteriaBuilder.notEqual(this, value);
+    }
+
+    public <X> Expression<X> cast(Class<X> type) {
+        return criteriaBuilder.cast(this, type);
+    }
+
     @SuppressWarnings({"unchecked"})
     public BlazeExpression<Long> asLong() {
         setJavaType(Long.class);

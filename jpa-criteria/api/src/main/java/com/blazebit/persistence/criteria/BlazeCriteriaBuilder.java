@@ -12,11 +12,14 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import java.util.Map;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * An extended version of {@link CriteriaBuilder}.
@@ -79,6 +82,42 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @return descending ordering corresponding to the expression
      */
     public BlazeOrder desc(Expression<?> x, boolean nullsFirst);
+
+    /**
+     * Like {@link BlazeCriteriaBuilder#asc(Expression,Nulls)}.
+     *
+     * @param x     The expression used to define the ordering
+     * @param nulls True if nulls should be first, false otherwise
+     * @return ascending ordering corresponding to the expression
+     */
+    public Order asc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls);
+
+    /**
+     * Like {@link BlazeCriteriaBuilder#desc(Expression,Nulls)}.
+     *
+     * @param x     The expression used to define the ordering
+     * @param nulls True if nulls should be first, false otherwise
+     * @return descending ordering corresponding to the expression
+     */
+    public Order desc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls);
+
+    /**
+     * Like {@link BlazeCriteriaBuilder#asc(Expression,boolean)}.
+     *
+     * @param x     The expression used to define the ordering
+     * @param nulls True if nulls should be first, false otherwise
+     * @return ascending ordering corresponding to the expression
+     */
+    public BlazeOrder asc(Expression<?> x, Nulls nulls);
+
+    /**
+     * Like {@link BlazeCriteriaBuilder#desc(Expression,boolean)}.
+     *
+     * @param x     The expression used to define the ordering
+     * @param nulls True if nulls should be first, false otherwise
+     * @return descending ordering corresponding to the expression
+     */
+    public BlazeOrder desc(Expression<?> x, Nulls nulls);
 
     /**
      * Like {@link BlazeCriteriaBuilder#createCriteriaUpdate(Class)} but also sets the alias for the entity.
@@ -627,4 +666,14 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @return the ordered set-aggregate function expression
      */
     public BlazeOrderedSetAggregateFunctionExpression<String> listaggDistinct(Expression<String> expression, Expression<String> separator);
+
+    /**
+     * Casts the given expression to the given type.
+     *
+     * @param expression The expression
+     * @param type The type
+     * @return The casted expression
+     * @param <X> The target type
+     */
+    <X> Expression<X> cast(Expression<?> expression, Class<X> type);
 }

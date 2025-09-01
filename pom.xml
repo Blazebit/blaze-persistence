@@ -379,6 +379,7 @@
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponents.java</exclude>
                         <exclude>**/src/main/java/com/blazebit/persistence/deltaspike/data/impl/meta/RepositoryComponentsFactory.java</exclude>
                         <exclude>**/src/main/java/javax/persistence/**</exclude>
+                        <exclude>**/src/main/java/jakarta/persistence/**</exclude>
                         <exclude>**/src/test/java/com/blazebit/persistence/view/processor/model/**</exclude>
                         <exclude>**/src/test/java/javax/annotation/**</exclude>
                     </excludes>

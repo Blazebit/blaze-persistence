@@ -17,8 +17,8 @@
         <spring.activeProfiles />
         <test.argLine />
 
-        <version.spring>${version.spring-data-2.0-spring}</version.spring>
-        <version.spring-data>${version.spring-data-2.0}</version.spring-data>
+        <version.spring>${version.spring-data-2.1-spring}</version.spring>
+        <version.spring-data>${version.spring-data-2.1}</version.spring-data>
     </properties>
 
     <dependencyManagement>
@@ -117,7 +117,7 @@
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -125,13 +125,13 @@
         <profile>
             <id>spring-data-2.0.x</id>
             <properties>
-                <version.spring>${version.spring-data-2.0-spring}</version.spring>
-                <version.spring-data>${version.spring-data-2.0}</version.spring-data>
+                <version.spring>${version.spring-data-2.1-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.1}</version.spring-data>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.0</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.1</artifactId>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
@@ -332,7 +332,7 @@
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.3 -->
+            <!-- It makes no sense to run these tests with Spring Boot 3.4 -->
             <build>
                 <plugins>
                     <plugin>
@@ -359,7 +359,34 @@
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.3 -->
+            <!-- It makes no sense to run these tests with Spring Boot 3.5 -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>spring-data-4.0.x</id>
+            <!-- Default to compile this module with Spring Boot 2.7 -->
+            <properties>
+                <version.spring>${version.spring-data-2.7-spring}</version.spring>
+                <version.spring-data>${version.spring-data-2.7}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <!-- It makes no sense to run these tests with Spring Boot 4.0 -->
             <build>
                 <plugins>
                     <plugin>

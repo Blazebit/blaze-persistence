@@ -12,6 +12,8 @@
     <!-- The compatibility stuff for the JPA criteria API does not have to comply either -->
     <suppress checks="." files="[\\/]javax[\\/]persistence[\\/].*\.java$"/>
     <suppress checks="." files="[\\/]javax[\\/]persistence[\\/]criteria[\\/].*\.java$"/>
+    <suppress checks="." files="[\\/]jakarta[\\/]persistence[\\/].*\.java$"/>
+    <suppress checks="." files="[\\/]jakarta[\\/]persistence[\\/]criteria[\\/].*\.java$"/>
     <suppress checks="." files="[\\/]javax[\\/]annotation[\\/].*\.java$"/>
     <!-- Some more or less copied classes from Javassist for a special data flow analysis -->
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]view[\\/]impl[\\/]metamodel[\\/]analysis[\\/].*\.java$"/>

@@ -154,7 +154,7 @@ public abstract class AbstractHibernateEntityManagerFactoryIntegrator implements
                 if (function == null) {
                     LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
                 } else {
-                    sqmFunctionRegistry.register(functionName, new HibernateJpqlFunctionAdapter(sfi, dbmsFunctionMap.getKind(), function));
+                    sqmFunctionRegistry.register(functionName, new HibernateJpqlFunctionAdapter(functionName, sfi, dbmsFunctionMap.getKind(), function));
                 }
             }
 

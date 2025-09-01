@@ -49,7 +49,7 @@ public class PersonControllerTest extends AbstractSpringWebMvcTest {
         updateView.setName("P2");
         mockMvc.perform(put("/persons/{id}", p1.getId())
                 .content(toJsonWithoutId(updateView))
-                .contentType(MediaType.APPLICATION_JSON_UTF8))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(updateView.getName())));
     }

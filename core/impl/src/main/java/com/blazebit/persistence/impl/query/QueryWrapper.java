@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+
 /**
  *
  * @author Christian Beikov
@@ -64,6 +67,37 @@ public class QueryWrapper implements Query {
     @Override
     public Object getSingleResult() {
         return delegate.getSingleResult();
+    }
+
+    public Object getSingleResultOrNull() {
+        return ((jakarta.persistence.Query) delegate).getSingleResultOrNull();
+    }
+
+    public Query setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        ((jakarta.persistence.Query) delegate).setCacheRetrieveMode(cacheRetrieveMode);
+        return this;
+    }
+
+    public Query setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        ((jakarta.persistence.Query) delegate).setCacheStoreMode(cacheStoreMode);
+        return this;
+    }
+
+    public CacheRetrieveMode getCacheRetrieveMode() {
+        return ((jakarta.persistence.Query) delegate).getCacheRetrieveMode();
+    }
+
+    public CacheStoreMode getCacheStoreMode() {
+        return ((jakarta.persistence.Query) delegate).getCacheStoreMode();
+    }
+
+    public Query setTimeout(Integer timeout) {
+        ((jakarta.persistence.Query) delegate).setTimeout(timeout);
+        return this;
+    }
+
+    public Integer getTimeout() {
+        return ((jakarta.persistence.Query) delegate).getTimeout();
     }
 
     @Override

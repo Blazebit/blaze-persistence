@@ -10,7 +10,6 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +28,7 @@ public class CompoundPredicate extends AbstractPredicate {
     public CompoundPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, BooleanOperator operator) {
         super(criteriaBuilder, false);
         this.operator = operator;
-        this.expressions = new ArrayList<Expression<Boolean>>();
+        this.expressions = new ArrayList<>();
     }
 
     @SafeVarargs
@@ -38,10 +37,19 @@ public class CompoundPredicate extends AbstractPredicate {
         Collections.addAll(this.expressions, expressions);
     }
 
-    private CompoundPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, BooleanOperator operator, List<Expression<Boolean>> expressions) {
+    public CompoundPredicate(BlazeCriteriaBuilderImpl criteriaBuilder, BooleanOperator operator, List<Expression<Boolean>> expressions) {
         super(criteriaBuilder, false);
         this.operator = operator;
         this.expressions = expressions;
+    }
+
+    private CompoundPredicate(CompoundPredicate original) {
+        super(original.criteriaBuilder, false);
+        this.operator = original.getNegatedOperator();
+        this.expressions = new ArrayList<>(original.expressions.size());
+        for (Expression<Boolean> expression : original.expressions) {
+            this.expressions.add(original.criteriaBuilder.not(expression));
+        }
     }
 
     @Override
@@ -94,14 +102,7 @@ public class CompoundPredicate extends AbstractPredicate {
 
     @Override
     public AbstractPredicate copyNegated() {
-        BooleanOperator operator = getNegatedOperator();
-        List<Expression<Boolean>> list = new ArrayList<Expression<Boolean>>(expressions.size());
-        for (Expression<Boolean> expr : expressions) {
-            if (expr instanceof Predicate) {
-                list.add(((Predicate) expr).not());
-            }
-        }
-        return new CompoundPredicate(criteriaBuilder, operator, list);
+        return new CompoundPredicate(this);
     }
 
     private BooleanOperator getNegatedOperator() {

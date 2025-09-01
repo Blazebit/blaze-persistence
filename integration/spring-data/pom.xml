@@ -23,6 +23,7 @@
         <module>base</module>
 <!--        <module>base-3.1</module>-->
 <!--        <module>base-3.3</module>-->
+<!--        <module>base-4.0</module>-->
         <module>1.x</module>
         <module>2.0</module>
         <module>2.1</module>
@@ -35,6 +36,7 @@
 <!--        <module>3.1</module>-->
 <!--        <module>3.3</module>-->
 <!--        <module>3.4</module>-->
+<!--        <module>4.0</module>-->
         <module>webmvc</module>
 <!--        <module>webmvc-jakarta</module>-->
         <module>webflux</module>
@@ -53,6 +55,7 @@
                 <module>base</module>
                 <module>base-3.1</module>
                 <module>base-3.3</module>
+                <module>base-4.0</module>
                 <module>1.x</module>
                 <module>2.0</module>
                 <module>2.1</module>
@@ -65,6 +68,7 @@
                 <module>3.1</module>
                 <module>3.3</module>
                 <module>3.4</module>
+                <module>4.0</module>
                 <module>webmvc</module>
                 <module>webmvc-jakarta</module>
                 <module>webflux</module>

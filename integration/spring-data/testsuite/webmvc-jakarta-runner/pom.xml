@@ -345,9 +345,9 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <properties>
-                <version.hibernate>${version.hibernate-7.0}</version.hibernate>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
@@ -357,7 +357,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-7.0</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -461,6 +461,21 @@
                 <dependency>
                     <groupId>com.blazebit</groupId>
                     <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>spring-data-4.0.x</id>
+            <properties>
+                <version.spring>${version.spring-data-4.0-spring}</version.spring>
+                <version.spring-boot>${version.spring-data-4.0-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-4.0}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

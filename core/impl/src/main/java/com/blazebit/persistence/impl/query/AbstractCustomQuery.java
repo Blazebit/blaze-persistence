@@ -10,7 +10,10 @@ import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 import com.blazebit.persistence.impl.util.SetView;
 import com.blazebit.persistence.spi.CteQueryWrapper;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
+import javax.persistence.NoResultException;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
@@ -85,9 +88,46 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
         return querySpecification.getSql();
     }
 
+    protected abstract Query getDelegate();
+
     @Override
     public List<Query> getParticipatingQueries() {
         return querySpecification.getParticipatingQueries();
+    }
+
+    public Object getSingleResultOrNull() {
+        try {
+            return getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
+    public Query setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheRetrieveMode(cacheRetrieveMode);
+        return this;
+    }
+
+    public Query setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        ((jakarta.persistence.Query) getDelegate()).setCacheStoreMode(cacheStoreMode);
+        return this;
+    }
+
+    public CacheRetrieveMode getCacheRetrieveMode() {
+        return ((jakarta.persistence.Query) getDelegate()).getCacheRetrieveMode();
+    }
+
+    public CacheStoreMode getCacheStoreMode() {
+        return ((jakarta.persistence.Query) getDelegate()).getCacheStoreMode();
+    }
+
+    public Query setTimeout(Integer timeout) {
+        ((jakarta.persistence.Query) getDelegate()).setTimeout(timeout);
+        return this;
+    }
+
+    public Integer getTimeout() {
+        return ((jakarta.persistence.Query) getDelegate()).getTimeout();
     }
 
     @Override

@@ -197,7 +197,7 @@
             </properties>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>

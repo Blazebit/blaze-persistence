@@ -157,6 +157,15 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
         return this;
     }
 
+    public BlazeCriteriaQuery<T> where(List<Predicate> restrictions) {
+        if (restrictions == null || restrictions.isEmpty()) {
+            query.setRestriction(null);
+        } else {
+            query.setRestriction(criteriaBuilder.and(restrictions));
+        }
+        return this;
+    }
+
     /* Group by */
 
     @Override
@@ -202,6 +211,15 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
     @Override
     public BlazeCriteriaQuery<T> having(Predicate... restrictions) {
         if (restrictions == null || restrictions.length == 0) {
+            query.setHaving(null);
+        } else {
+            query.setHaving(criteriaBuilder.and(restrictions));
+        }
+        return this;
+    }
+
+    public BlazeCriteriaQuery<T> having(List<Predicate> restrictions) {
+        if (restrictions == null || restrictions.isEmpty()) {
             query.setHaving(null);
         } else {
             query.setHaving(criteriaBuilder.and(restrictions));

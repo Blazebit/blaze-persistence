@@ -84,6 +84,11 @@ public class CustomReturningModificationQueryPlan<T> implements ModificationQuer
         return new DefaultReturningResult<T>(resultList, updateCount, dbmsDialect, objectBuilder);
     }
 
+    @Override
+    public ReturningResult<T> getSingleResultOrNull() {
+        return getSingleResult();
+    }
+
     public Stream<ReturningResult<T>> getResultStream() {
         return getResultList().stream();
     }

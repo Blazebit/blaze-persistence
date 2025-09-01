@@ -6,7 +6,9 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Add support for Hibernate ORM 7.1
+* Add support for Quarkus 3.26+
+* Add support for Spring Framework 7.0 and Spring Boot 4.0
 
 ### Bug fixes
 
@@ -15,7 +17,8 @@ None yet
 
 ### Backwards-incompatible changes
 
-None yet
+* Add `blaze-persistence-integration-hibernate-7.1` for Hibernate ORM 7.1+ support as replacement for `blaze-persistence-integration-hibernate-7.0`
+* Drop support for Spring WebFlux version older than 5.1.13.RELEASE to ease compatibility with Spring 7.0
 
 ## 1.6.16
 

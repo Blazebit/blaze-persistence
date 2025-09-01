@@ -778,7 +778,7 @@
             </dependencies>
         </profile>
         <profile>
-            <id>hibernate-7.0</id>
+            <id>hibernate-7.1</id>
             <properties>
                 <jpa-api-version>${version.jakarta-jpa-3.2-api}</jpa-api-version>
                 <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
@@ -787,17 +787,17 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-7.0}</version>
+                    <version>${version.hibernate-7.1}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-envers</artifactId>
-                    <version>${version.hibernate-7.0}</version>
+                    <version>${version.hibernate-7.1}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-testing</artifactId>
-                    <version>${version.hibernate-7.0}</version>
+                    <version>${version.hibernate-7.1}</version>
                 </dependency>
                 <dependency>
                     <groupId>jakarta.xml.bind</groupId>
@@ -821,7 +821,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-hibernate-7.0</artifactId>
+                    <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
                     <scope>test</scope>
                 </dependency>
                 <dependency>
@@ -834,7 +834,7 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
-                    <version>${version.hibernate-7.0}</version>
+                    <version>${version.hibernate-7.1}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>

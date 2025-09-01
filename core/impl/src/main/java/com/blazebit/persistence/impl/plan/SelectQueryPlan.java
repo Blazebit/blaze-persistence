@@ -21,4 +21,6 @@ public interface SelectQueryPlan<T> {
 
     public T getSingleResult();
 
+    public T getSingleResultOrNull();
+
 }
