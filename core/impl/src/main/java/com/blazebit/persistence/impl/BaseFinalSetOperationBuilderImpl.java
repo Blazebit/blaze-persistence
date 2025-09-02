@@ -30,6 +30,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
@@ -502,6 +503,14 @@ public abstract class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSet
 
     public T getSingleResult() {
         return getTypedQuery(null, null).getSingleResult();
+    }
+
+    public T getSingleResultOrNull() {
+        try {
+            return getTypedQuery(null, null).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public Stream<T> getResultStream() {

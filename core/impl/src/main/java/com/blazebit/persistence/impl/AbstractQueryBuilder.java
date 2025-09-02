@@ -8,6 +8,7 @@ package com.blazebit.persistence.impl;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import com.blazebit.persistence.FullQueryBuilder;
@@ -50,6 +51,15 @@ public abstract class AbstractQueryBuilder<T, X extends Queryable<T, X>, Z, W, F
     @Override
     public T getSingleResult() {
         return getQuery().getSingleResult();
+    }
+
+    @Override
+    public T getSingleResultOrNull() {
+        try {
+            return getQuery().getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Override
