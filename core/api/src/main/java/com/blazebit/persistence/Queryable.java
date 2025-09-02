@@ -49,6 +49,14 @@ public interface Queryable<T, X extends Queryable<T, X>> {
     public T getSingleResult();
 
     /**
+     * Execute the query expecting a single result or null.
+     *
+     * @return The single result or null
+     * @since 1.6.17
+     */
+    public T getSingleResultOrNull();
+
+    /**
      * Execute the query and return the result as a type Stream.
      *
      * @return The stream of the results

@@ -9,6 +9,7 @@ Changes that happened in releases
 * Add support for Hibernate ORM 7.1
 * Add support for Quarkus 3.26+
 * Add support for Spring Framework 7.0 and Spring Boot 4.0
+* Add `getSingleResultOrNull()` to `Queryable`, matching the method introduced in `Query` in JPA 3.2
 
 ### Bug fixes
 
