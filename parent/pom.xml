@@ -1070,6 +1070,7 @@
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <consoleOutput>true</consoleOutput>
                     <skip>${skipCheckstyle}</skip>
+                    <excludes>**/module-info.java</excludes>
                 </configuration>
                 <executions>
                     <execution>

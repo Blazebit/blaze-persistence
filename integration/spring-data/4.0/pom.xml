@@ -118,37 +118,13 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires transitive com.blazebit.persistence.integration.spring.data;
-                                        requires spring.data.commons;
-                                        requires com.blazebit.persistence.view;
-                                        requires jakarta.persistence;
-                                        requires spring.expression;
-                                        requires spring.core;
-                                        requires com.blazebit.persistence.core.parser;
-                                        requires spring.aop;
-                                        requires spring.beans;
-                                        requires spring.tx;
-                                        exports com.blazebit.persistence.spring.data.impl.query;
-                                        exports com.blazebit.persistence.spring.data.impl.repository;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${version.javadoc.plugin}</version>
+                <configuration>
+                    <source>${main.java.version}</source>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

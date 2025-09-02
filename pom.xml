@@ -47,7 +47,7 @@
         <version.install.plugin>3.1.1</version.install.plugin>
         <version.jandex.plugin>3.1.2</version.jandex.plugin>
         <version.jar.plugin>3.3.0</version.jar.plugin>
-        <version.javadoc.plugin>3.6.0</version.javadoc.plugin>
+        <version.javadoc.plugin>3.11.2</version.javadoc.plugin>
         <version.moditect.plugin>1.0.0.RC1</version.moditect.plugin>
         <version.plugin.plugin>3.9.0</version.plugin.plugin>
         <version.processor.plugin>3.3.2</version.processor.plugin>
@@ -173,6 +173,11 @@
                             <artifactId>maven-javadoc-plugin</artifactId>
                             <version>${version.javadoc.plugin}</version>
                             <configuration>
+                                <!--
+                                A major reason why this is necessary is because the moditect plugin generates
+                                a module-info file into the JAR, which is seems to cause trouble for the javadoc plugin.
+                                If the module-info.java files existed in the source folder directly, this could be removed.
+                                -->
                                 <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
 <!--                                <source>${main.java.version}</source>-->
                                 <additionalJOption>-Xdoclint:none</additionalJOption>
@@ -191,21 +196,6 @@
                 <maven.processor.source>1.9</maven.processor.source>
                 <maven.processor.target>1.9</maven.processor.target>
             </properties>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>${version.javadoc.plugin}</version>
-                            <configuration>
-                                <source>8</source> <!-- https://bugs.openjdk.java.net/browse/JDK-8212233 -->
-                                <additionalJOption>-Xdoclint:none</additionalJOption>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
         </profile>
         <profile>
             <id>jdk20+</id>

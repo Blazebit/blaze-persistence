@@ -237,8 +237,8 @@ public class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySuppor
 
 	Pageable withSort(Pageable pageable, Sort sort) {
 
-		if (pageable instanceof PageRequest pr && pageable.getSort() != sort) {
-			return pr.withSort(sort);
+		if (pageable instanceof PageRequest && pageable.getSort() != sort) {
+			return ((PageRequest) pageable).withSort(sort);
 		}
 
 		return pageable;
