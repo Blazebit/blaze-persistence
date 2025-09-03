@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-examples-showcase</artifactId>
-        <version>1.6.17-SNAPSHOT</version>
+        <version>1.6.17</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
