@@ -5,9 +5,9 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.blazebit/blaze-persistence-core-impl)
 [![Zulip Chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://blazebit.zulipchat.com)
 
-[![Javadoc - Core](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-core-api.svg?label=javadoc%20-%20core-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-core-api)
-[![Javadoc - Entity-View](https://www.javadoc.io/badge/com.blazebit/blaze-persistence-entity-view-api.svg?label=javadoc%20-%20entity-view-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-entity-view-api)
-[![Javadoc - JPA-Criteria](https://www.javadoc.io/badge/doc/com.blazebit/blaze-persistence-jpa-criteria-api.svg?label=javadoc%20-%20jpa-criteria-api)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-jpa-criteria-api)
+[![Javadoc - Core](https://www.javadoc.io/badge2/com.blazebit/blaze-persistence-core-api/Core%20API%20Javadoc.svg?color=green)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-core-api)
+[![Javadoc - Entity-View](https://www.javadoc.io/badge2/com.blazebit/blaze-persistence-entity-view-api/EntityView%20API%20Javadoc.svg?color=green)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-entity-view-api)
+[![Javadoc - JPA-Criteria](https://www.javadoc.io/badge2/com.blazebit/blaze-persistence-jpa-criteria-api/JPA%20Criteria%20API%20Javadoc.svg?color=green)](http://www.javadoc.io/doc/com.blazebit/blaze-persistence-jpa-criteria-api)
 
 Blaze-Persistence
 ==========
