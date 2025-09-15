@@ -128,14 +128,14 @@
         <version.spring-data-3.3>3.3.2</version.spring-data-3.3>
         <version.spring-data-3.3-spring>6.1.8</version.spring-data-3.3-spring>
         <version.spring-data-3.3-spring-boot>3.3.2</version.spring-data-3.3-spring-boot>
-        <version.spring-data-3.4>3.4.9</version.spring-data-3.4>
-        <version.spring-data-3.4-spring>6.2.10</version.spring-data-3.4-spring>
+        <version.spring-data-3.4>3.4.10</version.spring-data-3.4>
+        <version.spring-data-3.4-spring>6.2.11</version.spring-data-3.4-spring>
         <version.spring-data-3.4-spring-boot>3.4.9</version.spring-data-3.4-spring-boot>
-        <version.spring-data-3.5>3.5.3</version.spring-data-3.5>
-        <version.spring-data-3.5-spring>6.2.10</version.spring-data-3.5-spring>
+        <version.spring-data-3.5>3.5.4</version.spring-data-3.5>
+        <version.spring-data-3.5-spring>6.2.11</version.spring-data-3.5-spring>
         <version.spring-data-3.5-spring-boot>3.5.5</version.spring-data-3.5-spring-boot>
-        <version.spring-data-4.0>4.0.0-M5</version.spring-data-4.0>
-        <version.spring-data-4.0-spring>7.0.0-M8</version.spring-data-4.0-spring>
+        <version.spring-data-4.0>4.0.0-M6</version.spring-data-4.0>
+        <version.spring-data-4.0-spring>7.0.0-M9</version.spring-data-4.0-spring>
         <version.spring-data-4.0-spring-boot>4.0.0-M2</version.spring-data-4.0-spring-boot>
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
