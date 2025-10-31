@@ -430,6 +430,136 @@ public class BlazePersistenceConfiguration {
 }
 ----
 
+[[environments-wildfly]]
+==== Wildfly
+
+Blaze Persistence can be integrated with WildFly 36 in standalone mode using JDK 21, Jakarta EE 10 JPA (JPA 3.1), and Hibernate 6.6.7 as the JPA provider.
+
+Define a WildFly module for Blaze Persistence
+
+Create a module directory:
+
+`$WILDFLY/modules/system/layers/base/com/blazebit/main/`
+
+Place the following JARs inside the folder:
+
+- blaze-persistence-core-api-jakarta-{version}.jar
+- blaze-persistence-core-impl-jakarta-{version}.jar
+- blaze-persistence-core-parser-jakarta-{version}.jar
+- blaze-persistence-integration-hibernate-6.2-{version}.jar
+- blaze-persistence-integration-hibernate6-base-{version}.jar
+- blaze-persistence-integration-jpa-base-jakarta-{version}.jar
+- blaze-common-utils-0.1.21.jar
+
+Create `module.xml`:
+
+[source,xml]
+[subs="verbatim,attributes"]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="com.blazebit" xmlns="urn:jboss:module:1.9">
+    <resources>
+        <resource-root path="blaze-persistence-core-api-jakarta-{version}.jar"/>
+        <resource-root path="blaze-persistence-core-impl-jakarta-{version}.jar"/>
+        <resource-root path="blaze-persistence-core-parser-jakarta-{version}.jar"/>
+        <resource-root path="blaze-persistence-integration-hibernate-6.2-{version}.jar"/>
+        <resource-root path="blaze-persistence-integration-hibernate6-base-{version}.jar"/>
+        <resource-root path="blaze-persistence-integration-jpa-base-jakarta-{version}.jar"/>
+        <resource-root path="blaze-common-utils-0.1.21.jar"/>
+    </resources>
+    <dependencies>
+        <!-- Jakarta APIs -->
+        <module name="jakarta.persistence.api"/>
+        <module name="jakarta.transaction.api"/>
+
+        <!-- Hibernate ORM -->
+        <module name="org.hibernate"/>
+
+        <!-- Logging -->
+        <module name="org.jboss.logging"/>
+        <module name="java.logging"/>
+    </dependencies>
+</module>
+----
+
+Update `META-INF/jboss-deployment-structure.xml` of the client module
+
+In the module that uses Blaze Persistence (client module), in the above-mentioned file, include:
+
+[source,xml]
+----
+<module name="org.hibernate"/>
+<module name="com.blazebit" services="import"/>
+----
+
+⚠️ `services="import"` is required for proper service injection.
+
+Add Blaze Persistence dependencies to your client module POM
+
+[source,xml]
+----
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>provided</scope>
+</dependency>
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>provided</scope>
+</dependency>
+----
+
+Initialize Blaze Persistence
+
+[source,java]
+----
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.bootstrap.EntityManagerProvider;
+import jakarta.annotation.PostConstruct;
+import jakarta.ejb.Singleton;
+import jakarta.ejb.Startup;
+import jakarta.persistence.EntityManagerFactory;
+
+@Singleton
+@Startup
+public class CriteriaBuilderFactoryProducer {
+    private static volatile CriteriaBuilderFactory criteriaBuilderFactory;
+
+    @PostConstruct
+    public void init() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+
+        EntityManagerFactory emf = EntityManagerProvider.getEntityManagerFactory("datasource-name");
+
+        criteriaBuilderFactory = config.createCriteriaBuilderFactory(emf);
+    }
+
+    public static CriteriaBuilderFactory get() {
+        if (criteriaBuilderFactory == null) {
+            throw new IllegalStateException("CriteriaBuilderFactory is not initialized yet!");
+        }
+        return criteriaBuilderFactory;
+    }
+}
+----
+then use in any method of any class with:
+[source,java]
+----
+CriteriaBuilderFactory cbf = CriteriaBuilderFactoryProducer.get();
+----
+An instance of JPA's `EntityManager` is to be provided as well before doing the query.
+
 [[supported-java-runtimes]]
 === Supported Java runtimes
 
