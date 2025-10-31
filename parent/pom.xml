@@ -67,8 +67,8 @@
         <version.hibernate-6.3>6.3.1.Final</version.hibernate-6.3>
         <version.hibernate-6.4>6.4.10.Final</version.hibernate-6.4>
         <version.hibernate-6.5>6.5.2.Final</version.hibernate-6.5>
-        <version.hibernate-6.6>6.6.33.Final</version.hibernate-6.6>
-        <version.hibernate-7.1>7.1.4.Final</version.hibernate-7.1>
+        <version.hibernate-6.6>6.6.35.Final</version.hibernate-6.6>
+        <version.hibernate-7.1>7.1.7.Final</version.hibernate-7.1>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
@@ -128,15 +128,15 @@
         <version.spring-data-3.3>3.3.2</version.spring-data-3.3>
         <version.spring-data-3.3-spring>6.1.8</version.spring-data-3.3-spring>
         <version.spring-data-3.3-spring-boot>3.3.2</version.spring-data-3.3-spring-boot>
-        <version.spring-data-3.4>3.4.11</version.spring-data-3.4>
-        <version.spring-data-3.4-spring>6.2.12</version.spring-data-3.4-spring>
-        <version.spring-data-3.4-spring-boot>3.4.10</version.spring-data-3.4-spring-boot>
-        <version.spring-data-3.5>3.5.5</version.spring-data-3.5>
-        <version.spring-data-3.5-spring>6.2.12</version.spring-data-3.5-spring>
-        <version.spring-data-3.5-spring-boot>3.5.6</version.spring-data-3.5-spring-boot>
-        <version.spring-data-4.0>4.0.0-RC1</version.spring-data-4.0>
-        <version.spring-data-4.0-spring>7.0.0-RC1</version.spring-data-4.0-spring>
-        <version.spring-data-4.0-spring-boot>4.0.0-M3</version.spring-data-4.0-spring-boot>
+        <version.spring-data-3.4>3.4.12</version.spring-data-3.4>
+        <version.spring-data-3.4-spring>6.2.13</version.spring-data-3.4-spring>
+        <version.spring-data-3.4-spring-boot>3.4.11</version.spring-data-3.4-spring-boot>
+        <version.spring-data-3.5>3.5.6</version.spring-data-3.5>
+        <version.spring-data-3.5-spring>6.2.13</version.spring-data-3.5-spring>
+        <version.spring-data-3.5-spring-boot>3.5.7</version.spring-data-3.5-spring-boot>
+        <version.spring-data-4.0>4.0.0</version.spring-data-4.0>
+        <version.spring-data-4.0-spring>7.0.0</version.spring-data-4.0-spring>
+        <version.spring-data-4.0-spring-boot>4.0.0-RC2</version.spring-data-4.0-spring-boot>
         <version.openejb>4.7.5</version.openejb>
         <version.openejb.javaee-api>6.0-6</version.openejb.javaee-api>
 

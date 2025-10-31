@@ -18,7 +18,7 @@ package com.blazebit.persistence.spring.data.base.repository;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Subgraph;
-import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.core.PropertyPath;
 
 import java.util.HashMap;
 import java.util.Map;

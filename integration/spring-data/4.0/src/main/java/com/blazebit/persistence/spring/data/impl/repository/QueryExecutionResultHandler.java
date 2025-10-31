@@ -22,7 +22,7 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.util.NullableWrapper;
+import org.springframework.data.core.NullableWrapper;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 

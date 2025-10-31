@@ -11,8 +11,6 @@ import static com.blazebit.persistence.spring.data.testsuite.webmvc.controller.D
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,7 +32,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.web.config.SpringDataWebConfiguration;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
@@ -87,10 +84,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        mockMvc.perform(put("/documents/{id}", d1.getId())
-                .content(toJsonWithoutId(updateView))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(APPLICATION_VND_BLAZEBIT_UPDATE_1_JSON))
+        mockMvc.perform(putJson("/documents/{id}", d1.getId(), updateView, false, APPLICATION_VND_BLAZEBIT_UPDATE_1_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(updateView.getName())));
     }
@@ -105,10 +99,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        mockMvc.perform(put("/documents/{id}", d1.getId())
-                .content(toJsonWithoutId(updateView))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(APPLICATION_VND_BLAZEBIT_UPDATE_2_JSON))
+        mockMvc.perform(putJson("/documents/{id}", d1.getId(), updateView, false, APPLICATION_VND_BLAZEBIT_UPDATE_2_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(updateView.getName())));
     }
@@ -123,9 +114,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
             return evm.find(em, DocumentUpdateView.class, d1.getId());
         });
         updateView.setName("D2");
-        mockMvc.perform(put("/documents")
-                .content(toJsonWithId(updateView))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(putJson("/documents", null, updateView, true, null))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(updateView.getName())));
     }
@@ -146,19 +135,14 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         // This update sets the ID in the com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder
         // The update should fail because ID 50 does not exist. Still, the com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder
         // should be reset.
-        mockMvc.perform(put("/documents/{id}", 50L)
-                .content(toJsonWithId(updateView))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(APPLICATION_VND_BLAZEBIT_UPDATE_3_JSON))
+        mockMvc.perform(putJson("/documents/{id}", 50L, updateView, true, APPLICATION_VND_BLAZEBIT_UPDATE_3_JSON))
             .andExpect(status().isConflict());
         // This subsequent create request runs in the same thread as the previous update request hence will access
         // the same value in the ThreadLocal inside com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder.
         // If the com.blazebit.persistence.spring.data.webmvc.impl.json.EntityViewIdValueHolder has not been reset
         // correctly after the previous request this request will wrongly re-use the ID 50, and an update will be
         // attempted because the entity view used is both updatable and creatable. The update would fail like before.
-        mockMvc.perform(post("/documents")
-                .content(toJsonWithId(createView))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(postJson("/documents", createView))
             .andExpect(status().isOk());
     }
 

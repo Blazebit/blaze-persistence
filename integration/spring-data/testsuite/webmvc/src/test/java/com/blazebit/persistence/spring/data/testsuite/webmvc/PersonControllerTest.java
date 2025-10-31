@@ -18,12 +18,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.web.config.SpringDataWebConfiguration;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,9 +45,7 @@ public class PersonControllerTest extends AbstractSpringWebMvcTest {
             return evm.find(em, PersonUpdateView.class, p1.getId());
         });
         updateView.setName("P2");
-        mockMvc.perform(put("/persons/{id}", p1.getId())
-                .content(toJsonWithoutId(updateView))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(putJson("/persons/{id}", p1.getId(), updateView, true, null))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is(updateView.getName())));
     }
