@@ -20,6 +20,7 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.spring.data.testsuite.webflux</module.name>
+        <second.rename>empty.properties</second.rename>
     </properties>
 
     <dependencies>
@@ -53,6 +54,8 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
+                                    <arg value="-tr"/>
+                                    <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}" />
@@ -80,6 +83,8 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
+                                    <arg value="-tr"/>
+                                    <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}" />
@@ -107,6 +112,8 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
+                                    <arg value="-tr"/>
+                                    <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}" />
@@ -134,6 +141,8 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
+                                    <arg value="-tr"/>
+                                    <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
                                         <pathelement path="${plugin_classpath}" />
@@ -215,6 +224,12 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>spring-data-4.0.x</id>
+            <properties>
+                <second.rename>spring-boot-4-renames.properties</second.rename>
+            </properties>
+        </profile>
         <profile>
             <id>blazebit-release</id>
             <build>

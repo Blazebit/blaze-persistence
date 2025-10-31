@@ -20,7 +20,7 @@ package org.springframework.data.jpa.repository.query;
 import com.blazebit.persistence.spring.data.base.query.ParameterMetadataProvider;
 
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.core.PropertyPath;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;

@@ -11,7 +11,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import org.springframework.data.repository.core.CrudMethods;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFragment;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 import java.lang.reflect.Method;
 import java.util.Set;
