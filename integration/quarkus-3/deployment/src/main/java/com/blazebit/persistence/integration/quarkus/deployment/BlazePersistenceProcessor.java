@@ -256,7 +256,6 @@ class BlazePersistenceProcessor {
                     .constructors(true)
                     .fields(true)
                     .methods(true)
-                    .finalFieldsWritable(true)
                     .build()
             );
             // For static metamodel classes, we only need the fields
