@@ -62,7 +62,7 @@ If you are using Jakarta APIs and Spring Framework 7+ / Spring Boot 4+, use this
 </dependency>
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
+    <artifactId>blaze-persistence-integration-hibernate-7.2</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>

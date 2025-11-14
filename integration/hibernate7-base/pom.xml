@@ -183,5 +183,11 @@
                 <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>
         </profile>
+        <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.2}</version.hibernate>
+            </properties>
+        </profile>
     </profiles>
 </project>

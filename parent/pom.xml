@@ -69,6 +69,7 @@
         <version.hibernate-6.5>6.5.2.Final</version.hibernate-6.5>
         <version.hibernate-6.6>6.6.35.Final</version.hibernate-6.6>
         <version.hibernate-7.1>7.1.7.Final</version.hibernate-7.1>
+        <version.hibernate-7.2>7.2.0.CR2</version.hibernate-7.2>
 
         <version.datanucleus.base-4>4.1.17</version.datanucleus.base-4>
         <version.datanucleus.rdbms-4>4.1.19</version.datanucleus.rdbms-4>
@@ -150,6 +151,7 @@
         <version.quarkus-3>3.8.6.1</version.quarkus-3>
         <version.quarkus-3.15>3.15.6.2</version.quarkus-3.15>
         <version.quarkus-3.26>3.26.1</version.quarkus-3.26>
+        <version.quarkus-3.29>3.29.3</version.quarkus-3.29>
         <version.jandex>2.4.2.Final</version.jandex>
         <version.classgraph>4.8.89</version.classgraph>
 
@@ -417,6 +419,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-7.2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

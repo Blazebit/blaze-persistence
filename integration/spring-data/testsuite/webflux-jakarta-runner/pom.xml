@@ -377,6 +377,30 @@
             </dependencies>
         </profile>
         <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.2}</version.hibernate>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>${version.jakarta-jpa-3.2-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-7.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate7</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>spring-data-2.7.x</id>
             <!--
             Default to compiling with Spring Data 3.1 as profile activation gets too complicated

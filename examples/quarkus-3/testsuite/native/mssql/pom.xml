@@ -61,6 +61,12 @@
                 <hibernate.integration-version>7.1</hibernate.integration-version>
             </properties>
         </profile>
+        <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <hibernate.integration-version>7.1</hibernate.integration-version>
+            </properties>
+        </profile>
     </profiles>
 
     <build>

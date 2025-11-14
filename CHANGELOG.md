@@ -6,7 +6,8 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Add `blaze-persistence-integration-hibernate-7.2` for Hibernate ORM 7.2+ support
+* Add support for Spring Framework 7.0 and Spring Boot 4.0
 
 ### Bug fixes
 
