@@ -128,6 +128,14 @@ public class HibernateSqmFunctionDescriptorAdapter implements JpqlFunction {
         public void appendHqlString(StringBuilder sb, SqmRenderContext  renderContext) {
             // No-op
         }
+
+        public boolean isCompatible(Object o) {
+            return false;
+        }
+
+        public int cacheHashCode() {
+            return 0;
+        }
     }
 
 }

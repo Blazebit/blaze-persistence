@@ -355,6 +355,15 @@
             </properties>
         </profile>
         <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
+                <version.hibernate>${version.hibernate-7.2}</version.hibernate>
+                <version.hibernate-integration>7.2</version.hibernate-integration>
+                <version.hibernate-testsuite>7</version.hibernate-testsuite>
+            </properties>
+        </profile>
+        <profile>
             <id>spring-data-2.7.x</id>
             <!--
             Default to compiling with Spring Data 3.1 as profile activation gets too complicated

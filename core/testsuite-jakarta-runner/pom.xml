@@ -839,6 +839,68 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <jpa-api-version>${version.jakarta-jpa-3.2-api}</jpa-api-version>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate-7.2}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate-7.2}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate-7.2}</version>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.xml.bind</groupId>
+                    <artifactId>jakarta.xml.bind-api</artifactId>
+                    <version>${version.jakarta-jaxb-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                    <version>${version.jakarta-jaxb}</version>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.transaction</groupId>
+                    <artifactId>jakarta.transaction-api</artifactId>
+                    <version>${version.jakarta-jta}</version>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.activation</groupId>
+                    <artifactId>jakarta.activation-api</artifactId>
+                    <version>${version.jakarta-activation}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-hibernate-7.2</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate7</artifactId>
+                    <version>${project.version}</version>
+                    <scope>compile</scope>
+                </dependency>
+                <!-- IntelliJ apparently needs the annotation processor here -->
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-jpamodelgen</artifactId>
+                    <version>${version.hibernate-7.2}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>

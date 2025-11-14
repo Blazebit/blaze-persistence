@@ -17,7 +17,7 @@
     <artifactId>blaze-persistence-integration-hibernate-7.1</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Integration Hibernate 7.0</name>
+    <name>Blazebit Persistence Integration Hibernate 7.1</name>
 
     <properties>
         <module.name>com.blazebit.persistence.integration.hibernate</module.name>
@@ -162,7 +162,7 @@
 
     <profiles>
         <!-- Profiles for various Hibernate 7 versions -->
-        <!-- We default to 7.0 for the 6.x version profiles to avoid build script problems -->
+        <!-- We default to 7.1 for the 6.x version profiles to avoid build script problems -->
         <profile>
             <id>hibernate-6.2</id>
             <activation>
@@ -198,6 +198,12 @@
         </profile>
         <profile>
             <id>hibernate-7.1</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-7.2</id>
             <properties>
                 <version.hibernate>${version.hibernate-7.1}</version.hibernate>
             </properties>

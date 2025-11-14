@@ -1,0 +1,51 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Blazebit
+ */
+
+package com.blazebit.persistence.integration.hibernate;
+
+import com.blazebit.persistence.integration.hibernate.base.HibernateReturningResult;
+import com.blazebit.persistence.spi.DbmsDialect;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+/**
+ * @author Christian Beikov
+ * @since 1.6.7
+ */
+public class JdbcCoordinatorInvocationHandler implements InvocationHandler {
+    
+    private final JdbcCoordinator delegate;
+    private final SessionFactoryImplementor sessionFactoryImplementor;
+    private final DbmsDialect dbmsDialect;
+    private final int[] returningSqlTypes;
+    private final HibernateReturningResult<?> returningResult;
+    private transient StatementPreparer statementPreparer;
+
+    public JdbcCoordinatorInvocationHandler(JdbcCoordinator delegate, SessionFactoryImplementor sessionFactoryImplementor, DbmsDialect dbmsDialect, int[] returningSqlTypes, HibernateReturningResult<?> returningResult) {
+        this.delegate = delegate;
+        this.sessionFactoryImplementor = sessionFactoryImplementor;
+        this.dbmsDialect = dbmsDialect;
+        this.returningSqlTypes = returningSqlTypes;
+        this.returningResult = returningResult;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if ("getStatementPreparer".equals(method.getName())) {
+            if (statementPreparer == null) {
+                statementPreparer = new StatementPreparerImpl(delegate, sessionFactoryImplementor, dbmsDialect, returningSqlTypes, returningResult);
+            }
+            
+            return statementPreparer;
+        }
+        
+        return method.invoke(delegate, args);
+    }
+
+}
