@@ -16,6 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import java.io.Serializable;
 
+import org.hibernate.annotations.processing.Exclude;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -38,6 +40,7 @@ public class Issue1436Test extends AbstractCoreTest {
     }
 
     @Entity
+	@Exclude
     public static class Item implements Serializable {
         @Id
         Long id1;
@@ -49,6 +52,7 @@ public class Issue1436Test extends AbstractCoreTest {
     }
 
     @Entity
+	@Exclude
     public static class OrderItem implements Serializable {
         @Id
         Long id;

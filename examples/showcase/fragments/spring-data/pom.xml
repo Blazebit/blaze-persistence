@@ -69,7 +69,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
             <scope>provided</scope>
         </dependency>
 

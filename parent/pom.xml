@@ -43,18 +43,14 @@
 
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.21</version.blazeutils>
-        <version.mockito>4.11.0</version.mockito>
-        <version.bytebuddy>1.14.4</version.bytebuddy>
+        <version.mockito>5.20.0</version.mockito>
+        <version.bytebuddy>1.18.1</version.bytebuddy>
         <version.junit>4.13.2</version.junit>
         <version.junit-platform>1.13.4</version.junit-platform>
         <version.junit-vintage>5.13.4</version.junit-vintage>
         <version.junit-jupiter>5.13.4</version.junit-jupiter>
         <version.javassist>3.30.2-GA</version.javassist>
         <querydsl.version>5.0.0</querydsl.version>
-        <!-- 1.18 messed up calculation of load index -->
-        <version.bridge-injector>1.17</version.bridge-injector>
-        <version.bridge-injector-asm>9.5</version.bridge-injector-asm>
-        <version.bridge-injector-indexer>1.12</version.bridge-injector-indexer>
 
         <version.hibernate-6.2>6.2.48.Final</version.hibernate-6.2>
         <version.hibernate-6.4>6.4.10.Final</version.hibernate-6.4>
@@ -85,9 +81,9 @@
         <version.spring-data-4.0>4.0.0</version.spring-data-4.0>
         <version.spring-data-4.0-spring>7.0.0</version.spring-data-4.0-spring>
         <version.spring-data-4.0-spring-boot>4.0.0-RC2</version.spring-data-4.0-spring-boot>
-        <version.spring-data-latest>${version.spring-data-3.3}</version.spring-data-latest>
-        <version.spring-data-latest-spring>${version.spring-data-3.3-spring}</version.spring-data-latest-spring>
-        <version.spring-data-latest-spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-data-latest-spring-boot>
+        <version.spring-data-latest>${version.spring-data-3.5}</version.spring-data-latest>
+        <version.spring-data-latest-spring>${version.spring-data-3.5-spring}</version.spring-data-latest-spring>
+        <version.spring-data-latest-spring-boot>${version.spring-data-3.5-spring-boot}</version.spring-data-latest-spring-boot>
 
         <version.jakarta-jpa-3.1-api>3.1.0</version.jakarta-jpa-3.1-api>
         <version.jakarta-jpa-3.2-api>3.2.0</version.jakarta-jpa-3.2-api>
@@ -101,9 +97,7 @@
         <version.classgraph>4.8.89</version.classgraph>
         <version.jackson>2.16.2</version.jackson>
 
-        <asmVersion>9.5</asmVersion>
-        <version.bnd>6.4.1</version.bnd>
-<!--        <version.bnd>7.0.0-SNAPSHOT</version.bnd>-->
+        <asmVersion>9.9</asmVersion>
 
         <h2.version>2.4.240</h2.version>
         <mssql.version>12.4.1.jre8</mssql.version>

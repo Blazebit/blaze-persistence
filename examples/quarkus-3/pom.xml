@@ -40,6 +40,13 @@
                 <version>${version.jpa}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- Quarkus 3.20+ depend on CDI 4.1, so let's add it here -->
+            <dependency>
+                <groupId>jakarta.enterprise</groupId>
+                <artifactId>jakarta.enterprise.cdi-api</artifactId>
+                <version>4.1.0</version>
+                <scope>provided</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

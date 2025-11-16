@@ -14,8 +14,8 @@
     <properties>
         <module.name>com.blazebit.persistence.integration.spring.data.webmvc</module.name>
         <test.argLine />
-        <version.spring>${version.spring-data-3.3-spring}</version.spring>
-        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring-data>${version.spring-data-3.5}</version.spring-data>
     </properties>
 
     <dependencyManagement>
@@ -162,9 +162,6 @@
         </profile>
         <profile>
             <id>spring-data-3.3.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-3.3-spring}</version.spring>
                 <version.spring-data>${version.spring-data-3.3}</version.spring-data>
@@ -193,6 +190,9 @@
         </profile>
         <profile>
             <id>spring-data-3.5.x</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <version.spring>${version.spring-data-3.5-spring}</version.spring>
                 <version.spring-data>${version.spring-data-3.5}</version.spring-data>

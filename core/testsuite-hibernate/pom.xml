@@ -253,7 +253,7 @@
                             <reportsDirectory>${project.build.directory}/surefire-reports/${surefire.forkNumber}</reportsDirectory>
                             <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoOracle,${jpa.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
-                                <jdbc.url>jdbc:oracle:thin:@${dbHost}:1521:XE</jdbc.url>
+                                <jdbc.url>jdbc:oracle:thin:@//${dbHost}:1521/freepdb1</jdbc.url>
                                 <jdbc.user>SYSTEM</jdbc.user>
                                 <jdbc.password>Oracle18</jdbc.password>
                                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
@@ -647,7 +647,7 @@
             <id>hibernate-7.1</id>
             <properties>
                 <jpa-api-version>${version.jakarta-jpa-3.2-api}</jpa-api-version>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>
@@ -748,7 +748,7 @@
             <id>hibernate-7.2</id>
             <properties>
                 <jpa-api-version>${version.jakarta-jpa-3.2-api}</jpa-api-version>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

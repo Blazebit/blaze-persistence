@@ -35,9 +35,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>7.0</version>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -209,23 +208,23 @@
 
         <!-- skip tests for non-hibernate profiles -->
         <profile>
-            <id>spring-data-3.3.x</id>
+            <id>spring-data-3.5.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-3.3-spring}</version.spring>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-3.3}</version>
+                    <version>${version.spring-data-3.5}</version>
                     <scope>provided</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.blazebit</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                 </dependency>
             </dependencies>
         </profile>

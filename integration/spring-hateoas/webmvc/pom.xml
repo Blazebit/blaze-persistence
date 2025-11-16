@@ -14,10 +14,10 @@
     <properties>
         <module.name>com.blazebit.persistence.integration.spring.hateoas.webmvc</module.name>
         <test.argLine />
-        <version.spring>${version.spring-data-3.3-spring}</version.spring>
-        <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
-        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
-        <version.spring-hateoas>2.2.2</version.spring-hateoas>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring-boot>${version.spring-data-3.5-spring-boot}</version.spring-boot>
+        <version.spring-data>${version.spring-data-3.5}</version.spring-data>
+        <version.spring-hateoas>2.5.1</version.spring-hateoas>
         <version.hibernate>${version.hibernate-6.6}</version.hibernate>
         <main.java.version>17</main.java.version>
     </properties>
@@ -258,6 +258,18 @@
             </properties>
         </profile>
         <profile>
+            <id>hibernate-7.1</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.1}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
+            <id>hibernate-7.2</id>
+            <properties>
+                <version.hibernate>${version.hibernate-7.2}</version.hibernate>
+            </properties>
+        </profile>
+        <profile>
             <id>eclipselink</id>
             <build>
                 <plugins>
@@ -299,7 +311,7 @@
                 <version.spring>${version.spring-data-3.2-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.2-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.2}</version.spring-data>
-                <version.spring-hateoas>2.2.2</version.spring-hateoas>
+                <version.spring-hateoas>2.2.5</version.spring-hateoas>
             </properties>
             <dependencies>
                 <dependency>
@@ -311,14 +323,11 @@
         </profile>
         <profile>
             <id>spring-data-3.3.x</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <version.spring>${version.spring-data-3.3-spring}</version.spring>
                 <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
                 <version.spring-data>${version.spring-data-3.3}</version.spring-data>
-                <version.spring-hateoas>2.3.0</version.spring-hateoas>
+                <version.spring-hateoas>2.3.4</version.spring-hateoas>
             </properties>
             <dependencies>
                 <dependency>
@@ -330,90 +339,54 @@
         </profile>
         <profile>
             <id>spring-data-3.4.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-                <version.spring.data>${version.spring-data-2.7}</version.spring.data>
-                <version.spring.hateoas>1.5.1</version.spring.hateoas>
+                <version.spring>${version.spring-data-3.4-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.4-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-3.4}</version.spring.data>
+                <version.spring.hateoas>2.4.1</version.spring.hateoas>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>test</scope>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.4 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>spring-data-3.5.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-                <version.spring.data>${version.spring-data-2.7}</version.spring.data>
-                <version.spring.hateoas>1.5.1</version.spring.hateoas>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.5-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-3.5}</version.spring.data>
+                <version.spring.hateoas>2.5.1</version.spring.hateoas>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>test</scope>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 3.5 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>spring-data-4.0.x</id>
-            <!-- Default to compile this module with Spring Boot 2.7 -->
             <properties>
-                <version.spring>${version.spring-data-2.7-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-                <version.spring.data>${version.spring-data-2.7}</version.spring.data>
-                <version.spring.hateoas>1.5.1</version.spring.hateoas>
+                <version.spring>${version.spring-data-4.0-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-4.0-spring-boot}</version.spring.boot>
+                <version.spring.data>${version.spring-data-4.0}</version.spring.data>
+                <version.spring.hateoas>3.0.0</version.spring.hateoas>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-                    <scope>test</scope>
+                    <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
+                    <scope>provided</scope>
                 </dependency>
             </dependencies>
-            <!-- It makes no sense to run these tests with Spring Boot 4.0 -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>

@@ -11,6 +11,8 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.generator.EventType;
+
 import org.junit.Test;
 
 import jakarta.persistence.Column;
@@ -74,7 +76,7 @@ public class Issue519Test extends AbstractCoreTest {
         @Id
         private Long id;
 
-        @Generated(GenerationTime.INSERT)
+        @Generated(value = GenerationTime.INSERT, event = EventType.INSERT)
         @OneToOne(mappedBy = "a")
         private B b;
 

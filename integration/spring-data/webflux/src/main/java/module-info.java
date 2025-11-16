@@ -15,7 +15,6 @@ module com.blazebit.persistence.integration.spring.data.webflux {
     requires com.blazebit.common.utils;
     requires com.fasterxml.jackson.core;
     requires org.reactivestreams;
-    requires spring.jcl;
     requires org.slf4j;
     exports com.blazebit.persistence.spring.data.webflux;
 }

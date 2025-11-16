@@ -16,9 +16,9 @@
         <spring.activeProfiles />
         <test.argLine />
         <main.java.version>17</main.java.version>
-        <version.spring>${version.spring-data-3.3-spring}</version.spring>
-        <version.spring-boot>${version.spring-data-3.3-spring-boot}</version.spring-boot>
-        <version.spring-data>${version.spring-data-3.3}</version.spring-data>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring-boot>${version.spring-data-3.5-spring-boot}</version.spring-boot>
+        <version.spring-data>${version.spring-data-3.5}</version.spring-data>
         <version.hibernate>${version.hibernate-6.2}</version.hibernate>
         <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62</jpa.excludedGroups>
     </properties>
@@ -81,21 +81,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${version.hibernate}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-envers</artifactId>
-            <version>${version.hibernate}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-testing</artifactId>
-            <version>${version.hibernate}</version>
-        </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
@@ -172,13 +157,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoH2,${jpa.excludedGroups}</excludedGroups>
                     <systemPropertyVariables>
                         <jdbc.url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</jdbc.url>
                         <jdbc.user>admin</jdbc.user>
                         <jdbc.password>admin</jdbc.password>
                         <jdbc.driver>org.h2.Driver</jdbc.driver>
                         <user.timezone>UTC</user.timezone>
-                        <activeProfiles>hibernate</activeProfiles>
+                        <activeProfiles>${spring.activeProfiles}</activeProfiles>
                     </systemPropertyVariables>
                 </configuration>
                 <dependencies>
@@ -213,12 +199,28 @@
             <id>hibernate-6.2</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.2}</version.hibernate>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -237,12 +239,28 @@
             <id>hibernate-6.4</id>
             <properties>
                 <version.hibernate>${version.hibernate-6.4}</version.hibernate>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -264,12 +282,28 @@
             </activation>
             <properties>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.1-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -288,12 +322,28 @@
             <id>hibernate-7.1</id>
             <properties>
                 <version.hibernate>${version.hibernate-7.1}</version.hibernate>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.2-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -311,12 +361,28 @@
             <id>hibernate-7.2</id>
             <properties>
                 <version.hibernate>${version.hibernate-7.2}</version.hibernate>
+                <spring.activeProfiles>hibernate</spring.activeProfiles>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>jakarta.persistence</groupId>
                     <artifactId>jakarta.persistence-api</artifactId>
                     <version>${version.jakarta-jpa-3.2-api}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-envers</artifactId>
+                    <version>${version.hibernate}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-testing</artifactId>
+                    <version>${version.hibernate}</version>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -329,6 +395,120 @@
                     <scope>compile</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <id>eclipselink</id>
+            <properties>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink</jpa.excludedGroups>
+                <spring.activeProfiles>eclipselink</spring.activeProfiles>
+                <surefire.jvm.params>-Xms1024m -Xmx2048m -javaagent:${project.build.directory}/agents/spring-instrumentation-agent.jar</surefire.jvm.params>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>eclipselink</artifactId>
+                    <version>${version.eclipselink}</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <!-- IntelliJ apparently needs the annotation processor here -->
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+                    <version>${version.eclipselink}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>org.eclipse.persistence</groupId>
+                                    <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+                                    <version>${version.eclipselink}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <compilerArgs>
+                                <compilerArg>-Aeclipselink.persistencexml=${basedir}/src/test/resources/META-INF/persistence.xml</compilerArg>
+                                <compilerArg>-Aeclipselink.canonicalmodel.use_generated=false</compilerArg>
+                            </compilerArgs>
+                            <annotationProcessors>
+                                <processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
+                                <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-agent</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.springframework</groupId>
+                                            <artifactId>spring-instrument</artifactId>
+                                            <outputDirectory>${project.build.directory}/agents</outputDirectory>
+                                            <destFileName>spring-instrumentation-agent.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Only need this for IntelliJ -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>-javaagent:${project.build.directory}/agents/spring-instrumentation-agent.jar</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>spring-data-3.1.x</id>

@@ -170,20 +170,20 @@
 
     <profiles>
         <profile>
-            <id>spring-data-3.3.x</id>
+            <id>spring-data-3.5.x</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <version.spring>${version.spring-data-3.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-3.3-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.5-spring-boot}</version.spring.boot>
                 <version.hibernate>${version.hibernate-6.6}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-3.3}</version>
+                    <version>${version.spring-data-3.5}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -192,7 +192,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
@@ -203,15 +203,15 @@
         <profile>
             <id>hibernate-apt</id>
             <properties>
-                <version.spring>${version.spring-data-3.3-spring}</version.spring>
-                <version.spring.boot>${version.spring-data-3.3-spring-boot}</version.spring.boot>
+                <version.spring>${version.spring-data-3.5-spring}</version.spring>
+                <version.spring.boot>${version.spring-data-3.5-spring-boot}</version.spring.boot>
                 <version.hibernate>${version.hibernate-apt}</version.hibernate>
             </properties>
             <dependencies>
                 <dependency>
                     <groupId>org.springframework.data</groupId>
                     <artifactId>spring-data-jpa</artifactId>
-                    <version>${version.spring-data-3.3}</version>
+                    <version>${version.spring-data-3.5}</version>
                 </dependency>
                 <dependency>
                     <groupId>org.aspectj</groupId>
@@ -220,7 +220,7 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+                    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>

@@ -21,8 +21,8 @@
     <properties>
         <module.name>com.blazebit.persistence.examples.itsm</module.name>
 
-        <version.spring>${version.spring-data-3.3-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-3.3-spring-boot}</version.spring.boot>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-3.5-spring-boot}</version.spring.boot>
         <start-class>com.blazebit.persistence.examples.itsm.SpringBlazeApplication</start-class>
     </properties>
 
@@ -106,7 +106,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
         </dependency>
 
         <!-- Spring dependencies -->
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-3.3}</version>
+            <version>${version.spring-data-3.5}</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>

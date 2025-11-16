@@ -75,7 +75,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-3.3}</version>
+            <version>${version.spring-data-latest}</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -84,7 +84,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-3.3</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -175,6 +175,11 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-engine</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
             <version>${version.junit-platform}</version>
         </dependency>
         <dependency>

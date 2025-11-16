@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 
 import org.junit.Assert;
@@ -67,6 +68,7 @@ public class Issue1704Test extends AbstractCoreTest {
 
     @Entity(name = "WhereEntity")
     @Where(clause = "0=0")
+    @SQLRestriction("0=0")
     public static class WhereEntity {
 
         private Long id;

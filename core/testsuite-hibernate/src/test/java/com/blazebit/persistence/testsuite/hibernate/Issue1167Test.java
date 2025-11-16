@@ -5,6 +5,7 @@
 
 package com.blazebit.persistence.testsuite.hibernate;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import org.junit.Test;
 
@@ -27,6 +28,7 @@ public class Issue1167Test extends AbstractCoreTest {
 
     @Entity(name = "BasicEntity")
     @Where(clause = "deleted_char <> 't'")
+    @SQLRestriction("deleted_char <> 't'")
     public static class BasicEntity {
         @Id
         Long id;
