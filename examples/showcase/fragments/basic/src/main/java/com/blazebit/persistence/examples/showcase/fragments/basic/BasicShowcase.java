@@ -13,7 +13,7 @@ import com.blazebit.persistence.examples.showcase.spi.AbstractShowcase;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @author Moritz Becker

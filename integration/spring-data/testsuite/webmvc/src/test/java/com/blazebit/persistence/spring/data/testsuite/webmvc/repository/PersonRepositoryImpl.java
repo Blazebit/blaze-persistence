@@ -10,7 +10,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Moritz Becker

@@ -7,8 +7,8 @@ package com.blazebit.persistence.criteria;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.Tuple;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Root;
 
 import org.junit.Test;
 

@@ -21,7 +21,7 @@ import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.Limiter;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Map;
 
 /**

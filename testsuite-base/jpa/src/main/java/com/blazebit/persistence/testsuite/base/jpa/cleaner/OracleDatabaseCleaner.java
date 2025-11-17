@@ -295,7 +295,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 
     @Override
     public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
-        properties.put("javax.persistence.jdbc.user", schemaName);
-        properties.put("javax.persistence.jdbc.password", schemaName);
+        properties.put("jakarta.persistence.jdbc.user", schemaName);
+        properties.put("jakarta.persistence.jdbc.password", schemaName);
     }
 }

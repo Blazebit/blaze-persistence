@@ -30,9 +30,9 @@ import com.blazebit.persistence.view.spi.type.DirtyStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

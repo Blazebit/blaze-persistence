@@ -73,13 +73,7 @@ public class Context {
 
         Map<String, TypeMirror> optionalParameters = new HashMap<>();
         Map<String, Map<String, TypeConverter>> converters = new HashMap<>();
-        TypeElement java8AndBelowGeneratedAnnotation = pe.getElementUtils().getTypeElement("javax.annotation.Generated");
-        if (java8AndBelowGeneratedAnnotation != null) {
-            generatedAnnotation = java8AndBelowGeneratedAnnotation.getQualifiedName().toString();
-        } else {
-            // Using the new name for this annotation in Java 9 and above
-            generatedAnnotation = "javax.annotation.processing.Generated";
-        }
+        generatedAnnotation = "javax.annotation.processing.Generated";
         for (TypeConverter typeConverter : ServiceLoader.load(TypeConverter.class, Context.class.getClassLoader())) {
             typeConverter.addRegistrations(converters);
         }

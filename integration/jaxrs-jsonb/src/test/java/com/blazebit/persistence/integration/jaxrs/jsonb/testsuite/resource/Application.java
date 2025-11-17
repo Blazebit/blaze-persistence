@@ -8,8 +8,8 @@ package com.blazebit.persistence.integration.jaxrs.jsonb.testsuite.resource;
 import com.blazebit.persistence.integration.jaxrs.jsonb.testsuite.JsonbJsonProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import javax.enterprise.inject.Alternative;
-import javax.ws.rs.ApplicationPath;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.ws.rs.ApplicationPath;
 
 /**
  * @author Moritz Becker

@@ -6,7 +6,7 @@
 package com.blazebit.persistence.testsuite.tx;
 
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 public abstract class TxWork<V> {
 

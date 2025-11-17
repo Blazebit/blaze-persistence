@@ -11,7 +11,7 @@ import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.metamodel.OrderByItem;
 import com.blazebit.persistence.view.metamodel.ViewRoot;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 import java.util.List;
 
 /**

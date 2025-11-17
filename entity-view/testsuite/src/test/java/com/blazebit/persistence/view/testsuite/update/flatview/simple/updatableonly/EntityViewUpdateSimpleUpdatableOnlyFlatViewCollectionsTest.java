@@ -5,10 +5,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.flatview.simple.updatableonly;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.updatableonly.model.UpdatableDocumentWithCollectionsView;
 import com.blazebit.persistence.view.testsuite.update.flatview.simple.updatableonly.model.UpdatableNameObjectView;
@@ -24,7 +21,7 @@ import static org.junit.Assert.fail;
  * @since 1.2.0
  */
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSimpleUpdatableOnlyFlatViewCollectionsTest extends AbstractEntityViewTest {
 
     @Test

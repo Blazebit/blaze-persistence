@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-entity-view</artifactId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -31,12 +31,10 @@
     <name>Blazebit Persistence Entity-View Annotation Processor</name>
 
     <properties>
-        <!-- We use Java 8 for tests -->
-        <test.java.version>1.8</test.java.version>
-        <main.java.version>${test.java.version}</main.java.version>
         <module.name>com.blazebit.persistence.view.processor</module.name>
         <com.jolira.hickory.version>1.0.0</com.jolira.hickory.version>
         <org.eclipse.tycho.compiler-jdt.version>0.26.0</org.eclipse.tycho.compiler-jdt.version>
+        <surefire.jvm.params>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
     </properties>
 
     <dependencies>
@@ -52,16 +50,41 @@
             <version>0.18</version>
             <scope>test</scope>
         </dependency>
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
+
         <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-entity-view-api</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -76,95 +99,17 @@
         </testResources>
         <plugins>
             <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires transitive java.compiler;
-                                        requires transitive com.blazebit.persistence.core;
-                                        requires transitive com.blazebit.persistence.view;
-                                        provides javax.annotation.processing.Processor with com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor;
-                                        provides com.blazebit.persistence.view.processor.convert.TypeConverter with com.blazebit.persistence.view.processor.convert.OptionalTypeConverter;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-        <id>post-10</id>
-            <activation>
-                <jdk>[11,)</jdk>
-            </activation>
-            <properties>
-                <surefire.jvm.params>--add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</surefire.jvm.params>
-            </properties>
-        </profile>
-        <profile>
-            <id>post-10-unsafe-code-non-mac</id>
-            <activation>
-                <jdk>[11,)</jdk>
-                <file>
-                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar</exists>
-                </file>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <inherited>true</inherited>
-                                <configuration>
-                                    <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
-                                    <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar${path.separator}${jdk8.home}${file.separator}lib${file.separator}tools.jar</bootclasspath>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>post-10-unsafe-code-mac</id>
-            <activation>
-                <jdk>[11,)</jdk>
-                <file>
-                    <exists>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}classes.jar</exists>
-                </file>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <inherited>true</inherited>
-                                <configuration>
-                                    <!-- When we use a Java 11+ JVM, we need a JDK 8, otherwise we can't compile the old unsafe code -->
-                                    <bootclasspath>${jdk8.home}${file.separator}jre${file.separator}lib${file.separator}rt.jar${path.separator}${jdk8.home}${file.separator}lib${file.separator}tools.jar</bootclasspath>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

@@ -19,7 +19,7 @@ as well as added an example application for that and updated the documentation b
 The support for Spring Boot/Data 2.5 is now also ensured and verified as we added a new profile for testing the new version.
 
 Thanks a lot to https://github.com/jwgmeligmeyling[Jan-Willem Gmelig Meyling] for his great work for the support for QueryDSL 5.0, the new `FunctionContributor` SPI
-and the support for chunk-processing results through the new `Stream<T> getResultStream()` method that was also introduced with JPA 2.2 on `javax.persistence.Query`.
+and the support for chunk-processing results through the new `Stream<T> getResultStream()` method that was also introduced with JPA 2.2 on `jakarta.persistence.Query`.
 
 Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#162[changelog, window="_blank"] for a full list of changes and improvements.
 

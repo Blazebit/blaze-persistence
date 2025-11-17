@@ -8,8 +8,8 @@ package com.blazebit.persistence.integration.jsonb;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.json.bind.annotation.JsonbTransient;
-import javax.json.bind.config.PropertyVisibilityStrategy;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.json.bind.config.PropertyVisibilityStrategy;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

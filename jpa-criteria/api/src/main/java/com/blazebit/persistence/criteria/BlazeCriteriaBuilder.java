@@ -5,18 +5,17 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
 import java.util.Map;
 
 import jakarta.persistence.criteria.Nulls;
@@ -82,24 +81,6 @@ public interface BlazeCriteriaBuilder extends CriteriaBuilder {
      * @return descending ordering corresponding to the expression
      */
     public BlazeOrder desc(Expression<?> x, boolean nullsFirst);
-
-    /**
-     * Like {@link BlazeCriteriaBuilder#asc(Expression,Nulls)}.
-     *
-     * @param x     The expression used to define the ordering
-     * @param nulls True if nulls should be first, false otherwise
-     * @return ascending ordering corresponding to the expression
-     */
-    public Order asc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls);
-
-    /**
-     * Like {@link BlazeCriteriaBuilder#desc(Expression,Nulls)}.
-     *
-     * @param x     The expression used to define the ordering
-     * @param nulls True if nulls should be first, false otherwise
-     * @return descending ordering corresponding to the expression
-     */
-    public Order desc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls);
 
     /**
      * Like {@link BlazeCriteriaBuilder#asc(Expression,boolean)}.

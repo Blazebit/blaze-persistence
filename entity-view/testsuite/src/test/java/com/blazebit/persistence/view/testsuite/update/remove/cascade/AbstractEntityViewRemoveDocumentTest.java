@@ -17,7 +17,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

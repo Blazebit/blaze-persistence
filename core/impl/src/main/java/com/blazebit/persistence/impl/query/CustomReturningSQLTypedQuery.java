@@ -11,14 +11,14 @@ import com.blazebit.persistence.impl.ValuesParameterBinder;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -63,19 +63,19 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<Returni
 
     @Override
     public TypedQuery<ReturningResult<T>> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-        ((jakarta.persistence.Query) getDelegate()).setCacheRetrieveMode(cacheRetrieveMode);
+        super.setCacheRetrieveMode(cacheRetrieveMode);
         return this;
     }
 
     @Override
     public TypedQuery<ReturningResult<T>> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-        ((jakarta.persistence.Query) getDelegate()).setCacheStoreMode(cacheStoreMode);
+        super.setCacheStoreMode(cacheStoreMode);
         return this;
     }
 
     @Override
     public TypedQuery<ReturningResult<T>> setTimeout(Integer timeout) {
-        ((jakarta.persistence.Query) getDelegate()).setTimeout(timeout);
+        super.setTimeout(timeout);
         return this;
     }
 

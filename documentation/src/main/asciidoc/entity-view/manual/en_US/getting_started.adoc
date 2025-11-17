@@ -48,24 +48,6 @@ The required dependencies for the entity view module are
 </dependency>
 ----
 
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
 Depending on the environment, there are some integrations that help you with configuration
 
 [[maven-setup-apt]]
@@ -78,18 +60,6 @@ The annotation processor will generate static entity view metamodels, static ent
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-entity-view-processor</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>provided</scope>
-</dependency>
-----
-
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>provided</scope>
 </dependency>
@@ -108,32 +78,8 @@ or if you are using Jakarta JPA
 </dependency>
 ----
 
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
 [[maven-setup-spring-integration]]
 ===== Spring integration
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-or if you are using Jakarta APIs and Spring 6+
 
 [source,xml]
 ----
@@ -154,21 +100,7 @@ When you work with Spring Data you can additionally have first class integration
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-For Spring-Data version 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.0 or 1.x use the artifact with the respective suffix `2.6`, `2.5`, `2.4`, `2.3`, `2.2`, `2.1`, `2.0`, `1.x`.
-
-If you are using Jakarta APIs and Spring Framework 6 / Spring Boot 3, use this
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
+    <artifactId>blaze-persistence-integration-spring-data-3.5</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -209,36 +141,6 @@ NOTE: The Spring Data integration depends on the _jpa-criteria_ module
 </dependency>
 ----
 
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-api-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-impl-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-If a JPA provider that does not implement the JPA 2.1 specification like Hibernate 4.2 or OpenJPA is used, the following compatibility dependency is also required.
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
 [[maven-setup-spring-hateoas-integration]]
 ===== Spring HATEOAS integration
 
@@ -249,18 +151,6 @@ When you work with Spring HATEOAS you can additionally have first class support 
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-spring-hateoas-webmvc</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-or if you are using Jakarta APIs and Spring Framework 6+ / Spring Boot 3+ use
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-spring-hateoas-webmvc-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -277,7 +167,7 @@ To use the Quarkus extension you need to add the following Maven dependency to y
 ----
 <dependency>
     <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-quarkus</artifactId>
+    <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
     <version>${blaze-persistence.version}</version>
 </dependency>
 ----

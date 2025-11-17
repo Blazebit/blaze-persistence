@@ -45,10 +45,10 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
                 LOG.warning("Skipping schema clearing because no configuration could be found!");
                 return;
             }
-            properties.put("javax.persistence.jdbc.url", jdbcUrl);
-            properties.put("javax.persistence.jdbc.user", jdbcUser);
-            properties.put("javax.persistence.jdbc.password", jdbcPassword);
-            properties.put("javax.persistence.jdbc.driver", jdbcDriver);
+            properties.put("jakarta.persistence.jdbc.url", jdbcUrl);
+            properties.put("jakarta.persistence.jdbc.user", jdbcUser);
+            properties.put("jakarta.persistence.jdbc.password", jdbcPassword);
+            properties.put("jakarta.persistence.jdbc.driver", jdbcDriver);
         } else {
             Properties p = new Properties();
             try (InputStream stream = Files.newInputStream(configFile)) {
@@ -57,10 +57,10 @@ public class SchemaClearer extends AbstractJpaPersistenceTest {
 
             schema = p.getProperty("quarkus.hibernate-orm.database.default-schema");
 
-            properties.put("javax.persistence.jdbc.url", p.getProperty("quarkus.datasource.url"));
-            properties.put("javax.persistence.jdbc.user", p.getProperty("quarkus.datasource.username"));
-            properties.put("javax.persistence.jdbc.password", p.getProperty("quarkus.datasource.password"));
-            properties.put("javax.persistence.jdbc.driver", p.getProperty("quarkus.datasource.driver"));
+            properties.put("jakarta.persistence.jdbc.url", p.getProperty("quarkus.datasource.url"));
+            properties.put("jakarta.persistence.jdbc.user", p.getProperty("quarkus.datasource.username"));
+            properties.put("jakarta.persistence.jdbc.password", p.getProperty("quarkus.datasource.password"));
+            properties.put("jakarta.persistence.jdbc.driver", p.getProperty("quarkus.datasource.driver"));
         }
         DataSource dataSource = createDataSource(properties, null);
         try (Connection connection = dataSource.getConnection()) {

@@ -15,7 +15,7 @@ import com.blazebit.persistence.testsuite.model.DocumentViewModel;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.lang.reflect.Constructor;
 import java.util.List;
 

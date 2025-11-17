@@ -5,19 +5,16 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2Latest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentCTE;
@@ -33,14 +30,7 @@ import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.Collections;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -102,11 +92,8 @@ public class InlineCTETest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
-    // Prior to Hibernate 5.1 it wasn't possible reference other from clause elements in the ON clause which is required to support implicit joins in ON clauses
-    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoMySQLOld.class, NoH2Latest.class })
+    @Category({ NoEclipselink.class })
     public void testInliningFromSubqueryCte() {
         cbf.create(em, RecursiveEntity.class)
                 .withRecursive(DocumentCTE.class)
@@ -138,9 +125,8 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // TODO: Oracle requires a cycle clause #295
-    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoH2Latest.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testReusedNestedCte() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .withRecursive(TestCTE.class)
@@ -221,9 +207,8 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // TODO: Oracle requires a cycle clause #295
-    // NOTE: H2 v2 issue: https://github.com/h2database/h2database/issues/3621
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class, NoH2Latest.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testReusedNestedCte2() {
         CriteriaBuilder<ParameterOrderCte> cteBuilder = cbf.create(em, ParameterOrderCte.class)
                 .withRecursive(TestCTE.class)
@@ -278,9 +263,8 @@ public class InlineCTETest extends AbstractCoreTest {
         cteBuilder.getResultList();
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
+    @Category({ NoEclipselink.class })
     public void testParameterBindingOrder() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -306,9 +290,8 @@ public class InlineCTETest extends AbstractCoreTest {
         Assert.assertEquals(1, resultList.size());
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
+    @Category({ NoEclipselink.class })
     public void testParameterBindingOrderPaginated() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -336,7 +319,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testParameterBindingOrderNested() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -367,9 +350,8 @@ public class InlineCTETest extends AbstractCoreTest {
         Assert.assertEquals(1, resultList.size());
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
+    @Category({ NoEclipselink.class })
     public void testParameterBindingOrderNestedPaginated() {
         CriteriaBuilder<ParameterOrderEntity> cteBuilder = cbf.create(em, ParameterOrderEntity.class)
                 .with(ParameterOrderCte.class)
@@ -405,7 +387,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testInlineCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class, true)
@@ -426,7 +408,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testInlineCTENullExpression() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class, true)
@@ -446,7 +428,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testInlineCTEWithParam() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class, true)
@@ -465,9 +447,8 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(2, resultList.size());
     }
 
-    // NOTE: Hibernate 4.2 and 4.3 interprets entity name tokens in string literals...
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class })
+    @Category({ NoEclipselink.class })
     public void testInlineCTEInCorrelatedSubquery() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class, "r")
                 .whereExists()
@@ -491,7 +472,7 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testInlineEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromEntitySubquery(RecursiveEntity.class, "t")
@@ -510,7 +491,7 @@ public class InlineCTETest extends AbstractCoreTest {
 
     // Test for #1285
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testJoinOnSubquery() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "t")
@@ -533,11 +514,8 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // NOTE: Hibernate 5.1 renders t.id = tSub.id rather than t = tSub
-	// NOTE: Hibernate 7.1.0 suffers from: https://hibernate.atlassian.net/browse/HHH-19745
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate70.class })
+    @Category({ NoEclipselink.class })
     public void testMultipleInlineEntityWithLimitJoin() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromEntitySubquery(RecursiveEntity.class, "t")
@@ -569,9 +547,8 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class })
     public void testJoinInlineEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromValues(RecursiveEntity.class, "name", "val", Collections.singletonList("child1_1"))
@@ -592,10 +569,9 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
-    // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinLateralEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .fromValues(RecursiveEntity.class, "name", "val", Collections.singletonList("child1_1"))
@@ -617,10 +593,9 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
-    // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinLateralCorrelationEntityWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
@@ -632,7 +607,7 @@ public class InlineCTETest extends AbstractCoreTest {
                     .on("1").eqExpression("1")
                 .end()
                 .select("t");
-        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity r WHERE r.parent.id = x.id ORDER BY r.name ASC LIMIT 1";
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM x.children r ORDER BY r.name ASC LIMIT 1";
         String expected = ""
                 + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
 
@@ -641,10 +616,9 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
     }
 
-    // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinLateralCorrelationEntityJoinTableWithLimit() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
@@ -666,10 +640,9 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // Test for #1193
-    // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinLateralWithArrayExpressionImplicitJoin() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
@@ -686,19 +659,16 @@ public class InlineCTETest extends AbstractCoreTest {
     }
 
     // Additional test for #1193
-    // NOTE: H2 and old MySQL do not support lateral joins
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    // NOTE: H2 does not support lateral joins
     @Test
-//    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
-    // NOTE: This requires joins to be ordered correctly which is only fixed in Hibernate 5.4.22+. Also see https://hibernate.atlassian.net/browse/HHH-14201
-    @Ignore
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinLateralWithElementArrayExpressionImplicitJoin() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class)
                 .from(RecursiveEntity.class, "x")
                 .leftJoinLateralEntitySubquery("x.children[name = x.parent.name]", "t", "r").end()
                 .where("x.name").eq("root1")
                 .select("t");
-        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity x_children_base, RecursiveEntity x_parent_base LEFT JOIN x_parent_base.parent parent_1 JOIN x_children_base.children r ON (r.name = parent_1.name) WHERE x.id = x_children_base.id AND x.id = x_parent_base.id";
+        String expectedSubquery = "SELECT r.id, r.name, r.parent.id FROM RecursiveEntity x_children_base CROSS JOIN RecursiveEntity x_parent_base LEFT JOIN x_parent_base.parent parent_1 JOIN x_children_base.children r ON (r.name = parent_1.name) WHERE x.id = x_children_base.id AND x.id = x_parent_base.id";
         String expected = ""
                 + "SELECT t FROM RecursiveEntity x LEFT JOIN LATERAL RecursiveEntity(" + expectedSubquery + ") t(id, name, parent.id)" + onClause("1 = 1") + " WHERE x.name = :param_0";
 

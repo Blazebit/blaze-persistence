@@ -7,7 +7,7 @@ package com.blazebit.persistence.spring.data.testsuite.webflux.tx;
 
 import com.blazebit.persistence.view.EntityViewManager;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Moritz Becker

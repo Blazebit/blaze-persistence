@@ -13,7 +13,7 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 /**
  *

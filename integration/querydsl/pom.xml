@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-integration</artifactId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>blaze-persistence-integration-querydsl-parent</artifactId>
@@ -13,6 +13,5 @@
     <modules>
         <module>expressions</module>
         <module>testsuite</module>
-        <module>expressions-jakarta</module>
     </modules>
 </project>

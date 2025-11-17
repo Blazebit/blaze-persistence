@@ -8,12 +8,11 @@ package com.blazebit.persistence.view.testsuite.correlation.subselectsubset;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.correlation.AbstractCorrelationTest;
 import com.blazebit.persistence.view.testsuite.correlation.subselectsubset.model.DocumentEmbeddingViewSubselectWithoutIdView;
 import com.blazebit.persistence.view.testsuite.correlation.subselectsubset.model.DocumentSubselectElementCollectionView;
@@ -34,6 +33,8 @@ import java.util.List;
 public class SubselectSubsetCorrelationTest extends AbstractCorrelationTest {
 
     @Test
+    // MySQL doesn't support limit in subquery of IN predicate
+    @Category({ NoMySQL.class })
     public void testSubselectSubsetCorrelation() {
         EntityViewManager evm = build(
                 PersonSubselectView.class,

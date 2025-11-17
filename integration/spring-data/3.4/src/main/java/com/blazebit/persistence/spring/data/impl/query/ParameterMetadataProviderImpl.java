@@ -55,262 +55,262 @@ import java.util.stream.Collectors;
  */
 class ParameterMetadataProviderImpl implements ParameterMetadataProvider {
 
-	private final CriteriaBuilder builder;
-	private final Iterator<? extends Parameter> parameters;
-	private final List<ParameterMetadata<?>> expressions;
-	private final Iterator<Object> bindableParameterValues;
-	private final PersistenceProvider persistenceProvider;
-	private final EscapeCharacter escape;
+    private final CriteriaBuilder builder;
+    private final Iterator<? extends Parameter> parameters;
+    private final List<ParameterMetadata<?>> expressions;
+    private final Iterator<Object> bindableParameterValues;
+    private final PersistenceProvider persistenceProvider;
+    private final EscapeCharacter escape;
 
-	/**
-	 * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} and
-	 * {@link ParametersParameterAccessor} with support for parameter value customizations via {@link PersistenceProvider}
-	 * .
-	 *
-	 * @param builder must not be {@literal null}.
-	 * @param accessor must not be {@literal null}.
-	 * @param provider must not be {@literal null}.
-	 * @param escape
-	 */
-	public ParameterMetadataProviderImpl(CriteriaBuilder builder, ParametersParameterAccessor accessor,
+    /**
+     * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} and
+     * {@link ParametersParameterAccessor} with support for parameter value customizations via {@link PersistenceProvider}
+     * .
+     *
+     * @param builder must not be {@literal null}.
+     * @param accessor must not be {@literal null}.
+     * @param provider must not be {@literal null}.
+     * @param escape
+     */
+    public ParameterMetadataProviderImpl(CriteriaBuilder builder, ParametersParameterAccessor accessor,
                                          PersistenceProvider provider, EscapeCharacter escape) {
-		this(builder, accessor.iterator(), accessor.getParameters(), provider, escape);
-	}
+        this(builder, accessor.iterator(), accessor.getParameters(), provider, escape);
+    }
 
-	/**
-	 * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} and {@link Parameters} with
-	 * support for parameter value customizations via {@link PersistenceProvider}.
-	 *
-	 * @param builder must not be {@literal null}.
-	 * @param parameters must not be {@literal null}.
-	 * @param provider must not be {@literal null}.
-	 * @param escape
-	 */
-	public ParameterMetadataProviderImpl(CriteriaBuilder builder, Parameters<?, ?> parameters, PersistenceProvider provider,
+    /**
+     * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} and {@link Parameters} with
+     * support for parameter value customizations via {@link PersistenceProvider}.
+     *
+     * @param builder must not be {@literal null}.
+     * @param parameters must not be {@literal null}.
+     * @param provider must not be {@literal null}.
+     * @param escape
+     */
+    public ParameterMetadataProviderImpl(CriteriaBuilder builder, Parameters<?, ?> parameters, PersistenceProvider provider,
                                          EscapeCharacter escape) {
-		this(builder, null, parameters, provider, escape);
-	}
+        this(builder, null, parameters, provider, escape);
+    }
 
-	/**
-	 * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} an {@link Iterable} of all
-	 * bindable parameter values, and {@link Parameters} with support for parameter value customizations via
-	 * {@link PersistenceProvider}.
-	 *
-	 * @param builder must not be {@literal null}.
-	 * @param bindableParameterValues may be {@literal null}.
-	 * @param parameters must not be {@literal null}.
-	 * @param provider must not be {@literal null}.
-	 * @param escape
-	 */
-	private ParameterMetadataProviderImpl(CriteriaBuilder builder, Iterator<Object> bindableParameterValues,
+    /**
+     * Creates a new {@link ParameterMetadataProviderImpl} from the given {@link CriteriaBuilder} an {@link Iterable} of all
+     * bindable parameter values, and {@link Parameters} with support for parameter value customizations via
+     * {@link PersistenceProvider}.
+     *
+     * @param builder must not be {@literal null}.
+     * @param bindableParameterValues may be {@literal null}.
+     * @param parameters must not be {@literal null}.
+     * @param provider must not be {@literal null}.
+     * @param escape
+     */
+    private ParameterMetadataProviderImpl(CriteriaBuilder builder, Iterator<Object> bindableParameterValues,
                                           Parameters<?, ?> parameters, PersistenceProvider provider, EscapeCharacter escape) {
 
-		Assert.notNull(builder, "CriteriaBuilder must not be null!");
-		Assert.notNull(parameters, "Parameters must not be null!");
-		Assert.notNull(provider, "PesistenceProvider must not be null!");
+        Assert.notNull(builder, "CriteriaBuilder must not be null!");
+        Assert.notNull(parameters, "Parameters must not be null!");
+        Assert.notNull(provider, "PesistenceProvider must not be null!");
 
-		this.builder = builder;
-		this.parameters = parameters.getBindableParameters().iterator();
-		this.expressions = new ArrayList<>();
-		this.bindableParameterValues = bindableParameterValues;
-		this.persistenceProvider = provider;
-		this.escape = escape;
-	}
+        this.builder = builder;
+        this.parameters = parameters.getBindableParameters().iterator();
+        this.expressions = new ArrayList<>();
+        this.bindableParameterValues = bindableParameterValues;
+        this.persistenceProvider = provider;
+        this.escape = escape;
+    }
 
-	/**
-	 * Returns all {@link ParameterMetadata}s built.
-	 *
-	 * @return the expressions
-	 */
-	public List<ParameterMetadata<?>> getExpressions() {
-		return expressions;
-	}
+    /**
+     * Returns all {@link ParameterMetadata}s built.
+     *
+     * @return the expressions
+     */
+    public List<ParameterMetadata<?>> getExpressions() {
+        return expressions;
+    }
 
-	/**
-	 * Builds a new {@link ParameterMetadata} for given {@link Part} and the next {@link Parameter}.
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> ParameterMetadata<T> next(Part part) {
-		if (!parameters.hasNext()) {
-			throw new IllegalArgumentException(String.format("No parameter available for part %s.", part));
-		}
+    /**
+     * Builds a new {@link ParameterMetadata} for given {@link Part} and the next {@link Parameter}.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> ParameterMetadata<T> next(Part part) {
+        if (!parameters.hasNext()) {
+            throw new IllegalArgumentException(String.format("No parameter available for part %s.", part));
+        }
 
-		Parameter parameter = parameters.next();
-		return (ParameterMetadata<T>) next(part, parameter.getType(), parameter);
-	}
+        Parameter parameter = parameters.next();
+        return (ParameterMetadata<T>) next(part, parameter.getType(), parameter);
+    }
 
-	/**
-	 * Builds a new {@link ParameterMetadata} of the given {@link Part} and type. Forwards the underlying
-	 * {@link Parameters} as well.
-	 *
-	 * @param <T> is the type parameter of the returend {@link ParameterMetadata}.
-	 * @param type must not be {@literal null}.
-	 * @return ParameterMetadata for the next parameter.
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> ParameterMetadata<? extends T> next(Part part, Class<T> type) {
+    /**
+     * Builds a new {@link ParameterMetadata} of the given {@link Part} and type. Forwards the underlying
+     * {@link Parameters} as well.
+     *
+     * @param <T> is the type parameter of the returend {@link ParameterMetadata}.
+     * @param type must not be {@literal null}.
+     * @return ParameterMetadata for the next parameter.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> ParameterMetadata<? extends T> next(Part part, Class<T> type) {
 
-		Parameter parameter = parameters.next();
-		Class<?> typeToUse = ClassUtils.isAssignable(type, parameter.getType()) ? parameter.getType() : type;
-		return (ParameterMetadata<? extends T>) next(part, typeToUse, parameter);
-	}
+        Parameter parameter = parameters.next();
+        Class<?> typeToUse = ClassUtils.isAssignable(type, parameter.getType()) ? parameter.getType() : type;
+        return (ParameterMetadata<? extends T>) next(part, typeToUse, parameter);
+    }
 
-	/**
-	 * Builds a new {@link ParameterMetadata} for the given type and name.
-	 *
-	 * @param <T> type parameter for the returned {@link ParameterMetadata}.
-	 * @param part must not be {@literal null}.
-	 * @param type must not be {@literal null}.
-	 * @param parameter providing the name for the returned {@link ParameterMetadata}.
-	 * @return a new {@link ParameterMetadata} for the given type and name.
-	 */
-	private <T> ParameterMetadata<T> next(Part part, Class<T> type, Parameter parameter) {
+    /**
+     * Builds a new {@link ParameterMetadata} for the given type and name.
+     *
+     * @param <T> type parameter for the returned {@link ParameterMetadata}.
+     * @param part must not be {@literal null}.
+     * @param type must not be {@literal null}.
+     * @param parameter providing the name for the returned {@link ParameterMetadata}.
+     * @return a new {@link ParameterMetadata} for the given type and name.
+     */
+    private <T> ParameterMetadata<T> next(Part part, Class<T> type, Parameter parameter) {
 
-		Assert.notNull(type, "Type must not be null!");
+        Assert.notNull(type, "Type must not be null!");
 
-		/*
-		 * We treat Expression types as Object vales since the real value to be bound as a parameter is determined at query time.
-		 */
-		@SuppressWarnings("unchecked")
-		Class<T> reifiedType = Expression.class.equals(type) ? (Class<T>) Object.class : type;
+        /*
+         * We treat Expression types as Object vales since the real value to be bound as a parameter is determined at query time.
+         */
+        @SuppressWarnings("unchecked")
+        Class<T> reifiedType = Expression.class.equals(type) ? (Class<T>) Object.class : type;
 
-		Supplier<String> name = () -> parameter.getName()
-				.orElseThrow(() -> new IllegalArgumentException("o_O Parameter needs to be named"));
+        Supplier<String> name = () -> parameter.getName()
+                .orElseThrow(() -> new IllegalArgumentException("o_O Parameter needs to be named"));
 
-		ParameterExpression<T> expression = parameter.isExplicitlyNamed() //
-				? builder.parameter(reifiedType, name.get()) //
-				: builder.parameter(reifiedType);
+        ParameterExpression<T> expression = parameter.isExplicitlyNamed() //
+                ? builder.parameter(reifiedType, name.get()) //
+                : builder.parameter(reifiedType);
 
-		Object value = bindableParameterValues == null ? ParameterMetadata.PLACEHOLDER : bindableParameterValues.next();
+        Object value = bindableParameterValues == null ? ParameterMetadata.PLACEHOLDER : bindableParameterValues.next();
 
-		ParameterMetadata<T> metadata = new ParameterMetadataImpl<>(expression, part, value, persistenceProvider, escape);
-		expressions.add(metadata);
+        ParameterMetadata<T> metadata = new ParameterMetadataImpl<>(expression, part, value, persistenceProvider, escape);
+        expressions.add(metadata);
 
-		return metadata;
-	}
+        return metadata;
+    }
 
-	EscapeCharacter getEscape() {
-		return escape;
-	}
+    EscapeCharacter getEscape() {
+        return escape;
+    }
 
-	/**
-	 * @author Oliver Gierke
-	 * @author Thomas Darimont
-	 * @author Andrey Kovalev
-	 * @param <T>
-	 */
-	static class ParameterMetadataImpl<T> implements ParameterMetadata<T> {
+    /**
+     * @author Oliver Gierke
+     * @author Thomas Darimont
+     * @author Andrey Kovalev
+     * @param <T>
+     */
+    static class ParameterMetadataImpl<T> implements ParameterMetadata<T> {
 
-		private final Type type;
-		private final ParameterExpression<T> expression;
-		private final PersistenceProvider persistenceProvider;
-		private final EscapeCharacter escape;
-		private final boolean ignoreCase;
-		private final boolean noWildcards;
+        private final Type type;
+        private final ParameterExpression<T> expression;
+        private final PersistenceProvider persistenceProvider;
+        private final EscapeCharacter escape;
+        private final boolean ignoreCase;
+        private final boolean noWildcards;
 
-		/**
-		 * Creates a new {@link ParameterMetadata}.
-		 */
-		public ParameterMetadataImpl(ParameterExpression<T> expression, Part part, Object value,
-				PersistenceProvider provider, EscapeCharacter escape) {
+        /**
+         * Creates a new {@link ParameterMetadata}.
+         */
+        public ParameterMetadataImpl(ParameterExpression<T> expression, Part part, Object value,
+                PersistenceProvider provider, EscapeCharacter escape) {
 
-			this.expression = expression;
-			this.persistenceProvider = provider;
-			this.type = value == null && Type.SIMPLE_PROPERTY.equals(part.getType()) ? Type.IS_NULL : part.getType();
-			this.ignoreCase = IgnoreCaseType.ALWAYS.equals(part.shouldIgnoreCase());
-			this.noWildcards = part.getProperty().getLeafProperty().isCollection();
-			this.escape = escape;
-		}
+            this.expression = expression;
+            this.persistenceProvider = provider;
+            this.type = value == null && Type.SIMPLE_PROPERTY.equals(part.getType()) ? Type.IS_NULL : part.getType();
+            this.ignoreCase = IgnoreCaseType.ALWAYS.equals(part.shouldIgnoreCase());
+            this.noWildcards = part.getProperty().getLeafProperty().isCollection();
+            this.escape = escape;
+        }
 
-		/**
-		 * Returns the {@link ParameterExpression}.
-		 *
-		 * @return the expression
-		 */
-		public ParameterExpression<T> getExpression() {
-			return expression;
-		}
+        /**
+         * Returns the {@link ParameterExpression}.
+         *
+         * @return the expression
+         */
+        public ParameterExpression<T> getExpression() {
+            return expression;
+        }
 
-		/**
-		 * Returns whether the parameter shall be considered an {@literal IS NULL} parameter.
-		 */
-		public boolean isIsNullParameter() {
-			return Type.IS_NULL.equals(type);
-		}
+        /**
+         * Returns whether the parameter shall be considered an {@literal IS NULL} parameter.
+         */
+        public boolean isIsNullParameter() {
+            return Type.IS_NULL.equals(type);
+        }
 
-		/**
-		 * Prepares the object before it's actually bound to the {@link javax.persistence.Query;}.
-		 *
-		 * @param value must not be {@literal null}.
-		 */
-		public Object prepare(Object value) {
+        /**
+         * Prepares the object before it's actually bound to the {@link jakarta.persistence.Query;}.
+         *
+         * @param value must not be {@literal null}.
+         */
+        public Object prepare(Object value) {
 
-			Assert.notNull(value, "Value must not be null!");
+            Assert.notNull(value, "Value must not be null!");
 
-			Object unwrapped = PersistenceProvider.unwrapTypedParameterValue(value);
-			Class<? extends T> expressionType;
+            Object unwrapped = PersistenceProvider.unwrapTypedParameterValue(value);
+            Class<? extends T> expressionType;
 
-			if (unwrapped == null || (expressionType = expression.getJavaType()) == null) {
-				return unwrapped;
-			}
+            if (unwrapped == null || (expressionType = expression.getJavaType()) == null) {
+                return unwrapped;
+            }
 
-			if (String.class.equals(expression.getJavaType()) && !noWildcards) {
+            if (String.class.equals(expression.getJavaType()) && !noWildcards) {
 
-				switch (type) {
-					case STARTING_WITH:
-						return String.format("%s%%", escape.escape(unwrapped.toString()));
-					case ENDING_WITH:
-						return String.format("%%%s", escape.escape(unwrapped.toString()));
-					case CONTAINING:
-					case NOT_CONTAINING:
-						return String.format("%%%s%%", escape.escape(unwrapped.toString()));
-					default:
-						return unwrapped;
-				}
-			}
+                switch (type) {
+                    case STARTING_WITH:
+                        return String.format("%s%%", escape.escape(unwrapped.toString()));
+                    case ENDING_WITH:
+                        return String.format("%%%s", escape.escape(unwrapped.toString()));
+                    case CONTAINING:
+                    case NOT_CONTAINING:
+                        return String.format("%%%s%%", escape.escape(unwrapped.toString()));
+                    default:
+                        return unwrapped;
+                }
+            }
 
-			return Collection.class.isAssignableFrom(expressionType) //
-					? upperIfIgnoreCase(ignoreCase, toCollection(value)) //
-					: value;
-		}
+            return Collection.class.isAssignableFrom(expressionType) //
+                    ? upperIfIgnoreCase(ignoreCase, toCollection(value)) //
+                    : value;
+        }
 
-		/**
-		 * Returns the given argument as {@link Collection} which means it will return it as is if it's a
-		 * {@link Collections}, turn an array into an {@link ArrayList} or simply wrap any other value into a single element
-		 * {@link Collections}.
-		 *
-		 * @param value the value to be converted to a {@link Collection}.
-		 * @return the object itself as a {@link Collection} or a {@link Collection} constructed from the value.
-		 */
-		private static Collection<?> toCollection(Object value) {
+        /**
+         * Returns the given argument as {@link Collection} which means it will return it as is if it's a
+         * {@link Collections}, turn an array into an {@link ArrayList} or simply wrap any other value into a single element
+         * {@link Collections}.
+         *
+         * @param value the value to be converted to a {@link Collection}.
+         * @return the object itself as a {@link Collection} or a {@link Collection} constructed from the value.
+         */
+        private static Collection<?> toCollection(Object value) {
 
-			if (value == null) {
-				return null;
-			}
+            if (value == null) {
+                return null;
+            }
 
-			if (value instanceof Collection) {
-				return (Collection<?>) value;
-			}
+            if (value instanceof Collection) {
+                return (Collection<?>) value;
+            }
 
-			if (ObjectUtils.isArray(value)) {
-				return Arrays.asList(ObjectUtils.toObjectArray(value));
-			}
+            if (ObjectUtils.isArray(value)) {
+                return Arrays.asList(ObjectUtils.toObjectArray(value));
+            }
 
-			return Collections.singleton(value);
-		}
+            return Collections.singleton(value);
+        }
 
-		@SuppressWarnings("unchecked")
-		private static Collection<?> upperIfIgnoreCase(boolean ignoreCase, Collection<?> collection) {
+        @SuppressWarnings("unchecked")
+        private static Collection<?> upperIfIgnoreCase(boolean ignoreCase, Collection<?> collection) {
 
-			if (!ignoreCase || CollectionUtils.isEmpty(collection)) {
-				return collection;
-			}
+            if (!ignoreCase || CollectionUtils.isEmpty(collection)) {
+                return collection;
+            }
 
-			return ((Collection<String>) collection).stream() //
-					.map(it -> it == null //
-							? null //
-							: it.toUpperCase()) //
-					.collect(Collectors.toList());
-		}
-	}
+            return ((Collection<String>) collection).stream() //
+                    .map(it -> it == null //
+                            ? null //
+                            : it.toUpperCase()) //
+                    .collect(Collectors.toList());
+        }
+    }
 }

@@ -19,7 +19,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;

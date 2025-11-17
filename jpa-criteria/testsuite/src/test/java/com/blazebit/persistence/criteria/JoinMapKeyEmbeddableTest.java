@@ -5,13 +5,12 @@
 
 package com.blazebit.persistence.criteria;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
-import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
-import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps_;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
@@ -21,13 +20,6 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntitySub;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity_;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
-import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
-import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps_;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,8 +29,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.2.1
  */
 // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-// TODO: report that datanucleus doesn't support element collection in an embeddable
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class JoinMapKeyEmbeddableTest extends AbstractCoreTest {
 
     @Override

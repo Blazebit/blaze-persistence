@@ -7,8 +7,8 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;

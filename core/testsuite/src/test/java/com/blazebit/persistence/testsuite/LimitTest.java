@@ -5,17 +5,18 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.DeletePersonCTE;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
@@ -23,11 +24,7 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -87,8 +84,9 @@ public class LimitTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category(NoEclipselink.class)
+    // MySQL doesn't support limit in subquery of IN predicate
     // TODO: report eclipselink does not support subqueries in functions
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void testSubqueryAndOuterQueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()
@@ -109,7 +107,7 @@ public class LimitTest extends AbstractCoreTest {
 
     // Test for issue #774
     @Test
-    @Category({NoH2.class, NoDB2.class, NoFirebird.class, NoMSSQL.class, NoMySQL.class, NoOracle.class, NoSQLite.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    @Category({NoH2.class, NoDB2.class, NoMSSQL.class, NoMySQL.class, NoOracle.class, NoEclipselink.class })
     public void testModificationCteQueryWithLimitInMainQuery() {
         List<DeletePersonCTE> deletedPersons = cbf.create(em, DeletePersonCTE.class)
                 .withReturning(DeletePersonCTE.class)

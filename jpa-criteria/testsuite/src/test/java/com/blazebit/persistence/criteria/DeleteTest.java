@@ -12,7 +12,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import org.junit.Test;
 
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.Assert.assertEquals;
 

@@ -5,7 +5,7 @@ as well as some common problems with explanations and possible solutions.
 
 === Why do I get an optimistic lock exception when updating an updatable entity view?
 
-The `com.blazebit.persistence.view.OptimisticLockException` is very similar to the `javax.persistence.OptimisticLockException` and when thrown,
+The `com.blazebit.persistence.view.OptimisticLockException` is very similar to the `jakarta.persistence.OptimisticLockException` and when thrown,
 it signals that an update isn't possible because of a change of an object that happened in the meantime. This can also happen when you do not use optimistic locking explicitly.
 
 ==== If you try to update a non-existent entity

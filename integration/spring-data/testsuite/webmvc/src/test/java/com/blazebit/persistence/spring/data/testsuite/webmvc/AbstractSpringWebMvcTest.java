@@ -44,8 +44,8 @@ public abstract class AbstractSpringWebMvcTest extends AbstractSpringTest {
         try {
             Class<?> clazz = Class.forName("org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder");
             content = clazz.getMethod("content", byte[].class);
-			contentType = clazz.getMethod("contentType", MediaType.class);
-			accept = clazz.getMethod("accept", String[].class);
+            contentType = clazz.getMethod("contentType", MediaType.class);
+            accept = clazz.getMethod("accept", String[].class);
         } catch (NoSuchMethodException | ClassNotFoundException e) {
 
         }

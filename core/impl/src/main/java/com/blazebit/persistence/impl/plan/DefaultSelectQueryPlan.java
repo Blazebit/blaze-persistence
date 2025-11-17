@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.impl.plan;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -44,7 +44,7 @@ public class DefaultSelectQueryPlan<T> implements SelectQueryPlan<T> {
     public T getSingleResultOrNull() {
         query.setFirstResult(firstResult);
         query.setMaxResults(maxResults);
-        return (T) ((jakarta.persistence.Query) query).getSingleResultOrNull();
+        return (T) query.getSingleResultOrNull();
     }
 
     public Stream<T> getResultStream() {

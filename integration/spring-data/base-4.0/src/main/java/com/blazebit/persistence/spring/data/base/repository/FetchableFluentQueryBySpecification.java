@@ -83,7 +83,7 @@ public class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySuppor
         this.entityManager = entityManager;
     }
 
-	@Override
+    @Override
     public FetchableFluentQueryBySpecification<S, R> sortBy(Sort sort) {
 
         Assert.notNull(sort, "Sort must not be null");
@@ -146,10 +146,10 @@ public class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySuppor
 
     @Override
     public List<R> all() {
-		return all(this.sort);
-	}
+        return all(this.sort);
+    }
 
-	private List<R> all(Sort sort) {
+    private List<R> all(Sort sort) {
         return convert(createSortedAndProjectedQuery(sort).getResultList());
     }
 
@@ -166,11 +166,11 @@ public class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySuppor
         return pageable.isUnpaged() ? new PageImpl<>(all()) : readPage(pageable);
     }
 
-	@Override
-	public Page<R> page(Pageable pageable, Specification<?> countSpec) {
-		return pageable.isUnpaged() ? new PageImpl<>(all(pageable.getSort()))
-				: readPage(pageable, (Specification) countSpec);
-	}
+    @Override
+    public Page<R> page(Pageable pageable, Specification<?> countSpec) {
+        return pageable.isUnpaged() ? new PageImpl<>(all(pageable.getSort()))
+                : readPage(pageable, (Specification) countSpec);
+    }
 
     @Override
     public Stream<R> stream() {
@@ -219,30 +219,30 @@ public class FetchableFluentQueryBySpecification<S, R> extends FluentQuerySuppor
         return PageableExecutionUtils.getPage(paginatedResults, pageable, () -> countOperation.apply(spec));
     }
 
-	private Page<R> readPage(Pageable pageable, Specification<S> countSpec) {
+    private Page<R> readPage(Pageable pageable, Specification<S> countSpec) {
 
-		Sort sort = pageable.getSortOr(this.sort);
-		TypedQuery<S> pagedQuery = createSortedAndProjectedQuery(sort);
+        Sort sort = pageable.getSortOr(this.sort);
+        TypedQuery<S> pagedQuery = createSortedAndProjectedQuery(sort);
 
-		if (pageable.isPaged()) {
-			pagedQuery.setFirstResult(PageableUtils.getOffsetAsInteger(pageable));
-			pagedQuery.setMaxResults(pageable.getPageSize());
-		}
+        if (pageable.isPaged()) {
+            pagedQuery.setFirstResult(PageableUtils.getOffsetAsInteger(pageable));
+            pagedQuery.setMaxResults(pageable.getPageSize());
+        }
 
-		List<R> paginatedResults = convert(pagedQuery.getResultList());
+        List<R> paginatedResults = convert(pagedQuery.getResultList());
 
-		return PageableExecutionUtils.getPage(paginatedResults, withSort(pageable, sort),
-				() -> countOperation.apply(countSpec));
-	}
+        return PageableExecutionUtils.getPage(paginatedResults, withSort(pageable, sort),
+                () -> countOperation.apply(countSpec));
+    }
 
-	Pageable withSort(Pageable pageable, Sort sort) {
+    Pageable withSort(Pageable pageable, Sort sort) {
 
-		if (pageable instanceof PageRequest && pageable.getSort() != sort) {
-			return ((PageRequest) pageable).withSort(sort);
-		}
+        if (pageable instanceof PageRequest && pageable.getSort() != sort) {
+            return ((PageRequest) pageable).withSort(sort);
+        }
 
-		return pageable;
-	}
+        return pageable;
+    }
 
     private List<R> convert(List<S> resultList) {
 

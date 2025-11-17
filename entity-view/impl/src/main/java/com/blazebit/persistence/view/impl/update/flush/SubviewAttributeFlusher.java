@@ -19,7 +19,7 @@ import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;

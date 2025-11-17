@@ -12,7 +12,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

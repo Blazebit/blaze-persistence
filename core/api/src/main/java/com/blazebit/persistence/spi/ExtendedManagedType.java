@@ -5,14 +5,14 @@
 
 package com.blazebit.persistence.spi;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * This is a wrapper around the JPA {@link javax.persistence.metamodel.ManagedType} that allows additionally efficient access to properties of the metamodel.
+ * This is a wrapper around the JPA {@link jakarta.persistence.metamodel.ManagedType} that allows additionally efficient access to properties of the metamodel.
  *
  * @param <X> The Java type represented by this managed type
  * @author Christian Beikov

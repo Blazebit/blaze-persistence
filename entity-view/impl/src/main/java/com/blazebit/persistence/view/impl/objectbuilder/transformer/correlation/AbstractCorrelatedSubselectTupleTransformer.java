@@ -36,9 +36,9 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EmbeddingViewJpqlMacro;
 import com.blazebit.persistence.view.spi.ViewJpqlMacro;
 
-import javax.persistence.Parameter;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

@@ -5,23 +5,18 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.nested.graph;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.AbstractEntityViewUpdateNestedEmbeddableEntityTest;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.graph.model.UpdatableEmbeddableEntityWithCollectionsView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.graph.model.UpdatableEmbeddableEntityWithMultipleCollectionsEmbeddableViewBase;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *
@@ -29,8 +24,7 @@ import javax.persistence.EntityManager;
  * @since 1.3.0
  */
 // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
-// NOTE: No Datanucleus support yet
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class })
 public class EntityViewUpdateNestedEmbeddableCollectionsGraphTest extends AbstractEntityViewUpdateNestedEmbeddableEntityTest<UpdatableEmbeddableEntityWithCollectionsView> {
 
     public EntityViewUpdateNestedEmbeddableCollectionsGraphTest() {

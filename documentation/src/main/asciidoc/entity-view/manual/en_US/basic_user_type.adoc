@@ -93,7 +93,7 @@ When a basic type is used in a write model, it is very important that an appropr
 If no basic user type is registered for a type, by default the `com.blazebit.persistence.view.spi.type.MutableBasicUserType` is used.
 This basic user type assume the type is mutable which will cause values of that type to always be assumed being dirty.
 Updatable entity views containing values of such a type are thus always considered being dirty which has the effect, that every call to
-link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.save(EntityManager em, Object view)`]
+link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.save(EntityManager em, Object view)`]
 will cause a flush of attributes containing that value.
 The <<Change Model API,updatable-entity-view-change-model-api>> is also affected of this by always reporting such attributes as being dirty.
 

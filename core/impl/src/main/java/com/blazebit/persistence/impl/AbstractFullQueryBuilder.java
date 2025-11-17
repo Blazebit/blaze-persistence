@@ -45,12 +45,12 @@ import com.blazebit.persistence.parser.util.TypeUtils;
 import com.blazebit.persistence.spi.AttributeAccessor;
 import com.blazebit.persistence.spi.JpaMetamodelAccessor;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;

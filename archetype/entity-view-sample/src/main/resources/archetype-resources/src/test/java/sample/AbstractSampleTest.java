@@ -12,17 +12,17 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.function.Consumer;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Persistence;
 import ${package}.model.Cat;
 import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.view.CatWithOwnerView;
 import ${package}.view.PersonSimpleView;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractSampleTest {
     
@@ -30,7 +30,7 @@ public abstract class AbstractSampleTest {
     protected CriteriaBuilderFactory cbf;
     protected EntityViewManager evm;
 
-    @Before
+    @BeforeEach
     public void init() {
         emf = Persistence.createEntityManagerFactory("default");
         CriteriaBuilderConfiguration config = Criteria.getDefault();
@@ -109,7 +109,7 @@ public abstract class AbstractSampleTest {
         }
     }
 
-    @After
+    @AfterEach
     public void destruct() {
         emf.close();
     }

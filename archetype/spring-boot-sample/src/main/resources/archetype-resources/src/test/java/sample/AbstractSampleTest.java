@@ -5,14 +5,14 @@
 
 package ${package}.sample;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import ${package}.model.Cat;
 import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.view.CatWithOwnerView;
 import ${package}.view.PersonSimpleView;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +22,7 @@ public abstract class AbstractSampleTest {
     @Autowired
     protected EntityManager em;
 
-    @Before
+    @BeforeEach
     public void init() {
         Person p1 = new Person("P1");
         Person p2 = new Person("P2");

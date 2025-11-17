@@ -6,31 +6,11 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMSSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoPostgreSQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.IntIdEntity;
-import com.blazebit.persistence.testsuite.entity.Order;
-import com.blazebit.persistence.testsuite.entity.OrderPosition;
-import com.blazebit.persistence.testsuite.entity.OrderPositionElement;
-import com.blazebit.persistence.testsuite.entity.OrderPositionHead;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.SimpleEmbeddedIdEntity;
 import com.blazebit.persistence.testsuite.entity.SimpleEmbeddedIdEntityId;
-import com.blazebit.persistence.testsuite.entity.Version;
-import com.blazebit.persistence.testsuite.entity.Workflow;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 

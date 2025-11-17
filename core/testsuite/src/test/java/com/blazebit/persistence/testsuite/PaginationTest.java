@@ -5,36 +5,35 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.DefaultKeyset;
 import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -408,8 +407,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupByExplicitPagination() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id") + " ORDER BY d.id ASC";
@@ -434,8 +431,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy1() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
@@ -460,8 +455,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy2() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
@@ -489,8 +482,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy3() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
@@ -518,8 +509,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy4() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
@@ -547,8 +536,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testPaginatedWithGroupBy5() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "d.name", "strings_1") + " ORDER BY d.name ASC, d.id ASC";
@@ -576,9 +563,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testPaginatedWithGroupBy6() {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.name, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
@@ -606,9 +592,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testPaginatedWithGroupBy7() {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, d.age, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.name, d.age, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
@@ -636,9 +621,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testPaginatedWithGroupBy8() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id", "d.name", "d.age") + " ORDER BY d.name ASC, d.age ASC, d.id ASC";
@@ -670,9 +654,8 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
     // Eclipselink does not render the table alias necessary for the path expression in the count function...
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testPaginatedWithGroupBy9() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY " + groupBy("d.id") + " ORDER BY d.id ASC";
@@ -892,8 +875,6 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // Apparently, Datanucleus doesn't like it when using a joined element collection in a function
-    @Category(NoDatanucleus.class)
     public void testOrderBySizeAlias2() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)", "contactCount")
@@ -955,7 +936,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     // Not sure what datanucleus does here..
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipse bug, the expression "VALUE(c) IS NULL" seems illegal but JPA spec 4.6.11 allows it
     public void testSelectOnlyPropagationForWithJoins3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
@@ -977,7 +958,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testCountWithExplicitLeftJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .leftJoinOn(Person.class, "p")
@@ -991,7 +972,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testPaginateSimpleAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")
@@ -1198,8 +1179,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoEclipselink.class)
+    // MySQL doesn't support limit in subquery of IN predicate
     // TODO: report eclipselink does not support subqueries in functions
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void testExtractIdQueryIntoSubquery() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
                 .from(Document.class, "doc")
@@ -1217,7 +1199,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void testBoundedCountSimpleExternal() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
@@ -1233,7 +1215,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void testBoundedCountSimpleInline() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
@@ -1248,7 +1230,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void testBoundedCountAdvancedExternal() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
@@ -1266,7 +1248,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     // TODO: report eclipselink does not support subqueries in functions
     public void testBoundedCountAdvancedInline() {
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
@@ -1283,9 +1265,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     // Test for #1209
-    // NOTE: DataNucleus renders the literal `(1)` for the byte array parameter on PostgreSQL which is wrong
     @Test
-    @Category({ NoDatanucleus.class })
     public void testPaginationImplicitGroupByWithParameter() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")
@@ -1298,8 +1278,7 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void testUsePaginatedCriteriaBuilderCopyAsSubquery() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
                 .from(Document.class, "d")

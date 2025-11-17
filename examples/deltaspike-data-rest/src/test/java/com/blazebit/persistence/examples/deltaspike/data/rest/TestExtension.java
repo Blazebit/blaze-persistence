@@ -8,9 +8,9 @@ package com.blazebit.persistence.examples.deltaspike.data.rest;
 
 import com.blazebit.persistence.examples.deltaspike.data.rest.config.EntityManagerProducer;
 
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.Extension;
+import jakarta.enterprise.inject.spi.ProcessAnnotatedType;
 
 /**
  * In the test, we have to produce the EntityManagerFactory and EntityManager manually.

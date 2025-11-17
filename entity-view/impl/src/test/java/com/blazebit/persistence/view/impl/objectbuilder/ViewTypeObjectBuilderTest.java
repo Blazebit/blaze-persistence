@@ -18,21 +18,21 @@ import static org.junit.Assert.assertTrue;
  */
 public class ViewTypeObjectBuilderTest {
 
-	// Test for #1832
-	@Test
-	public void hasSubFetches() {
-		TreeSet<String> fetches = new TreeSet<>();
-		fetches.add( "id" );
-		fetches.add( "bbbbbb" );
-		fetches.add( "a.name" );
-		assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "id"));
-		assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbbb"));
-		assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "aaa.id"));
-		assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "ccc.id"));
-		assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbb"));
-		assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbbbb"));
-		assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "a"));
-		assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "a.name"));
-		assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "a.id"));
-	}
+    // Test for #1832
+    @Test
+    public void hasSubFetches() {
+        TreeSet<String> fetches = new TreeSet<>();
+        fetches.add( "id" );
+        fetches.add( "bbbbbb" );
+        fetches.add( "a.name" );
+        assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "id"));
+        assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbbb"));
+        assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "aaa.id"));
+        assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "ccc.id"));
+        assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbb"));
+        assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "bbbbbbb"));
+        assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "a"));
+        assertTrue(ViewTypeObjectBuilder.hasSubFetches(fetches, "a.name"));
+        assertFalse(ViewTypeObjectBuilder.hasSubFetches(fetches, "a.id"));
+    }
 }

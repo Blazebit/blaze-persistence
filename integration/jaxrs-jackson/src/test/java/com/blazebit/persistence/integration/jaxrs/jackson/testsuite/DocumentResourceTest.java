@@ -12,8 +12,8 @@ import com.blazebit.persistence.integration.jaxrs.jackson.testsuite.entity.Perso
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 
 import static org.junit.Assert.assertEquals;
 

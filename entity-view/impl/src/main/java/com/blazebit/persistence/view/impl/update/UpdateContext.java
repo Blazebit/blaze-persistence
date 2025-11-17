@@ -11,7 +11,7 @@ import com.blazebit.persistence.view.spi.TransactionAccess;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 
 /**

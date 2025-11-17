@@ -7,7 +7,7 @@ package com.blazebit.persistence.criteria.impl.path;
 
 import com.blazebit.persistence.criteria.BlazePath;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Christian Beikov

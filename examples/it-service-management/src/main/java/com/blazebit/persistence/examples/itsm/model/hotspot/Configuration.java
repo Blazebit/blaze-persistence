@@ -8,11 +8,11 @@ package com.blazebit.persistence.examples.itsm.model.hotspot;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotBlank;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotBlank;
 
 import org.hibernate.annotations.NaturalId;
 

@@ -10,12 +10,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -48,21 +48,21 @@ public class TypedQueryWrapper<X> extends QueryWrapper implements TypedQuery<X> 
 
     @Override
     public X getSingleResultOrNull() {
-        return (X) ((jakarta.persistence.Query) delegate).getSingleResultOrNull();
+        return (X) super.getSingleResultOrNull();
     }
 
     public TypedQuery<X> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-        ((jakarta.persistence.Query) delegate).setCacheRetrieveMode(cacheRetrieveMode);
+        super.setCacheRetrieveMode(cacheRetrieveMode);
         return this;
     }
 
     public TypedQuery<X> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-        ((jakarta.persistence.Query) delegate).setCacheStoreMode(cacheStoreMode);
+        super.setCacheStoreMode(cacheStoreMode);
         return this;
     }
 
     public TypedQuery<X> setTimeout(Integer timeout) {
-        ((jakarta.persistence.Query) delegate).setTimeout(timeout);
+        super.setTimeout(timeout);
         return this;
     }
 

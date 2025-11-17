@@ -11,4 +11,4 @@ mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -pl co
 rm -Rf core/parser/target
 # In the second execution we exclude the parser from the project list so that it uses the previously installed one, which shades ANTLR
 PROJECT_LIST=integration/quarkus-3/deployment,examples/quarkus-3/testsuite/base,examples/quarkus-3/testsuite/native/h2,!core/parser
-mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus-3=${QUARKUS_VERSION} -Dversion.hibernate-orm=${HIBERNATE_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"hibernate-7.1" -P"spring-data-4.0.x" -P"deltaspike-1.9" --projects $PROJECT_LIST -am
+mvn --settings .github/quarkus-ecosystem-maven-settings.xml clean install -Dversion.quarkus-3=${QUARKUS_VERSION} -Dversion.hibernate-orm=${HIBERNATE_VERSION} -Dquarkus.native.container-build=true -Pnative -Ph2 -P"hibernate-7.1" -P"spring-data-4.0.x" -P"deltaspike-2.0" --projects $PROJECT_LIST -am

@@ -11,7 +11,7 @@ package com.blazebit.persistence.view;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class OptimisticLockException extends javax.persistence.OptimisticLockException {
+public class OptimisticLockException extends jakarta.persistence.OptimisticLockException {
 
     /**
      * The entity view object that caused the exception.

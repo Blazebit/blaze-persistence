@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration-quarkus-3-parent</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -40,29 +40,73 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-quarkus-3</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-api</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-parser-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-core-parser</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-api-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-api</artifactId>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- Overriding the JUnit version is kind of pain -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- test dependencies -->
@@ -120,12 +164,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-entity-view-impl-jakarta</artifactId>
+            <artifactId>blaze-persistence-entity-view-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jackson-jakarta</artifactId>
+            <artifactId>blaze-persistence-integration-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -135,12 +179,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jpa-base-jakarta</artifactId>
+            <artifactId>blaze-persistence-integration-jpa-base</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -158,24 +202,30 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.quarkus</groupId>
-                        <artifactId>quarkus-extension-processor</artifactId>
-                        <version>${version.quarkus-3}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>process-build-steps</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <phase>compile</phase>
-                    </execution>
-                </executions>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <dependency>
+                            <groupId>io.quarkus</groupId>
+                            <artifactId>quarkus-extension-processor</artifactId>
+                            <version>${version.quarkus-3}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <compilerArg>-AstrictCascadingCheck=false</compilerArg>
+                        <compilerArg>-AdefaultVersionAttributeName=version</compilerArg>
+                        <compilerArg>-AdefaultVersionAttributeType=java.lang.Long</compilerArg>
+                    </compilerArgs>
+                    <annotationProcessors>
+                        <processor>io.quarkus.annotation.processor.ExtensionAnnotationProcessor</processor>
+                        <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                    </annotationProcessors>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -211,204 +261,13 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                            <systemProperties>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <!-- Required for JDK 16 -->
-                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>hibernate-6.3</id>
-            <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
-            <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
-                <hibernate.integration-base>6</hibernate.integration-base>
-                <hibernate.integration-version>6.2</hibernate.integration-version>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>jakarta.persistence</groupId>
-                    <artifactId>jakarta.persistence-api</artifactId>
-                    <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.hibernate.orm</groupId>
-                    <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.4}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -446,204 +305,13 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                            <systemProperties>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <!-- Required for JDK 16 -->
-                                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                            </systemProperties>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>hibernate-6.5</id>
-            <!-- Note that we run against 6.4 because Quarkus 3.8 is based on 6.4 -->
-            <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate</jpa.excludedGroups>
-                <hibernate.integration-base>6</hibernate.integration-base>
-                <hibernate.integration-version>6.2</hibernate.integration-version>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>jakarta.persistence</groupId>
-                    <artifactId>jakarta.persistence-api</artifactId>
-                    <version>${version.jakarta-jpa-3.1-api}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>org.hibernate.orm</groupId>
-                    <artifactId>hibernate-core</artifactId>
-                    <version>${version.hibernate-6.4}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-                                        <!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -682,86 +350,13 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -800,86 +395,13 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -918,86 +440,13 @@
                 </dependency>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
             </dependencies>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>process-test</id>
-                                <goals>
-                                    <goal>process-test</goal>
-                                </goals>
-                                <phase>generate-test-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
-                                    <processors>
-<!--                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <strictCascadingCheck>false</strictCascadingCheck>
-                                        <defaultVersionAttributeName>version</defaultVersionAttributeName>
-                                        <defaultVersionAttributeType>java.lang.Long</defaultVersionAttributeType>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-test-source-metamodel</id>
-                                <phase>generate-test-sources</phase>
-                                <goals>
-                                    <goal>add-test-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/test-metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>

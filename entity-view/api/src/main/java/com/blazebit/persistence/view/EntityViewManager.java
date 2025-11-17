@@ -12,7 +12,7 @@ import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Map;
 
 /**

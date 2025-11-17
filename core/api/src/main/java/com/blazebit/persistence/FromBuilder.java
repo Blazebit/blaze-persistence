@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Collection;
 import java.util.Set;
 
@@ -189,7 +189,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> joinOn(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -237,7 +237,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinOnSubquery(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -317,7 +317,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -344,7 +344,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinOnEntitySubquery(String base, EntityType<?> entityType, String alias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -397,7 +397,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> joinLateralOnSubquery(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -450,7 +450,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z joinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -528,7 +528,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<X> joinLateralSubquery(String base, Class<?> entityClass, String alias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -581,7 +581,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z joinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias, JoinType type);
 
     /**
-     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * the query root assumed as base.
      *
      * @param entityType The entity type to join
@@ -698,7 +698,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> innerJoinOn(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -709,7 +709,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> innerJoinOn(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -744,7 +744,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -755,7 +755,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinOnSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -792,7 +792,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -804,7 +804,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -844,7 +844,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -857,7 +857,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -894,7 +894,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -905,7 +905,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> innerJoinLateralOnSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -944,7 +944,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -957,7 +957,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z innerJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -1019,7 +1019,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<X> innerJoinLateralSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -1030,7 +1030,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<X> innerJoinLateralSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -1069,7 +1069,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param entityType The entity type to join
@@ -1082,7 +1082,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z innerJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param base The base node on which to join
@@ -1184,7 +1184,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> leftJoinOn(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1195,7 +1195,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> leftJoinOn(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1230,7 +1230,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1241,7 +1241,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinOnSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1278,7 +1278,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1290,7 +1290,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1330,7 +1330,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1343,7 +1343,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1380,7 +1380,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1391,7 +1391,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> leftJoinLateralOnSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1430,7 +1430,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1443,7 +1443,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z leftJoinLateralOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1505,7 +1505,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<X> leftJoinLateralSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1516,7 +1516,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<X> leftJoinLateralSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1555,7 +1555,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param entityType The entity type to join
@@ -1568,7 +1568,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<X, ? extends Z>> Z leftJoinLateralEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinLateralEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param base The base node on which to join
@@ -1670,7 +1670,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> rightJoinOn(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param entityType The entity type to join
@@ -1681,7 +1681,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public JoinOnBuilder<X> rightJoinOn(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOn(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param base The base node on which to join
@@ -1716,7 +1716,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnSubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param entityType The entity type to join
@@ -1727,7 +1727,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public FullSelectCTECriteriaBuilder<JoinOnBuilder<X>> rightJoinOnSubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnSubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param base The base node on which to join
@@ -1764,7 +1764,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param entityType The entity type to join
@@ -1776,7 +1776,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(EntityType<?> entityType, String alias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param base The base node on which to join
@@ -1816,7 +1816,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(String base, Class<?> entityClass, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param entityType The entity type to join
@@ -1829,7 +1829,7 @@ public interface FromBuilder<X extends FromBuilder<X>> extends FromBaseBuilder<X
     public <Z extends BaseFromQueryBuilder<JoinOnBuilder<X>, ? extends Z>> Z rightJoinOnEntitySubquery(EntityType<?> entityType, String alias, String subqueryAlias);
 
     /**
-     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, javax.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOnEntitySubquery(java.lang.String, jakarta.persistence.metamodel.EntityType, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param base The base node on which to join

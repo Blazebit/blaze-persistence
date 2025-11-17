@@ -8,17 +8,19 @@ package com.blazebit.persistence.examples.itsm.model.customer.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OneToMany;
-import javax.persistence.SecondaryTable;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.SecondaryTable;
 
 /**
  * @author Giovanni Lovato
@@ -58,6 +60,8 @@ public abstract class AbstractCustomer extends Company {
     @AttributeOverride(name = "vpnPassword", column = @Column(table = SERVICE_DETAIL))
     @AttributeOverride(name = "vpnNote", column = @Column(table = SERVICE_DETAIL))
     @AttributeOverride(name = "technician", column = @Column(table = SERVICE_DETAIL))
+    @AssociationOverride(name = "switchboard", joinColumns = @JoinColumn(table = SERVICE_DETAIL))
+    @AssociationOverride(name = "technician", joinColumns = @JoinColumn(table = SERVICE_DETAIL))
     // @formatter:on
     private ServiceDetail serviceDetail = new ServiceDetail();
 

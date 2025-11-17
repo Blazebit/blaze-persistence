@@ -5,30 +5,28 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -73,7 +71,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testBindingNull() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class, "t").where("t.level").ltExpression("2");
         cb.with(TestAdvancedCTE1.class, false)
@@ -89,7 +87,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testNotFullyBoundCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
         FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> fullSelectCTECriteriaBuilder = cb.with(TestCTE.class, false)
@@ -103,7 +101,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testNotFullyBoundCTEOnSetOperation() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
         FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class, false)
@@ -115,7 +113,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testNotFullyBoundCTEOnSecondSetOperation() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
         LeafOngoingSetOperationCTECriteriaBuilder<CriteriaBuilder<TestCTE>> builder = cb.with(TestCTE.class, false)
@@ -134,7 +132,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testNotDefinedCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
 
@@ -144,7 +142,7 @@ public class CTETest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class, false)
@@ -167,7 +165,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testCTEAdvanced() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class, "t").where("t.level").ltExpression("2");
         cb.with(TestAdvancedCTE1.class, false)
@@ -196,7 +194,7 @@ public class CTETest extends AbstractCoreTest {
 
     // NOTE: Apparently H2 doesn't like limit in CTEs
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testCTELimit() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
         cb.with(TestCTE.class, false)
@@ -222,7 +220,7 @@ public class CTETest extends AbstractCoreTest {
 
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testRecursiveCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.withRecursive(TestCTE.class)
@@ -256,7 +254,7 @@ public class CTETest extends AbstractCoreTest {
 
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testPaginationWithRecursiveCte() {
         CriteriaBuilder<RecursiveEntity> cb = cbf.create(em, RecursiveEntity.class).orderByAsc("id");
         // The CTE doesn't really matter, it's just there to trigger #570
@@ -283,7 +281,7 @@ public class CTETest extends AbstractCoreTest {
 
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testRecursiveCTEAdvanced() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class, "t").where("t.level").ltExpression("2");
         cb.withRecursive(TestAdvancedCTE1.class)
@@ -325,7 +323,7 @@ public class CTETest extends AbstractCoreTest {
 
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testRecursiveCTEPagination() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
         cb.withRecursive(TestCTE.class)
@@ -397,7 +395,7 @@ public class CTETest extends AbstractCoreTest {
     // NOTE: Apparently H2 before 1.4.199 produces wrong results when a CTE is used with IN predicate
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQuery() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)
@@ -495,7 +493,7 @@ public class CTETest extends AbstractCoreTest {
 
     // TODO: Oracle requires a cycle clause #295
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testRecursiveCTEPaginationIdQueryLeftJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.withRecursive(TestCTE.class)
@@ -588,7 +586,7 @@ public class CTETest extends AbstractCoreTest {
     
     // NOTE: Apparently H2 before 1.4.199 can't handle multiple CTEs
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testCTEInSubquery() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
             .from(RecursiveEntity.class, "r")
@@ -619,7 +617,7 @@ public class CTETest extends AbstractCoreTest {
 
     // NOTE: Apparently H2 can't handle multiple CTEs
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoH2.class, NoEclipselink.class })
     public void testBindEmbeddable() {
         CriteriaBuilder<TestAdvancedCTE2> cb = cbf.create(em, TestAdvancedCTE2.class);
         cb.with(TestAdvancedCTE1.class, false)
@@ -659,7 +657,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testBindEmbeddableWithNullBindingsForJoinableAttributes() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
         cb.with(TestAdvancedCTE1.class, false)
@@ -693,7 +691,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testWithStartSetEmptyRightSide() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
         cb.withStartSet(TestAdvancedCTE1.class, false)
@@ -718,7 +716,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testWithStartSetEmptyRightSideLeaf() {
         CriteriaBuilder<TestAdvancedCTE1> cb = cbf.create(em, TestAdvancedCTE1.class);
         cb.withStartSet(TestAdvancedCTE1.class, false)
@@ -745,7 +743,7 @@ public class CTETest extends AbstractCoreTest {
 
     @Test
     // NOTE: H2 does not support the PARTITION clause in the ROW_NUMBER function, so we can't emulate EXCEPT ALL
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoH2.class, NoMySQL.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testWithStartSetEmptyLeftSideLeaf() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class)
         .withStartSet(TestCTE.class, false)
@@ -774,7 +772,7 @@ public class CTETest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testBuilderEndTracking() {
         FullSelectCTECriteriaBuilder<CriteriaBuilder<TestCTE>> cb = cbf.create(em, TestCTE.class).with(TestCTE.class, false);
         cb.from(RecursiveEntity.class, "e")
@@ -793,7 +791,7 @@ public class CTETest extends AbstractCoreTest {
 
     // from issue #513
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testNestedSizeInCte() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .with(TestCTE.class, false)
@@ -815,7 +813,7 @@ public class CTETest extends AbstractCoreTest {
     // For issue #1563
     @Test
     // NOTE: MySQL doesn't support nesting set operands i.e. `q1 union (q2 union q3)` is illegal, but `q1 union q2 union q3` is fine. Let's ignore that for now
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoEclipselink.class, NoMySQL.class })
     public void testInlineInSetOperand() {
         CriteriaBuilder<Object[]> cb = cbf.create(em, Object[].class);
         cb.with(TestAdvancedCTE1.class, true)

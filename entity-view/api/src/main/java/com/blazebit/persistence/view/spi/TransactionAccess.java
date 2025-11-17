@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view.spi;
 
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 /**
  * A transaction control abstraction that allows to be independent of the concrete transaction technology.

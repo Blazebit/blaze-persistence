@@ -7,8 +7,8 @@ package com.blazebit.persistence.view.testsuite.entity;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class EmbeddableTestEntitySimpleEmbeddable2 implements Serializable {

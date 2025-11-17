@@ -8,10 +8,10 @@ package com.blazebit.persistence.examples.deltaspike.data.rest;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Cat;
 import com.blazebit.persistence.examples.deltaspike.data.rest.model.Person;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.ws.rs.ApplicationPath;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.ws.rs.ApplicationPath;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,10 +20,10 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@jakarta.ejb.Singleton
+@jakarta.ejb.Startup
 @ApplicationPath("rest")
-public class Application extends javax.ws.rs.core.Application {
+public class Application extends jakarta.ws.rs.core.Application {
 
     @Inject
     private EntityManager em;

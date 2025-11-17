@@ -10,21 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.SecondaryTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SecondaryTable;
 
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 /**
  * @author Giovanni Lovato
@@ -83,8 +83,7 @@ public class ServiceContract {
     @ManyToMany
     private Set<ServiceItem> serviceItems;
 
-    @Lob
-    @Type(type = "text")
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
     @Column(table = DETAIL)
     private String note;
 

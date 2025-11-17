@@ -76,8 +76,8 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void printCollection(Vector items, ExpressionSQLPrinter printer) {
-        prepare((List<Expression>) items, printer);
+    public void printCollection(List<Expression> items, ExpressionSQLPrinter printer) {
+        prepare(items, printer);
         // Certain functions don't allow binding on some platforms.
         if (printer.getPlatform().isDynamicSQLRequiredForFunctions() && !isBindingSupported()) {
             printer.getCall().setUsesBinding(false);
@@ -105,7 +105,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
             int index = argumentIndices[i];
             Expression item;
             if (index == -1) {
-                item = (Expression)items.elementAt(i);
+                item = items.get(i);
                 Writer w = printer.getWriter();
                 try {
                     printer.setWriter(NULL_WRITER);
@@ -115,7 +115,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
                 }
                 continue;
             }
-            item = (Expression)items.elementAt(index);
+            item = items.get(index);
             if ((this.selector == Ref) || ((this.selector == Deref) && (item.isObjectExpression()))) {
                 DatabaseTable alias = ((ObjectExpression)item).aliasForTable(((ObjectExpression)item).getDescriptor().getTables().firstElement());
                 printer.printString(alias.getNameDelimited(printer.getPlatform()));

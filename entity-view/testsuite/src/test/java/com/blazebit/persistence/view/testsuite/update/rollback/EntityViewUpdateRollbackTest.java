@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.rollback;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -25,8 +24,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,7 +38,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateRollbackTest extends AbstractEntityViewUpdateDocumentTest<UpdatableDocumentRollbackView> {
 
     public EntityViewUpdateRollbackTest(FlushMode mode, FlushStrategy strategy, boolean version) {

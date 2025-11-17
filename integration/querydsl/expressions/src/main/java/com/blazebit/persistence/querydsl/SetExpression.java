@@ -9,8 +9,6 @@ import com.querydsl.core.Fetchable;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.SubQueryExpression;
 
-import javax.annotation.Nonnegative;
-
 /**
  * Set expresion defines an interface for set operation queries.
  * Analog to {@link com.querydsl.sql.Union}, but also used for {@code INTERSECT} and {@code EXCEPT} operations.
@@ -27,7 +25,7 @@ public interface SetExpression<RT> extends SubQueryExpression<RT>, Fetchable<RT>
      * @param limit max rows
      * @return the current object
      */
-    SetExpression<RT> limit(@Nonnegative long limit);
+    SetExpression<RT> limit(long limit);
 
     /**
      * Set the offset for the query results
@@ -35,7 +33,7 @@ public interface SetExpression<RT> extends SubQueryExpression<RT>, Fetchable<RT>
      * @param offset row offset
      * @return the current object
      */
-    SetExpression<RT> offset(@Nonnegative long offset);
+    SetExpression<RT> offset(long offset);
 
     /**
      * Define the ordering of the query results

@@ -9,9 +9,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
+import jakarta.persistence.EntityManager;
+
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithDeepSubqueryEmbeddingView;
 import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryEmbeddingView;

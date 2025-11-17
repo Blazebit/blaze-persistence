@@ -30,6 +30,8 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]query[\\/]ParameterMetadataProviderImpl\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractCriteriaQueryParameterBinder\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]AbstractPartTreeBlazePersistenceQuery\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]QueryUtils\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]query[\\/]FixedJpaQueryCreator\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]base[\\/]repository[\\/]EntityViewAwareCrudMethodMetadataPostProcessor\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]BlazePersistenceRepositoryFactory\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]impl[\\/]repository[\\/]DefaultRepositoryInformation\.java$"/>
@@ -40,7 +42,7 @@
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortHandlerMethodArgumentResolver\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]webflux[\\/]impl[\\/]SortArgumentResolver\.java$"/>
 
-    <suppress checks="." files="[\\/]org[\\/]springframework[\\/]data[\\/]repository[\\/]config[\\/].*\.java$"/>
+    <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]spring[\\/]data[\\/]repository[\\/]config[\\/]BootstrapMode\.java$"/>
     <suppress checks="." files="[\\/]com[\\/]blazebit[\\/]persistence[\\/]integration[\\/]jsonb[\\/]jsonstructure[\\/].*\.java$"/>
 
     <!-- The implementation, testsuite and examples don't have to fit our Javadoc requirements -->

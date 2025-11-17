@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Predicate;
 
 /**
- * An {@link javax.persistence.criteria.Expression} for an aggregate function.
+ * An {@link jakarta.persistence.criteria.Expression} for an aggregate function.
  *
  * @param <X> The target type
  * @author Christian Beikov

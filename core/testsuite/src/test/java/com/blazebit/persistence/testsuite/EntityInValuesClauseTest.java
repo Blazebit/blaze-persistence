@@ -5,24 +5,23 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentTupleEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddedDocumentTupleEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import java.util.Arrays;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 import static org.junit.Assert.assertEquals;
 
@@ -75,7 +74,7 @@ public class EntityInValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void entityClassWithMultipleRelationsInValuesClause() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 
@@ -96,7 +95,7 @@ public class EntityInValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void entityClassWithEmbeddedIdInValuesClause() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 

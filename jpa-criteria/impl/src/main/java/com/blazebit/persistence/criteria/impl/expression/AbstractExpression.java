@@ -9,8 +9,8 @@ import com.blazebit.persistence.criteria.BlazeExpression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.expression.function.FunctionExpressionImpl;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;

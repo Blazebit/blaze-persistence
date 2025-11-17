@@ -19,7 +19,7 @@ import com.blazebit.persistence.view.testsuite.cache.model.PersonView;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *

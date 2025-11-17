@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-parent</artifactId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -26,52 +26,8 @@
         <module>spring-data-dgs</module>
         <module>spring-hateoas</module>
         <module>it-service-management</module>
-        <module>quarkus</module>
-<!--        <module>quarkus-3</module>-->
+        <module>quarkus-3</module>
         <module>microprofile-graphql</module>
     </modules>
-
-    <!-- Hibernate 6 is compiled with JDK 11, so we can only compile it, if we the build is running on a JDK 11 -->
-    <profiles>
-        <profile>
-            <id>jdk11+</id>
-            <activation>
-                <jdk>[11,)</jdk>
-            </activation>
-            <modules>
-                <module>showcase</module>
-                <module>deltaspike-data-rest</module>
-                <module>spring-data-webmvc</module>
-                <module>spring-data-webflux</module>
-                <module>spring-data-graphql</module>
-                <module>spring-data-spqr</module>
-                <module>spring-data-dgs</module>
-                <module>spring-hateoas</module>
-                <module>it-service-management</module>
-                <module>quarkus</module>
-                <module>microprofile-graphql</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>jdk17+</id>
-            <activation>
-                <jdk>[17,)</jdk>
-            </activation>
-            <modules>
-                <module>showcase</module>
-                <module>deltaspike-data-rest</module>
-                <module>spring-data-webmvc</module>
-                <module>spring-data-webflux</module>
-                <module>spring-data-graphql</module>
-                <module>spring-data-spqr</module>
-                <module>spring-data-dgs</module>
-                <module>spring-hateoas</module>
-                <module>it-service-management</module>
-                <module>quarkus</module>
-                <module>quarkus-3</module>
-                <module>microprofile-graphql</module>
-            </modules>
-        </profile>
-    </profiles>
 
 </project>

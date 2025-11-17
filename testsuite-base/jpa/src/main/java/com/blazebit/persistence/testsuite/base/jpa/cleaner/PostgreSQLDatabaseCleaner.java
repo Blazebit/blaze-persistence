@@ -223,7 +223,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 
     @Override
     public void applyTargetDatabasePropertyModifications(Map<Object, Object> properties, String databaseName) {
-        String jdbcUrl = (String) properties.get("javax.persistence.jdbc.url");
+        String jdbcUrl = (String) properties.get("jakarta.persistence.jdbc.url");
         try {
             jdbcUrl = "jdbc:" + new URIBuilder(jdbcUrl.substring(jdbcUrl.indexOf(':') + 1))
                     .setPath(databaseName)
@@ -231,12 +231,12 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
         } catch (URISyntaxException e) {
             throw new RuntimeException();
         }
-        properties.put("javax.persistence.jdbc.url", jdbcUrl);
+        properties.put("jakarta.persistence.jdbc.url", jdbcUrl);
     }
 
     @Override
     public void applyTargetSchemaPropertyModifications(Map<Object, Object> properties, String schemaName) {
-        String jdbcUrl = (String) properties.get("javax.persistence.jdbc.url");
+        String jdbcUrl = (String) properties.get("jakarta.persistence.jdbc.url");
         try {
             jdbcUrl = "jdbc:" + new URIBuilder(jdbcUrl.substring(jdbcUrl.indexOf(':') + 1))
                     .addParameter("currentSchema", schemaName)
@@ -244,6 +244,6 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
         } catch (URISyntaxException e) {
             throw new RuntimeException();
         }
-        properties.put("javax.persistence.jdbc.url", jdbcUrl);
+        properties.put("jakarta.persistence.jdbc.url", jdbcUrl);
     }
 }

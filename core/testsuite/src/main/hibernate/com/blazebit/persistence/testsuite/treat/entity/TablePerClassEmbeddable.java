@@ -5,8 +5,6 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
-import org.hibernate.annotations.ForeignKey;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,15 +12,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
+
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 
 @Embeddable
 public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase>, Serializable {
@@ -43,8 +44,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @Override
     @ManyToOne(fetch = FetchType.LAZY)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinColumn(name = "embeddableParent")
-    @ForeignKey(name = "none")
+    @JoinColumn(name = "embeddableParent", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public TablePerClassBase getParent() {
         return parent;
     }
@@ -70,8 +70,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpce_list")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpce_list", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public List<TablePerClassBase> getList() {
         return list;
     }
@@ -84,8 +83,7 @@ public class TablePerClassEmbeddable implements BaseEmbeddable<TablePerClassBase
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpce_map")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpce_map", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @MapKeyColumn(name = "tpce_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap() {
         return map;

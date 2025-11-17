@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-examples-quarkus-3</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jaxrs-jackson-jakarta</artifactId>
+            <artifactId>blaze-persistence-integration-jaxrs-jackson</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -86,7 +86,7 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
@@ -95,81 +95,46 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <version>3.3.2</version>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <addGeneratedAnnotation>false</addGeneratedAnnotation>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate-orm}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-metamodel</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>org.hibernate.orm</groupId>
+                                    <artifactId>hibernate-jpamodelgen</artifactId>
+                                    <version>${version.hibernate-apt}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                            </annotationProcessors>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -179,7 +144,7 @@
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
-                    <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
+                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
                     <version>${project.version}</version>
                     <scope>provided</scope>
                 </dependency>
@@ -188,81 +153,50 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.bsc.maven</groupId>
-                        <artifactId>maven-processor-plugin</artifactId>
-                        <version>3.3.2</version>
-                        <executions>
-                            <execution>
-                                <id>process</id>
-                                <goals>
-                                    <goal>process</goal>
-                                </goals>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <!-- source output directory -->
-                                    <outputDirectory>${project.build.directory}/metamodel</outputDirectory>
-                                    <processors>
-                                        <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-                                        <processor>
-                                            com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor
-                                        </processor>
-                                    </processors>
-                                    <optionMap>
-                                        <addGeneratedAnnotation>false</addGeneratedAnnotation>
-                                    </optionMap>
-                                </configuration>
-                            </execution>
-                        </executions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jpamodelgen</artifactId>
-                                <version>${version.hibernate-orm}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>blaze-persistence-entity-view-processor-jakarta</artifactId>
-                                <version>${project.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.xml.bind</groupId>
-                                <artifactId>jakarta.xml.bind-api</artifactId>
-                                <version>${version.jakarta-jaxb-api}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.sun.xml.bind</groupId>
-                                <artifactId>jaxb-impl</artifactId>
-                                <version>${version.jakarta-jaxb}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.transaction</groupId>
-                                <artifactId>jakarta.transaction-api</artifactId>
-                                <version>${version.jakarta-jta}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>jakarta.activation</groupId>
-                                <artifactId>jakarta.activation-api</artifactId>
-                                <version>${version.jakarta-activation}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-metamodel</id>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/metamodel</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <!-- Metamodel -->
+                                <dependency>
+                                    <groupId>org.hibernate.orm</groupId>
+                                    <artifactId>hibernate-jpamodelgen</artifactId>
+                                    <version>${version.hibernate-orm}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>blaze-persistence-entity-view-processor</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.xml.bind</groupId>
+                                    <artifactId>jakarta.xml.bind-api</artifactId>
+                                    <version>${version.jaxb-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>com.sun.xml.bind</groupId>
+                                    <artifactId>jaxb-impl</artifactId>
+                                    <version>${version.jaxb}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.transaction</groupId>
+                                    <artifactId>jakarta.transaction-api</artifactId>
+                                    <version>${version.jta-api}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>jakarta.activation</groupId>
+                                    <artifactId>jakarta.activation-api</artifactId>
+                                    <version>${version.activation-api}</version>
+                                </dependency>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                <processor>com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor</processor>
+                            </annotationProcessors>
+                            <!-- ORM 6.2 still added the javax annotation -->
+                            <compilerArgs>
+                                <compilerArg>-AaddGeneratedAnnotation=false</compilerArg>
+                            </compilerArgs>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

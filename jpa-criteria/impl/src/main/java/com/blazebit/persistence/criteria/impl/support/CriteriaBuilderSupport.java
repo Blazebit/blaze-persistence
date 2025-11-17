@@ -5,16 +5,16 @@
 
 package com.blazebit.persistence.criteria.impl.support;
 
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
 
 /**
  * An interface necessary to be able to compile against JPA 2.0 but let users use JPA 2.1 APIs.

@@ -16,9 +16,9 @@ import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.metamodel.MetamodelBuildingContext;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;

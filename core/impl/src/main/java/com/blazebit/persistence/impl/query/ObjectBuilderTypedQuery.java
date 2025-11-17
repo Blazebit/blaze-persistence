@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 
 /**
  *

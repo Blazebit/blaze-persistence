@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.spi;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 
 /**

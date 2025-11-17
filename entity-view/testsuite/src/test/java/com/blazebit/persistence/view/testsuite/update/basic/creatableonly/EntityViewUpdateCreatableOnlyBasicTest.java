@@ -5,14 +5,12 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic.creatableonly;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.update.basic.creatableonly.model.UpdatableDocumentBasicView;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.update.basic.creatableonly.model.UpdatableDocumentBasicView;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -22,8 +20,7 @@ import static org.junit.Assert.fail;
  * @author Christian Beikov
  * @since 1.2.0
  */
-// NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateCreatableOnlyBasicTest extends AbstractEntityViewTest {
 
     @Test

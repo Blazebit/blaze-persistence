@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.hibernate.base;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ConfigurationSource;
@@ -146,7 +145,6 @@ import java.util.stream.StreamSupport;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(ExtendedQuerySupport.class)
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());

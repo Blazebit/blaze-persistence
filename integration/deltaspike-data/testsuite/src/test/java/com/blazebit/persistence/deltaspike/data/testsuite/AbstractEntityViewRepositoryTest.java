@@ -19,8 +19,8 @@ import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.junit.After;
 import org.junit.Before;
 
-import javax.inject.Inject;
-import javax.persistence.EntityTransaction;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityTransaction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

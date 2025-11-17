@@ -7,8 +7,8 @@ package com.blazebit.persistence.spring.data.testsuite.webflux.config;
 
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import java.util.Properties;
 
 /**

@@ -33,17 +33,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceProviderResolver;
-import javax.persistence.spi.PersistenceProviderResolverHolder;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceProviderResolver;
+import jakarta.persistence.spi.PersistenceProviderResolverHolder;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -120,8 +120,8 @@ public abstract class AbstractJpaPersistenceTest {
     @BeforeClass
     public static void initLogging() {
         try {
-            LogManager.getLogManager().readConfiguration(AbstractJpaPersistenceTest.class.getResourceAsStream(
-                    "/logging.properties"));
+            LogManager.getLogManager().readConfiguration(Thread.currentThread().getContextClassLoader().getResourceAsStream(
+                    "logging.properties"));
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -598,7 +598,7 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected Properties createProperties(String dbAction) {
         Properties properties = createDefaultProperties();
-        properties.put("javax.persistence.schema-generation.database.action", dbAction);
+        properties.put("jakarta.persistence.schema-generation.database.action", dbAction);
         String targetDatabase = getTargetDatabase();
         String targetSchema = getTargetSchema();
         if (targetDatabase != null) {
@@ -617,12 +617,12 @@ public abstract class AbstractJpaPersistenceTest {
 
     private static Properties createDefaultProperties() {
         Properties properties = new Properties();
-        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"));
-        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", "user"));
-        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", "password"));
-        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver", "org.h2.Driver"));
-        properties.put("javax.persistence.sharedCache.mode", "NONE");
-        properties.put("javax.persistence.schema-generation.database.action", "none");
+        properties.put("jakarta.persistence.jdbc.url", System.getProperty("jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"));
+        properties.put("jakarta.persistence.jdbc.user", System.getProperty("jdbc.user", "user"));
+        properties.put("jakarta.persistence.jdbc.password", System.getProperty("jdbc.password", "password"));
+        properties.put("jakarta.persistence.jdbc.driver", System.getProperty("jdbc.driver", "org.h2.Driver"));
+        properties.put("jakarta.persistence.sharedCache.mode", "NONE");
+        properties.put("jakarta.persistence.schema-generation.database.action", "none");
         return properties;
     }
 
@@ -687,10 +687,10 @@ public abstract class AbstractJpaPersistenceTest {
     private DataSource getDataSource(Map<Object, Object> properties) {
         if (dataSource != null) {
             // Remove properties that are normally removed
-            properties.remove("javax.persistence.jdbc.driver");
-            properties.remove("javax.persistence.jdbc.url");
-            properties.remove("javax.persistence.jdbc.user");
-            properties.remove("javax.persistence.jdbc.password");
+            properties.remove("jakarta.persistence.jdbc.driver");
+            properties.remove("jakarta.persistence.jdbc.url");
+            properties.remove("jakarta.persistence.jdbc.user");
+            properties.remove("jakarta.persistence.jdbc.password");
 
             properties.remove("hibernate.connection.driver_class");
             properties.remove("hibernate.connection.url");
@@ -712,14 +712,14 @@ public abstract class AbstractJpaPersistenceTest {
     protected DataSource createDataSource(Map<Object, Object> properties, Consumer<Connection> connectionCustomizer) {
         try {
             // Load the driver
-            Class.forName((String) properties.remove("javax.persistence.jdbc.driver"));
+            Class.forName((String) properties.remove("jakarta.persistence.jdbc.driver"));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return createDataSource(
-                (String) properties.remove("javax.persistence.jdbc.url"),
-                (String) properties.remove("javax.persistence.jdbc.user"),
-                (String) properties.remove("javax.persistence.jdbc.password"),
+                (String) properties.remove("jakarta.persistence.jdbc.url"),
+                (String) properties.remove("jakarta.persistence.jdbc.user"),
+                (String) properties.remove("jakarta.persistence.jdbc.password"),
                 connectionCustomizer
         );
     }

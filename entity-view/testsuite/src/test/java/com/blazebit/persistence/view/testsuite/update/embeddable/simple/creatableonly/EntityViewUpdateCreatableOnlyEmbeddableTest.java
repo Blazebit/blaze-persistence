@@ -5,10 +5,7 @@
 
 package com.blazebit.persistence.view.testsuite.update.embeddable.simple.creatableonly;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.update.embeddable.simple.creatableonly.model.UpdatableDocumentEmbeddableView;
 import org.junit.Test;
@@ -23,7 +20,7 @@ import static org.junit.Assert.fail;
  * @since 1.2.0
  */
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateCreatableOnlyEmbeddableTest extends AbstractEntityViewTest {
 
     @Test

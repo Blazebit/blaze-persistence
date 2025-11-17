@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 /**
  * @author Christian Beikov

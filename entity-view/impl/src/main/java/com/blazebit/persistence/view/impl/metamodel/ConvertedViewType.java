@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.type.TypeConverter;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -274,7 +274,7 @@ public class ConvertedViewType<X> implements ViewTypeImplementor<X> {
     }
 
     @Override
-    public Map<String, javax.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
+    public Map<String, jakarta.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
         return delegate.getEntityViewRootTypes();
     }
 

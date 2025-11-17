@@ -12,12 +12,12 @@ import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.PathTypeExpression;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,7 +105,7 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public <E, C extends Collection<E>> BlazeExpression<C> get(PluralAttribute<X, C, E> attribute) {
+    public <E, C extends Collection<E>> BlazeExpression<C> get(PluralAttribute<? super X, C, E> attribute) {
         checkGet(attribute);
         PluralAttributePath<C> path = (PluralAttributePath<C>) getAttributePath(attribute.getName());
         if (path == null) {
@@ -117,7 +117,7 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements B
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public <K, V, M extends Map<K, V>> BlazeExpression<M> get(MapAttribute<X, K, V> attribute) {
+    public <K, V, M extends Map<K, V>> BlazeExpression<M> get(MapAttribute<? super X, K, V> attribute) {
         checkGet(attribute);
         PluralAttributePath<M> path = (PluralAttributePath<M>) getAttributePath(attribute.getName());
         if (path == null) {

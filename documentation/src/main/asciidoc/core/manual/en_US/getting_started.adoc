@@ -56,24 +56,6 @@ The required dependencies for the core module are
 </dependency>
 ----
 
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-core-api-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-core-impl-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
 Depending on the JPA provider that should be used, one of the following integrations is required
 
 [[maven-setup-hibernate72]]
@@ -115,162 +97,6 @@ Depending on the JPA provider that should be used, one of the following integrat
 </dependency>
 ----
 
-[[maven-setup-hibernate56-jakarta]]
-===== Hibernate 5.6+ Jakarta
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.6-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate56]]
-===== Hibernate 5.6
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate55-jakarta]]
-===== Hibernate 5.5 Jakarta
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.5-jakarta</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate55]]
-===== Hibernate 5.5
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.5</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate54]]
-===== Hibernate 5.4
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.4</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate53]]
-===== Hibernate 5.3
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.3</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate52]]
-===== Hibernate 5.2
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate5]]
-===== Hibernate 5+
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate43]]
-===== Hibernate 4.3
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-hibernate42]]
-===== Hibernate 4.2
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-datanucleus51]]
-===== Datanucleus 5.1
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-datanucleus-5.1</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-datanucleus]]
-===== Datanucleus 4 and 5
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
 [[maven-setup-eclipselink]]
 ===== EclipseLink
 
@@ -279,19 +105,6 @@ Depending on the JPA provider that should be used, one of the following integrat
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-eclipselink</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>runtime</scope>
-</dependency>
-----
-
-[[maven-setup-openjpa]]
-===== OpenJPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-openjpa</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
@@ -307,18 +120,6 @@ When you work with Querydsl you can additionally have first class integration by
 <dependency>
     <groupId>com.blazebit</groupId>
     <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
-    <version>${blaze-persistence.version}</version>
-    <scope>compile</scope>
-</dependency>
-----
-
-or if you are using Jakarta JPA
-
-[source,xml]
-----
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-querydsl-expressions-jakarta</artifactId>
     <version>${blaze-persistence.version}</version>
     <scope>compile</scope>
 </dependency>
@@ -707,10 +508,10 @@ This query simply selects all Cat objects and is equivalent to following JPQL qu
 SELECT c FROM Cat c
 ----
 
-Once the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] method is called the expression
+Once the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(jakarta.persistence.EntityManager,%20java.lang.Class)[`create()`] method is called the expression
 returns a link:{core_jdoc}/persistence/CriteriaBuilder.html[`CriteriaBuilder<T>`] where `T` is specified via the second parameter of the
-link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] method and denotes the result type of the query.
-The default behavior of link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] is that the result type
+link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(jakarta.persistence.EntityManager,%20java.lang.Class)[`create()`] method and denotes the result type of the query.
+The default behavior of link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(jakarta.persistence.EntityManager,%20java.lang.Class)[`create()`] is that the result type
 is assumed to be the entity class from which to select. So if we would like to only select the cats' age we would have to write:
 
 [source,java]
@@ -722,7 +523,7 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 
 Here we can see that the criteria builder assigns a default alias (the simple lower-case name of the entity class)
 to the entity class from which we select (root entity) if we do not specify one. If we want to save some
-writing, both the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(javax.persistence.EntityManager,%20java.lang.Class)[`create()`] and
+writing, both the link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#create(jakarta.persistence.EntityManager,%20java.lang.Class)[`create()`] and
 the link:{core_jdoc}/persistence/FromBuilder.html#from(java.lang.Class,%20java.lang.String)[`from()`] method allow the specification of a custom alias for the root entity:
 
 [source,java]

@@ -5,12 +5,12 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
 import java.util.List;
 
 /**
- * An {@link javax.persistence.criteria.Expression} for an ordered set-aggregate function.
+ * An {@link jakarta.persistence.criteria.Expression} for an ordered set-aggregate function.
  *
  * @param <X> The target type
  * @author Christian Beikov

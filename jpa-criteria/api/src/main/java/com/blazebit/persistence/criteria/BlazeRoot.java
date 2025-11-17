@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.Root;
 
 /**
  * An extended version of {@link Root}.

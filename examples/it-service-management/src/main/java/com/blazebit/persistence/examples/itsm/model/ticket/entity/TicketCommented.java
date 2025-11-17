@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.examples.itsm.model.ticket.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 
 /**
  * @author Giovanni Lovato

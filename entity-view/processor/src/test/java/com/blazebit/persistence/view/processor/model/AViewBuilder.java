@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticBuilder(AView.class)

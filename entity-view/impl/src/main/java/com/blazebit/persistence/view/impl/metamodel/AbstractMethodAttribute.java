@@ -23,9 +23,9 @@ import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -220,7 +220,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), getDeclaringType().getEntityClass(), isUpdatable(), getDeclaringType().getEntityViewRootTypes());
                 try {
                     mappingExpression.accept(visitor);
-                    Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+                    Map<Attribute<?, ?>, jakarta.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
 
                     if (possibleTargets.size() > 1) {
                         context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
@@ -301,7 +301,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                     for (String value : writableMappedByMappings.values()) {
                         visitor.clear();
                         context.getTypeValidationExpressionFactory().createPathExpression(value).accept(visitor);
-                        Map<Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
+                        Map<Attribute<?, ?>, jakarta.persistence.metamodel.Type<?>> possibleTargets = visitor.getPossibleTargets();
                         if (possibleTargets.size() > 1) {
                             context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
                         }

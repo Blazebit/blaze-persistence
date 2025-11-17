@@ -8,13 +8,13 @@ package com.blazebit.persistence.examples.itsm.model.customer.view;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.JoinType;
@@ -48,7 +48,7 @@ public interface AbstractCustomerSummary extends AbstractCustomerBase {
     @EntityView(TicketCountCte.class)
     interface TicketAggregateView {
 
-        String getCustomerId();
+        Long getCustomerId();
 
         @Mapping("coalesce(totalTicketCount, 0L)")
         long getTotalTicketCount();
@@ -62,7 +62,7 @@ public interface AbstractCustomerSummary extends AbstractCustomerBase {
     @Entity
     class TicketCountCte {
         @Id
-        String customerId;
+        Long customerId;
         long totalTicketCount;
         long openTicketCount;
     }
@@ -76,7 +76,7 @@ public interface AbstractCustomerSummary extends AbstractCustomerBase {
     @EntityView(ContractCountCte.class)
     interface ContractAggregateView {
 
-        String getCustomerId();
+        Long getCustomerId();
 
         @Mapping("coalesce(totalContractCount, 0L)")
         long getTotalContractCount();
@@ -90,7 +90,7 @@ public interface AbstractCustomerSummary extends AbstractCustomerBase {
     @Entity
     class ContractCountCte {
         @Id
-        String customerId;
+        Long customerId;
         long totalContractCount;
         long activeContractCount;
         @ManyToMany
@@ -123,7 +123,7 @@ public interface AbstractCustomerSummary extends AbstractCustomerBase {
                     .unionAll()
                     .from(ServiceContract.class, "c2")
                     .join("c2.addresses", "a", JoinType.INNER)
-                    .bind("customerId").select("a.id")
+                    .bind("customerId").select("cast_long(a.id)")
                     .bind("totalContractCount").select("count(*)")
                     .bind("activeContractCount").select("count(CASE WHEN c2.endingDate >= current_date THEN 1 END)")
                     .endSet()

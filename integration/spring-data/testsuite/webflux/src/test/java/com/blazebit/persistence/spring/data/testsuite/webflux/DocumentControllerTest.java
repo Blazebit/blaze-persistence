@@ -52,7 +52,7 @@ public class DocumentControllerTest extends AbstractSpringTest {
 //                .expectStatus().isOk()
                 .expectBody()
                 // Then
-				.json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
+                .json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
     }
 
     @Test
@@ -74,7 +74,7 @@ public class DocumentControllerTest extends AbstractSpringTest {
 //                .expectStatus().isOk()
                 .expectBody()
                 // Then
-				.json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
+                .json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
     }
 
     @Test
@@ -95,7 +95,7 @@ public class DocumentControllerTest extends AbstractSpringTest {
 //                .expectStatus().isOk()
                 .expectBody()
                 // Then
-				.json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
+                .json("{\"id\":" + d1.getId() + ",\"name\":\"D2\",\"optionalParameter\":null,\"owner\":null,\"ownerDocumentCount\":0,\"someInstant\":\"1970-01-01T00:00:00Z\"}");
     }
 
     private Document createDocument(String name) {

@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.integration.hibernate.base.HibernateAccess;
 import com.blazebit.persistence.integration.hibernate.base.HibernateReturningResult;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -21,7 +20,6 @@ import java.lang.reflect.Proxy;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(HibernateAccess.class)
 public class Hibernate62Access implements HibernateAccess {
 
     @Override

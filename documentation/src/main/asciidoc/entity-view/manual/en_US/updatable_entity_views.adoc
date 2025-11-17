@@ -83,7 +83,7 @@ Still, the object can safely make use of the primary key based equals-hashCode i
 
 === API usage
 
-An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.save(EntityManager em, Object view)`]
+An updatable as well as an creatable entity view is flushed by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.save(EntityManager em, Object view)`]
 or one of its variants and will flush changes according to the flush strategy and mode. Changes to collections are flushed depending on the collection mapping, flush strategy and JPA provider support.
 
 The query flush strategy requires support for collection DML queries which is currently only provided with Hibernate.
@@ -96,8 +96,8 @@ INFO: {projectname} will manage inverse relationships automatically and even upd
 Creatable entity views are constructed via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#create(java.lang.Class)[`EntityViewManager.create(Class type)`] and
 always result in a persist when being flushed directly or through an updatable attribute having the `CascadeType.PERSIST` enabled.
 
-Deletion of entities through view types works either by supplying an existing view object to link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.remove(EntityManager em, Object view)`]
-or by entity id via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.remove(EntityManager em, Class viewType, Object id)`].
+Deletion of entities through view types works either by supplying an existing view object to link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.remove(EntityManager em, Object view)`]
+or by entity id via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.remove(EntityManager em, Class viewType, Object id)`].
 
 The big advantage of using the remove APIs is that {projectname} will reduce the amount of queries significantly, especially if the a view object is passed that already provides information about the object graph.
 
@@ -311,8 +311,8 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
-or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
+Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
+or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
 
 [source,java]
 ----
@@ -353,8 +353,8 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
-or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
+Additional listeners can be attached for an save or remove operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`]
+or link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#removeWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.removeWith(EntityManager em, Object view)`] methods.
 
 [source,java]
 ----
@@ -398,7 +398,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -456,7 +456,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -499,7 +499,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -539,7 +539,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -580,7 +580,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -626,7 +626,7 @@ interface CatUpdateView {
 }
 ----
 
-Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
+Additional listeners can be attached for an save operation by using the link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#saveWith(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.saveWith(EntityManager em, Object view)`] method.
 
 [source,java]
 ----
@@ -1899,7 +1899,7 @@ When removing a reference from entity A to entity B through an attribute that de
 Orphan removal also implies delete cascading, so entity B is also deleted when deleting entity A.
 
 Most JPA implementations only support cascading deletes and orphan removal for managed entities whereas DML statements for the entity types do not consider this configuration.
-{projectname} respects the settings all the way and strives to avoid data loading even for the removal by id action done via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[EntityViewManager.remove(EntityManager, Class, Object)].
+{projectname} respects the settings all the way and strives to avoid data loading even for the removal by id action done via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#remove(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[EntityViewManager.remove(EntityManager, Class, Object)].
 When an entity graph for an entity view type has an _arbitrary depth relationship_, {projectname} still has to do some entity data loading, but it tries to reduce the executed statements as much as possible.
 
 NOTE: At some point, DML statements might be grouped together via Updatable CTEs for DBMS that support that. For more information about that, see https://github.com/Blazebit/blaze-persistence/issues/500
@@ -2015,7 +2015,7 @@ CatBaseView catBaseView = //...
 CatOwnerUpdateView catOwnerUpdate = entityViewManager.convert(CatOwnerUpdateView.class, catBaseView);
 ----
 
-After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(javax.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.save(EntityManager, Object)]
+After setting the new owner and flushing the changes via link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#save(jakarta.persistence.EntityManager,%20java.lang.Object)[EntityViewManager.save(EntityManager, Object)]
 the view is converted back to the base view by invoking link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#convert(java.lang.Class,%20java.lang.Object,%20com.blazebit.persistence.view.ConvertOption...)[EntityViewManager.convert(Class, Object, ConvertOption...)] again.
 
 [source,java]

@@ -21,7 +21,8 @@ import java.lang.reflect.Type;
 
 /**
  * @author Christian Beikov
- * @since 1.4.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJackson2HttpMessageConverter {
 
@@ -76,7 +77,7 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
             }
             return entityViewAwareObjectMapper.readerFor(javaType).readValue(inputMessage.getBody());
         } catch (IOException ex) {
-            throw new HttpMessageNotReadableException("Could not read document: " + ex.getMessage(), ex);
+            throw new HttpMessageNotReadableException("Could not read document: " + ex.getMessage(), ex, inputMessage);
         }
     }
 }

@@ -5,21 +5,6 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.ConfigurationProperties;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.entity.KeysetEntity2;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +12,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import com.blazebit.persistence.ConfigurationProperties;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.testsuite.entity.KeysetEntity2;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -36,9 +35,6 @@ import static org.junit.Assert.assertNull;
  * @author Moritz Becker
  * @since 1.2.0
  */
-// DataNucleus has a bug with null precedence rendering
-// see https://github.com/datanucleus/datanucleus-rdbms/issues/224
-@Category({ NoDatanucleus.class })
 @RunWith(Parameterized.class)
 public class OptimizedKeysetPaginationNullsTest extends AbstractCoreTest {
 

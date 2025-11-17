@@ -29,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @ContextConfiguration(classes = {DocumentControllerTest.TestConfig.class, HateoasAwareBlazePersistenceWebConfiguration.class})
 public class DocumentControllerTest extends AbstractSpringWebMvcTest {
@@ -41,7 +42,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
     public void testDocumentControllerHeaders() throws Exception {
         // Given
         Document d1 = createDocument("D1");
-        Document d2 = createDocument("D2");
+        createDocument("D2");
 
         // When / Then
         mockMvc.perform(get("/documents?size=1").accept(MediaType.APPLICATION_JSON))
@@ -54,7 +55,7 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
     public void testDocumentControllerHateoas() throws Exception {
         // Given
         Document d1 = createDocument("D1");
-        Document d2 = createDocument("D2");
+        createDocument("D2");
 
         // When / Then
         mockMvc.perform(get("/documents?size=1").accept("application/hal+json"))

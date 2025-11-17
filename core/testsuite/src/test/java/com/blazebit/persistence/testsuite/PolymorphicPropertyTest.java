@@ -6,7 +6,8 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.0.0
  */
 // NOTE: Hibernate 6.0 supports this when only a single subtype contains the attribute
-@Category(NoHibernate60.class)
+@Category(NoHibernate.class)
 public class PolymorphicPropertyTest extends AbstractCoreTest {
     
     @Override

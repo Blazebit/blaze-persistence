@@ -14,7 +14,7 @@ import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 import com.blazebit.persistence.view.impl.update.UpdateQueryFactory;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.Collections;
 import java.util.List;
 

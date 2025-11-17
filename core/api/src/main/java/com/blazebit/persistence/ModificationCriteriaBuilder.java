@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 /**
  * A builder for modification queries.

@@ -20,7 +20,7 @@ import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 import java.util.List;
 
 /**

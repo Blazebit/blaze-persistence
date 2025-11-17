@@ -42,7 +42,7 @@ import com.blazebit.persistence.parser.predicate.PredicateQuantifier;
 import com.blazebit.persistence.parser.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Collection;
 
 /**

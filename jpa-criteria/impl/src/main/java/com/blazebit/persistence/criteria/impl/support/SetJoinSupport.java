@@ -5,9 +5,9 @@
 
 package com.blazebit.persistence.criteria.impl.support;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.SetJoin;
 
 /**
  * An interface necessary to be able to compile against JPA 2.0 but let users use JPA 2.1 APIs.

@@ -5,20 +5,17 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.entity.Document;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -29,8 +26,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 public class InTest extends AbstractCoreTest {
 
     @Test
-    // NOTE: See https://hibernate.atlassian.net/browse/HHH-9630
-    @Category({ NoHibernate42.class, NoHibernate43.class })
     public void testBuggyHqlIn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });
@@ -46,8 +41,6 @@ public class InTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: See https://hibernate.atlassian.net/browse/HHH-9630
-    @Category({ NoHibernate42.class, NoHibernate43.class })
     public void testBuggyHqlIn1() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });

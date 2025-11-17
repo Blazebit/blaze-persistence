@@ -5,35 +5,29 @@
 
 package com.blazebit.persistence.view.testsuite.collections.subview;
 
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
+import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
+import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.testsuite.entity.DocumentForEntityKeyMaps;
-import com.blazebit.persistence.testsuite.entity.PersonForEntityKeyMaps;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentCollectionsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewDocumentForEntityKeyMapsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewPersonForEntityKeyMapsView;
 import com.blazebit.persistence.view.testsuite.collections.subview.model.SubviewSimpleDocumentForEntityKeyMapsView;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
 
-import javax.persistence.EntityManager;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Moritz Becker
@@ -91,9 +85,6 @@ public class EntityMapKeySubviewTest<T extends SubviewDocumentCollectionsView> e
      * Test for https://github.com/Blazebit/blaze-persistence/issues/329
      */
     @Test
-    // NOTE: Hibernate 5.0 and lower don't work because of https://hibernate.atlassian.net/browse/HHH-10537 and https://hibernate.atlassian.net/browse/HHH-10577
-    // NOTE: DataNucleus does not support this yet: https://github.com/datanucleus/datanucleus-core/issues/182
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class })
     public void testCollections() {
         EntityViewManager evm = build(
                 SubviewDocumentForEntityKeyMapsView.class,

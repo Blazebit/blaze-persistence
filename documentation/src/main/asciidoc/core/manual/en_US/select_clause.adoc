@@ -60,9 +60,9 @@ NOTE: This even works with embedded ids with Hibernate on DBMS that don't suppor
 
 === Tuple select
 
-When selecting multiple expressions, you can decide between the query return types `Object[]` and `javax.persistence.Tuple`.
+When selecting multiple expressions, you can decide between the query return types `Object[]` and `jakarta.persistence.Tuple`.
 
-WARNING: Some persistence providers might return the object directly when having just a single select item, even if you pass `Object[]`. This will not happen when using `javax.persistence.Tuple` as query return type.
+WARNING: Some persistence providers might return the object directly when having just a single select item, even if you pass `Object[]`. This will not happen when using `jakarta.persistence.Tuple` as query return type.
 
 You can define aliases for select items and access the tuple elements by name or by a 0-based index.
 

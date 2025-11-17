@@ -7,7 +7,7 @@ import com.blazebit.persistence.view.metamodel.AttributePathWrapper;
 import com.blazebit.persistence.view.metamodel.MethodPluralAttribute;
 import com.blazebit.persistence.view.metamodel.MethodSingularAttribute;
 import java.util.Collection;
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticRelation(BView.class)

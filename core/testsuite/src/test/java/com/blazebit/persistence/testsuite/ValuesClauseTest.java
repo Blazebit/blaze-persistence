@@ -5,16 +5,25 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.sql.Connection;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.function.Consumer;
+import javax.sql.DataSource;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
@@ -26,25 +35,9 @@ import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.PersonCTE;
 import com.blazebit.persistence.testsuite.entity.StringIdCTE;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.function.Consumer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -124,7 +117,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunction() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Collections.singleton(1L));
@@ -144,7 +137,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(NameObject.class, "embeddable", Collections.singleton(new NameObject("abc", "123")));
@@ -167,7 +160,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithPluralOnlyEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(NameObjectContainer.class, "embeddable", Collections.singleton(new NameObjectContainer("test", new NameObject("abc", "123"))));
@@ -190,7 +183,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikeBasic() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "name", "n", Collections.singleton("someName"));
@@ -205,7 +198,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikeEnum() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "documentType", "t", Collections.singleton(DocumentType.NOVEL));
@@ -220,7 +213,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikeCalendar() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         Calendar cal = Calendar.getInstance();
@@ -241,7 +234,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikeEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "nameObject", "t", Collections.singleton(new NameObject("123", "abc")));
@@ -256,7 +249,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikeEntity() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "owner", "t", Collections.singleton(new Person(1L)));
@@ -271,7 +264,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikePluralBasic() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "strings", "t", Collections.singleton("test"));
@@ -287,7 +280,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Only the latest Hibernate 5.2 properly implements support for selecting element collections
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikePluralEmbeddable() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "names", "t", Collections.singleton(new NameObject("123", "abc")));
@@ -302,7 +295,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikePluralEntity() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "partners", "t", Collections.singleton(new Person(1L)));
@@ -317,7 +310,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikePluralIndex() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "INDEX(people)", "t", Collections.singleton(1));
@@ -332,7 +325,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLikePluralKey() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Document.class, "KEY(stringMap)", "t", Collections.singleton("key"));
@@ -347,7 +340,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testIdentifiableValuesEntityFunctionGroupBy() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 
@@ -364,7 +357,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     // Test for #305
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithParameterInSelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
@@ -387,7 +380,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
 
     // Test for #305
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithParameterInSelectSubquery() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.from(Document.class, "doc");
@@ -407,7 +400,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionParameters() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
@@ -432,8 +425,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionLeftJoin() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L, 3L));
@@ -464,8 +456,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithEntity() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(IntIdEntity.class, "intEntity", Arrays.asList(
@@ -496,8 +487,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionParameter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.fromValues(IntIdEntity.class, "intEntity", 1);
@@ -550,8 +540,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionParameterWithoutNullsFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -574,11 +563,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-//    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    // No hibernate for now, see https://hibernate.atlassian.net/browse/HHH-11340
-    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionInCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -609,7 +594,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithCteEntity() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -628,7 +613,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testFromValuesWithEmbeddables() {
         final Document doc1 = new Document("doc1");
         doc1.setNameObject(new NameObject("doc1Primary", "doc1Secondary"));
@@ -646,8 +631,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testValuesEntityFunctionWithCteInCteWithSetOperation() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -681,8 +665,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     }
 
     @Test
-    // H2 before 1.4.199 does not support parameters in the CTE http://dba.stackexchange.com/a/78449
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testIdentifiableValuesEntityFunction() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
         cb.setProperty(ConfigurationProperties.VALUES_CLAUSE_FILTER_NULLS, "false");
@@ -711,7 +694,7 @@ public class ValuesClauseTest extends AbstractCoreTest {
     // test for #1975
     @Test
     // NOTE: For Oracle, we use to_clob in VALUES for cast_string which is problematic
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoOracle.class })
     public void testValuesInInlinedCte() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
 

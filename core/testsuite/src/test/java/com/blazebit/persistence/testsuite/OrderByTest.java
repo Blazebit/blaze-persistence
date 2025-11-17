@@ -5,24 +5,21 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.parser.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.Document;
-import org.junit.experimental.categories.Category;
+import com.blazebit.persistence.testsuite.entity.Person;
+import jakarta.persistence.Tuple;
 
-import javax.persistence.Tuple;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -171,8 +168,6 @@ public class OrderByTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: Report datanucleus issue
-    @Category({ NoDatanucleus.class })
     public void testOrderByAliasedCaseWhen() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 

@@ -363,16 +363,7 @@ public class ProxyFactoryTest extends AbstractEntityViewTest {
     }
 
     private void assertProxyEvmReferencesNull(Class<?> proxy) throws NoSuchFieldException, IllegalAccessException {
-        EntityViewManager proxyEvm = (EntityViewManager) proxy.getField(SerializableEntityViewManager.EVM_FIELD_NAME).get(null);
-        SerializableEntityViewManager serializableEvm =
-            (SerializableEntityViewManager) proxy.getField(
-                SerializableEntityViewManager.SERIALIZABLE_EVM_FIELD_NAME).get(null);
-        Field serializableEvmDelegateField = SerializableEntityViewManager.class.getDeclaredField(
-            SerializableEntityViewManager.SERIALIZABLE_EVM_DELEGATE_FIELD_NAME);
-        serializableEvmDelegateField.setAccessible(true);
-        EntityViewManager serializableEvmDelegate = (EntityViewManager) serializableEvmDelegateField.get(serializableEvm);
-        assertNull(proxyEvm);
-        assertNull(serializableEvmDelegate);
+        assertNull(proxy.getField(SerializableEntityViewManager.EVM_FIELD_NAME).get(null));
     }
 
     private <T> T getDeclaredFieldValue(Object obj, String fieldName, Class<T> resultType) {

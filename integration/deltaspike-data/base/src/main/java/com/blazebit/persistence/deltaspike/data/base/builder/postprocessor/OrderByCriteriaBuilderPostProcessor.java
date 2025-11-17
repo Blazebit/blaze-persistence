@@ -9,7 +9,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderPostProcessor;
 import org.apache.deltaspike.data.impl.builder.OrderDirection;
 
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Implementation is similar to {@link org.apache.deltaspike.data.impl.builder.postprocessor.OrderByQueryStringPostProcessor}

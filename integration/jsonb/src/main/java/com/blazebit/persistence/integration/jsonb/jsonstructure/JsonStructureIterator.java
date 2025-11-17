@@ -12,14 +12,14 @@
 
 package com.blazebit.persistence.integration.jsonb.jsonstructure;
 
-import javax.json.JsonString;
-import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
-import javax.json.stream.JsonParser;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.bind.JsonbException;
+import jakarta.json.stream.JsonParser;
 import java.util.Iterator;
 
 /**
- * Iterates over {@link javax.json.JsonStructure}.
+ * Iterates over {@link jakarta.json.JsonStructure}.
  */
 abstract class JsonStructureIterator implements Iterator<JsonParser.Event> {
 

@@ -10,7 +10,7 @@ import com.blazebit.persistence.view.PostRollbackListener;
 import com.blazebit.persistence.view.ViewListener;
 import com.blazebit.persistence.view.ViewTransition;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *

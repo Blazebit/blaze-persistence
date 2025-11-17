@@ -5,18 +5,14 @@
 
 package com.blazebit.persistence.view.testsuite.update.flatview.nested.updatableonly;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.updatableonly.model.UpdatableDocumentWithMapsView;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.updatableonly.model.UpdatableNameObjectContainerView;
 import com.blazebit.persistence.view.testsuite.update.flatview.nested.updatableonly.model.UpdatableNameObjectView;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -26,9 +22,7 @@ import static org.junit.Assert.fail;
  * @author Christian Beikov
  * @since 1.2.0
  */
-// NOTE: Apparently Hibernate 4 does not support a list of embeddables containing embeddables
-// NOTE: No Datanucleus support yet
-@Category({ NoHibernate42.class, NoHibernate43.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class })
 public class EntityViewUpdateNestedUpdatableOnlyFlatViewMapsTest extends AbstractEntityViewTest {
 
     @Test

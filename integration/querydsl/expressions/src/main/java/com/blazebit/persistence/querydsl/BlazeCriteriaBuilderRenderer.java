@@ -74,7 +74,7 @@ import com.querydsl.core.types.dsl.CollectionExpressionBase;
 import com.querydsl.jpa.JPAQueryMixin;
 import com.querydsl.jpa.JPQLTemplates;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

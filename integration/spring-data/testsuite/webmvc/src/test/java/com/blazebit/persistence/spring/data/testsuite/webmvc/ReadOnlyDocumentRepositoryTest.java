@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.EntityViewManager;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;

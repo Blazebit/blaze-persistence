@@ -7,7 +7,7 @@ package com.blazebit.persistence.examples.itsm.model.article.entity;
 
 import java.util.Objects;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Giovanni Lovato
