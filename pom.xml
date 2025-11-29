@@ -32,6 +32,7 @@
         <!-- Plugin versions -->
         <version.antrun.plugin>3.1.0</version.antrun.plugin>
         <version.assembly.plugin>3.6.0</version.assembly.plugin>
+        <version.buildhelper.plugin>3.6.1</version.buildhelper.plugin>
         <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
         <version.clean.plugin>3.3.1</version.clean.plugin>
         <version.compiler.plugin>3.13.0</version.compiler.plugin>
@@ -250,6 +251,8 @@
                         <exclude>**/src/test/java/com/blazebit/persistence/view/processor/model/**</exclude>
                         <exclude>**/src/test/java/javax/annotation/**</exclude>
                         <exclude>**/jpa-3.2-compatibility/src/main/java/module-info.java</exclude>
+
+                        <exclude>**/src/test/spring4/org/springframework/boot/test/autoconfigure/web/reactive/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
