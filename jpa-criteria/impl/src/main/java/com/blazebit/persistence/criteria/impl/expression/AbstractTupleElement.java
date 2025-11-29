@@ -9,7 +9,7 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 
-import javax.persistence.TupleElement;
+import jakarta.persistence.TupleElement;
 import java.io.Serializable;
 
 /**

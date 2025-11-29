@@ -9,7 +9,7 @@ import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Map;
 
 /**
@@ -41,7 +41,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingFinalSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
 
     /**
-     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#create(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.
      *
      * @param entityManager The entity manager to use for the criteria builder
@@ -65,7 +65,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias);
 
     /**
-     * Like {@link CriteriaBuilderFactory#delete(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#delete(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete class returns.
      *
      * @param entityManager The entity manager to use for the delete criteria builder
@@ -89,7 +89,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias);
 
     /**
-     * Like {@link CriteriaBuilderFactory#deleteCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#deleteCollection(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
      *
      * @param entityManager The entity manager to use for the delete criteria builder
@@ -116,7 +116,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> DeleteCriteriaBuilder<T> deleteCollection(EntityManager entityManager, Class<T> deleteOwnerClass, String alias, String collectionName);
 
     /**
-     * Like {@link CriteriaBuilderFactory#update(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#update(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the update class returns.
      *
      * @param entityManager The entity manager to use for the update criteria builder
@@ -140,7 +140,7 @@ public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSo
     public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias);
 
     /**
-     * Like {@link CriteriaBuilderFactory#updateCollection(javax.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
+     * Like {@link CriteriaBuilderFactory#updateCollection(jakarta.persistence.EntityManager, java.lang.Class, java.lang.String, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete owner class returns.
      *
      * @param entityManager The entity manager to use for the update criteria builder

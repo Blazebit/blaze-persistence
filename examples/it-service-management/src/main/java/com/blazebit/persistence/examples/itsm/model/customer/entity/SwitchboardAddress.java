@@ -8,7 +8,7 @@ package com.blazebit.persistence.examples.itsm.model.customer.entity;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Giovanni Lovato

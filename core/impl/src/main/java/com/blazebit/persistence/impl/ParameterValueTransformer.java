@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * @author Christian Beikov

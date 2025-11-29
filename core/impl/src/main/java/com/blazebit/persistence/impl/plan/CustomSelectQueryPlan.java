@@ -8,8 +8,8 @@ package com.blazebit.persistence.impl.plan;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.stream.Stream;
 

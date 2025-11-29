@@ -20,7 +20,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticBuilder(BView.class)

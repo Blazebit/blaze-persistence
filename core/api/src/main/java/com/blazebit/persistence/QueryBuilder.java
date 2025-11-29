@@ -6,7 +6,7 @@
 package com.blazebit.persistence;
 
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A base interface for builders that support normal query functionality.

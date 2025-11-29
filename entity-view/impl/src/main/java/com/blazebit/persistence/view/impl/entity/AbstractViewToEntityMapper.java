@@ -17,8 +17,8 @@ import com.blazebit.persistence.view.impl.update.flush.FetchGraphNode;
 import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

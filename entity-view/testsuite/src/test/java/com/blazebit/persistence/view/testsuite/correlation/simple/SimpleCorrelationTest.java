@@ -5,13 +5,10 @@
 
 package com.blazebit.persistence.view.testsuite.correlation.simple;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.view.testsuite.correlation.AbstractCorrelationTest;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinId;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewJoinNormal;
@@ -19,8 +16,6 @@ import com.blazebit.persistence.view.testsuite.correlation.simple.model.Document
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubqueryNormal;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselectId;
 import com.blazebit.persistence.view.testsuite.correlation.simple.model.DocumentSimpleCorrelationViewSubselectNormal;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -30,57 +25,53 @@ import org.junit.experimental.categories.Category;
 public class SimpleCorrelationTest extends AbstractCorrelationTest {
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelationNormal() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, null);
     }
 
     @Test
-    // NOTE: Datenucleus issue: https://github.com/datanucleus/datanucleus-api-jpa/issues/77
-    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelationId() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, null);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize2() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize2() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 2);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize4() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus4.class, NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize4() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 4);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationNormalSize20() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryNormal.class, 20);
     }
 
     @Test
     // NOTE: Requires values clause which currently is only available for Hibernate
-    @Category({ NoDatanucleus.class, NoOpenJPA.class, NoEclipselink.class})
+    @Category({ NoEclipselink.class})
     public void testSubqueryBatchedCorrelationIdSize20() {
         testCorrelation(DocumentSimpleCorrelationViewSubqueryId.class, 20);
     }
@@ -99,17 +90,15 @@ public class SimpleCorrelationTest extends AbstractCorrelationTest {
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinCorrelationNormal() {
         testCorrelation(DocumentSimpleCorrelationViewJoinNormal.class, null);
     }
 
     @Test
-    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
     // NOTE: Eclipselink renders a cross join at the wrong position in the SQL
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void testJoinCorrelationId() {
         testCorrelation(DocumentSimpleCorrelationViewJoinId.class, null);
     }

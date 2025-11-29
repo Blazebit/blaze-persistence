@@ -48,7 +48,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  *
  * @author Christian Beikov
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class KeysetPageableHandlerMethodArgumentResolver extends PageableHandlerMethodArgumentResolver implements KeysetPageableArgumentResolver {
 

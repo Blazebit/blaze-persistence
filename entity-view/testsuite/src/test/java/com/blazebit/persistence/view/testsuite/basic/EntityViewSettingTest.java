@@ -5,38 +5,32 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.basic.model.CustomRootPersonView;
 import com.blazebit.persistence.view.testsuite.basic.model.DocumentWithEntityView;
 import com.blazebit.persistence.view.testsuite.basic.model.FilteredDocument;
 import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
 
-import javax.persistence.EntityManager;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -198,12 +192,8 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     }
 
     @Test
-    @Category({ NoMySQLOld.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
-    // We need a left entity join for this so Hibernate < 5.1 can't be used
-    // MySQL before 8 didn't support lateral and also don't support correlated LIMIT subqueries in quantified predicates
     // EclipseLink doesn't support subqueries in functions which is required for LIMIT
-    // Datanucleus fails because of a NPE?
-    // OpenJPA has no function support
+    @Category({ NoEclipselink.class })
     public void testEntityViewFetchesWithFilterAndSorter() {
         EntityViewManager evm = build(DocumentWithEntityView.class, PersonView.class);
 

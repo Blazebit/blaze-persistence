@@ -5,8 +5,13 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.polymorphic;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.treat.entity.IntValueEmbeddable;
@@ -19,9 +24,7 @@ import com.blazebit.persistence.testsuite.treat.entity.SingleTableSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.SingleTableBaseView;
 import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.SingleTableSimpleBaseView;
@@ -29,12 +32,7 @@ import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.Sin
 import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.SingleTableSimpleSub2View;
 import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.SingleTableSub1View;
 import com.blazebit.persistence.view.testsuite.inheritance.polymorphic.model.SingleTableSub2View;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -46,7 +44,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.2.0
  */
 // NOTE: Eclipselink and Datanucleus have no real support for subtype property access
-@Category({ NoEclipselink.class, NoDatanucleus.class })
+@Category({ NoEclipselink.class })
 public class PolymorphicInheritanceTest extends AbstractEntityViewTest {
 
     private SingleTableSub1 base1;

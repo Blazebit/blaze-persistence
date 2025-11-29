@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 /**
  * A builder for paginated criteria queries.

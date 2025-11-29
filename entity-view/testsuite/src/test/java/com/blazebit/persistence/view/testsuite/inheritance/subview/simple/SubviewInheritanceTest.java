@@ -5,17 +5,21 @@
 
 package com.blazebit.persistence.view.testsuite.inheritance.subview.simple;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView1;
+import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView2;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView3;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.OldPersonView1;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.OldPersonView2;
@@ -26,17 +30,10 @@ import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.PersonBaseView3;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.SimpleDocumentView;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.SimplePersonSubView;
-import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.DocumentView2;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView1;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView2;
 import com.blazebit.persistence.view.testsuite.inheritance.subview.simple.model.YoungPersonView3;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -267,8 +264,6 @@ public class SubviewInheritanceTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // TODO: report that datanucleus thinks a NULL literal is of type Integer and normal integral literals are of type Long
-    @Category({ NoDatanucleus.class })
     public void inheritanceQuerySubviewInheritanceMappingWithoutBaseType() {
         this.evm = build(
                 DocumentView3.class,

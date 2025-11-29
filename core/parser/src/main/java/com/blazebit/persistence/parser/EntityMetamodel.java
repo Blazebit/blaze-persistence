@@ -5,16 +5,16 @@
 
 package com.blazebit.persistence.parser;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.metamodel.Type;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * This is a wrapper around the JPA {@link javax.persistence.metamodel.Metamodel} that allows additionally efficient access by other attributes than a Class.
+ * This is a wrapper around the JPA {@link jakarta.persistence.metamodel.Metamodel} that allows additionally efficient access by other attributes than a Class.
  *
  * @author Christian Beikov
  * @since 1.2.0

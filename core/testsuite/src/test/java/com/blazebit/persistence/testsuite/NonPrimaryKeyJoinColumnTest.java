@@ -7,16 +7,7 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.BookISBNReferenceEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -28,7 +19,7 @@ import com.blazebit.persistence.testsuite.entity.Workflow;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -58,7 +49,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Only Hibernate supports the single values association id access optimization, but doesn't do it for natural ids yet
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+    @Category({NoEclipselink.class})
 //    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "ref")
@@ -71,7 +62,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Only Hibernate supports the single values association id access optimization, but doesn't do it for natural ids yet
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+    @Category({NoEclipselink.class})
 //    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
@@ -83,7 +74,6 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class)
                 .innerJoin("book", "b")
@@ -95,7 +85,6 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoOpenJPA.class })
     public void testNonPrimaryKeySingleValuedAssociationId4() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "r")
                 .innerJoinOn("book", "b")
@@ -110,7 +99,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
 
     // NOTE: No JPA provider supports the optimized natural id access and only EclipseLink and Hibernate seem to support natural ids
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+    @Category({NoEclipselink.class})
     public void testNonPrimaryKeySingleValuedAssociationId5() {
         CriteriaBuilder<Tuple> cb1 = cbf.create(em, Tuple.class).from(BookISBNReferenceEntity.class, "r")
                 .innerJoinOn("bookNormal", "b")
@@ -132,7 +121,7 @@ public class NonPrimaryKeyJoinColumnTest extends AbstractCoreTest {
 
     // NOTE: No JPA provider supports the optimized natural id access and only EclipseLink and Hibernate seem to support natural ids
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class, NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class})
+    @Category({NoEclipselink.class})
     public void testNonPrimaryKeySingleValuedAssociationIdInUpdate() {
         Person owner = new Person("p1");
         BookEntity bookEntity = new BookEntity();

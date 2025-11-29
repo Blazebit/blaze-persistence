@@ -5,11 +5,12 @@
 
 package com.blazebit.persistence.criteria;
 
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityContainer;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
@@ -20,10 +21,7 @@ import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity_;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.NameObject;
 import com.blazebit.persistence.testsuite.entity.NameObject_;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +31,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.6.3
  */
 // NOTE: See EmbeddableComplexTest for details about why we need to ignore DataNucleus and EclipseLink
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class EmbeddableJoinTest extends AbstractCoreTest {
 
     @Override

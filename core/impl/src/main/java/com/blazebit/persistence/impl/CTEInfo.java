@@ -7,7 +7,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Map;
 

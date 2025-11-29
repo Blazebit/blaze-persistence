@@ -5,7 +5,6 @@
 
 package com.blazebit.persistence.integration.hibernate;
 
-import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
@@ -16,7 +15,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  * @author Christian Beikov
  * @since 1.6.7
  */
-@ServiceProvider(AdditionalMappingContributor.class)
 public class Hibernate7AdditionalMappingContributor implements AdditionalMappingContributor {
     @Override
     public void contribute(AdditionalMappingContributions contributions, InFlightMetadataCollector metadata, ResourceStreamLocator resourceStreamLocator, MetadataBuildingContext buildingContext) {

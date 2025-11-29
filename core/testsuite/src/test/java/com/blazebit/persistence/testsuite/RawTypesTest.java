@@ -5,11 +5,10 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.entity.RawTypeEntity;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.entity.RawTypeEntity;
 
 /**
  * This test is for issue #344
@@ -26,9 +25,7 @@ public class RawTypesTest extends AbstractCoreTest {
         };
     }
 
-    // NOTE: Datanucleus does not support the MapKeyClass yet: https://github.com/datanucleus/datanucleus-core/issues/185
     @Test
-    @Category({ NoDatanucleus.class })
     public void buildingQueryWithEntityThatUsesRawTypesWorks() {
         CriteriaBuilder<RawTypeEntity> criteria = cbf.create(em, RawTypeEntity.class, "d");
         criteria.select("d.list.id");

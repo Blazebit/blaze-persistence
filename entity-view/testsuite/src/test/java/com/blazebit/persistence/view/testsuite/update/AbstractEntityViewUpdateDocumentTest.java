@@ -13,7 +13,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Date;
 
 /**

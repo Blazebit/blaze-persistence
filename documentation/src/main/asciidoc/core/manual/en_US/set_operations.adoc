@@ -66,12 +66,12 @@ You can also make use of set operations in CTEs like the following example shows
 [source,java]
 ----
 @CTE    // from com.blazebit.persistence
-@Entity // from javax.persistence
+@Entity // from jakarta.persistence
 public class MyCte {
 
     private Long id;
 
-    @Id // from javax.persistence
+    @Id // from jakarta.persistence
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 }
@@ -242,7 +242,7 @@ UNION
 SELECT cat FROM Cat cat WHERE cat.name = :param_3
 ----
 
-The left nesting is started by link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#startSet(javax.persistence.EntityManager,%20java.lang.Class)[`startSet()`] which
+The left nesting is started by link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#startSet(jakarta.persistence.EntityManager,%20java.lang.Class)[`startSet()`] which
 more or less represents the _open parenthesis_. The parenthesis is then closed by calling `endSet()`.
 
 At the beginning of every _nesting group_, you can start as many left nestings as you want by calling link:{core_jdoc}/persistence/StartOngoingSetOperationBuilder.html#startSet()[`startSet()`]

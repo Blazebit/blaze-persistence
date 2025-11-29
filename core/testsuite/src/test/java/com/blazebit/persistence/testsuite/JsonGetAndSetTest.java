@@ -4,25 +4,24 @@
  */
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoFirebird;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.JsonDocument;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Moritz Becker
@@ -56,7 +55,7 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class })
+    @Category({ NoH2.class })
     public void testJsonGetWithLiteralPathElements() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
                 .select("d.content")
@@ -102,7 +101,7 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class })
+    @Category({ NoH2.class })
     public void testJsonGetWithLiteralJsonPath() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
             .select("d.content")
@@ -124,7 +123,7 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class, NoOracle.class })
+    @Category({ NoH2.class, NoOracle.class })
     public void testJsonGetWithParameterizedJsonPath() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
             .select("d.content")
@@ -160,7 +159,7 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class, NoMySQLOld.class })
+    @Category({ NoH2.class })
     public void testJsonSet() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
                 .select("d.content")
@@ -205,7 +204,7 @@ public class JsonGetAndSetTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoH2.class, NoSQLite.class, NoFirebird.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoH2.class, NoOracle.class })
     public void testJsonSetNull() throws JsonProcessingException {
         List<Tuple> objectRootResult = cbf.create(em, Tuple.class).from(JsonDocument.class, "d")
                 .select("d.content")

@@ -18,9 +18,9 @@ import com.blazebit.persistence.parser.predicate.MemberOfPredicate;
 import com.blazebit.persistence.parser.util.ExpressionUtils;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.PluralAttribute;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -5,21 +5,15 @@
 
 package com.blazebit.persistence.testsuite;
 
-import static org.junit.Assert.assertEquals;
-
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
-import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -125,7 +119,6 @@ public class JoinOnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
     public void testJoinAvoidance() {
         CriteriaBuilder<String> crit = cbf.create(em, String.class).from(Document.class, "e");
         crit.select("e.responsiblePerson.name");
@@ -148,7 +141,7 @@ public class JoinOnTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class })
     // NOTE: Subquery support in ON clause is only possible with Hibernate 5.1+
     // TODO: report eclipselink does not support subqueries in functions
     public void testJoinWithSubqueryBuilder() {

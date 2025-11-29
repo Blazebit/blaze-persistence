@@ -50,7 +50,7 @@ public class PersonControllerTest extends AbstractSpringTest {
 //                .expectStatus().isOk()
                 .expectBody()
                 // Then
-				.json("{\"id\":\"" + p1.getId() + "\",\"name\":\"P2\"}");
+                .json("{\"id\":\"" + p1.getId() + "\",\"name\":\"P2\"}");
     }
 
     private Person createPerson(String name) {

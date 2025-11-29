@@ -13,7 +13,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.spi.ServiceProvider;
 import com.blazebit.persistence.view.CorrelationBuilder;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  *

@@ -7,7 +7,7 @@ package com.blazebit.persistence.deltaspike.data.base.handler;
 
 import com.blazebit.persistence.FullQueryBuilder;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * @author Christian Beikov

@@ -3,7 +3,7 @@
     <parent>
         <artifactId>blaze-persistence-integration</artifactId>
         <groupId>com.blazebit</groupId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -14,16 +14,41 @@
 
     <properties>
         <module.name>com.blazebit.persistence.integration.graphql.spqr</module.name>
-        <main.java.version>1.8</main.java.version>
-        <version.spring>${version.spring-data-2.7-spring}</version.spring>
-        <version.spring.boot>${version.spring-data-2.7-spring-boot}</version.spring.boot>
-        <version.hibernate>${version.hibernate-5.6}</version.hibernate>
+        <version.spring>${version.spring-data-3.5-spring}</version.spring>
+        <version.spring.boot>${version.spring-data-3.5-spring-boot}</version.spring.boot>
+        <version.spring.data>${version.spring-data-3.5}</version.spring.data>
     </properties>
 
     <dependencies>
         <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.interceptor</groupId>
+            <artifactId>jakarta.interceptor-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-graphql</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -36,7 +61,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.13.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -48,7 +72,7 @@
         <dependency>
             <groupId>io.leangen.graphql</groupId>
             <artifactId>graphql-spqr-spring-boot-starter</artifactId>
-            <version>0.0.7</version>
+            <version>1.0.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -75,6 +99,44 @@
             <version>${version.spring.boot}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Overriding the JUnit version is kind of pain -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${version.junit-jupiter}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>${version.junit-platform}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${version.junit-jupiter}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -88,15 +150,15 @@
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>org.hibernate</groupId>
+                    <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${version.hibernate}</version>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${version.hibernate-apt}</version>
             <scope>test</scope>
         </dependency>
 
@@ -104,7 +166,7 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${version.spring-data-2.7}</version>
+            <version>${version.spring.data}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -115,12 +177,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-spring-data-2.7</artifactId>
+            <artifactId>blaze-persistence-integration-spring-data-3.4</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
+            <artifactId>blaze-persistence-integration-hibernate-6.2</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -128,12 +190,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>${version.junit-vintage}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -165,7 +221,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${version.annotation}</version>
+            <version>${version.annotation-api}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -186,28 +242,18 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.moditect</groupId>
-                <artifactId>moditect-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-module-infos</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>add-module-info</goal>
-                        </goals>
-                        <configuration>
-                            <module>
-                                <moduleInfoSource>
-                                    module ${module.name} {
-                                        requires transitive com.blazebit.persistence.view;
-                                        requires com.blazebit.common.utils;
-                                        exports com.blazebit.persistence.integration.graphql;
-                                    }
-                                </moduleInfoSource>
-                            </module>
-                        </configuration>
-                    </execution>
-                </executions>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Too complicated to make entities in test source open -->
+                    <useModulePath>false</useModulePath>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>${version.junit-vintage}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

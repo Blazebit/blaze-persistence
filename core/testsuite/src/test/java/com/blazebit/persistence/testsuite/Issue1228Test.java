@@ -9,8 +9,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import org.junit.Test;
 
@@ -96,7 +96,7 @@ public class Issue1228Test extends AbstractCoreTest {
         
         List<String> actualResult = new ArrayList<>();
         result.forEach(tuple -> {
-        	actualResult.add((String)tuple.get(0));
+            actualResult.add((String)tuple.get(0));
         });
         assertEquals(expectedResult, actualResult);
     }

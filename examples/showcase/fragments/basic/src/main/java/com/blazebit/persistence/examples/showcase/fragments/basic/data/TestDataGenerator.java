@@ -8,8 +8,8 @@ package com.blazebit.persistence.examples.showcase.fragments.basic.data;
 import com.blazebit.persistence.examples.showcase.base.bean.EntityManagerHolder;
 import com.blazebit.persistence.examples.showcase.base.model.Cat;
 
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 /**
  * @author Moritz Becker

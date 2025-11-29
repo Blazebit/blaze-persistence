@@ -6,23 +6,23 @@
 package ${package}.sample;
 
 import java.util.function.Consumer;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.Persistence;
 import ${package}.model.Cat;
 import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.view.CatWithOwnerView;
 import ${package}.view.PersonSimpleView;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractSampleTest {
     
     protected EntityManagerFactory emf;
 
-    @Before
+    @BeforeEach
     public void init() {
         emf = Persistence.createEntityManagerFactory("default");
 
@@ -97,7 +97,7 @@ public abstract class AbstractSampleTest {
         }
     }
 
-    @After
+    @AfterEach
     public void destruct() {
         emf.close();
     }

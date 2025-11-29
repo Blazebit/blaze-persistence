@@ -19,9 +19,9 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -245,7 +245,7 @@ public final class Accessors {
         List<AttributeAccessor> mappers = new ArrayList<>(attributes.size());
         Class<?> targetClass = entityClass;
         for (int i = 0; i < attributes.size() - 1; i++) {
-            javax.persistence.metamodel.Attribute<?, ?> attribute = attributes.get(i);
+            jakarta.persistence.metamodel.Attribute<?, ?> attribute = attributes.get(i);
             Class<?> attributeClass = JpaMetamodelUtils.resolveFieldClass(targetClass, attribute);
             mappers.add(forEntityAttribute(evm, targetClass, attribute, attributeClass));
             targetClass = attributeClass;
@@ -258,8 +258,8 @@ public final class Accessors {
     private static AttributeAccessor forEntityAttribute(EntityViewManagerImpl evm, Class<?> entityClass, Attribute<?, ?> attribute, Class<?> targetType) {
         Member member = attribute.getJavaMember();
         if (member instanceof Field) {
-            if (attribute instanceof javax.persistence.metamodel.SingularAttribute<?, ?>
-                    && ((javax.persistence.metamodel.SingularAttribute<?, ?>) attribute).isId()
+            if (attribute instanceof jakarta.persistence.metamodel.SingularAttribute<?, ?>
+                    && ((jakarta.persistence.metamodel.SingularAttribute<?, ?>) attribute).isId()
                     && ((IdentifiableType<?>) attribute.getDeclaringType()).hasSingleIdAttribute()) {
                 return new EntityIdFieldAttributeAccessor(evm.getJpaProvider(), (Field) member, targetType);
             }

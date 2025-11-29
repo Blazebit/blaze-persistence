@@ -8,9 +8,9 @@ package com.blazebit.persistence.deltaspike.data;
 import com.blazebit.persistence.PagedList;
 import org.apache.deltaspike.data.api.QueryResult;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.List;
 
 /**

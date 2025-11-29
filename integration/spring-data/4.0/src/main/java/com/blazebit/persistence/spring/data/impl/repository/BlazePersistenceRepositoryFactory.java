@@ -167,10 +167,10 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         this.queryLookupStrategyKey = key;
     }
 
-	public void setEvaluationContextProvider(@Nullable EvaluationContextProvider evaluationContextProvider) {
-		this.evaluationContextProvider = evaluationContextProvider == null ? EvaluationContextProvider.DEFAULT
-				: evaluationContextProvider;
-	}
+    public void setEvaluationContextProvider(@Nullable EvaluationContextProvider evaluationContextProvider) {
+        this.evaluationContextProvider = evaluationContextProvider == null ? EvaluationContextProvider.DEFAULT
+                : evaluationContextProvider;
+    }
 
     @Override
     public void setNamedQueries(NamedQueries namedQueries) {
@@ -180,7 +180,9 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     @Override
     public void addQueryCreationListener(QueryCreationListener<?> listener) {
         Assert.notNull(listener, "Listener must not be null!");
-        this.queryPostProcessors.add(listener);
+        if (queryPostProcessors != null) {
+            this.queryPostProcessors.add(listener);
+        }
     }
 
     @Override
@@ -255,9 +257,9 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
 
     @Override
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-		if (repositoryBaseClass != EntityViewAwareRepositoryImpl.class) {
-			return repositoryBaseClass;
-		}
+        if (repositoryBaseClass != EntityViewAwareRepositoryImpl.class) {
+            return repositoryBaseClass;
+        }
         ExtendedManagedType<?> managedType = cbf.getService(EntityMetamodel.class).getManagedType(ExtendedManagedType.class, metadata.getDomainType());
         // Only use the entity view aware repository if the domain type has a single id attribute
         if (managedType.getIdAttributes().size() == 1) {
@@ -409,8 +411,8 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
         if (this.exposeMetadata || shouldExposeMetadata(fragments)) {
             result.addAdvice(new ExposeMetadataInterceptor(metadata));
         }
-		// Always need this interceptor to access EVM
-		result.addAdvisor(ExposeInvocationInterceptor.ADVISOR);
+        // Always need this interceptor to access EVM
+        result.addAdvisor(ExposeInvocationInterceptor.ADVISOR);
 
         postProcessors.forEach(processor -> processor.postProcess(result, information));
 

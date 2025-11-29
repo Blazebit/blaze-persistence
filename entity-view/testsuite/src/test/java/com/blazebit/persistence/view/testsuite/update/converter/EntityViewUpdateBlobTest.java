@@ -5,11 +5,22 @@
 
 package com.blazebit.persistence.view.testsuite.update.converter;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Date;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.BlobEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
@@ -18,19 +29,7 @@ import com.blazebit.persistence.view.FlushMode;
 import com.blazebit.persistence.view.FlushStrategy;
 import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateTest;
 import com.blazebit.persistence.view.testsuite.update.converter.model.UpdatableBlobEntityView;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import javax.persistence.EntityManager;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Date;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,9 +39,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.2.0
  */
 @RunWith(Parameterized.class)
-// NOTE: No Datanucleus support yet
-// NOTE: Not sure why, but Hibernate 4.2 reports the LOB as being closed
-@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<UpdatableBlobEntityView> {
 
     private BlobEntity entity;
@@ -204,8 +201,7 @@ public class EntityViewUpdateBlobTest extends AbstractEntityViewUpdateTest<Updat
     @Test
     // Oracle keeps LOBs open/tied to a result set so we can't write to it by means of setBytes.
     // For Oracle it would be more appropriate to treat writes like "replacements" i.e. remember the written bytes and replace the underlying object on flush
-    // NOTE: No Datanucleus support yet
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOracle.class, NoH2.class})
+    @Category({ NoEclipselink.class, NoOracle.class, NoH2.class})
     public void testUpdateBlob() throws Exception {
         // Given
         {

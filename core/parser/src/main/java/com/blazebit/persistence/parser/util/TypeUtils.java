@@ -7,7 +7,7 @@ package com.blazebit.persistence.parser.util;
 
 import com.blazebit.persistence.parser.EntityMetamodel;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;

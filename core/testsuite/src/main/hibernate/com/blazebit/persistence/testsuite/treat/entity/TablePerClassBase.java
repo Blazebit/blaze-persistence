@@ -5,22 +5,23 @@
 
 package com.blazebit.persistence.testsuite.treat.entity;
 
-import org.hibernate.annotations.ForeignKey;
-
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,7 +88,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     @Override
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @ForeignKey(name = "none")
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public TablePerClassBase getParent() {
         return parent;
     }
@@ -112,8 +113,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     @ManyToMany
     @OrderColumn(name = "list_idx", nullable = false)
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpcb_list")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpcb_list", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     public List<TablePerClassBase> getList() {
         return list;
     }
@@ -126,8 +126,7 @@ public abstract class TablePerClassBase implements Serializable, Base<TablePerCl
     @Override
     @ManyToMany
     // We can't have a constraint in this case because we don't know the exact table this will refer to
-    @JoinTable(name = "tpcb_map")
-    @ForeignKey(name = "none", inverseName = "none")
+    @JoinTable(name = "tpcb_map", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT), inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @MapKeyColumn(name = "tpcb_map_key", nullable = false, length = 20)
     public Map<TablePerClassBase, TablePerClassBase> getMap() {
         return map;

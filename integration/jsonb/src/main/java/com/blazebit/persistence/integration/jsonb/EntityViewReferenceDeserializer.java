@@ -12,17 +12,16 @@ import com.blazebit.persistence.view.impl.metamodel.AbstractMethodAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import org.eclipse.yasson.internal.JsonbRiParser;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
-import javax.json.bind.annotation.JsonbProperty;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.bind.spi.JsonbProvider;
-import javax.json.stream.JsonParser;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonStructure;
+import jakarta.json.JsonValue;
+import jakarta.json.bind.annotation.JsonbProperty;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.json.bind.serializer.DeserializationContext;
+import jakarta.json.bind.spi.JsonbProvider;
+import jakarta.json.stream.JsonParser;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
@@ -198,12 +197,18 @@ public class EntityViewReferenceDeserializer {
         JsonParser newParser;
         if (jsonValue instanceof JsonStructure) {
             newParser = new JsonStructureToParserAdapter((JsonStructure) jsonValue);
+            if (IS_YASSON && jsonValue instanceof JsonObject) {
+                // Yasson keeps the last processed event around for a deserialization context,
+                // which makes it hard to use the same deserialization context for re-processing sub-parts,
+                // but we have to get it to work somehow, because that is the only way to reuse the Jsonb instance
+                newParser.next();
+            }
         } else {
             newParser = new JsonValueToParserAdapter(jsonValue);
         }
-        if (IS_YASSON) {
-            return new JsonbRiParser(newParser);
-        }
+//        if (IS_YASSON) {
+//            return new org.eclipse.yasson.internal.JsonbRiParser(newParser);
+//        }
         return newParser;
     }
 }

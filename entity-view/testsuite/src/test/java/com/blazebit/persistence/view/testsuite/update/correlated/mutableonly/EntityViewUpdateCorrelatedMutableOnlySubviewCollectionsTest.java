@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.correlated.mutableonly;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -34,7 +33,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest extends AbstractEntityViewUpdateDocumentTest<UpdatableDocumentWithCollectionsView> {
 
     public EntityViewUpdateCorrelatedMutableOnlySubviewCollectionsTest(FlushMode mode, FlushStrategy strategy, boolean version) {

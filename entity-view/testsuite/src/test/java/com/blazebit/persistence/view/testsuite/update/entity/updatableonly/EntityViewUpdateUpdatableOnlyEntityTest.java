@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.entity.updatableonly;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.FlushMode;
@@ -18,7 +17,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import static org.junit.Assert.*;
 
@@ -29,7 +28,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateUpdatableOnlyEntityTest extends AbstractEntityViewUpdateEntityTest<UpdatableDocumentEntityView> {
 
     public EntityViewUpdateUpdatableOnlyEntityTest(FlushMode mode, FlushStrategy strategy, boolean version) {

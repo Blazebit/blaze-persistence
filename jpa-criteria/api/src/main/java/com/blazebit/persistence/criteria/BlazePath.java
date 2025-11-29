@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * An extended version of {@link Path}.
@@ -45,7 +45,7 @@ public interface BlazePath<X> extends Path<X>, BlazeExpression<X> {
      * @param <E>        The attribute collection element type
      * @return expression corresponding to the referenced attribute
      */
-    <E, C extends java.util.Collection<E>> BlazeExpression<C> get(PluralAttribute<X, C, E> collection);
+    <E, C extends java.util.Collection<E>> BlazeExpression<C> get(PluralAttribute<? super X, C, E> collection);
 
     /**
      * Like {@link Path#get(MapAttribute)} but returns the subtype {@link BlazeExpression} instead.
@@ -56,7 +56,7 @@ public interface BlazePath<X> extends Path<X>, BlazeExpression<X> {
      * @param <V> The attribute map element type
      * @return expression corresponding to the referenced attribute
      */
-    <K, V, M extends java.util.Map<K, V>> BlazeExpression<M> get(MapAttribute<X, K, V> map);
+    <K, V, M extends java.util.Map<K, V>> BlazeExpression<M> get(MapAttribute<? super X, K, V> map);
 
     /**
      * Like {@link Path#type} but returns the subtype {@link BlazeExpression} instead.

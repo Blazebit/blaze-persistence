@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A listener for getting a callback after persisting a creatable view.

@@ -8,7 +8,7 @@ package com.blazebit.persistence.deltaspike.data.base.builder.postprocessor;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.deltaspike.data.base.handler.CriteriaBuilderQueryCreator;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * @author Christian Beikov

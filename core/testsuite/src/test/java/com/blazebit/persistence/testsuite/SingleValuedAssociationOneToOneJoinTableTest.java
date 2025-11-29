@@ -6,15 +6,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate52;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate53;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.DocumentForOneToOneJoinTable;
 import com.blazebit.persistence.testsuite.entity.DocumentForOneToOne;
 import com.blazebit.persistence.testsuite.entity.DocumentInfo;
@@ -23,7 +15,7 @@ import org.junit.Assume;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,8 +24,6 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
-// NOTE: Datanucleus generates wrong DDL for OneToOne JoinTable mappings: https://github.com/datanucleus/datanucleus-core/issues/196
-@Category({ NoDatanucleus.class })
 public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTest {
 
     @Override
@@ -55,7 +45,6 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoHibernate52.class, NoHibernate53.class})
     public void oneToOneJoinTableSingleValuedAssociationRelativeIdAccess() {
         Assume.assumeFalse(supportsTableGroupJoins());
 
@@ -66,7 +55,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate51.class, NoHibernate50.class, NoHibernate43.class, NoHibernate42.class})
+    @Category({NoEclipselink.class})
     public void oneToOneJoinTableSingleValuedAssociationRelativeIdAccessWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -78,7 +67,6 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoHibernate52.class, NoHibernate53.class})
     public void oneToOneJoinTableSingleValuedAssociationAbsoluteIdAccess() {
         Assume.assumeFalse(supportsTableGroupJoins());
 
@@ -89,7 +77,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate51.class, NoHibernate50.class, NoHibernate43.class, NoHibernate42.class})
+    @Category({NoEclipselink.class})
     public void oneToOneJoinTableSingleValuedAssociationAbsoluteIdAccessWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -101,7 +89,6 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoHibernate52.class, NoHibernate53.class})
     public void oneToOneJoinTableSingleValuedAssociationIdAccessJoinOverride1() {
         Assume.assumeFalse(supportsTableGroupJoins());
 
@@ -113,7 +100,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate51.class, NoHibernate50.class, NoHibernate43.class, NoHibernate42.class})
+    @Category({NoEclipselink.class})
     public void oneToOneJoinTableSingleValuedAssociationIdAccessJoinOverride1WithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -144,7 +131,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class})
+    @Category({NoEclipselink.class})
     public void leftJoinDereferenedForeignJoinTableWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -157,7 +144,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class})
+    @Category({NoEclipselink.class})
     public void leftJoinDereferenedForeignJoinTableInverseWithTableGroupJoins() {
         Assume.assumeTrue(supportsTableGroupJoins());
 
@@ -170,7 +157,7 @@ public class SingleValuedAssociationOneToOneJoinTableTest extends AbstractCoreTe
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate51.class, NoHibernate52.class, NoHibernate53.class})
+    @Category({NoEclipselink.class})
     public void leftJoinDereferenedForeignJoinTable() {
         Assume.assumeFalse(supportsTableGroupJoins());
         Assume.assumeTrue(jpaProvider.supportsEntityJoin());

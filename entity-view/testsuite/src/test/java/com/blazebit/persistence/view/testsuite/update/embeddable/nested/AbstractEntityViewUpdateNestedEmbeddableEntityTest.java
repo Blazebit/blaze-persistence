@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.Si
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleIntIdEntityView;
 import com.blazebit.persistence.view.testsuite.update.embeddable.nested.model.SimpleNameObjectView;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *

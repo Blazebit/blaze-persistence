@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
 import java.util.List;
 
 /**

@@ -5,16 +5,22 @@
 
 package com.blazebit.persistence.criteria;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.Tuple;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
+import com.blazebit.persistence.testsuite.entity.PolymorphicBase_;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub1_;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
+import com.blazebit.persistence.testsuite.entity.PolymorphicSub2_;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +86,7 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     // Eclipselink does not support dereferencing of TREAT join path elements
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void treatRootJoin() {
         BlazeCriteriaQuery<PolymorphicBase> cq = BlazeCriteria.get(cbf, PolymorphicBase.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -143,7 +149,7 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     // Eclipselink does not support dereferencing of TREAT join path elements
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void joinTreatedJoinWithOnClause() {
         BlazeCriteriaQuery<Tuple> cq = BlazeCriteria.get(cbf, Tuple.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

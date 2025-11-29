@@ -28,8 +28,8 @@ import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.EntityViewParameterMapping;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;

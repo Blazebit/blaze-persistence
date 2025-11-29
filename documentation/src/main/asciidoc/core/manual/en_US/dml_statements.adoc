@@ -15,7 +15,7 @@ When joins are involved through explicit `join` calls or implicit joins, {projec
 === DELETE statement
 
 The `DELETE` statement deletes entities that satisfy the `WHERE` clause of the statement.
-A delete builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#delete(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.delete()`].
+A delete builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#delete(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.delete()`].
 
 [source,java]
 ----
@@ -43,7 +43,7 @@ TIP: If your DBMS supports it, cascading deletes will be implemented as CTEs whe
 === DELETE collection statement
 
 The `DELETE` collection statement deletes collection entries of entities that satisfy the `WHERE` clause of the statement.
-A collection delete builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#deleteCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.deleteCollection()`].
+A collection delete builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#deleteCollection(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.deleteCollection()`].
 The statement only works on collections that have a join or collection table.
 
 [source,java]
@@ -79,7 +79,7 @@ or create a JPA `Query` by calling link:{core_jdoc}/persistence/Executable.html#
 === UPDATE statement
 
 The `UPDATE` statement updates attributes as specified in the `SET` clause on entities that satisfy the `WHERE` clause of the statement.
-An update builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#update(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.update()`].
+An update builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#update(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.update()`].
 
 [source,java]
 ----
@@ -206,7 +206,7 @@ WARNING: Currently you can't make use of advanced SQL features like CTEs when ha
 === UPDATE collection statement
 
 The `UPDATE` collection statement updates attributes as specified in the `SET` clause on entries of a collection of entities that satisfy the `WHERE` clause of the statement.
-A collection update builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#updateCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.updateCollection()`].
+A collection update builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#updateCollection(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.updateCollection()`].
 The statement only works on collections that have a join or collection table.
 
 [source,java]
@@ -236,7 +236,7 @@ This will cause all kittens that previously were associated with the cat with id
 === INSERT-SELECT statement
 
 The `INSERT-SELECT` statement allows to create new entities based on result of a `SELECT` query.
-An insert builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#insert(javax.persistence.EntityManager,%20java.lang.Class)[`CriteriaBuilderFactory.insert()`].
+An insert builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#insert(jakarta.persistence.EntityManager,%20java.lang.Class)[`CriteriaBuilderFactory.insert()`].
 
 WARNING: This feature is currently only supported with Hibernate!
 
@@ -285,7 +285,7 @@ WARNING: When using Oracle, generated identifiers currently don't work. Also see
 === INSERT-SELECT collection statement
 
 The `INSERT-SELECT` collection statement inserts new collection entries.
-A collection insert builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#insertCollection(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.insertCollection()`].
+A collection insert builder can be created via link:{core_jdoc}/persistence/CriteriaBuilderFactory.html#insertCollection(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.String)[`CriteriaBuilderFactory.insertCollection()`].
 The statement only works on collections that have a join or collection table.
 
 [source,java]

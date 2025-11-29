@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.onetoone.simple;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentForSimpleOneToOne;
@@ -26,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *
@@ -35,7 +34,7 @@ import javax.persistence.EntityManager;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseOneToOneSimpleTest extends AbstractEntityViewUpdateTest<UpdatableDocumentForOneToOneView> {
 
     private DocumentForSimpleOneToOne doc1;

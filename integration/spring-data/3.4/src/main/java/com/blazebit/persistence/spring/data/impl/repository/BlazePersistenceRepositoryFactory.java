@@ -177,7 +177,9 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
     @Override
     public void addQueryCreationListener(QueryCreationListener<?> listener) {
         Assert.notNull(listener, "Listener must not be null!");
-        this.queryPostProcessors.add(listener);
+        if (queryPostProcessors != null) {
+            this.queryPostProcessors.add(listener);
+        }
     }
 
     @Override

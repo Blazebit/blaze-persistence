@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.impl;
 
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 /**
  * @author Christian Beikov

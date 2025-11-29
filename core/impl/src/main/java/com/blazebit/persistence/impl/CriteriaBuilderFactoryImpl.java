@@ -30,9 +30,9 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.JpqlFunctionKind;
 import com.blazebit.persistence.spi.PackageOpener;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.Metamodel;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.metamodel.Metamodel;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

@@ -21,7 +21,8 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 
 /**
  * @author Moritz Becker
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @ActiveProfiles(resolver = SystemPropertyBasedActiveProfilesResolver.class)
 public abstract class AbstractSpringTest extends AbstractPersistenceTest {

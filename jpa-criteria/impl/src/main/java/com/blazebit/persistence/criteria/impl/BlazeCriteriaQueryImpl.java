@@ -12,15 +12,16 @@ import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -269,6 +270,11 @@ public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
     @Override
     public <U> BlazeSubquery<U> subquery(Class<U> type) {
         return query.subquery(type);
+    }
+
+    @Override
+    public <U> Subquery<U> subquery(EntityType<U> type) {
+        return query.subquery(type.getJavaType());
     }
 
     @Override

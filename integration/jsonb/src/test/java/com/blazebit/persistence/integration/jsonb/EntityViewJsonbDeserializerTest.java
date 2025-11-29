@@ -20,15 +20,15 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbConfig;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.json.bind.serializer.DeserializationContext;
-import javax.json.stream.JsonParser;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.json.JsonObject;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
+import jakarta.json.bind.JsonbConfig;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.json.bind.serializer.DeserializationContext;
+import jakarta.json.stream.JsonParser;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -113,7 +113,7 @@ public class EntityViewJsonbDeserializerTest {
     }
 
     @EntityView(SomeEntity.class)
-    interface NameView {
+    public interface NameView {
         @IdMapping
         long getId();
         String getName();
@@ -129,7 +129,7 @@ public class EntityViewJsonbDeserializerTest {
     }
 
     @EntityView(SomeEntity.class)
-    interface ReadViewWithSetters {
+    public interface ReadViewWithSetters {
         @IdMapping
         long getId();
         String getName();
@@ -149,7 +149,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @UpdatableEntityView
-    interface UpdateViewWithSetters {
+    public interface UpdateViewWithSetters {
         @IdMapping
         long getId();
         String getName();
@@ -169,7 +169,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    interface CreatableViewWithSetters {
+    public interface CreatableViewWithSetters {
         @IdMapping
         long getId();
         String getName();
@@ -200,7 +200,7 @@ public class EntityViewJsonbDeserializerTest {
     @EntityView(SomeEntity.class)
     @CreatableEntityView
     @UpdatableEntityView
-    interface CreatableAndUpdatableViewWithSetters {
+    public interface CreatableAndUpdatableViewWithSetters {
         @IdMapping
         long getId();
         String getName();
@@ -232,7 +232,7 @@ public class EntityViewJsonbDeserializerTest {
     @EntityView(SomeEntity.class)
     @CreatableEntityView
     @UpdatableEntityView
-    interface CreatableAndUpdatableViewWithNested {
+    public interface CreatableAndUpdatableViewWithNested {
         @IdMapping
         long getId();
         String getName();
@@ -255,7 +255,7 @@ public class EntityViewJsonbDeserializerTest {
     @EntityView(SomeEntity.class)
     @CreatableEntityView
     @UpdatableEntityView
-    interface CreatableWithCollection {
+    public interface CreatableWithCollection {
         @IdMapping
         long getId();
         String getName();
@@ -277,7 +277,7 @@ public class EntityViewJsonbDeserializerTest {
     @EntityView(SomeEntity.class)
     @CreatableEntityView
     @UpdatableEntityView
-    interface CreatableWithCollectionWithSetter {
+    public interface CreatableWithCollectionWithSetter {
         @IdMapping
         long getId();
         String getName();
@@ -299,7 +299,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    interface CreatableWithIgnoreId {
+    public interface CreatableWithIgnoreId {
         @IdMapping
         @JsonbTransient
         long getId();
@@ -320,7 +320,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @UpdatableEntityView
-    interface UpdatableWithCollectionWithSetter {
+    public interface UpdatableWithCollectionWithSetter {
         @IdMapping
         long getId();
         String getName();
@@ -349,7 +349,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @UpdatableEntityView
-    interface UpdatableWithCollectionForIdAccessor {
+    public interface UpdatableWithCollectionForIdAccessor {
         @IdMapping
         long getId();
         String getName();
@@ -360,7 +360,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    interface NameViewForIdAccessor {
+    public interface NameViewForIdAccessor {
         @IdMapping
         Long getId();
         String getName();
@@ -381,7 +381,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    static abstract class ViewWithJsonIgnore {
+    public static abstract class ViewWithJsonIgnore {
         @IdMapping
         public abstract long getId();
         public abstract void setId(long id);
@@ -403,7 +403,7 @@ public class EntityViewJsonbDeserializerTest {
 
     @EntityView(SomeEntity.class)
     @CreatableEntityView
-    static interface ViewWithSingularCollection {
+    public static interface ViewWithSingularCollection {
         @IdMapping
         long getId();
         String getName();

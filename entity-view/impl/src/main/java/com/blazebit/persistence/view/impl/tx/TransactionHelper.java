@@ -10,7 +10,7 @@ import com.blazebit.persistence.view.spi.TransactionAccessFactory;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

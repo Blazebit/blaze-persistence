@@ -12,7 +12,7 @@ import com.blazebit.persistence.deltaspike.data.testsuite.view.PersonView;
 import org.apache.deltaspike.data.api.QueryResult;
 import org.junit.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

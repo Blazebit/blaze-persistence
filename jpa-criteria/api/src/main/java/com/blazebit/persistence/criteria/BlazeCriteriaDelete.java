@@ -7,11 +7,11 @@ package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * An extended version of {@link CriteriaDelete}.

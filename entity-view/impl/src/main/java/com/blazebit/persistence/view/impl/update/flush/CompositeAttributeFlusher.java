@@ -32,12 +32,12 @@ import com.blazebit.persistence.view.spi.type.DirtyTracker;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -66,7 +66,7 @@ public class CompositeAttributeFlusher extends CompositeAttributeFetchGraphNode<
     private final Class<?> entityClass;
     private final boolean persistable;
     private final ViewMapper<Object, Object> persistViewMapper;
-    private final javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute;
+    private final jakarta.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute;
     private final ViewToEntityMapper viewIdMapper;
     private final AttributeAccessor viewIdAccessor;
     private final AttributeAccessor entityIdAccessor;

@@ -18,7 +18,7 @@ import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.ServiceLoader;
 
 /**

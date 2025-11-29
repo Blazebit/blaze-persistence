@@ -68,14 +68,14 @@ import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PrePersist;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -148,7 +148,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     private final boolean hasJoinFetchedCollections;
     private final boolean hasSelectOrSubselectFetchedAttributes;
     private final boolean hasJpaManagedAttributes;
-    private final Map<String, javax.persistence.metamodel.Type<?>> viewRootTypes;
+    private final Map<String, jakarta.persistence.metamodel.Type<?>> viewRootTypes;
     private final Set<ViewRoot> viewRoots = new LinkedHashSet<>();
     private final Set<CTEProvider> cteProviders = new LinkedHashSet<>();
 
@@ -250,7 +250,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
                 SingularAttribute<?, ?> attribute = (SingularAttribute<?, ?>) extendedAttribute.getAttribute();
                 if (!attribute.isVersion() && !attribute.isOptional() && !extendedAttribute.getElementClass().isPrimitive()) {
                     // The attribute could be the id attribute of an owned *ToOne association
-                    if ((attribute.getType().getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.BASIC || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
+                    if ((attribute.getType().getPersistenceType() == jakarta.persistence.metamodel.Type.PersistenceType.BASIC || attribute.getType() instanceof EmbeddableType<?>) && extendedAttribute.getAttributePath().size() > 1) {
                         List<Attribute<?, ?>> attributePath = extendedAttribute.getAttributePath();
                         // So we check the *ToOne attribute instead
                         for (int i = attributePath.size() - 2; i >= 0; i--) {
@@ -1395,7 +1395,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewTypeImplement
     }
 
     @Override
-    public Map<String, javax.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
+    public Map<String, jakarta.persistence.metamodel.Type<?>> getEntityViewRootTypes() {
         return viewRootTypes;
     }
 

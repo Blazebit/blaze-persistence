@@ -19,7 +19,7 @@ import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAInsertClause;
 import com.querydsl.jpa.impl.JPAUpdateClause;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Collection;
 import java.util.List;
 

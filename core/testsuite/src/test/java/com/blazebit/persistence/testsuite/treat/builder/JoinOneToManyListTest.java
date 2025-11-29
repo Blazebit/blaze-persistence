@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.testsuite.treat.builder;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate62;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -16,7 +16,7 @@ import java.util.List;
 
 // NOTE: Bug in ORM 6.3: https://hibernate.atlassian.net/browse/HHH-17385
 @RunWith(Parameterized.class)
-@Category({ NoHibernate60.class })
+@Category({ NoHibernate62.class })
 public class JoinOneToManyListTest extends AbstractTreatVariationsTest {
 
     public JoinOneToManyListTest(String strategy, String objectPrefix) {

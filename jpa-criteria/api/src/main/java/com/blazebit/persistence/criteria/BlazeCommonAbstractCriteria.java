@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
 
 /**
  * An extended version of {@link CommonAbstractCriteria}.

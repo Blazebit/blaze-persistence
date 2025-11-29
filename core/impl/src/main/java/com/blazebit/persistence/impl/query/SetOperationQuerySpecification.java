@@ -11,8 +11,8 @@ import com.blazebit.persistence.impl.plan.SelectQueryPlan;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.Parameter;
-import javax.persistence.Query;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

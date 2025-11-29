@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.spi;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 import java.util.List;
 
 /**

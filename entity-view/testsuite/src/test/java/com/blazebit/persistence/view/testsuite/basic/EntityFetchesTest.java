@@ -5,37 +5,31 @@
 
 package com.blazebit.persistence.view.testsuite.basic;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView1;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView3;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView2;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView1;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView3;
-import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView2;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.blazebit.persistence.testsuite.tx.TxVoidWork;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView1;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView2;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesDocumentView3;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView1;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView2;
+import com.blazebit.persistence.view.testsuite.basic.model.FetchesPersonView3;
+import jakarta.persistence.EntityManager;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -139,8 +133,6 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
     }
 
     @Test
-    // NOTE: Datanucleus doesn't seem to support fetching non-root relations
-    @Category({ NoDatanucleus.class })
     public void entityViewFetchesInitializeEntitiesSimple() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class)
                 .where("id").eq(pers1.getId());
@@ -205,8 +197,7 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: EclipseLink messes up the whole query result as soon as map values are selected...
-    // NOTE: Datanucleus doesn't seem to support fetching non-root relations
-    @Category({ NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void entityViewFetchesInitializeEntities() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class)
             .where("id").eq(pers1.getId());
@@ -279,9 +270,7 @@ public class EntityFetchesTest extends AbstractEntityViewTest {
 
     @Test
     // NOTE: EclipseLink messes up the whole query result as soon as map values are selected...
-    // NOTE: Element collection fetching of non-roots only got fixed in Hibernate 5.2.3: https://hibernate.atlassian.net/browse/HHH-11140
-    // NOTE: Datanucleus doesn't seem to support fetching non-root relations
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class, NoDatanucleus.class })
+    @Category({ NoEclipselink.class })
     public void entityViewFetchesInitializeEntitiesWithElementCollections() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class)
                 .where("id").eq(pers1.getId());

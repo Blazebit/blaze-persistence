@@ -80,22 +80,21 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.TemporalField;
 
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Predicate.BooleanOperator;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CompoundSelection;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Predicate.BooleanOperator;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -299,16 +298,6 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public BlazeOrder desc(Expression<?> x, boolean nullsFirst) {
         return new OrderImpl(x, false, nullsFirst);
-    }
-
-    @Override
-    public Order asc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls) {
-        return new OrderImpl((Expression<?>) x, true, nulls == Nulls.FIRST);
-    }
-
-    @Override
-    public Order desc(jakarta.persistence.criteria.Expression<?> x, Nulls nulls) {
-        return new OrderImpl((Expression<?>) x, false, nulls == Nulls.FIRST);
     }
 
     @Override
@@ -725,6 +714,46 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     }
 
     @Override
+    public Expression<Integer> sign(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Integer.class, "SIGN", x);
+    }
+
+    @Override
+    public <N extends Number> Expression<N> ceiling(Expression<N> x) {
+        return new FunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "CEILING", x);
+    }
+
+    @Override
+    public <N extends Number> Expression<N> floor(Expression<N> x) {
+        return new FunctionExpressionImpl<>(this, (Class<N>) x.getJavaType(), "FLOOR", x);
+    }
+
+    @Override
+    public Expression<Double> exp(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Double.class, "EXP", x);
+    }
+
+    @Override
+    public Expression<Double> ln(Expression<? extends Number> x) {
+        return new FunctionExpressionImpl<>(this, Double.class, "LN", x);
+    }
+
+    @Override
+    public Expression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
+        return new FunctionExpressionImpl<>(this, Double.class, "POWER", x, y);
+    }
+
+    @Override
+    public Expression<Double> power(Expression<? extends Number> x, Number y) {
+        return new FunctionExpressionImpl<>(this, Double.class, "POWER", x, value(y));
+    }
+
+    @Override
+    public <T extends Number> Expression<T> round(Expression<T> x, Integer n) {
+        return new FunctionExpressionImpl<>(this, (Class<T>) x.getJavaType(), "ROUND", x, value(n));
+    }
+
+    @Override
     public Expression<java.sql.Date> currentDate() {
         return new CurrentDateFunction(this);
     }
@@ -739,14 +768,17 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
         return new CurrentTimeFunction(this);
     }
 
+    @Override
     public Expression<LocalDate> localDate() {
         return new LocalDateFunction(this);
     }
 
+    @Override
     public Expression<LocalDateTime> localDateTime() {
         return new LocalDateTimeFunction(this);
     }
 
+    @Override
     public Expression<LocalTime> localTime() {
         return new LocalTimeFunction(this);
     }
@@ -885,6 +917,61 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, CriteriaB
     @Override
     public Expression<String> concat(String string1, Expression<String> string2) {
         return new ConcatFunction(this, value(string1), string2);
+    }
+
+    @Override
+    public Expression<String> concat(List<Expression<String>> expressions) {
+        if (expressions == null || expressions.isEmpty()) {
+            throw new IllegalArgumentException("The list of expressions cannot be null or empty");
+        }
+        Expression<String> result = expressions.get(0);
+        for (int i = 1; i < expressions.size(); i++) {
+            result = concat(result, expressions.get(i));
+        }
+        return result;
+    }
+
+    @Override
+    public Expression<String> left(Expression<String> x, int len) {
+        return new FunctionExpressionImpl<>(this, String.class, "LEFT", x, value(len));
+    }
+
+    @Override
+    public Expression<String> right(Expression<String> x, int len) {
+        return new FunctionExpressionImpl<>(this, String.class, "RIGHT", x, value(len));
+    }
+
+    @Override
+    public Expression<String> left(Expression<String> x, Expression<Integer> len) {
+        return new FunctionExpressionImpl<>(this, String.class, "LEFT", x, len);
+    }
+
+    @Override
+    public Expression<String> right(Expression<String> x, Expression<Integer> len) {
+        return new FunctionExpressionImpl<>(this, String.class, "RIGHT", x, len);
+    }
+
+    @Override
+    public Expression<String> replace(
+            Expression<String> x,
+            Expression<String> substring,
+            Expression<String> replacement) {
+        return new FunctionExpressionImpl<>(this, String.class, "REPLACE", x, substring, replacement);
+    }
+
+    @Override
+    public Expression<String> replace(Expression<String> x, String substring, Expression<String> replacement) {
+        return new FunctionExpressionImpl<>(this, String.class, "REPLACE", x, value(substring), replacement);
+    }
+
+    @Override
+    public Expression<String> replace(Expression<String> x, Expression<String> substring, String replacement) {
+        return new FunctionExpressionImpl<>(this, String.class, "REPLACE", x, substring, value(replacement));
+    }
+
+    @Override
+    public Expression<String> replace(Expression<String> x, String substring, String replacement) {
+        return new FunctionExpressionImpl<>(this, String.class, "REPLACE", x, value(substring), value(replacement));
     }
 
     /**********************

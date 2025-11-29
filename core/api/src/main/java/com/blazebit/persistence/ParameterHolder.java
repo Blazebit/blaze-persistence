@@ -5,9 +5,9 @@
 
 package com.blazebit.persistence;
 
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;

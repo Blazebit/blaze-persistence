@@ -5,18 +5,13 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus4;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
-import com.blazebit.persistence.testsuite.entity.Document;
-import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Person;
 
 import static org.junit.Assert.assertEquals;
 
@@ -26,7 +21,6 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
-@Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
 public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
 
     @Test
@@ -42,7 +36,6 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported1() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
         criteria.innerJoinOn(Document.class,"correlated_ownedDocuments")
@@ -56,7 +49,6 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus4.class })
     public void neverRewriteEntityAssociationEqualsEntityInOnIfSupported2() {
         CriteriaBuilder<Person> criteria = cbf.create(em, Person.class, "p");
         criteria.select("correlated_ownedDocuments.owner.name");
@@ -71,8 +63,6 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support transient objects as parameters
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class })
     public void neverRewriteEntityAssociationEqualsTransientEntityParameterInOnIfSupported() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -86,7 +76,7 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Eclipselink loads entities when doing getReference()
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void neverRewriteEntityAssociationEqualsManagedEntityParameterInOnIfSupported() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -111,8 +101,6 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support transient objects as parameters
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoDatanucleus.class })
     public void neverRewriteEntityEqualsTransientEntityParameterInOn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")
@@ -126,7 +114,7 @@ public class EntityEqualityNoRewriteToIdTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Eclipselink loads entities when doing getReference()
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void neverRewriteEntityEqualsManagedEntityParameterInOn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinOn("partners","p")

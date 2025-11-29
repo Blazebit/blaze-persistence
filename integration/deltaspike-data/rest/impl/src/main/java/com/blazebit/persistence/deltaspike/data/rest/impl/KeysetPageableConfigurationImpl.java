@@ -10,7 +10,7 @@ import com.blazebit.persistence.deltaspike.data.KeysetPageable;
 import com.blazebit.persistence.deltaspike.data.Pageable;
 import com.blazebit.persistence.deltaspike.data.rest.KeysetPageableConfiguration;
 
-import javax.enterprise.inject.Typed;
+import jakarta.enterprise.inject.Typed;
 
 /**
  *

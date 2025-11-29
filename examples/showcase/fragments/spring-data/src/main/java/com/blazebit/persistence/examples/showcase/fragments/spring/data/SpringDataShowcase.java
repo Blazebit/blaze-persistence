@@ -9,7 +9,7 @@ import com.blazebit.persistence.examples.showcase.fragments.spring.data.data.Tes
 import com.blazebit.persistence.examples.showcase.fragments.spring.data.repository.CatRepository;
 import com.blazebit.persistence.examples.showcase.spi.AbstractShowcase;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @author Moritz Becker

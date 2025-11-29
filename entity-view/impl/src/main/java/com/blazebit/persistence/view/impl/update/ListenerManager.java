@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

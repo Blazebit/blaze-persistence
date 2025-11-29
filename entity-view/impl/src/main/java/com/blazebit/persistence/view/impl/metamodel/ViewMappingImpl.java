@@ -29,12 +29,12 @@ import com.blazebit.persistence.view.spi.EntityViewConstructorMapping;
 import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MappedSuperclassType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -406,7 +406,7 @@ public class ViewMappingImpl implements ViewMapping {
                 String joinExpression = entityViewRoot.getJoinExpression();
                 Class<? extends CorrelationProvider> correlationProvider = entityViewRoot.getCorrelationProvider();
                 CorrelationProviderFactory correlationProviderFactory = null;
-                javax.persistence.metamodel.Type<?> type = null;
+                jakarta.persistence.metamodel.Type<?> type = null;
                 String conditionExpression = entityViewRoot.getConditionExpression();
 
                 if (entityClass != null) {

@@ -12,8 +12,8 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;

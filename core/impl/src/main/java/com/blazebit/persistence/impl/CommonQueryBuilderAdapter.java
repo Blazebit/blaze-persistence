@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.criteria.ParameterExpression;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;

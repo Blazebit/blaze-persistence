@@ -27,17 +27,18 @@ import com.blazebit.persistence.criteria.impl.path.RootImpl;
 import com.blazebit.persistence.criteria.impl.path.SetAttributeJoin;
 import com.blazebit.persistence.criteria.impl.support.SubquerySupport;
 
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
@@ -316,6 +317,11 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
     @Override
     public <U> BlazeSubquery<U> subquery(Class<U> type) {
         return query.subquery(type);
+    }
+
+    @Override
+    public <U> Subquery<U> subquery(EntityType<U> type) {
+        return query.subquery(type.getJavaType());
     }
 
     @Override

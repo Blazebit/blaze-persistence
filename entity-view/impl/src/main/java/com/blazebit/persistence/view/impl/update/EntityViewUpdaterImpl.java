@@ -81,12 +81,12 @@ import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.spi.type.VersionBasicUserType;
 
-import javax.persistence.Query;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -190,8 +190,8 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
 
         Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set<?>) viewType.getAttributes();
         String idAttributeName = null;
-        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute = null;
-        javax.persistence.metamodel.SingularAttribute<?, ?> viewIdMappingAttribute = null;
+        jakarta.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttribute = null;
+        jakarta.persistence.metamodel.SingularAttribute<?, ?> viewIdMappingAttribute = null;
         AbstractMethodAttribute<?, ?> idAttribute;
         AbstractMethodAttribute<?, ?> versionAttribute;
 
@@ -340,7 +340,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                         ExtendedManagedType managedType = entityMetamodel.getManagedType(ExtendedManagedType.class, extendedAttribute.getElementClass());
                         deleter = new UnmappedWritableBasicAttributeSetNullCascadeDeleter(evm, entityType, managedType, extendedAttribute.getWritableMappedByMappings((EntityType<?>) managedType.getType()));
                     } else {
-                        if (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == javax.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
+                        if (((jakarta.persistence.metamodel.PluralAttribute<?, ?, ?>) extendedAttribute.getAttribute()).getCollectionType() == jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP) {
                             deleter = new UnmappedMapAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
                         } else {
                             deleter = new UnmappedCollectionAttributeCascadeDeleter(evm, unmappedAttributeName, extendedAttribute, entityClass, idAttributeName, false);
@@ -520,7 +520,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 throw new IllegalArgumentException("Plural attributes in embeddable types aren't supported yet! Remove attribute " + attribute.getName() + " of type " + attribute.getDeclaringType().getJavaType().getName() + " or use an entity view instead of the embeddable type!");
             }
             SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
-            if (attr.getType() instanceof javax.persistence.metamodel.BasicType<?>) {
+            if (attr.getType() instanceof jakarta.persistence.metamodel.BasicType<?>) {
                 String attributeName = attributePrefix + attribute.getName();
                 String attributeMapping = mappingPrefix + attribute.getName();
                 String parameterName = attributeName;
@@ -986,7 +986,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                 }
                 subviewIdAccessor = Accessors.forSubviewAssociationId(evm, attributeViewType, attributeElementIdMapping, true);
                 Attribute<?, ?> attributeIdAttribute = attributeViewType.getJpaManagedType().getAttribute(attributeElementIdMapping);
-                javax.persistence.metamodel.Type<?> attributeIdAttributeType = entityMetamodel.type(JpaMetamodelUtils.resolveFieldClass(attributeViewType.getEntityClass(), attributeIdAttribute));
+                jakarta.persistence.metamodel.Type<?> attributeIdAttributeType = entityMetamodel.type(JpaMetamodelUtils.resolveFieldClass(attributeViewType.getEntityClass(), attributeIdAttribute));
                 List<String> idComponentMappings;
                 boolean requiresComponentWiseSetInUpdate = true;
 
@@ -1162,7 +1162,7 @@ public class EntityViewUpdaterImpl implements EntityViewUpdater {
                     }
                     subviewIdAccessor = Accessors.forSubviewAssociationId(evm, attributeViewType, attributeElementIdMapping, true);
                     Attribute<?, ?> attributeIdAttribute = attributeViewType.getJpaManagedType().getAttribute(attributeElementIdMapping);
-                    javax.persistence.metamodel.Type<?> attributeIdAttributeType = entityMetamodel.type(JpaMetamodelUtils.resolveFieldClass(attributeViewType.getEntityClass(), attributeIdAttribute));
+                    jakarta.persistence.metamodel.Type<?> attributeIdAttributeType = entityMetamodel.type(JpaMetamodelUtils.resolveFieldClass(attributeViewType.getEntityClass(), attributeIdAttribute));
                     List<String> idComponentMappings;
                     boolean requiresComponentWiseSetInUpdate = true;
 

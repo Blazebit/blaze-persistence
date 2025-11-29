@@ -5,9 +5,9 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.SetJoin;
 
 /**
  * An extended version of {@link SetJoin}.

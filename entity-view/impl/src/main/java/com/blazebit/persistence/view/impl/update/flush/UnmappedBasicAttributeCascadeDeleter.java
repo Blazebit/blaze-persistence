@@ -14,10 +14,10 @@ import com.blazebit.persistence.spi.ExtendedManagedType;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.update.UpdateContext;
 
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

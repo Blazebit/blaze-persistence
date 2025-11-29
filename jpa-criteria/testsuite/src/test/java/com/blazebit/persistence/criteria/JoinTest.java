@@ -5,11 +5,6 @@
 
 package com.blazebit.persistence.criteria;
 
-import static org.junit.Assert.assertEquals;
-
-import javax.persistence.criteria.JoinType;
-
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -18,7 +13,9 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Person_;
-import org.junit.experimental.categories.Category;
+import jakarta.persistence.criteria.JoinType;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -123,8 +120,6 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: Report that SingularAttributeImpl#getBindableType() returns ENTITY_TYPE instead of SINGULAR_ATTRIBUTE
-    @Category(NoDatanucleus.class)
     public void listStringMapEmbeddableJoinWithFunctions() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

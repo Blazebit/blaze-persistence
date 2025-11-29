@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 @Configuration
 public class BlazePersistenceAutoConfigurationImportFilter implements AutoConfigurationImportFilter {

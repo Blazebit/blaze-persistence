@@ -11,7 +11,7 @@ import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.junit.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import static org.junit.Assert.*;
 
@@ -25,6 +25,8 @@ public class EntityViewExtensionTest {
     @Inject
     private EntityViewConfiguration config;
 
+    // NOTE: IntelliJ can't run this test correctly, because it doesn't interpret the
+    // <useModulePath>false</useModulePath> setting in the pom.xml correctly
     @Test
     public void testInjection() throws Exception {
         CdiContainer container = CdiContainerLoader.getCdiContainer();

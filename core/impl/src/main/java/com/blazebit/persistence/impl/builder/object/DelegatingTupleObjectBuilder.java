@@ -8,7 +8,7 @@ package com.blazebit.persistence.impl.builder.object;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.SelectInfo;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 import java.util.List;
 import java.util.Map;
 

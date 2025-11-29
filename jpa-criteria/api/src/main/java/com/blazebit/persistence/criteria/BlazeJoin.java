@@ -5,10 +5,10 @@
 
 package com.blazebit.persistence.criteria;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * An extended version of {@link Join}.

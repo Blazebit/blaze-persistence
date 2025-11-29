@@ -23,7 +23,7 @@ link:documentation/core/manual/en_US/index.html[Core Reference, window="_blank"]
 The reference documentation for the Core module
 +
 [.versions]
-//link:documentation/1.7/core/manual/en_US/index.html[Development 1.7, window="_blank", role="development-version"]
+link:documentation/2.0/core/manual/en_US/index.html[Development 2.0, window="_blank", role="development-version"]
 link:documentation/1.6/core/manual/en_US/index.html[Latest stable 1.6, window="_blank", role="stable-version"]
 Older
 link:documentation/1.5/core/manual/en_US/index.html[1.5, window="_blank"],
@@ -35,7 +35,7 @@ link:documentation/entity-view/manual/en_US/index.html[Entity View Reference, wi
 The reference documentation for the Entity View module
 +
 [.versions]
-//link:documentation/1.7/entity-view/manual/en_US/index.html[Development 1.7, window="_blank", role="development-version"]
+link:documentation/2.0/entity-view/manual/en_US/index.html[Development 2.0, window="_blank", role="development-version"]
 link:documentation/1.6/entity-view/manual/en_US/index.html[Latest stable 1.6, window="_blank", role="stable-version"]
 Older
 link:documentation/1.5/entity-view/manual/en_US/index.html[1.5, window="_blank"],

@@ -8,11 +8,11 @@ package com.blazebit.persistence.impl.query;
 import com.blazebit.persistence.impl.ParameterValueTransformer;
 import com.blazebit.persistence.impl.ValuesParameterBinder;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;

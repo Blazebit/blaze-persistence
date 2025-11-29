@@ -12,8 +12,8 @@ import com.blazebit.persistence.view.metamodel.ViewRoot;
 import com.blazebit.persistence.view.spi.EntityViewMapping;
 import com.blazebit.persistence.view.spi.EntityViewRootMapping;
 
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Type;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;

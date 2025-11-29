@@ -13,8 +13,8 @@ import ${package}.model.Person;
 import ${package}.view.CatSimpleView;
 import ${package}.view.CatWithOwnerView;
 import ${package}.view.PersonSimpleView;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SampleTest extends AbstractSampleTest {
 
@@ -38,7 +38,7 @@ public class SampleTest extends AbstractSampleTest {
             List<CatWithOwnerView> list = cb.getResultList();
             
             System.out.println(list);
-            Assert.assertEquals(6, list.size());
+            assertEquals(6, list.size());
         });
     }
 }

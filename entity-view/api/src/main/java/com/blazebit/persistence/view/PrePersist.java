@@ -5,14 +5,14 @@
 
 package com.blazebit.persistence.view;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to mark a method to be executed before a call to {@link javax.persistence.EntityManager#persist(Object)} when flushing
+ * Annotation to mark a method to be executed before a call to {@link jakarta.persistence.EntityManager#persist(Object)} when flushing
  * the creatable entity view containing this method via {@link EntityViewManager#save(EntityManager, Object)}.
  * A method annotated with <code>@PrePersist</code> may optionally have the following parameters
  * <ul>

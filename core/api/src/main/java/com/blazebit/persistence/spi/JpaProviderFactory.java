@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.spi;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * A service provider factory to create {@link JpaProvider} instances.

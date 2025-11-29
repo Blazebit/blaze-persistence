@@ -9,7 +9,8 @@ import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 
 /**
  * @author Moritz Becker
- * @since 1.2.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class SystemPropertyBasedActiveProfilesResolver extends DefaultActiveProfilesResolver {
 

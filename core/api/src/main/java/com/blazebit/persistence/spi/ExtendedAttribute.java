@@ -7,14 +7,14 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.JoinType;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * This is a wrapper around the JPA {@link javax.persistence.metamodel.Attribute} that allows additionally efficient access to properties of the metamodel.
+ * This is a wrapper around the JPA {@link jakarta.persistence.metamodel.Attribute} that allows additionally efficient access to properties of the metamodel.
  *
  * @param <X> The Java type represented by the managed type owning the attribute
  * @param <Y> The Java element type of the attribute

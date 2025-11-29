@@ -6,7 +6,6 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -32,8 +31,6 @@ public class EntityEqualityGeneralTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus does not support transient objects as parameters
-    @Category({ NoDatanucleus.class })
     public void neverRewriteEntityAssociationEqualsTransientEntityParameterInWhere() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.owner").eq(new Person(1L));

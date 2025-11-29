@@ -20,9 +20,9 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.type.BasicUserType;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
@@ -189,11 +189,11 @@ public class ViewMetamodelImpl implements ViewMetamodel {
 
             // Try to set any value on instance so that it would differ from instance1
             for (SingularAttribute<?, ?> jpaAttribute : jpaAttributes) {
-                javax.persistence.metamodel.Type<?> type = jpaAttribute.getType();
+                jakarta.persistence.metamodel.Type<?> type = jpaAttribute.getType();
                 Class<?> attributeType = JpaMetamodelUtils.resolveFieldClass(javaType, jpaAttribute);
                 Object value = typeTestValues.get(attributeType);
                 if (value == null) {
-                    if (type.getPersistenceType() == javax.persistence.metamodel.Type.PersistenceType.BASIC) {
+                    if (type.getPersistenceType() == jakarta.persistence.metamodel.Type.PersistenceType.BASIC) {
                         if (attributeType.isEnum()) {
                             value = attributeType.getEnumConstants()[0];
                         } else {

@@ -7,10 +7,10 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.JoinType;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.List;
 import java.util.Map;
 
@@ -510,15 +510,6 @@ public interface JpaProvider {
      * @return true if supported, else false
      */
     public boolean supportsTransientEntityAsParameter();
-
-    /**
-     * Indicates if the provider needs associations in the ON clause to use their id.
-     * If needed, an expression like <code>alias.association</code> in the ON clause is rewritten to
-     * <code>alias.association.id</code>.
-     *
-     * @return true if required, else false
-     */
-    public boolean needsAssociationToIdRewriteInOnClause();
 
     /**
      * Indicates if the provider needs associations in the ON clause to use their id.

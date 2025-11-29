@@ -6,7 +6,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  *

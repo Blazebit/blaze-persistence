@@ -40,12 +40,12 @@ Here is a rough overview of new features that are introduced by Blaze-Persistenc
 
 * Use CTEs and recursive CTEs
 * Use modification CTEs aka DML in CTEs
-* Make use of the RETURNING clause from DML statements
-* Use the VALUES clause for reporting queries and soon make use of table generating functions
-* Create queries that use SET operations like UNION, EXCEPT and INTERSECT
+* Make use of the `RETURNING` clause from DML statements
+* Use the `VALUES` clause for reporting queries and soon make use of table generating functions
+* Create queries that use SET operations like `UNION`, `EXCEPT` and `INTERSECT`
 * Manage entity collections via DML statements to avoid reading them in memory
-* Define functions similar to Hibernates SQLFunction in a JPA provider agnostic way
-* Use many built-in functions like GROUP_CONCAT, date extraction, date arithmetic and many more
+* Define functions similar to Hibernates `SQLFunction` in a JPA provider agnostic way
+* Use many built-in functions like `GROUP_CONCAT`, date extraction, date arithmetic and many more
 * Easy pagination and simple API to make use of keyset pagination
 
 In addition to that, Blaze-Persistence also works around some JPA provider issues in a transparent way.
@@ -114,71 +114,47 @@ mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=
 Java EE archetype:
 
 ```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-java-ee-sample" "-DarchetypeVersion=1.6.17"
-```
-
-Core-only Jakarta archetype:
-
-```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-core-sample-jakarta" "-DarchetypeVersion=1.6.17"
-```
-
-Entity view Jakarta archetype:
-
-```bash
-mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-entity-view-sample-jakarta" "-DarchetypeVersion=1.6.17"
+mvn archetype:generate "-DarchetypeGroupId=com.blazebit" "-DarchetypeArtifactId=blaze-persistence-archetype-jakarta-ee-sample" "-DarchetypeVersion=1.6.17"
 ```
 
 ## Supported Java runtimes
 
-All projects are built for Java 7 except for the ones where dependencies already use Java 8 like e.g. Hibernate 5.2, Spring Data 2.0 etc.
-So you are going to need a JDK 8 for building the project. The latest Java version we test and support is Java 21.
-
-We also support building the project with JDK 9 and try to keep up with newer versions.
-If you want to run your application on a Java 9 JVM you need to handle the fact that JDK 9+ doesn't export the JAXB and JTA APIs anymore.
-In fact, JDK 11 removed the modules, so the command line flags to add modules to the classpath won't work.
-
-Since libraries like Hibernate and others require these APIs you need to make them available. The easiest way to get these APIs back on the classpath is to package them along with your application.
-This will also work when running on Java 8. We suggest you add the following dependencies.
+All projects are built for Java 11 except for the ones where dependencies already use Java 17 like e.g. Spring Data integration etc.
+So you are going to need a JDK 17 for building the project. The latest Java version we test and support is Java 21.
 
 ```xml
 <dependency>
     <groupId>jakarta.xml.bind</groupId>
     <artifactId>jakarta.xml.bind-api</artifactId>
-    <!-- Use version 3.0.1 if you want to use Jakarta EE 9 -->
-    <version>2.3.3</version>
+    <version>3.0.1</version>
     <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>com.sun.xml.bind</groupId>
     <artifactId>jaxb-impl</artifactId>
-    <!-- Use version 3.0.2 if you want to use Jakarta EE 9 -->
-    <version>2.3.3</version>
+    <version>3.0.2</version>
     <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.transaction</groupId>
     <artifactId>jakarta.transaction-api</artifactId>
-    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
-    <version>1.3.3</version>
+    <version>2.0.1</version>
     <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.activation</groupId>
     <artifactId>jakarta.activation-api</artifactId>
-    <!-- Use version 2.0.1 if you want to use Jakarta EE 9 -->
-    <version>1.2.2</version>
+    <version>2.0.1</version>
     <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
 <dependency>
     <groupId>jakarta.annotation</groupId>
     <artifactId>jakarta.annotation-api</artifactId>
-    <!-- Use version 2.0.0 if you want to use Jakarta EE 9 -->
-    <version>1.3.5</version>
+    <version>2.1.1</version>
     <!-- In a managed environment like Java/Jakarta EE, use 'provided'. Otherwise use 'compile' -->
     <scope>provided</scope>
 </dependency>
@@ -188,28 +164,25 @@ The `jakarta.transaction` and `jakarta.activation` dependencies are especially r
 
 ## Supported environments/libraries
 
-The bare minimum is JPA 2.0. If you want to use the JPA Criteria API module, you will also have to add the JPA 2 compatibility module.
-Generally, we support the usage in Java EE 6+ or Spring 4+ applications.
+The bare minimum is JPA 3.1. Generally, we support the usage in Java EE 10+, Quarkus 3+ or Spring 6+ applications.
 
 See the following table for an overview of supported versions.
 
-Module                           | Minimum version                     | Supported versions
----------------------------------|-------------------------------------|--------------------
-Hibernate integration            | Hibernate 4.2                       | 4.2, 4.3, 5.0+, 6.2+, 7.1 (not all features are available in older versions)
-EclipseLink integration          | EclipseLink 2.6                     | 2.6 (Probably 2.4 and 2.5 work as well, but only tested against 2.6)
-DataNucleus integration          | DataNucleus 4.1                     | 4.1, 5.0
-OpenJPA integration              | N/A                                 | (Currently not usable. OpenJPA doesn't seem to be actively developed anymore and no users asked for support yet)
-Entity View CDI integration      | CDI 1.0                             | 1.0, 1.1, 1.2, 2.0, 3.0
-Entity View Spring integration   | Spring 4.3                          | 4.3, 5.0, 5.1, 5.2, 5.3, 6.0
-DeltaSpike Data integration      | DeltaSpike 1.7                      | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.7, 3.1 - 3.5
-Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3 | Spring Data 1.11 - 3.5, Spring WebMvc 4.3 - 6.2
-Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0 | Spring Data 2.0 - 3.5, Spring WebFlux 5.0 - 6.2
-Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2  | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
-Jackson integration              | 2.8.11                              | 2.8.11+
-GraphQL integration              | 17.3                                | 17.3+
-JAX-RS integration               | Any JAX-RS version                  | Any JAX-RS version
-Quarkus integration              | 1.4.2                               | 1.4+, 2.0+, 3.1+
+Module                           | Minimum version    | Supported versions
+---------------------------------|--------------------|--------------------
+Hibernate integration            | Hibernate 6.2      | 6.2, 6.4, 6.6, 7.1+
+EclipseLink integration          | EclipseLink 4.0    | 4.0
+Entity View CDI integration      | CDI 4.0            | 4.0+
+Entity View Spring integration   | Spring 6.0         | 6.0, 6.1, 6.2, 7.0
+DeltaSpike Data integration      | DeltaSpike 2.0     | 2.0
+Spring Data integration          | Spring Data 3.1    | 3.1 - 3.5, 4.0
+Spring Data WebMvc integration   | Spring WebMvc 6.0  | 6.0, 6.1, 6.2, 7.0
+Spring Data WebFlux integration  | Spring WebFlux 6.0 | 6.0, 6.1, 6.2, 7.0
+Spring HATEOAS WebMvc integration| Spring HATEOAS 2.1 | Spring WebMvc 6.0+, Spring HATEOAS 2.1+
+Jackson integration              | 2.8.11             | 2.8.11+
+GraphQL integration              | 17.3               | 17.3+
+JAX-RS integration               | JAX-RS 3.1         | 3.1+
+Quarkus integration              | 3.20               | 3.20+
 
 ## Manual setup
 
@@ -438,12 +411,7 @@ Here some notes about setting up a local environment for testing.
 
 ## Setup general build environment
 
-Although Blaze-Persistence still supports running on Java 7, the build must be run with at least JDK 8.
-When doing a release at least a JDK 9 is required as we need to build some Multi-Release or MR JARs.
-Since we try to support the latest JDK versions as well, we require developers that want to build the project with JDK 11+ to define a system property for a release build.
-
-The system property `jdk8.home` should be set to the path to a Java 7 or 8 installation that contains either `jre/lib/rt.jar` or `jre/lib/classes.jar`.
-This property is necessary when using JDK 11+ because `sun.misc.Unsafe.defineClass` was removed.
+Although Blaze-Persistence still supports running on Java 11, the build must be run with at least JDK 17.
 
 ## Building the website and documentation
 
@@ -464,40 +432,22 @@ Click on *Check project* and checkstyle will run once for the whole project, the
 
 ## Testing a JPA provider and DBMS combination
 
-By default, a Maven build `mvn clean install` will test against H2 and Hibernate 5.2 but you can activate different profiles to test other combinations.
+By default, a Maven build `mvn clean install` will test against H2, Hibernate 6.6 and Spring Boot/Data 3.3, but you can activate different profiles to test other combinations.
 To test a specific combination, you need to activate at least 4 profiles
 
 * One of the JPA provider profiles
   * `hibernate-7.1` + the `jakarta` profile
-  * `hibernate-6.6` + the `jakarta` profile
-  * `hibernate-6.5` + the `jakarta` profile
-  * `hibernate-6.4` + the `jakarta` profile
-  * `hibernate-6.3` + the `jakarta` profile
-  * `hibernate-6.2` + the `jakarta` profile
-  * `hibernate-5.6`
-  * `hibernate-5.5`
-  * `hibernate-5.4`
-  * `hibernate-5.3`
-  * `hibernate-5.2`
-  * `hibernate-5.1`
-  * `hibernate-5.0`
-  * `hibernate-4.3`
-  * `hibernate`
+  * `hibernate-6.6`
+  * `hibernate-6.4`
+  * `hibernate-6.2`
   * `eclipselink`
-  * `datanucleus-5.1`
-  * `datanucleus-5`
-  * `datanucleus-4`
-  * `openjpa`
 * A DBMS profile
   * `h2`
   * `postgresql`
   * `mysql`
-  * `mysql8`
   * `oracle`
   * `db2`
   * `mssql`
-  * `firebird`
-  * `sqllite`
 * A Spring data profile
   * `spring-data-4.0.x`
   * `spring-data-3.5.x`
@@ -505,19 +455,11 @@ To test a specific combination, you need to activate at least 4 profiles
   * `spring-data-3.3.x`
   * `spring-data-3.2.x`
   * `spring-data-3.1.x`
-  * `spring-data-2.7.x`
-  * `spring-data-2.6.x`
-  * `spring-data-2.5.x`
-  * `spring-data-2.4.x`
-  * `spring-data-2.3.x`
-  * `spring-data-2.2.x`
-  * `spring-data-2.1.x`
-  * `spring-data-2.0.x`
-  * `spring-data-1.11.x`
+  * `spring-data-3.3.x`
+  * `spring-data-3.2.x`
+  * `spring-data-3.1.x`
 * A DeltaSpike profile
-  * `deltaspike-1.9`
-  * `deltaspike-1.8`
-  * `deltaspike-1.7`
+  * `deltaspike-2.0`
 
 The default DBMS connection infos are defined via Maven properties, so you can override them in a build by passing the properties as system properties.
 
@@ -530,11 +472,6 @@ The values are defined in e.g. `core/testsuite/pom.xml` in the respective DBMS p
 
 For executing tests against a database on a dedicated host you might want to specify the following system property `-DdbHost=192.168.99.100`.
 
-## Testing with Jakarta Persistence provider
-
-To build everything use `mvn -pl core/testsuite-jakarta-runner clean install -am -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" -DskipTests`
-and to run tests use `mvn -pl core/testsuite-jakarta-runner clean install -P "hibernate-6.2,jakarta,h2,spring-data-2.6.x,deltaspike-1.9" "-Dtest=com.blazebit.persistence.testsuite.SetOperationTest#testUnionAllOrderBySubqueryLimit"`.
-
 ## Switching JPA provider profiles in IntelliJ
 
 When switching between Hibernate and other JPA provider profiles, IntelliJ does not unmark the `basic` or `hibernate` source directories in *core/testsuite*.
@@ -544,31 +481,6 @@ If you encounter errors like _duplicate class file found_ or something alike, ma
 * With a non-Hibernate profile you unmark the *core/testsuite/src/main/hibernate* and *core/testsuite/src/test/hibernate* directory as source root
 
 Unmarking as source root can be done by right clicking on the source directory, going to the submenu _Mark directory as_ and finally clicking _Unmark as Sources Root_.
-
-## Using DataNucleus profiles in IntelliJ
-
-DataNucleus requires bytecode enhancement to work properly which requires an extra step to be able to do testing within IntelliJ.
-Usually when switching the JPA provider profile, it is recommended to trigger a _Rebuild Project_ action in IntelliJ to avoid strange errors causes by previous bytecode enhancement runs.
-After that, the entities in the project *core/testsuite* have to be enhanced. This is done through a Maven command.
-
-* DataNucleus 4: `mvn -P "datanucleus-4,h2,deltaspike-1.8,spring-data-2.0.x" -pl core/testsuite,entity-view/testsuite,integration/spring-data/testsuite/webmvc,integration/spring-data/testsuite/webflux datanucleus:enhance`
-* DataNucleus 5: `mvn -P "datanucleus-5,h2,deltaspike-1.8,spring-data-2.0.x" -pl core/testsuite,entity-view/testsuite,integration/spring-data/testsuite/webmvc,integration/spring-data/testsuite/webflux datanucleus:enhance`
-* DataNucleus 5.1: `mvn -P "datanucleus-5.1,h2,deltaspike-1.8,spring-data-2.0.x" -pl core/testsuite,entity-view/testsuite,integration/spring-data/testsuite/webmvc,integration/spring-data/testsuite/webflux datanucleus:enhance`
-
-After doing that, you should be able to execute any test in IntelliJ.
-
-Note that if you make changes to an entity class or add a new entity class you might need to redo the rebuild and enhancement. 
-
-## Firebird
-
-When installing the 3.x version, you also need a 3.x JDBC driver.
-Additionally you should add the following to the firebird.conf
-
-```
-WireCrypt = Enabled
-```
-
-After creating the DB with `create database 'localhost:test' user 'sysdba' password 'sysdba';`, you can connect with JDBC with `jdbc:firebirdsql:localhost:test?charSet=utf-8`
 
 ## Oracle
 
@@ -580,14 +492,14 @@ In IntelliJ when defining the Oracle database, go to the Advanced tab an specify
 
 The general setup required for building native images with GraalVM is described in https://quarkus.io/guides/building-native-image.
 
-* Install GraalVM 20.2.0 (Java 11) and make sure you install the native-image tool and set `GRAALVM_HOME` environment variable
+* Install GraalVM 22.3.0 (Java 17) and make sure you install the native-image tool and set `GRAALVM_HOME` environment variable
 * Install required packages for a C development environment
   *  Under Windows, install [Visual Studio 2017 Visual C++ Build Tools](https://aka.ms/vs/15/release/vs_buildtools.exe)
 
 For example, run the following maven build to execute native image tests for H2:
 
 ```
-mvn -pl examples/quarkus/testsuite/native/h2 -am integration-test -Pnative,h2,spring-data-2.7.x,deltaspike-1.9
+mvn -pl examples/quarkus/testsuite/native/h2 -am integration-test -Pnative,h2,spring-data-3.3.x,deltaspike-2.0
 ```
 
 Under Windows, make sure you run maven builds that use native image from the VS2017 native tools command line.

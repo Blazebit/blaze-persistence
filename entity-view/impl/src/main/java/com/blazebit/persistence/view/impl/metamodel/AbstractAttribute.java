@@ -77,9 +77,9 @@ import com.blazebit.persistence.view.metamodel.Type;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -136,7 +136,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final MappingType mappingType;
     protected final boolean id;
     protected final boolean isAggregate;
-    protected final javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
+    protected final jakarta.persistence.metamodel.Attribute<?, ?> updateMappableAttribute;
     private final List<TargetType> possibleTargetTypes;
     private final List<TargetType> possibleIndexTargetTypes;
 
@@ -197,7 +197,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         SubqueryProviderFactory subqueryProviderFactory = null;
         Class<? extends SubqueryProvider> subqueryProvider = null;
         boolean id = false;
-        javax.persistence.metamodel.Attribute<?, ?> updateMappableAttribute = null;
+        jakarta.persistence.metamodel.Attribute<?, ?> updateMappableAttribute = null;
         String subqueryExpression = null;
         Expression subqueryResultExpression = null;
         String subqueryAlias = null;
@@ -362,7 +362,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             }
             correlationProviderFactory = CorrelationProviderHelper.getFactory(correlationProvider);
             ScalarTargetResolvingExpressionVisitor resolver = new ScalarTargetResolvingExpressionVisitor(declaringType.getJpaManagedType(), context.getEntityMetamodel(), context.getJpqlFunctions(), declaringType.getEntityViewRootTypes());
-            javax.persistence.metamodel.Type<?> type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, "_alias", context, resolver);
+            jakarta.persistence.metamodel.Type<?> type = TypeExtractingCorrelationBuilder.extractType(correlationProviderFactory, "_alias", context, resolver);
             correlated = type == null ? null : type.getJavaType();
         } else if (mappingAnnotation instanceof MappingCorrelatedSimple) {
             MappingCorrelatedSimple mappingCorrelated = (MappingCorrelatedSimple) mappingAnnotation;
@@ -489,12 +489,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return ReflectionUtils.resolveType(declaringClass, convertedType);
     }
 
-    private javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(MetamodelBuildingContext context, Expression mappingExpression) {
+    private jakarta.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute(MetamodelBuildingContext context, Expression mappingExpression) {
         if (mappingExpression != null) {
             try {
                 UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(context.getEntityMetamodel(), declaringType.getEntityClass(), true, declaringType.getEntityViewRootTypes());
                 mappingExpression.accept(visitor);
-                Iterator<javax.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
+                Iterator<jakarta.persistence.metamodel.Attribute<?, ?>> iterator = visitor.getPossibleTargets().keySet().iterator();
                 if (iterator.hasNext()) {
                     return iterator.next();
                 }
@@ -652,9 +652,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         if (isCollection() && getMapping() != null && getMapping().indexOf('.') == -1 && getMappingIndexExpression() == null && getKeyMappingExpression() == null) {
             ExtendedManagedType<?> managedType = context.getEntityMetamodel().getManagedType(ExtendedManagedType.class, getDeclaringType().getJpaManagedType());
             ExtendedAttribute<?, ?> attribute = managedType.getOwnedAttributes().get(getMapping());
-            if (attribute != null && attribute.getAttribute() instanceof javax.persistence.metamodel.PluralAttribute<?, ?, ?>) {
+            if (attribute != null && attribute.getAttribute() instanceof jakarta.persistence.metamodel.PluralAttribute<?, ?, ?>) {
                 // TODO: we should add that information to ExtendedAttribute
-                return (((javax.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != javax.persistence.metamodel.PluralAttribute.CollectionType.MAP)
+                return (((jakarta.persistence.metamodel.PluralAttribute<?, ?, ?>) attribute.getAttribute()).getCollectionType() != jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP)
                         && (!StringUtils.isEmpty(attribute.getMappedBy()) || !attribute.isBag())
                         && (attribute.getJoinTable() == null || attribute.getJoinTable().getKeyColumnMappings() == null)
                         && !MetamodelUtils.isIndexedList(context.getEntityMetamodel(), managedType.getType().getJavaType(), mappingExpression, mapping);
@@ -664,7 +664,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return false;
     }
 
-    public javax.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute() {
+    public jakarta.persistence.metamodel.Attribute<?, ?> getUpdateMappableAttribute() {
         return updateMappableAttribute;
     }
 
@@ -777,7 +777,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
      * @param singular Whether the view attribute is singular
      * @return True if mapping from <code>entityAttributeType</code>/<code>entityAttributeElementType</code> to <code>targetType</code>/<code>viewAttributeElementType</code> is possible
      */
-    private static boolean isCompatible(javax.persistence.metamodel.Attribute<?, ?> attribute, Class<?> entityAttributeType, Class<?> entityAttributeElementType, Class<?> viewAttributeType, Class<?> viewAttributeElementType, boolean updatable, boolean singular) {
+    private static boolean isCompatible(jakarta.persistence.metamodel.Attribute<?, ?> attribute, Class<?> entityAttributeType, Class<?> entityAttributeElementType, Class<?> viewAttributeType, Class<?> viewAttributeElementType, boolean updatable, boolean singular) {
         // Null is the marker for ANY TYPE
         if (entityAttributeType == null) {
             return true;
@@ -848,7 +848,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
     }
 
-    private static void validateTypesCompatible(ManagedType<?> managedType, Expression expression, Class<?> targetType, Class<?> targetElementType, boolean updatable, boolean singular, Map<String, javax.persistence.metamodel.Type<?>> rootTypes, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
+    private static void validateTypesCompatible(ManagedType<?> managedType, Expression expression, Class<?> targetType, Class<?> targetElementType, boolean updatable, boolean singular, Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes, MetamodelBuildingContext context, ExpressionLocation expressionLocation, String location) {
         ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, context.getEntityMetamodel(), context.getJpqlFunctions(), rootTypes);
 
         try {
@@ -930,7 +930,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         Class<?> keyType = null;
         Class<?> elementType = null;
         ManagedType<?> elementManagedType;
-        javax.persistence.metamodel.Attribute<?, ?> elementAttribute;
+        jakarta.persistence.metamodel.Attribute<?, ?> elementAttribute;
         if (possibleTargetTypes.size() != 1) {
             if (getElementType() instanceof ManagedViewType<?>) {
                 elementManagedType = context.getEntityMetamodel().getManagedType(((ManagedViewType<?>) getElementType()).getEntityClass());
@@ -1131,7 +1131,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     correlationPredicate.accept(aliasReplacementVisitor);
                     // Finally we validate that the expression
                     try {
-                        Map<String, javax.persistence.metamodel.Type<?>> rootTypes = new HashMap<>(declaringType.getEntityViewRootTypes());
+                        Map<String, jakarta.persistence.metamodel.Type<?>> rootTypes = new HashMap<>(declaringType.getEntityViewRootTypes());
                         rootTypes.put(correlationKeyAlias, managedType);
                         ScalarTargetResolvingExpressionVisitor correlationVisitor = new ScalarTargetResolvingExpressionVisitor(correlated, context.getEntityMetamodel(), context.getJpqlFunctions(), rootTypes);
                         correlationPredicate.accept(correlationVisitor);
@@ -1171,7 +1171,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     // I guess these attributes are not "updatable" but that probably depends on the decision regarding collections as they have a similar problem
                     // A collection itself might not be "updatable" but it's elements could be. This is roughly the same problem
                     mappingExpression.accept(updatableVisitor);
-                    Map<javax.persistence.metamodel.Attribute<?, ?>, javax.persistence.metamodel.Type<?>> possibleTargets = updatableVisitor.getPossibleTargets();
+                    Map<jakarta.persistence.metamodel.Attribute<?, ?>, jakarta.persistence.metamodel.Type<?>> possibleTargets = updatableVisitor.getPossibleTargets();
 
                     if (possibleTargets.size() > 1) {
                         context.addError("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);

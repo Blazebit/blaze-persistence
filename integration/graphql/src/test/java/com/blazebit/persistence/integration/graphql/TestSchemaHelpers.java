@@ -118,49 +118,49 @@ public class TestSchemaHelpers {
         when(selectionSet.getFields()).thenReturn(new ArrayList<>());
         when(selectionSet.getImmediateFields()).thenReturn(new ArrayList<>());
 
-		for (String field : fields) {
-			List<String> qualifiedFieldParts = new ArrayList<>();
-			String[] fieldParts = field.split("/");
-			GraphQLNamedOutputType fieldType = null;
-			String baseType = rootType;
+        for (String field : fields) {
+            List<String> qualifiedFieldParts = new ArrayList<>();
+            String[] fieldParts = field.split("/");
+            GraphQLNamedOutputType fieldType = null;
+            String baseType = rootType;
 
             DataFetchingFieldSelectionSet parentSelectionSet = selectionSet;
             SelectedField immediateField = null;
-			for (int i = 0; i < fieldParts.length; i++) {
-				String fieldPart = fieldParts[i];
-				if (fieldPart.contains(".")) {
-					// provided fieldPart is already fully qualified
-					qualifiedFieldParts.add(fieldPart);
-					baseType = getBaseTypes(fieldPart)[0];
-					fieldPart = (fieldPart.split("\\."))[1];
-				} else {
-					qualifiedFieldParts.add(baseType + "." + fieldPart);
-				}
-				fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
-				baseType = fieldType.getName();
+            for (int i = 0; i < fieldParts.length; i++) {
+                String fieldPart = fieldParts[i];
+                if (fieldPart.contains(".")) {
+                    // provided fieldPart is already fully qualified
+                    qualifiedFieldParts.add(fieldPart);
+                    baseType = getBaseTypes(fieldPart)[0];
+                    fieldPart = (fieldPart.split("\\."))[1];
+                } else {
+                    qualifiedFieldParts.add(baseType + "." + fieldPart);
+                }
+                fieldType = objectFieldToTypeMapping.get(baseType).get(fieldPart);
+                baseType = fieldType.getName();
 
-				immediateField = findField(parentSelectionSet.getImmediateFields(), qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
+                immediateField = findField(parentSelectionSet.getImmediateFields(), qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
 
-				if (immediateField == null) {
-					DataFetchingFieldSelectionSet fieldSelectionSet = mock(DataFetchingFieldSelectionSet.class);
-					when(fieldSelectionSet.getFields()).thenReturn(new ArrayList<>());
-					when(fieldSelectionSet.getImmediateFields()).thenReturn(new ArrayList<>());
+                if (immediateField == null) {
+                    DataFetchingFieldSelectionSet fieldSelectionSet = mock(DataFetchingFieldSelectionSet.class);
+                    when(fieldSelectionSet.getFields()).thenReturn(new ArrayList<>());
+                    when(fieldSelectionSet.getImmediateFields()).thenReturn(new ArrayList<>());
 
-					immediateField = mock(SelectedField.class);
-					when(immediateField.getFullyQualifiedName()).thenReturn(qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
-					when(immediateField.getQualifiedName()).thenReturn(fieldPart);
-					when(immediateField.getName()).thenReturn(fieldPart);
-					when(immediateField.getType()).thenReturn(fieldType);
-					when(immediateField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length - 1])));
-					when(immediateField.getSelectionSet()).thenReturn(fieldSelectionSet);
+                    immediateField = mock(SelectedField.class);
+                    when(immediateField.getFullyQualifiedName()).thenReturn(qualifiedFieldParts.get(qualifiedFieldParts.size() - 1));
+                    when(immediateField.getQualifiedName()).thenReturn(fieldPart);
+                    when(immediateField.getName()).thenReturn(fieldPart);
+                    when(immediateField.getType()).thenReturn(fieldType);
+                    when(immediateField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length - 1])));
+                    when(immediateField.getSelectionSet()).thenReturn(fieldSelectionSet);
 
-					parentSelectionSet.getImmediateFields().add(immediateField);
-					parentSelectionSet = fieldSelectionSet;
-				}
-				else {
-					parentSelectionSet = immediateField.getSelectionSet();
-				}
-			}
+                    parentSelectionSet.getImmediateFields().add(immediateField);
+                    parentSelectionSet = fieldSelectionSet;
+                }
+                else {
+                    parentSelectionSet = immediateField.getSelectionSet();
+                }
+            }
 
             SelectedField selectedField = mock(SelectedField.class);
             when(selectedField.getFullyQualifiedName()).thenReturn(String.join("/", qualifiedFieldParts));
@@ -169,7 +169,7 @@ public class TestSchemaHelpers {
             when(selectedField.getType()).thenReturn(fieldType);
             when(selectedField.getObjectTypeNames()).thenReturn(Arrays.asList(getBaseTypes(fieldParts[fieldParts.length - 1])));
             selectionSet.getFields().add(selectedField);
-		}
+        }
         return selectionSet;
     }
 

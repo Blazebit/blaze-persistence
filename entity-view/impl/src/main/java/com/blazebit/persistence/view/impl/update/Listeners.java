@@ -20,7 +20,7 @@ import com.blazebit.persistence.view.impl.update.listener.ViewInstancePreRemoveL
 import com.blazebit.persistence.view.impl.update.listener.ViewPreRemoveListenerImpl;
 import com.blazebit.persistence.view.spi.type.EntityViewProxy;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

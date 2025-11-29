@@ -5,8 +5,16 @@
 
 package com.blazebit.persistence.view.testsuite.update.subview.nested.mutable;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -17,16 +25,10 @@ import com.blazebit.persistence.view.testsuite.update.AbstractEntityViewUpdateDo
 import com.blazebit.persistence.view.testsuite.update.subview.nested.mutable.model.UpdatableDocumentWithMapsView;
 import com.blazebit.persistence.view.testsuite.update.subview.nested.mutable.model.UpdatableFriendPersonView;
 import com.blazebit.persistence.view.testsuite.update.subview.nested.mutable.model.UpdatableResponsiblePersonView;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  *
@@ -34,8 +36,7 @@ import static org.junit.Assert.*;
  * @since 1.2.0
  */
 @RunWith(Parameterized.class)
-// NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class })
+@Category({ NoEclipselink.class })
 public class EntityViewUpdateNestedMutableSubviewMapsTest extends AbstractEntityViewUpdateDocumentTest<UpdatableDocumentWithMapsView> {
 
     public EntityViewUpdateNestedMutableSubviewMapsTest(FlushMode mode, FlushStrategy strategy, boolean version) {

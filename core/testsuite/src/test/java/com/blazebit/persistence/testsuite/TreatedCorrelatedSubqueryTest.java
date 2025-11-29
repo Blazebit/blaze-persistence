@@ -5,8 +5,13 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
@@ -14,12 +19,7 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicBaseContainer;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,8 +28,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.4.0
  */
 // NOTE: EclipseLink does not support subtype property access which is required here
-// NOTE: Seems Datanucleus fails to properly interpret the entity literal
-@Category({ NoEclipselink.class, NoDatanucleus.class })
+@Category({ NoEclipselink.class })
 public class TreatedCorrelatedSubqueryTest extends AbstractCoreTest {
 
     private PolymorphicSub1 root2;

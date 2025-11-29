@@ -14,13 +14,14 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import org.apache.commons.logging.Log;
 import org.reactivestreams.Publisher;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.CodecException;
 import org.springframework.core.codec.DecodingException;
+import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.codec.json.Jackson2CodecSupport;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.lang.Nullable;
@@ -31,8 +32,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.Function;
@@ -42,12 +41,6 @@ import java.util.function.Function;
  * @since 1.4.0
  */
 public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
-    private static final Field LOGGER_FIELD;
-    private static final Method IS_LOGGING_SUPPRESSED;
-    private static final Method GET_LOG_PREFIX_METHOD;
-    private static final Method TRACE_DEBUG_METHOD;
-    private static final Method FORMAT_VALUE_METHOD;
-
     private static final Method DEFER_CONTEXTUAL;
     private static final Method SUBSCRIBER_CONTEXT;
 
@@ -56,27 +49,6 @@ public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
 
     static {
         try {
-            Field loggerField = null;
-            Method isLoggingSuppressed = null;
-            Method traceDebugMethod = null;
-            Method formatValueMethod = null;
-            Method getLogPrefixMethod = null;
-            try {
-                loggerField = Jackson2CodecSupport.class.getDeclaredField("logger");
-                Class<?> hintsClass = Class.forName("org.springframework.core.codec.Hints");
-                Class<?> logFormatUtilsClass = Class.forName("org.springframework.core.log.LogFormatUtils");
-                isLoggingSuppressed = hintsClass.getMethod("isLoggingSuppressed", Map.class);
-                traceDebugMethod = logFormatUtilsClass.getMethod("traceDebug", Log.class, Function.class);
-                formatValueMethod = logFormatUtilsClass.getMethod("formatValue", Object.class, boolean.class);
-                getLogPrefixMethod = hintsClass.getMethod("getLogPrefix", Map.class);
-            } catch (NoSuchFieldException ex) {
-                // Ignore
-            }
-            LOGGER_FIELD = loggerField;
-            IS_LOGGING_SUPPRESSED = isLoggingSuppressed;
-            GET_LOG_PREFIX_METHOD = getLogPrefixMethod;
-            TRACE_DEBUG_METHOD = traceDebugMethod;
-            FORMAT_VALUE_METHOD = formatValueMethod;
             Method deferContextual = null;
             Method subscriberContext = null;
             try {
@@ -168,6 +140,15 @@ public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
         });
     }
 
+    private void logValue(@Nullable Object value, @Nullable Map<String, Object> hints) {
+        if (!Hints.isLoggingSuppressed(hints)) {
+            LogFormatUtils.traceDebug(logger, traceOn -> {
+                String formatted = LogFormatUtils.formatValue(value, !traceOn);
+                return Hints.getLogPrefix(hints) + "Decoded [" + formatted + "]";
+            });
+        }
+    }
+
     private void registerParser(JsonParser jsonParser, Object ctx) {
         try {
             if ((boolean) HAS_KEY.invoke(ctx, EntityViewIdAwareWebFilter.ENTITY_VIEW_ID_CONTEXT_PARAM)) {
@@ -178,22 +159,4 @@ public class EntityViewAwareJackson2JsonDecoder extends Jackson2JsonDecoder {
         }
     }
 
-    private void logValue(Object value, Map<String, Object> hints) {
-        try {
-            if (LOGGER_FIELD != null && !(boolean) IS_LOGGING_SUPPRESSED.invoke(null, hints)) {
-                Log logger = (Log) LOGGER_FIELD.get(this);
-                TRACE_DEBUG_METHOD.invoke(null, logger, (Function<Boolean, String>) traceOn -> {
-                    try {
-                        String formatted = (String) FORMAT_VALUE_METHOD.invoke(null, value, !traceOn);
-                        String logPrefix = (String) GET_LOG_PREFIX_METHOD.invoke(null, hints);
-                        return logPrefix + "Decoded [" + formatted + "]";
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

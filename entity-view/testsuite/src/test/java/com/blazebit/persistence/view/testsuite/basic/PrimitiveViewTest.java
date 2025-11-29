@@ -10,7 +10,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitivePerson;
@@ -27,7 +26,7 @@ import com.blazebit.persistence.view.testsuite.basic.model.PrimitiveSimpleDocume
 import com.blazebit.persistence.view.testsuite.basic.model.SelectFetchingPrimitivePersonView;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -159,9 +158,8 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void entityViewMultisetWithNestedSelectFetching() {
         // Given
         EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);
@@ -181,9 +179,8 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
     }
 
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class })
+    @Category({ NoEclipselink.class })
     public void entityViewMultisetWithNestedJoinFetching() {
         // Given
         EntityViewSetting<PrimitiveDocumentMultisetView, CriteriaBuilder<PrimitiveDocumentMultisetView>> setting = EntityViewSetting.create(PrimitiveDocumentMultisetView.class);

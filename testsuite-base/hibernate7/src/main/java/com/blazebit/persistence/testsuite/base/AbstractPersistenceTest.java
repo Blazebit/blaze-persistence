@@ -207,6 +207,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     }
 
     @Override
+    protected boolean supportsCollectionTableCteDelete() {
+        return true;
+    }
+
+    @Override
     protected boolean supportsMapKeyDeReference() {
         return true;
     }

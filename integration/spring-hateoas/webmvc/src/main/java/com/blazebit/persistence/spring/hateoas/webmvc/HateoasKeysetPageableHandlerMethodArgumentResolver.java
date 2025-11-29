@@ -17,7 +17,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Christian Beikov
- * @since 1.5.0
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public class HateoasKeysetPageableHandlerMethodArgumentResolver extends KeysetPageableHandlerMethodArgumentResolver implements UriComponentsContributor {
 
@@ -81,7 +82,7 @@ public class HateoasKeysetPageableHandlerMethodArgumentResolver extends KeysetPa
 
         // TODO: handle offset etc.
         builder.replaceQueryParam(pagePropertyName, isOneIndexedParameters() ? pageNumber + 1 : pageNumber);
-        builder.replaceQueryParam(sizePropertyName, pageable.getPageSize() <= getMaxPageSize() ? pageable.getPageSize() : getMaxPageSize());
+        builder.replaceQueryParam(sizePropertyName, Math.min(pageable.getPageSize(), getMaxPageSize()));
 
         ((HateoasSortHandlerMethodArgumentResolver) getSortResolver()).enhance(builder, parameter, pageable.getSort());
     }

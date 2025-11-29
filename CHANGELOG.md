@@ -2,6 +2,20 @@
 
 Changes that happened in releases
 
+## 2.0.0-SNAPSHOT
+
+### New features
+
+None yet
+
+### Bug fixes
+
+None yet
+
+### Backwards-incompatible changes
+
+None yet
+
 ## 1.6.18-SNAPSHOT
 
 ### New features

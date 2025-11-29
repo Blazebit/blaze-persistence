@@ -11,7 +11,7 @@ import com.blazebit.persistence.Path;
 import com.blazebit.persistence.parser.expression.BaseNode;
 import com.blazebit.persistence.parser.expression.PathReference;
 
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Christian Beikov

@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,12 +23,7 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoDB2;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -119,10 +114,8 @@ public class BigMultisetTest extends AbstractEntityViewTest {
 
     // NOTE: DB2 crashes when executing this test with the GROUP_CONCAT based implementation
     // NOTE: EclipseLink can't handle multiple subquery select items... Only one expression can be declared in a SELECT clause of a subquery
-    // NOTE: DataNucleus can't handle multiple subquery select items... Number of result expressions in subquery should be 1
-    // NOTE: Java 8 time types are only supported as of Hibernate 5.2
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
+    @Category({ NoDB2.class, NoEclipselink.class })
     public void testCollections() {
         EntityViewManager evm = build(
                 SimplePersonMultisetFetchView.class,
@@ -135,7 +128,7 @@ public class BigMultisetTest extends AbstractEntityViewTest {
                 .where("id").in(pers1.getId(), pers2.getId())
                 .orderByAsc("id");
         CriteriaBuilder<PersonMultisetFetchView> cb = evm.applySetting( EntityViewSetting.create(
-				PersonMultisetFetchView.class), criteria);
+                PersonMultisetFetchView.class), criteria);
         List<PersonMultisetFetchView> results = cb.getResultList();
 
         assertEquals(2, results.size());

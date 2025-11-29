@@ -5,6 +5,20 @@
 
 package com.blazebit.persistence.querydsl;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.JoinType;
@@ -12,7 +26,9 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.Queryable;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.jpa.category.*;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
 import com.blazebit.persistence.testsuite.entity.BookEntity;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
@@ -40,22 +56,17 @@ import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQuery;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import jakarta.persistence.EntityManager;
 
-import javax.persistence.EntityManager;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import static com.blazebit.persistence.querydsl.JPQLNextExpressions.*;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.bind;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.castToNum;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.lastValue;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.literal;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.rowNumber;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.select;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.selectFrom;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.selectOne;
+import static com.blazebit.persistence.querydsl.JPQLNextExpressions.sum;
 import static com.blazebit.persistence.querydsl.SetUtils.intersect;
 import static com.blazebit.persistence.querydsl.SetUtils.union;
 import static com.blazebit.persistence.querydsl.SetUtils.unionAll;
@@ -63,7 +74,6 @@ import static com.blazebit.persistence.testsuite.entity.QDocument.document;
 import static com.blazebit.persistence.testsuite.entity.QIdHolderCTE.idHolderCTE;
 import static com.blazebit.persistence.testsuite.entity.QPerson.person;
 import static com.blazebit.persistence.testsuite.entity.QRecursiveEntity.recursiveEntity;
-import static com.querydsl.core.types.dsl.Expressions.asNumber;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -203,7 +213,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: This requires advanced SQL support
     @Test
-    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testFetchCount() {
         doInJPA(em -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -285,7 +295,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     @Test
     // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
+    @Category({ NoEclipselink.class })
     public void testResultStream() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -318,9 +328,7 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
-    // Note: Datanucleus has issues with  parameters in the select clause
     @Test
-    @Category({NoDatanucleus.class})
     public void testParameterExpressionInSelect() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -352,9 +360,7 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Window functions were only introduced in MySQL8
     @Test
-    @Category({ NoMySQLOld.class })
     public void testWindowFunction() {
         Assume.assumeTrue(dbmsDialect.supportsWindowFunctions());
 
@@ -372,9 +378,7 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Window functions were only introduced in MySQL8
     @Test
-    @Category({ NoMySQLOld.class })
     public void testNamedWindowFunction() {
         Assume.assumeTrue(dbmsDialect.supportsWindowFunctions());
 
@@ -398,7 +402,6 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     @Test
     @Ignore("Filter support is work in progress")
-    @Category({ NoMySQLOld.class })
     public void testFilteredWindowfunction() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -422,7 +425,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testNestedSubQuery() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -467,9 +470,8 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    @Category({ NoEclipselink.class })
     public void testEntityJoin() {
         Assume.assumeTrue(jpaProvider.supportsEntityJoin());
 
@@ -489,7 +491,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testFromValues() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -509,7 +511,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
+    @Category({ NoEclipselink.class })
     public void testFromValuesStream() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -532,7 +534,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testFromValuesAttributes() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -550,7 +552,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void  testComplexUnion() {
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
@@ -560,16 +562,14 @@ public class BasicQueryTest extends AbstractCoreTest {
             entityManager.persist(person);
 
             Document theBook = new Document();
-            theBook.setId(1337L);
             theBook.setName("test");
             theBook.setOwner(person);
-            entityManager.merge(theBook);
+            entityManager.persist(theBook);
 
             Document theSequel = new Document();
-            theSequel.setId(42L);
             theSequel.setName("test2");
             theSequel.setOwner(person);
-            entityManager.merge(theSequel);
+            entityManager.persist(theSequel);
         });
 
         doInJPA(entityManager -> {
@@ -578,7 +578,7 @@ public class BasicQueryTest extends AbstractCoreTest {
                         queryFactory.intersect(
                                 select(document).from(document).where(document.id.eq(41L)),
                                 queryFactory.except(
-                                        select(document).from(document).where(document.id.eq(42L)),
+                                        select(document).from(document).where(document.name.eq("test2")),
                                         select(document).from(document).where(document.id.eq(43L)))),
                         select(document).from(document).where(document.id.eq(46L)))
                     .fetch();
@@ -590,7 +590,7 @@ public class BasicQueryTest extends AbstractCoreTest {
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     // NOTE: MySQL only supports the UNION set operation
     @Test
-    @Category({ NoMySQL.class, NoFirebird.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoMySQL.class, NoEclipselink.class })
     public void testComplexSubqueryUnion() {
         doInJPA(entityManager -> {
             Person person = new Person();
@@ -598,27 +598,25 @@ public class BasicQueryTest extends AbstractCoreTest {
             entityManager.persist(person);
 
             Document theBook = new Document();
-            theBook.setId(1337L);
             theBook.setName("test");
             theBook.setOwner(person);
-            entityManager.merge(theBook);
+            entityManager.persist(theBook);
 
             Document theSequel = new Document();
-            theSequel.setId(42L);
             theSequel.setName("test2");
             theSequel.setOwner(person);
-            entityManager.merge(theSequel);
+            entityManager.persist(theSequel);
         });
 
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
 
             SetExpression<Long> union = queryFactory
-                    .union(select(document.id).from(document).where(document.id.eq(1337L)),
+                    .union(select(document.id).from(document).where(document.name.eq("test")),
                             queryFactory.intersect(
                                     select(document.id).from(document).where(document.id.eq(41L)),
                                     queryFactory.except(
-                                            select(document.id).from(document).where(document.id.eq(42L)),
+                                            select(document.id).from(document).where(document.name.eq("test2")),
                                             select(document.id).from(document).where(document.id.eq(43L)))),
                             select(document.id).from(document).where(document.id.eq(46L))
                     );
@@ -636,7 +634,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCTE() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -652,7 +650,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCTEClone() {
         doInJPA(entityManager -> {
             BlazeJPAQuery<Long> from = new BlazeJPAQuery<Document>(entityManager, cbf)
@@ -668,7 +666,7 @@ public class BasicQueryTest extends AbstractCoreTest {
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     // NOTE: Querydsl integration needs JPA 2.2 for streaming to work
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoHibernate52.class})
+    @Category({ NoEclipselink.class })
     public void testCTEStream() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -685,7 +683,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCTEWithBinds() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -701,7 +699,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCTEWithBindsWithAlias() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -717,7 +715,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCTEWithBinds2() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -735,7 +733,7 @@ public class BasicQueryTest extends AbstractCoreTest {
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     // NOTE: MySQL only supports the UNION set operation
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoEclipselink.class, NoMySQL.class })
     public void testCTEUnion() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -751,7 +749,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testCTEFromValues() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -772,9 +770,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Recursive CTE support was only added in MySQL8
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testRecursiveCTEUnion() {
         Assume.assumeTrue(dbmsDialect.supportsWithClause());
         JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -792,9 +789,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Recursive CTE support was only added in MySQL8
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testRecursiveBindBuilder() {
         Assume.assumeTrue(dbmsDialect.supportsWithClause());
 
@@ -815,7 +811,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testInlineEntityWithLimit() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -837,7 +833,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void testCteInSubquery() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -856,10 +852,8 @@ public class BasicQueryTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // NOTE: Hibernate 5.1 renders t.id = tSub.id rather than t = tSub
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class})
+    @Category({ NoEclipselink.class })
     public void testMultipleInlineEntityWithLimitJoin() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -889,10 +883,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // Oracle, H2 and MySQL <8 do not support lateral joins
+    // H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOracle.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoH2.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testMultipleInlineEntityWithLimitJoinLateral() {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
@@ -924,10 +917,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // Oracle, H2 and MySQL <8 do not support lateral joins
+    // H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoH2.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinInlineEntityWithLimit() {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
@@ -950,10 +942,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // Oracle, H2 and MySQL <8 do not support lateral joins
+    // H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoH2.class, NoMySQLOld.class, NoOracle.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinInlineEntityWithLimitWithCTE() {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
@@ -979,9 +970,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoMySQL.class })
+    @Category({ NoEclipselink.class })
     public void testJoinInlineWithLimitUnion() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -1018,10 +1008,8 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // NOTE: MySQL (also MySQL 8) doesn't yet support 'nesting of unions at the right-hand side'
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoMySQL.class })
+    @Category({ NoEclipselink.class })
     public void testJoinInlineEntityWithLimitUnion() {
         doInJPA(entityManager -> {
             JPQLNextQueryFactory queryFactory = new BlazeJPAQueryFactory(em, cbf);
@@ -1048,10 +1036,9 @@ public class BasicQueryTest extends AbstractCoreTest {
     }
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
-    // NOTE: Entity joins are only supported on Hibernate 5.1+
-    // Oracle, H2 and MySQL <8 do not support lateral joins
+    // H2 does not support lateral joins
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class, NoH2.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class, NoH2.class })
     public void testJoinInlineLateralEntityWithLimitUnion() {
         Assume.assumeFalse(dbmsDialect.getLateralStyle() == LateralStyle.NONE);
 
@@ -1085,7 +1072,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testMultipleFromEntitySubqueries() {
         doInJPA(em -> {
             String expected = cbf.create(em, Person.class)
@@ -1117,7 +1104,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testCteInLeftNestedSet() {
         doInJPA(em -> {
             FinalSetOperationCriteriaBuilder<Tuple> cb = cbf.startSet(em, Tuple.class)
@@ -1163,7 +1150,7 @@ public class BasicQueryTest extends AbstractCoreTest {
 
     // NOTE: No advanced sql support for Datanucleus, Eclipselink and OpenJPA yet
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testExpressionEqualToSubquery() {
         doInJPA(em -> {
             CriteriaBuilder<Person> select = cbf.create(em, Person.class)

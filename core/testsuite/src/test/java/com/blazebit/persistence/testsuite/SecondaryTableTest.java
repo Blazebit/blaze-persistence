@@ -5,14 +5,14 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60;
-import com.blazebit.persistence.testsuite.entity.SecondaryTableEntityBase;
-import com.blazebit.persistence.testsuite.entity.SecondaryTableEntitySub;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.UpdateCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate;
+import com.blazebit.persistence.testsuite.entity.SecondaryTableEntityBase;
+import com.blazebit.persistence.testsuite.entity.SecondaryTableEntitySub;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,10 +38,9 @@ public class SecondaryTableTest extends AbstractCoreTest {
         assertFalse(criteria.getResultList().isEmpty());
     }
 
-    @Test
-    // DataNucleus doesn't handle that properly
     // NOTE: Hibernate ORM bug: https://hibernate.atlassian.net/browse/HHH-18813
-    @Category({ NoDatanucleus.class, NoHibernate60.class })
+    @Test
+    @Category({ NoHibernate.class } )
     public void updateSecondaryTableAttribute() {
         SecondaryTableEntitySub b = new SecondaryTableEntitySub();
         b.setB(4L);

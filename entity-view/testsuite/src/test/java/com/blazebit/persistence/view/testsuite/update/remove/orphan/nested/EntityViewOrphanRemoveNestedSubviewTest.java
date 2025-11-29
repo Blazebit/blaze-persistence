@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.remove.orphan.nested;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -35,7 +34,7 @@ import static org.junit.Assert.assertNull;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewOrphanRemoveNestedSubviewTest extends AbstractEntityViewOrphanRemoveDocumentTest<UpdatableDocumentView> {
 
     public EntityViewOrphanRemoveNestedSubviewTest(FlushMode mode, FlushStrategy strategy, boolean version) {

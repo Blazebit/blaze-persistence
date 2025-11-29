@@ -13,11 +13,11 @@ import com.blazebit.persistence.spi.CteQueryWrapper;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
-import javax.persistence.NoResultException;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -104,30 +104,30 @@ public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
     }
 
     public Query setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-        ((jakarta.persistence.Query) getDelegate()).setCacheRetrieveMode(cacheRetrieveMode);
+        getDelegate().setCacheRetrieveMode(cacheRetrieveMode);
         return this;
     }
 
     public Query setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-        ((jakarta.persistence.Query) getDelegate()).setCacheStoreMode(cacheStoreMode);
+        getDelegate().setCacheStoreMode(cacheStoreMode);
         return this;
     }
 
     public CacheRetrieveMode getCacheRetrieveMode() {
-        return ((jakarta.persistence.Query) getDelegate()).getCacheRetrieveMode();
+        return getDelegate().getCacheRetrieveMode();
     }
 
     public CacheStoreMode getCacheStoreMode() {
-        return ((jakarta.persistence.Query) getDelegate()).getCacheStoreMode();
+        return getDelegate().getCacheStoreMode();
     }
 
     public Query setTimeout(Integer timeout) {
-        ((jakarta.persistence.Query) getDelegate()).setTimeout(timeout);
+        getDelegate().setTimeout(timeout);
         return this;
     }
 
     public Integer getTimeout() {
-        return ((jakarta.persistence.Query) getDelegate()).getTimeout();
+        return getDelegate().getTimeout();
     }
 
     @Override

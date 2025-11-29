@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Locale;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.junit.Test;
 

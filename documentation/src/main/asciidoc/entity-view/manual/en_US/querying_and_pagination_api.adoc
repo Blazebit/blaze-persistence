@@ -21,7 +21,7 @@ A `EntityViewSetting` essentially is configuration that can be applied to a `Cri
 
 Allowing the actual data consumer i.e. the UI to specify these aspects is essential for efficient and easy to maintain data retrieval.
 
-For a simple lookup by id there is also a convenience link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(javax.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.find()`] method available
+For a simple lookup by id there is also a convenience link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(jakarta.persistence.EntityManager,%20java.lang.Class,%20java.lang.Object)[`EntityViewManager.find()`] method available
 that allows you to skip some of the `CriteriaBuilder` ceremony and that works analogous to how `EntityManager.find()` works, but with entity views.
 
 [source, java]
@@ -38,7 +38,7 @@ or also for setting *ToOne relationships.
 CatView cat = entityViewManager.getReference(CatView.class, catId);
 ----
 
-To get a _reference_ to an entity form an entity view one can use link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(javax.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.getEntityReference()`]
+To get a _reference_ to an entity form an entity view one can use link:{entity_view_jdoc}/persistence/view/EntityViewManager.html#find(jakarta.persistence.EntityManager,%20java.lang.Object)[`EntityViewManager.getEntityReference()`]
 which will return the entity reference object retrieved via `EntityManager.getReference()` for the given entity view object.
 
 [source, java]

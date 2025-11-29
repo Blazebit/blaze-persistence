@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.examples.spring.data.graphql.model;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Christian Beikov

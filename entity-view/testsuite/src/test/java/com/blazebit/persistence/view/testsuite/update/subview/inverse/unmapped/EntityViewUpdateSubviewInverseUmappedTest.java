@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.subview.inverse.unmapped;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -35,7 +34,7 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateSubviewInverseUmappedTest extends AbstractEntityViewUpdateTest<UpdatableDocumentView> {
 
     public EntityViewUpdateSubviewInverseUmappedTest(FlushMode mode, FlushStrategy strategy, boolean version) {

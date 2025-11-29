@@ -10,7 +10,7 @@ import com.blazebit.persistence.deltaspike.data.testsuite.repository.PersonViewC
 import com.blazebit.persistence.deltaspike.data.testsuite.view.PersonView;
 import org.junit.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 

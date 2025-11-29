@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Generated;
+import javax.annotation.processing.Generated;
 
 @Generated(value = "com.blazebit.persistence.view.processor.EntityViewAnnotationProcessor")
 @StaticImplementation(BView.class)

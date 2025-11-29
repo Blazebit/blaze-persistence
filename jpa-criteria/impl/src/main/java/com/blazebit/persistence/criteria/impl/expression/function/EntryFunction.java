@@ -13,7 +13,7 @@ import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 import com.blazebit.persistence.criteria.impl.path.AbstractPath;
 import com.blazebit.persistence.criteria.impl.path.TreatedPath;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 import java.util.Map;
 
 /**

@@ -5,8 +5,8 @@
 
 package com.blazebit.persistence.view;
 
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

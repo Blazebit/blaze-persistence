@@ -5,22 +5,20 @@
 
 package com.blazebit.persistence.testsuite;
 
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQLOld;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.TPCBase;
 import com.blazebit.persistence.testsuite.entity.TPCSub1;
 import com.blazebit.persistence.testsuite.entity.TPCSub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertEquals;
 
@@ -54,9 +52,8 @@ public class SelectPolymorphicTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL has no CTE support
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQLOld.class })
+    @Category({ NoEclipselink.class })
     public void testSelectTablePerClassWithCte() throws Exception {
         CriteriaBuilder<TPCBase> cb = cbf.create(em, TPCBase.class, "t")
                 .with(IdHolderCTE.class, false)

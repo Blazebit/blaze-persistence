@@ -5,13 +5,15 @@
 
 package com.blazebit.persistence.testsuite;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoH2;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.IndexedEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IndexedNode;
 import com.blazebit.persistence.testsuite.entity.KeyedEmbeddable;
@@ -25,16 +27,10 @@ import com.blazebit.persistence.testsuite.entity.Sub2;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub1;
 import com.blazebit.persistence.testsuite.entity.Sub2Sub2;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -42,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  * @since 1.2.0
  */
 // NOTE: No advanced sql support for datanucleus, eclipselink and openjpa yet
-@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+@Category({ NoEclipselink.class })
 public class CollectionRoleDeleteTest extends AbstractCoreTest {
 
     @Before
@@ -126,7 +122,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void deleteIndexedImplicitJoin() {
         DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
         criteria.where("r.name").eq("r");
@@ -143,7 +139,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoEclipselink.class })
     public void deleteIndexedMultipleDeepImplicitJoin() {
         DeleteCriteriaBuilder<Root> criteria = cbf.deleteCollection(em, Root.class, "r", "indexedNodes");
         criteria.where("r.name").eq("r");
@@ -164,7 +160,7 @@ public class CollectionRoleDeleteTest extends AbstractCoreTest {
 
     // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoEclipselink.class })
     public void deleteIndexedReturning() {
         transactional(new TxVoidWork() {
             @Override

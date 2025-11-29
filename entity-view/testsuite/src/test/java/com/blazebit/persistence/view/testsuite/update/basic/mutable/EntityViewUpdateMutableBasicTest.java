@@ -5,8 +5,15 @@
 
 package com.blazebit.persistence.view.testsuite.update.basic.mutable;
 
+import java.util.Arrays;
+import java.util.Date;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.view.FlushMode;
@@ -16,15 +23,11 @@ import com.blazebit.persistence.view.change.SingularChangeModel;
 import com.blazebit.persistence.view.spi.type.MutableStateTrackable;
 import com.blazebit.persistence.view.testsuite.update.basic.AbstractEntityViewUpdateBasicTest;
 import com.blazebit.persistence.view.testsuite.update.basic.mutable.model.UpdatableDocumentBasicView;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-import java.util.Date;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -32,8 +35,7 @@ import static org.junit.Assert.*;
  * @since 1.2.0
  */
 @RunWith(Parameterized.class)
-// NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewUpdateMutableBasicTest extends AbstractEntityViewUpdateBasicTest<UpdatableDocumentBasicView> {
 
     public EntityViewUpdateMutableBasicTest(FlushMode mode, FlushStrategy strategy, boolean version) {

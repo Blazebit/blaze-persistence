@@ -9,8 +9,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -73,7 +73,7 @@ public interface TicketSummary extends AuditedView {
     @EntityView(TicketCommentsCTE.class)
     interface TicketCommentAggregate {
 
-        String getTicketNumber();
+        Long getTicketNumber();
 
         @Mapping("coalesce(totalCommentCount, 0L)")
         long getTotalCommentCount();
@@ -87,7 +87,7 @@ public interface TicketSummary extends AuditedView {
     @Entity
     class TicketCommentsCTE {
         @Id
-        String ticketNumber;
+        Long ticketNumber;
         long totalCommentCount;
         long seenCommentCount;
     }

@@ -18,7 +18,8 @@ import org.springframework.web.context.request.NativeWebRequest;
  * in a {@link Pageable} object or {@literal null} if {@link KeysetPageable} cannot be resolved.
  *
  * @author Moritz Becker
- * @since 1.4.1
+ * @author Eugen Mayer
+ * @since 1.6.9
  */
 public interface KeysetPageableArgumentResolver extends PageableArgumentResolver {
     /**

@@ -6,7 +6,6 @@
 package com.blazebit.persistence.view.testsuite.update.remove.cascade.simple;
 
 import com.blazebit.persistence.testsuite.base.jpa.assertion.AssertStatementBuilder;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.entity.PrimitiveDocument;
 import com.blazebit.persistence.testsuite.entity.PrimitiveFamily;
@@ -30,7 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  *
@@ -39,7 +38,7 @@ import javax.persistence.EntityManager;
  */
 @RunWith(Parameterized.class)
 // NOTE: No Datanucleus support yet
-@Category({ NoDatanucleus.class, NoEclipselink.class})
+@Category({ NoEclipselink.class})
 public class EntityViewRemoveCascadeOneToManyTest extends AbstractEntityViewUpdateTest<PersonIdView> {
 
     private PrimitiveFamily family;

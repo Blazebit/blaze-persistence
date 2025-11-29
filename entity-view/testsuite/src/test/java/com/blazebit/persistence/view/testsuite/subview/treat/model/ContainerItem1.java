@@ -5,7 +5,7 @@
 
 package com.blazebit.persistence.view.testsuite.subview.treat.model;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Moritz Becker

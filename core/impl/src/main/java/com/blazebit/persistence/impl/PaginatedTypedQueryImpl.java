@@ -17,16 +17,18 @@ import com.blazebit.persistence.DefaultKeysetPage;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.util.SetView;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Parameter;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -478,6 +480,23 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
     }
 
     @Override
+    public X getSingleResultOrNull() {
+        List<X> result = getResultList();
+        if (result.size() == 0) {
+            return null;
+        } else if (result.size() > 1) {
+            final Set<X> uniqueResult = new HashSet<X>(result);
+            if (uniqueResult.size() > 1) {
+                throw new NonUniqueResultException("result returns more than one element");
+            } else {
+                return uniqueResult.iterator().next();
+            }
+        } else {
+            return result.get(0);
+        }
+    }
+
+    @Override
     public int executeUpdate() {
         throw new IllegalArgumentException("Can not call executeUpdate on a select query!");
     }
@@ -510,6 +529,42 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
 
     @Override
     public Map<String, Object> getHints() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public TypedQuery<X> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public TypedQuery<X> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public TypedQuery<X> setTimeout(Integer timeout) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public CacheRetrieveMode getCacheRetrieveMode() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public CacheStoreMode getCacheStoreMode() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
+    public Integer getTimeout() {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemented!");
     }

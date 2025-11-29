@@ -28,39 +28,15 @@ if [[ "$BUILD_JDK" != "" ]]; then
   if [[ "$BUILD_JDK" == *-ea ]]; then
     export BUILD_JDK=${BUILD_JDK::-3}
   fi
-  PROPERTIES="$PROPERTIES -Dmain.java.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK -Djdk8.home=$JDK8_HOME"
-  if [[ "$BUILD_JDK" == "21" ]] || [[ "$BUILD_JDK" == "22" ]]; then
+  PROPERTIES="$PROPERTIES -Dmain.java.version=$BUILD_JDK -Dtest.java.version=$BUILD_JDK"
+  if [[ "$BUILD_JDK" == "21" ]] || [[ "$BUILD_JDK" == "25" ]] || [[ "$BUILD_JDK" == "26" ]]; then
     # Until Deltaspike releases a version with ASM 9.5, we have to exclude these parts from the build
     PROPERTIES="-pl !integration/deltaspike-data/testsuite $PROPERTIES"
-#    PROPERTIES="-pl !integration/deltaspike-data/testsuite,!examples/deltaspike-data-rest,!integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
-#  else
-    # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
-  #PROPERTIES="-pl !integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
   fi
-#else
-  #if [ "$JPAPROVIDER" == "hibernate-5.2" ] && [ "$JDK" != "8" ]; then
-    # Unfortunately we have to exclude quarkus tests with Java 9+ due to the MR-JAR issue: https://github.com/quarkusio/quarkus/issues/13892
-    #PROPERTIES="-pl !integration/quarkus/deployment,!integration/quarkus/runtime,!examples/quarkus/testsuite/base,!examples/quarkus/base $PROPERTIES"
-  #fi
-fi
-
-if [[ "$JDK" != "" ]]; then
-  if [[ "$JDK" == *-ea ]]; then
-    export JDK=${JDK::-3}
-  fi
-  if [[ "$JDK" == "21" ]] || [[ "$JDK" == "22" ]]; then
-    # As of JDK 21 Javac produces parameter attributes with a null name that old BND versions can't read
-    PROPERTIES="$PROPERTIES -Dversion.bnd=7.0.0"
-  fi
-  PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
-fi
-
-if [[ "$JPAPROVIDER" == hibernate-6* ]]; then
-  ADDITIONAL_PROFILES=,jakarta
 fi
 
 if [[ "$NATIVE" == "true" ]]; then
-  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9},native${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
+  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-3.5.x},${DELTASPIKE:-deltaspike-2.0},native${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
 else
-  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-2.7.x},${DELTASPIKE:-deltaspike-1.9}${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
+  exec $DIR/mvnw -B -P ${JPAPROVIDER},${RDBMS},${SPRING_DATA:-spring-data-3.5.x},${DELTASPIKE:-deltaspike-2.0}${ADDITIONAL_PROFILES} clean install -am -V $PROPERTIES
 fi

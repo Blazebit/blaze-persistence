@@ -13,7 +13,7 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;

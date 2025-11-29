@@ -7,7 +7,7 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;

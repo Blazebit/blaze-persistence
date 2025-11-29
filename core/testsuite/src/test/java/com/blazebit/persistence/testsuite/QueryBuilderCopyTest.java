@@ -5,11 +5,7 @@
 
 package com.blazebit.persistence.testsuite;
 
-import com.blazebit.persistence.testsuite.base.jpa.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoEclipselink;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate42;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate43;
-import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.jpa.category.NoOracle;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
@@ -49,7 +45,7 @@ public class QueryBuilderCopyTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoOracle.class})
+    @Category({ NoEclipselink.class, NoOracle.class})
     public void testQueryCopyingWithCte() {
         cbf.create(em, String.class)
             .from(Document.class, "doc")

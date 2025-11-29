@@ -44,253 +44,253 @@ import java.util.Optional;
  */
 class QueryExecutionResultHandler {
 
-	private static final TypeDescriptor WRAPPER_TYPE = TypeDescriptor.valueOf(NullableWrapper.class);
+    private static final TypeDescriptor WRAPPER_TYPE = TypeDescriptor.valueOf(NullableWrapper.class);
 
-	private final GenericConversionService conversionService;
+    private final GenericConversionService conversionService;
 
-	private final Object mutex = new Object();
+    private final Object mutex = new Object();
 
-	// concurrent access guarded by mutex.
-	private Map<Method, ReturnTypeDescriptor> descriptorCache = Collections.emptyMap();
+    // concurrent access guarded by mutex.
+    private Map<Method, ReturnTypeDescriptor> descriptorCache = Collections.emptyMap();
 
-	/**
-	 * Creates a new {@link QueryExecutionResultHandler}.
-	 */
-	public QueryExecutionResultHandler(GenericConversionService conversionService) {
-		this.conversionService = conversionService;
-	}
+    /**
+     * Creates a new {@link QueryExecutionResultHandler}.
+     */
+    public QueryExecutionResultHandler(GenericConversionService conversionService) {
+        this.conversionService = conversionService;
+    }
 
-	/**
-	 * Post-processes the given result of a query invocation to match the return type of the given method.
-	 *
-	 * @param result can be {@literal null}.
-	 * @param method must not be {@literal null}.
-	 * @return
-	 */
-	@Nullable
-	public Object postProcessInvocationResult(@Nullable Object result, Method method) {
+    /**
+     * Post-processes the given result of a query invocation to match the return type of the given method.
+     *
+     * @param result can be {@literal null}.
+     * @param method must not be {@literal null}.
+     * @return
+     */
+    @Nullable
+    public Object postProcessInvocationResult(@Nullable Object result, Method method) {
 
-		if (!processingRequired(result, method.getReturnType())) {
-			return result;
-		}
+        if (!processingRequired(result, method.getReturnType())) {
+            return result;
+        }
 
-		ReturnTypeDescriptor descriptor = getOrCreateReturnTypeDescriptor(method);
+        ReturnTypeDescriptor descriptor = getOrCreateReturnTypeDescriptor(method);
 
-		return postProcessInvocationResult(result, 0, descriptor);
-	}
+        return postProcessInvocationResult(result, 0, descriptor);
+    }
 
-	private ReturnTypeDescriptor getOrCreateReturnTypeDescriptor(Method method) {
+    private ReturnTypeDescriptor getOrCreateReturnTypeDescriptor(Method method) {
 
-		Map<Method, ReturnTypeDescriptor> descriptorCache = this.descriptorCache;
-		ReturnTypeDescriptor descriptor = descriptorCache.get(method);
+        Map<Method, ReturnTypeDescriptor> descriptorCache = this.descriptorCache;
+        ReturnTypeDescriptor descriptor = descriptorCache.get(method);
 
-		if (descriptor == null) {
+        if (descriptor == null) {
 
-			descriptor = ReturnTypeDescriptor.of(method);
+            descriptor = ReturnTypeDescriptor.of(method);
 
-			Map<Method, ReturnTypeDescriptor> updatedDescriptorCache;
+            Map<Method, ReturnTypeDescriptor> updatedDescriptorCache;
 
-			if (descriptorCache.isEmpty()) {
-				updatedDescriptorCache = Collections.singletonMap(method, descriptor);
-			} else {
-				updatedDescriptorCache = new HashMap<>(descriptorCache.size() + 1, 1);
-				updatedDescriptorCache.putAll(descriptorCache);
-				updatedDescriptorCache.put(method, descriptor);
+            if (descriptorCache.isEmpty()) {
+                updatedDescriptorCache = Collections.singletonMap(method, descriptor);
+            } else {
+                updatedDescriptorCache = new HashMap<>(descriptorCache.size() + 1, 1);
+                updatedDescriptorCache.putAll(descriptorCache);
+                updatedDescriptorCache.put(method, descriptor);
 
-			}
+            }
 
-			synchronized (mutex) {
-				this.descriptorCache = updatedDescriptorCache;
-			}
-		}
+            synchronized (mutex) {
+                this.descriptorCache = updatedDescriptorCache;
+            }
+        }
 
-		return descriptor;
-	}
+        return descriptor;
+    }
 
-	/**
-	 * Post-processes the given result of a query invocation to the given type.
-	 *
-	 * @param result can be {@literal null}.
-	 * @param nestingLevel
-	 * @param descriptor must not be {@literal null}.
-	 * @return
-	 */
-	@Nullable
-	Object postProcessInvocationResult(@Nullable Object result, int nestingLevel, ReturnTypeDescriptor descriptor) {
+    /**
+     * Post-processes the given result of a query invocation to the given type.
+     *
+     * @param result can be {@literal null}.
+     * @param nestingLevel
+     * @param descriptor must not be {@literal null}.
+     * @return
+     */
+    @Nullable
+    Object postProcessInvocationResult(@Nullable Object result, int nestingLevel, ReturnTypeDescriptor descriptor) {
 
-		TypeDescriptor returnTypeDescriptor = descriptor.getReturnTypeDescriptor(nestingLevel);
+        TypeDescriptor returnTypeDescriptor = descriptor.getReturnTypeDescriptor(nestingLevel);
 
-		if (returnTypeDescriptor == null) {
-			return result;
-		}
+        if (returnTypeDescriptor == null) {
+            return result;
+        }
 
-		Class<?> expectedReturnType = returnTypeDescriptor.getType();
+        Class<?> expectedReturnType = returnTypeDescriptor.getType();
 
-		result = unwrapOptional(result);
+        result = unwrapOptional(result);
 
-		if (QueryExecutionConverters.supports(expectedReturnType)) {
+        if (QueryExecutionConverters.supports(expectedReturnType)) {
 
-			// For a wrapper type, try nested resolution first
-			result = postProcessInvocationResult(result, nestingLevel + 1, descriptor);
+            // For a wrapper type, try nested resolution first
+            result = postProcessInvocationResult(result, nestingLevel + 1, descriptor);
 
-			if (conversionRequired(WRAPPER_TYPE, returnTypeDescriptor)) {
-				return conversionService.convert(new NullableWrapper(result), returnTypeDescriptor);
-			}
+            if (conversionRequired(WRAPPER_TYPE, returnTypeDescriptor)) {
+                return conversionService.convert(new NullableWrapper(result), returnTypeDescriptor);
+            }
 
-			if (result != null) {
+            if (result != null) {
 
-				TypeDescriptor source = TypeDescriptor.valueOf(result.getClass());
+                TypeDescriptor source = TypeDescriptor.valueOf(result.getClass());
 
-				if (conversionRequired(source, returnTypeDescriptor)) {
-					return conversionService.convert(result, returnTypeDescriptor);
-				}
-			}
-		}
+                if (conversionRequired(source, returnTypeDescriptor)) {
+                    return conversionService.convert(result, returnTypeDescriptor);
+                }
+            }
+        }
 
-		if (result != null) {
+        if (result != null) {
 
-			if (ReactiveWrapperConverters.supports(expectedReturnType)) {
-				return ReactiveWrapperConverters.toWrapper(result, expectedReturnType);
-			}
+            if (ReactiveWrapperConverters.supports(expectedReturnType)) {
+                return ReactiveWrapperConverters.toWrapper(result, expectedReturnType);
+            }
 
-			if (result instanceof Collection<?>) {
+            if (result instanceof Collection<?>) {
 
-				TypeDescriptor elementDescriptor = descriptor.getReturnTypeDescriptor(nestingLevel + 1);
-				boolean requiresConversion = requiresConversion((Collection<?>) result, expectedReturnType, elementDescriptor);
+                TypeDescriptor elementDescriptor = descriptor.getReturnTypeDescriptor(nestingLevel + 1);
+                boolean requiresConversion = requiresConversion((Collection<?>) result, expectedReturnType, elementDescriptor);
 
-				if (!requiresConversion) {
-					return result;
-				}
-			}
+                if (!requiresConversion) {
+                    return result;
+                }
+            }
 
-			TypeDescriptor resultDescriptor = TypeDescriptor.forObject(result);
-			return conversionService.canConvert(resultDescriptor, returnTypeDescriptor)
-					? conversionService.convert(result, returnTypeDescriptor)
-					: result;
-		}
+            TypeDescriptor resultDescriptor = TypeDescriptor.forObject(result);
+            return conversionService.canConvert(resultDescriptor, returnTypeDescriptor)
+                    ? conversionService.convert(result, returnTypeDescriptor)
+                    : result;
+        }
 
-		return Map.class.equals(expectedReturnType) //
-				? CollectionFactory.createMap(expectedReturnType, 0) //
-				: null;
+        return Map.class.equals(expectedReturnType) //
+                ? CollectionFactory.createMap(expectedReturnType, 0) //
+                : null;
 
-	}
-	private boolean requiresConversion(Collection<?> collection, Class<?> expectedReturnType,
-			@Nullable TypeDescriptor elementDescriptor) {
+    }
+    private boolean requiresConversion(Collection<?> collection, Class<?> expectedReturnType,
+            @Nullable TypeDescriptor elementDescriptor) {
 
-		if (Streamable.class.isAssignableFrom(expectedReturnType) || !expectedReturnType.isInstance(collection)) {
-			return true;
-		}
+        if (Streamable.class.isAssignableFrom(expectedReturnType) || !expectedReturnType.isInstance(collection)) {
+            return true;
+        }
 
-		if (elementDescriptor == null || !Iterable.class.isAssignableFrom(expectedReturnType)) {
-			return false;
-		}
+        if (elementDescriptor == null || !Iterable.class.isAssignableFrom(expectedReturnType)) {
+            return false;
+        }
 
-		Class<?> type = elementDescriptor.getType();
+        Class<?> type = elementDescriptor.getType();
 
-		for (Object o : collection) {
+        for (Object o : collection) {
 
-			if (!type.isInstance(o)) {
-				return true;
-			}
-		}
+            if (!type.isInstance(o)) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/**
-	 * Returns whether the configured {@link ConversionService} can convert between the given {@link TypeDescriptor}s and
-	 * the conversion will not be a no-op.
-	 *
-	 * @param source
-	 * @param target
-	 * @return
-	 */
-	private boolean conversionRequired(TypeDescriptor source, TypeDescriptor target) {
+    /**
+     * Returns whether the configured {@link ConversionService} can convert between the given {@link TypeDescriptor}s and
+     * the conversion will not be a no-op.
+     *
+     * @param source
+     * @param target
+     * @return
+     */
+    private boolean conversionRequired(TypeDescriptor source, TypeDescriptor target) {
 
-		return conversionService.canConvert(source, target) //
-				&& !conversionService.canBypassConvert(source, target);
-	}
+        return conversionService.canConvert(source, target) //
+                && !conversionService.canBypassConvert(source, target);
+    }
 
-	/**
-	 * Unwraps the given value if it's a JDK 8 {@link Optional}.
-	 *
-	 * @param source can be {@literal null}.
-	 * @return
-	 */
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private static Object unwrapOptional(@Nullable Object source) {
+    /**
+     * Unwraps the given value if it's a JDK 8 {@link Optional}.
+     *
+     * @param source can be {@literal null}.
+     * @return
+     */
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static Object unwrapOptional(@Nullable Object source) {
 
-		if (source == null) {
-			return null;
-		}
+        if (source == null) {
+            return null;
+        }
 
-		return Optional.class.isInstance(source) //
-				? Optional.class.cast(source).orElse(null) //
-				: source;
-	}
+        return Optional.class.isInstance(source) //
+                ? Optional.class.cast(source).orElse(null) //
+                : source;
+    }
 
-	/**
-	 * Returns whether we have to process the given source object in the first place.
-	 *
-	 * @param source can be {@literal null}.
-	 * @param targetType must not be {@literal null}.
-	 * @return
-	 */
-	private static boolean processingRequired(@Nullable Object source, Class<?> targetType) {
+    /**
+     * Returns whether we have to process the given source object in the first place.
+     *
+     * @param source can be {@literal null}.
+     * @param targetType must not be {@literal null}.
+     * @return
+     */
+    private static boolean processingRequired(@Nullable Object source, Class<?> targetType) {
 
-		return !targetType.isInstance(source) //
-				|| source == null //
-				|| Collection.class.isInstance(source);
-	}
+        return !targetType.isInstance(source) //
+                || source == null //
+                || Collection.class.isInstance(source);
+    }
 
-	/**
-	 * Value object capturing {@link MethodParameter} and {@link TypeDescriptor}s for top and nested levels.
-	 */
-	static class ReturnTypeDescriptor {
+    /**
+     * Value object capturing {@link MethodParameter} and {@link TypeDescriptor}s for top and nested levels.
+     */
+    static class ReturnTypeDescriptor {
 
-		private final MethodParameter methodParameter;
-		private final TypeDescriptor typeDescriptor;
-		private final @Nullable TypeDescriptor nestedTypeDescriptor;
+        private final MethodParameter methodParameter;
+        private final TypeDescriptor typeDescriptor;
+        private final @Nullable TypeDescriptor nestedTypeDescriptor;
 
-		private ReturnTypeDescriptor(Method method) {
-			this.methodParameter = new MethodParameter(method, -1);
-			this.typeDescriptor = TypeDescriptor.nested(this.methodParameter, 0);
-			this.nestedTypeDescriptor = TypeDescriptor.nested(this.methodParameter, 1);
-		}
+        private ReturnTypeDescriptor(Method method) {
+            this.methodParameter = new MethodParameter(method, -1);
+            this.typeDescriptor = TypeDescriptor.nested(this.methodParameter, 0);
+            this.nestedTypeDescriptor = TypeDescriptor.nested(this.methodParameter, 1);
+        }
 
-		/**
-		 * Create a {@link ReturnTypeDescriptor} from a {@link Method}.
-		 *
-		 * @param method
-		 * @return
-		 */
-		public static ReturnTypeDescriptor of(Method method) {
-			return new ReturnTypeDescriptor(method);
-		}
+        /**
+         * Create a {@link ReturnTypeDescriptor} from a {@link Method}.
+         *
+         * @param method
+         * @return
+         */
+        public static ReturnTypeDescriptor of(Method method) {
+            return new ReturnTypeDescriptor(method);
+        }
 
-		/**
-		 * Return the {@link TypeDescriptor} for a nested type declared within the method parameter described by
-		 * {@code nestingLevel} .
-		 *
-		 * @param nestingLevel the nesting level. {@code 0} is the first level, {@code 1} the next inner one.
-		 * @return the {@link TypeDescriptor} or {@literal null} if it could not be obtained.
-		 * @see TypeDescriptor#nested(MethodParameter, int)
-		 */
-		@Nullable
-		public TypeDescriptor getReturnTypeDescriptor(int nestingLevel) {
+        /**
+         * Return the {@link TypeDescriptor} for a nested type declared within the method parameter described by
+         * {@code nestingLevel} .
+         *
+         * @param nestingLevel the nesting level. {@code 0} is the first level, {@code 1} the next inner one.
+         * @return the {@link TypeDescriptor} or {@literal null} if it could not be obtained.
+         * @see TypeDescriptor#nested(MethodParameter, int)
+         */
+        @Nullable
+        public TypeDescriptor getReturnTypeDescriptor(int nestingLevel) {
 
-			// optimizing for nesting level 0 and 1 (Optional<T>, List<T>)
-			// nesting level 2 (Optional<List<T>>) uses the slow path.
+            // optimizing for nesting level 0 and 1 (Optional<T>, List<T>)
+            // nesting level 2 (Optional<List<T>>) uses the slow path.
 
-			switch (nestingLevel) {
-				case 0:
-					return typeDescriptor;
-				case 1:
-					return nestedTypeDescriptor;
-				default:
-					return TypeDescriptor.nested(this.methodParameter, nestingLevel);
-			}
-		}
-	}
+            switch (nestingLevel) {
+                case 0:
+                    return typeDescriptor;
+                case 1:
+                    return nestedTypeDescriptor;
+                default:
+                    return TypeDescriptor.nested(this.methodParameter, nestingLevel);
+            }
+        }
+    }
 }
