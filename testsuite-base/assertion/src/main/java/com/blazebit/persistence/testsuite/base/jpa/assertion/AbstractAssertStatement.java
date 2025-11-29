@@ -125,7 +125,7 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                     for (SelectItem item : plainSelect.getSelectItems()) {
                         item.getExpression().accept(new ExpressionVisitorAdapter() {
                             @Override
-                            public void visit(Column column) {
+                            public Object visit(Column column, Object context) {
                                 Table t = column.getTable();
                                 Table realTable;
                                 if ((realTable = findTable(tables, t.getName())) == null) {
@@ -133,6 +133,7 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                                 }
 
                                 fetchedTables.add(realTable);
+                                return null;
                             }
                         });
                     }
@@ -162,21 +163,24 @@ public abstract class AbstractAssertStatement implements AssertStatement {
                 final List<Table> tables = new ArrayList<>();
                 FromItemVisitor visitor = new FromItemVisitorAdapter() {
                     @Override
-                    public void visit(Table table) {
+                    public Object visit(Table table, Object context) {
                         tables.add(table);
+                        return null;
                     }
 
                     @Override
-                    public void visit(ParenthesedSelect selectBody) {
-                        tables.addAll( getTables( selectBody.getSelect() ) );
+                    public Object visit(ParenthesedSelect selectBody, Object context) {
+                        tables.addAll(getTables(selectBody.getSelect()));
+                        return null;
                     }
 
                     @Override
-                    public void visit(ParenthesedFromItem fromItem) {
-                        fromItem.getFromItem().accept( this );
+                    public Object visit(ParenthesedFromItem fromItem, Object context) {
+                        fromItem.getFromItem().accept(this);
                         for (Join join : fromItem.getJoins()) {
                             join.getRightItem().accept(this);
                         }
+                        return null;
                     }
                 };
                 plainSelect.getFromItem().accept(visitor);
@@ -204,14 +208,16 @@ public abstract class AbstractAssertStatement implements AssertStatement {
             Delete delete = (Delete) statement;
             if (delete.getTables().size() == 1) {
                 Table t = delete.getTables().get(0);
-                if (delete.getJoins() != null && !delete.getJoins().isEmpty()) {
-                    for (Join join : delete.getJoins()) {
-                        if (join.getRightItem().getAlias().getName().equals(t.getName())) {
-                            return Collections.singletonList((Table) join.getRightItem());
+                if (!t.getName().equals(delete.getTable().getAlias().getName())) {
+                    if (delete.getJoins() != null && !delete.getJoins().isEmpty()) {
+                        for (Join join : delete.getJoins()) {
+                            if (join.getRightItem().getAlias().getName().equals(t.getName())) {
+                                return Collections.singletonList((Table) join.getRightItem());
+                            }
                         }
                     }
+                    return Collections.singletonList(t);
                 }
-                return Collections.singletonList(t);
             }
             return Collections.singletonList(delete.getTable());
         } else if (statement instanceof Merge) {
