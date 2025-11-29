@@ -201,7 +201,7 @@
                                 <jdbc.url>jdbc:mysql://${dbHost}:3306/information_schema?useUnicode=true&amp;characterEncoding=utf8&amp;databaseTerm=schema&amp;nullDatabaseMeansCurrent=true</jdbc.url>
                                 <jdbc.user>root</jdbc.user>
                                 <jdbc.password />
-                                <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
+                                <jdbc.driver>com.mysql.cj.jdbc.Driver</jdbc.driver>
                                 <jdbc.database>entityview${surefire.forkNumber}</jdbc.database>
                                 <excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoMySQL,${jpa.excludedGroups}</excludedGroups>
                                 <testBasePackage>${testBasePackage}</testBasePackage>
@@ -221,8 +221,8 @@
             </build>
             <dependencies>
                 <dependency>
-                    <groupId>mysql</groupId>
-                    <artifactId>mysql-connector-java</artifactId>
+                    <groupId>com.mysql</groupId>
+                    <artifactId>mysql-connector-j</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

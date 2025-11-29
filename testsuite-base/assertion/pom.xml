@@ -32,7 +32,8 @@
         <dependency>
             <groupId>com.github.jsqlparser</groupId>
             <artifactId>jsqlparser</artifactId>
-            <version>4.9</version>
+            <!-- Stick to 5.2 for now due to https://github.com/JSQLParser/JSqlParser/issues/2351 -->
+            <version>5.2</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
