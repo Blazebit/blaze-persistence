@@ -141,7 +141,11 @@ public class SubqueryCorrelationBuilder implements CorrelationBuilder {
                     if (limiter.getLimitValue() != null && limiter.getLimitValue() == 1) {
                         subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).eq().from(entityClass, correlationAlias);
                     } else {
-                        subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
+                        if (getService(DbmsDialect.class).supportsLimitInQuantifiedPredicateSubquery()) {
+                            subqueryBuilder = criteriaBuilder.where(correlationExternalAlias).in().from(entityClass, correlationAlias);
+                        } else {
+                            subqueryBuilder = criteriaBuilder.where("1").eq("subqueryAlias_","FUNCTION('in_wrapper', " + correlationExternalAlias + ", subqueryAlias_)").from(entityClass, correlationAlias);
+                        }
                     }
                     limiter.apply(parameterHolder, optionalParameters, subqueryBuilder);
                     this.correlationBuilder = subqueryBuilder;

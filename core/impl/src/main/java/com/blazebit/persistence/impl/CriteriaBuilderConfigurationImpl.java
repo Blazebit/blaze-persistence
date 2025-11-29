@@ -18,6 +18,7 @@ import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
 import com.blazebit.persistence.impl.function.alias.AliasFunction;
+import com.blazebit.persistence.impl.function.inwrapper.InWrapperFunction;
 import com.blazebit.persistence.impl.function.base64.Base64Function;
 import com.blazebit.persistence.impl.function.base64.PostgreSQLBase64Function;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
@@ -1655,6 +1656,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // alias function
         jpqlFunctionGroup = new JpqlFunctionGroup(AliasFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add(null, new AliasFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        // in_wrapper function
+        jpqlFunctionGroup = new JpqlFunctionGroup(InWrapperFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new InWrapperFunction());
         registerFunction(jpqlFunctionGroup);
 
         // column trunc function
