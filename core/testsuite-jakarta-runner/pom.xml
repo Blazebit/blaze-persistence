@@ -843,7 +843,7 @@
             <id>hibernate-7.2</id>
             <properties>
                 <jpa-api-version>${version.jakarta-jpa-3.2-api}</jpa-api-version>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate60,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate72</jpa.excludedGroups>
             </properties>
             <dependencies>
                 <dependency>

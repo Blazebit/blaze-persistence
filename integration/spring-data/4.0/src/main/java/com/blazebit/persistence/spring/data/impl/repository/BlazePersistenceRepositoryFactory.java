@@ -255,7 +255,7 @@ public class BlazePersistenceRepositoryFactory extends JpaRepositoryFactory {
 
     @Override
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-		if (repositoryBaseClass != EntityViewAwareRepositoryImpl.class) {
+		if (repositoryBaseClass != null && repositoryBaseClass != EntityViewAwareRepositoryImpl.class) {
 			return repositoryBaseClass;
 		}
         ExtendedManagedType<?> managedType = cbf.getService(EntityMetamodel.class).getManagedType(ExtendedManagedType.class, metadata.getDomainType());

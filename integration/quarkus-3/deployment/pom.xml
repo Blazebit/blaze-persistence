@@ -899,7 +899,7 @@
             <id>hibernate-7.2</id>
             <!-- Note that Quarkus doesn't support Hibernate ORM 7.2 yet, so we test against 7.1 -->
             <properties>
-                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70</jpa.excludedGroups>
+                <jpa.excludedGroups>com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate70,com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate72</jpa.excludedGroups>
                 <hibernate.integration-base>7</hibernate.integration-base>
                 <hibernate.integration-version>7.1</hibernate.integration-version>
             </properties>

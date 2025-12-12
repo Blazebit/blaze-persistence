@@ -55,7 +55,7 @@ if [[ "$JDK" != "" ]]; then
   PROPERTIES="$PROPERTIES -Djdk8.home=$JDK8_HOME"
 fi
 
-if [[ "$JPAPROVIDER" == hibernate-6* ]]; then
+if [[ "$JPAPROVIDER" == hibernate-6* ]] || [[ "$JPAPROVIDER" == hibernate-7* ]]; then
   ADDITIONAL_PROFILES=,jakarta
 fi
 

@@ -6,6 +6,7 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.jpa.category.NoHibernate72;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -13,6 +14,7 @@ import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TemporalType;
@@ -299,7 +301,9 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(quartersBetween    (c1, l1), actual.get(17));
     }
 
+    // Doesn't work on ORM 7.2 anymore: https://hibernate.atlassian.net/browse/HHH-20021
     @Test
+    @Category(NoHibernate72.class)
     public void testTimestampWithParameterDiff() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
@@ -366,7 +370,9 @@ public class DateDiffTest extends AbstractCoreTest {
         assertEquals(quartersBetween    (l2, l1), actual.get(24));
     }
 
+    // Doesn't work on ORM 7.2 anymore: https://hibernate.atlassian.net/browse/HHH-20021
     @Test
+    @Category(NoHibernate72.class)
     public void testDateWithParameterDiff() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
                 .from(Document.class, "doc")
