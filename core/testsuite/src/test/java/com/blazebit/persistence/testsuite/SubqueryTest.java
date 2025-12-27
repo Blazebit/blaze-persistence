@@ -252,7 +252,13 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("d.owner.friend.name").isNotNull()
                     .where("d.owner.defaultLanguage").isNotNull()
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Person p, Document d_owner_base JOIN d_owner_base.owner owner_1 LEFT JOIN owner_1.friend friend_1 WHERE d.id = d_owner_base.id AND friend_1.name IS NOT NULL AND owner_1.defaultLanguage IS NOT NULL)";
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM Person p JOIN Document d_owner_base ON (d.id = d_owner_base.id) JOIN d_owner_base.owner owner_1 LEFT JOIN owner_1.friend friend_1 WHERE friend_1.name IS NOT NULL AND owner_1.defaultLanguage IS NOT NULL";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM Person p, Document d_owner_base JOIN d_owner_base.owner owner_1 LEFT JOIN owner_1.friend friend_1 WHERE d.id = d_owner_base.id AND friend_1.name IS NOT NULL AND owner_1.defaultLanguage IS NOT NULL";
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (" + expectedSubQuery + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -335,7 +341,14 @@ public class SubqueryTest extends AbstractCoreTest {
                     .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
                     .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d.id = d_owner_base.id AND dSub <> d)";
+
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM Document dSub JOIN Document d_owner_base" + onClause("d.id = d_owner_base.id") + " JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND dSub <> d";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d.id = d_owner_base.id AND dSub <> d";
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (" + expectedSubQuery + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -349,7 +362,14 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from("Document[_ MEMBER OF d.owner.ownedDocuments AND LENGTH(d.owner.name) > 0]", "dSub")
                 .where("dSub").notEqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d = d_owner_base AND dSub <> d)";
+
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT 1 FROM Document dSub JOIN Document d_owner_base" + onClause("d = d_owner_base") + " JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND dSub <> d";
+        } else {
+            expectedSubQuery = "SELECT 1 FROM Document dSub, Document d_owner_base JOIN d_owner_base.owner owner_1 WHERE dSub MEMBER OF owner_1.ownedDocuments AND LENGTH(owner_1.name) > 0 AND d = d_owner_base AND dSub <> d";
+        }
+        String expectedQuery = "SELECT d FROM Document d WHERE EXISTS (" + expectedSubQuery + ")";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -484,11 +504,20 @@ public class SubqueryTest extends AbstractCoreTest {
                 .where("LENGTH(d.partners.localized[1])").gt(1)
                 .end()
             .like().value("%dld").noEscape();
-        String expectedQuery = "SELECT d FROM Document d"
-                + " WHERE (SELECT p.name FROM Person p, Document d_partners_base " +
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT p.name FROM Person p JOIN Document d_partners_base ON (d.id = d_partners_base.id) " +
                 "LEFT JOIN d_partners_base.partners partners_1 " +
                 "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
-                " WHERE d.id = d_partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+                " WHERE LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        } else {
+            expectedSubQuery = "SELECT p.name FROM Person p, Document d_partners_base " +
+                "LEFT JOIN d_partners_base.partners partners_1 " +
+                "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
+                " WHERE d.id = d_partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        }
+        String expectedQuery = "SELECT d FROM Document d"
+                + " WHERE (" + expectedSubQuery + ") LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -528,7 +557,12 @@ public class SubqueryTest extends AbstractCoreTest {
                 .groupBy("id")
                 .orderByAsc("localizedCount");
 
-        String expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1, Document d_contacts_base LEFT JOIN d_contacts_base.contacts contacts_1 WHERE d.id = d_contacts_base.id AND p.id = " + joinAliasValue("contacts_1", "id") + "))";
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 JOIN Document d_contacts_base ON (d.id = d_contacts_base.id) LEFT JOIN d_contacts_base.contacts contacts_1 WHERE p.id = " + joinAliasValue("contacts_1", "id") + "))";
+        } else {
+            expectedSubQuery = "ABS((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1, Document d_contacts_base LEFT JOIN d_contacts_base.contacts contacts_1 WHERE d.id = d_contacts_base.id AND p.id = " + joinAliasValue("contacts_1", "id") + "))";
+        }
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
                 + "FROM Document d GROUP BY d.id ORDER BY localizedCount ASC";
         assertEquals(expectedQuery, cb.getQueryString());
@@ -545,11 +579,20 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
             .like().value("%dld").noEscape();
 
-        String expectedQuery = "SELECT d FROM Document d"
-                + " WHERE (SELECT p.name FROM Person p, Document d_partners_base " +
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT p.name FROM Person p JOIN Document d_partners_base ON (d.id = d_partners_base.id) " +
                 "LEFT JOIN d_partners_base.partners partners_1 " +
                 "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
-                " WHERE d.id = d_partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+                " WHERE LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        } else {
+            expectedSubQuery = "SELECT p.name FROM Person p, Document d_partners_base " +
+                "LEFT JOIN d_partners_base.partners partners_1 " +
+                "LEFT JOIN partners_1.localized localized_1_1" + onClause("KEY(localized_1_1) = 1") +
+                " WHERE d.id = d_partners_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        }
+        String expectedQuery = "SELECT d FROM Document d"
+                + " WHERE (" + expectedSubQuery + ") LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -565,12 +608,21 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
                 .like().value("%dld").noEscape();
 
+        String expectedSubQuery;
+        if (jpaProvider.supportsEntityJoin()) {
+            expectedSubQuery = "SELECT p.name FROM Person p JOIN Person d_partners_localized_base ON (partners_1.id = d_partners_localized_base.id) " +
+                "LEFT JOIN d_partners_localized_base.localized localized_1_1"
+                + onClause("KEY(localized_1_1) = 1")
+                + " WHERE LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        } else {
+            expectedSubQuery = "SELECT p.name FROM Person p, Person d_partners_localized_base LEFT JOIN d_partners_localized_base.localized localized_1_1"
+                    + onClause("KEY(localized_1_1) = 1")
+                    + " WHERE partners_1.id = d_partners_localized_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0";
+        }
         String expectedQuery = "SELECT d FROM Document d "
                 + "LEFT JOIN d.partners partners_1 "
                 + "LEFT JOIN partners_1.localized l "
-                + "WHERE (SELECT p.name FROM Person p, Person d_partners_localized_base LEFT JOIN d_partners_localized_base.localized localized_1_1"
-                + onClause("KEY(localized_1_1) = 1")
-                + " WHERE partners_1.id = d_partners_localized_base.id AND LENGTH("+ joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
+                + "WHERE (" + expectedSubQuery + ") LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
