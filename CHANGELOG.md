@@ -111,7 +111,7 @@ None yet
 
 ### New features
 
-None yet
+* Add `BlazeCriteriaQuery.applyToCriteriaBuilder` to allow using a JPA Criteria query as set operand
 
 ### Bug fixes
 
