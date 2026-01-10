@@ -12,6 +12,7 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.model.DocumentCount;
 import com.blazebit.persistence.testsuite.model.DocumentPartnerView;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
+import com.blazebit.persistence.testsuite.model.PersonModel;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import org.junit.Test;
 
@@ -104,6 +105,36 @@ public class SelectNewTest extends AbstractCoreTest {
         Long expectedCount = (Long) em.createQuery("SELECT COUNT(d.id) FROM Document d").getSingleResult();
 
         assertEquals((long) expectedCount, actual.size());
+    }
+
+    @Test
+    public void testSelectNewSubqueryPrecededByOtherItem() {
+        CriteriaBuilder<PersonModel> crit = cbf.create(em, Person.class, "p")
+                .selectNew(PersonModel.class)
+                    .with("p.name")
+                    .withSubquery().from(Document.class).select("COUNT(document.id)").whereExpression("document.owner = p").end()
+                .end();
+
+        assertEquals("SELECT p.name, (SELECT COUNT(document.id) FROM Document document WHERE document.owner = p) FROM Person p", crit.getQueryString());
+        List<PersonModel> actual = crit.getResultList();
+
+        assertEquals(1L, actual.size());
+        assertEquals(Long.valueOf(2), actual.get(0).getDocumentCount());
+    }
+
+    @Test
+    public void testSelectNewSubqueryFollowedByOtherItem() {
+        CriteriaBuilder<PersonModel> crit = cbf.create(em, Person.class, "p")
+                .selectNew(PersonModel.class)
+                    .withSubquery().from(Document.class).select("COUNT(document.id)").whereExpression("document.owner = p").end()
+                    .with("p.name")
+                .end();
+
+        assertEquals("SELECT (SELECT COUNT(document.id) FROM Document document WHERE document.owner = p), p.name FROM Person p", crit.getQueryString());
+        List<PersonModel> actual = crit.getResultList();
+
+        assertEquals(1L, actual.size());
+        assertEquals(Long.valueOf(2), actual.get(0).getDocumentCount());
     }
 
     @Test
