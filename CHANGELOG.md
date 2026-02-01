@@ -2,16 +2,31 @@
 
 Changes that happened in releases
 
-## 1.6.18-SNAPSHOT
+## 1.6.19-SNAPSHOT
 
 ### New features
 
-* Add `blaze-persistence-integration-hibernate-7.2` for Hibernate ORM 7.2+ support
-* Add support for Spring Framework 7.0 and Spring Boot 4.0
+None yet
 
 ### Bug fixes
 
 None yet
+
+### Backwards-incompatible changes
+
+None yet
+
+## 1.6.18
+
+01/02/2026 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.6.18) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?q=is%3Aissue+milestone%3A1.6.18+is%3Aclosed+sort%3Aupdated-desc)
+
+### New features
+
+* Add `blaze-persistence-integration-hibernate-7.2` for Hibernate ORM 7.2+ support
+
+### Bug fixes
+
+* Fix support for Quarkus 3.29+ and Spring Boot 4.0
 
 ### Backwards-incompatible changes
 

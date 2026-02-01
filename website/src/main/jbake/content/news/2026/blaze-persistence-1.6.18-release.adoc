@@ -1,0 +1,30 @@
+= Blaze-Persistence 1.6.18 Release
+Christian Beikov
+2026-02-01 0
+:description: Blaze-Persistence version 1.6.18 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+:linkattrs:
+
+We are happy to announce the eighteenth bug fix release of the 1.6 series.
+
+=== Hibernate ORM 7.2 integration
+
+Hibernate ORM 7.2 was released and had some breaking changes in SPIs which required a new integration `blaze-persistence-integration-hibernate-7.2` to be written.
+
+Users are encouraged to update to Hibernate ORM 7.2 and the new integration of Blaze-Persistence 1.6.18 directly.
+Quarkus 3.31+ users need to upgrade to the Hibernate ORM 7.2 new integration.
+
+=== Spring Boot/Data 4.0
+
+The final version of Spring Boot/Data 4.0 had some +++<!-- PREVIEW-SUFFIX --><!-- </p></div> --><!-- PREVIEW-END -->+++
+breaking changes to which the integration was now adapted.
+
+=== Various bug fixes
+
+Take a look into the https://github.com/Blazebit/blaze-persistence/blob/main/CHANGELOG.md#1618[changelog, window="_blank"] for a full list of changes and improvements.
+
+Enjoy the release and stay tuned for the next one!
