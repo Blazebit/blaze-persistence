@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-integration-spring-data-testsuite</artifactId>
-        <version>1.6.18-SNAPSHOT</version>
+        <version>1.6.18</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -54,7 +54,7 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
-                                    <arg value="-tr"/>
+                                    <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
@@ -83,7 +83,7 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
-                                    <arg value="-tr"/>
+                                    <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
@@ -112,7 +112,7 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
-                                    <arg value="-tr"/>
+                                    <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
@@ -141,7 +141,7 @@
                                     <arg value="-o" />
                                     <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/jakarta-renames.properties" />
-                                    <arg value="-tr"/>
+                                    <arg value="-tr" />
                                     <arg value="${project.basedir}/../../../../rules/${second.rename}" />
                                     <classpath>
                                         <!--suppress UnresolvedMavenProperty -->
