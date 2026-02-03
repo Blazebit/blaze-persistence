@@ -29,13 +29,32 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
 
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_CALENDAR;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_DATE;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_INSTANT;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_LOCALDATE;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_LOCALDATETIME;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_LOCALTIME;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_OFFSETDATETIME;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_OFFSETTIME;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_TIME;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_TIMESTAMP;
+import static com.blazebit.persistence.querydsl.JPQLNextOps.LITERAL_ZONEDDATETIME;
 import static com.querydsl.core.types.dsl.Expressions.asNumber;
+import static com.querydsl.core.types.dsl.Expressions.constant;
 
 /**
  * Utility methods for creating JPQL.next expressions
@@ -968,7 +987,30 @@ public class JPQLNextExpressions {
      * @return the literal value
      */
     public static <T extends Comparable<? super T>> Expression<T> literal(Class<T> clasz, T value) {
-        return (Expression) Expressions.template(clasz, JPQLNextTemplates.DEFAULT.asLiteral(value));
+        if (Time.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.timeOperation(Time.class, LITERAL_TIME, constant(value));
+        } else if (Date.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateOperation(Date.class, LITERAL_DATE, constant(value));
+        } else if (Timestamp.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateTimeOperation(Timestamp.class, LITERAL_TIMESTAMP, constant(value));
+        } else if (Calendar.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.operation(Calendar.class, LITERAL_CALENDAR, constant(value));
+        } else if (Instant.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.operation(Instant.class, LITERAL_INSTANT, constant(value));
+        } else if (LocalDate.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateOperation(LocalDate.class, LITERAL_LOCALDATE, constant(value));
+        } else if (LocalDateTime.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateTimeOperation(LocalDateTime.class, LITERAL_LOCALDATETIME, constant(value));
+        }  else if (LocalTime.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.timeOperation(LocalTime.class, LITERAL_LOCALTIME, constant(value));
+        }  else if (OffsetDateTime.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateTimeOperation(OffsetDateTime.class, LITERAL_OFFSETDATETIME, constant(value));
+        }  else if (OffsetTime.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.timeOperation(OffsetTime.class, LITERAL_OFFSETTIME, constant(value));
+        }  else if (ZonedDateTime.class.isAssignableFrom(clasz)) {
+            return (Expression) Expressions.dateTimeOperation(ZonedDateTime.class, LITERAL_ZONEDDATETIME, constant(value));
+        }
+        return Expressions.template(clasz, JPQLNextTemplates.DEFAULT.asLiteral(value));
     }
 
     /**
@@ -979,7 +1021,7 @@ public class JPQLNextExpressions {
      * @return the literal value
      */
     public static <T extends Comparable<? super T>> Expression<T> literal(T value) {
-        return (Expression) Expressions.template(value.getClass(), JPQLNextTemplates.DEFAULT.asLiteral(value));
+        return literal((Class) value.getClass(), JPQLNextTemplates.DEFAULT.asLiteral(value));
     }
 
     /**
@@ -1158,8 +1200,22 @@ public class JPQLNextExpressions {
             return Expressions.simpleOperation(result, JPQLNextOps.TREAT_TIME, expression);
         } else if (Date.class.isAssignableFrom(result)) {
             return Expressions.simpleOperation(result, JPQLNextOps.TREAT_DATE, expression);
+        } else if (Instant.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_INSTANT, expression);
+        } else if (LocalDate.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_LOCALDATE, expression);
+        } else if (LocalDateTime.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_LOCALDATETIME, expression);
+        } else if (LocalTime.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_LOCALTIME, expression);
+        } else if (OffsetDateTime.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_OFFSETDATETIME, expression);
+        } else if (OffsetTime.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_OFFSETTIME, expression);
+        } else if (ZonedDateTime.class.isAssignableFrom(result)) {
+            return Expressions.simpleOperation(result, JPQLNextOps.TREAT_ZONEDDATETIME, expression);
         } else {
-            throw new IllegalArgumentException("No cast operation for " + result.getName());
+            throw new IllegalArgumentException("No treat operation for " + result.getName());
         }
     }
 

@@ -9,6 +9,7 @@ import com.blazebit.persistence.parser.util.TypeConverter;
 import com.blazebit.persistence.parser.util.TypeUtils;
 import com.querydsl.core.types.Ops;
 import com.querydsl.jpa.DefaultQueryHandler;
+import com.querydsl.jpa.JPQLOps;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.QueryHandler;
 
@@ -102,6 +103,8 @@ public class JPQLNextTemplates extends JPQLTemplates {
         add(JPQLNextOps.LEFT_NESTED_SET_EXCEPT, "({0}) EXCEPT {1}", Precedence.OR + 1);
         add(JPQLNextOps.LEFT_NESTED_SET_EXCEPT_ALL, "({0}) EXCEPT ALL {1}", Precedence.OR + 1);
 
+        add(Ops.STRING_CAST, "CAST_STRING({0})");
+
         add(JPQLNextOps.CAST_BOOLEAN, "CAST_BOOLEAN({0})");
         add(JPQLNextOps.CAST_BYTE, "CAST_BYTE({0})");
         add(JPQLNextOps.CAST_SHORT, "CAST_SHORT({0})");
@@ -133,7 +136,25 @@ public class JPQLNextTemplates extends JPQLTemplates {
         add(JPQLNextOps.TREAT_DATE, "TREAT_BOOLEAN({0})");
         add(JPQLNextOps.TREAT_TIMESTAMP, "TREAT_TIMESTAMP({0})");
         add(JPQLNextOps.TREAT_CALENDAR, "TREAT_CALENDAR({0})");
+        add(JPQLNextOps.TREAT_INSTANT, "TREAT_INSTANT({0})");
+        add(JPQLNextOps.TREAT_LOCALDATE, "TREAT_LOCALDATE({0})");
+        add(JPQLNextOps.TREAT_LOCALDATETIME, "TREAT_LOCALDATETIME({0})");
+        add(JPQLNextOps.TREAT_LOCALTIME, "TREAT_LOCALTIME({0})");
+        add(JPQLNextOps.TREAT_OFFSETDATETIME, "TREAT_OFFSETDATETIME({0})");
+        add(JPQLNextOps.TREAT_OFFSETTIME, "TREAT_OFFSETTIME({0})");
+        add(JPQLNextOps.TREAT_ZONEDDATETIME, "TREAT_ZONEDDATETIME({0})");
 
+        add(JPQLNextOps.LITERAL_TIME, "LITERAL_TIME({0})");
+        add(JPQLNextOps.LITERAL_DATE, "LITERAL_DATE({0})");
+        add(JPQLNextOps.LITERAL_TIMESTAMP, "LITERAL_TIMESTAMP({0})");
+        add(JPQLNextOps.LITERAL_CALENDAR, "LITERAL_CALENDAR({0})");
+        add(JPQLNextOps.LITERAL_INSTANT, "LITERAL_INSTANT({0})");
+        add(JPQLNextOps.LITERAL_LOCALDATE, "LITERAL_LOCALDATE({0})");
+        add(JPQLNextOps.LITERAL_LOCALDATETIME, "LITERAL_LOCALDATETIME({0})");
+        add(JPQLNextOps.LITERAL_LOCALTIME, "LITERAL_LOCALTIME({0})");
+        add(JPQLNextOps.LITERAL_OFFSETDATETIME, "LITERAL_OFFSETDATETIME({0})");
+        add(JPQLNextOps.LITERAL_OFFSETTIME, "LITERAL_OFFSETTIME({0})");
+        add(JPQLNextOps.LITERAL_ZONEDDATETIME, "LITERAL_ZONEDDATETIME({0})");
 
         add(JPQLNextOps.LEAST, "LEAST({0}, {1})");
         add(Ops.MathOps.MIN, "LEAST({0}, {1})");
@@ -164,6 +185,8 @@ public class JPQLNextTemplates extends JPQLTemplates {
         add(JPQLNextOps.WINDOW_DEFINITION_4, "{0} {1} {2} {3}");
 
         add(JPQLNextOps.FILTER, "{0} FILTER (WHERE {1})");
+
+        add(JPQLNextOps.JSON_GET, "JSON_GET({0}, {1})");
     }
 
     @Override
