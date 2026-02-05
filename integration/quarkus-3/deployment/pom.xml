@@ -14,7 +14,7 @@
     <properties>
         <module.name>com.blazebit.persistence.integration.quarkus.deployment</module.name>
         <hibernate.integration-base>7</hibernate.integration-base>
-        <hibernate.integration-version>7.1</hibernate.integration-version>
+        <hibernate.integration-version>7.2</hibernate.integration-version>
     </properties>
 
     <dependencies>
