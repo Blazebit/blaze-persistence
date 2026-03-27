@@ -110,5 +110,13 @@
                 <version.jandex>3.4.0</version.jandex>
             </properties>
         </profile>
+        <profile>
+            <id>hibernate-7.3</id>
+            <properties>
+                <version.jakarta-jpa>${version.jakarta-jpa-3.2-api}</version.jakarta-jpa>
+                <version.quarkus>${version.quarkus-3.32}</version.quarkus>
+                <version.jandex>3.4.0</version.jandex>
+            </properties>
+        </profile>
     </profiles>
 </project>
