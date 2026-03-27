@@ -69,7 +69,7 @@
         <profile>
             <id>hibernate-7.2</id>
             <properties>
-                <hibernate.integration-version>7.1</hibernate.integration-version>
+                <hibernate.integration-version>7.2</hibernate.integration-version>
             </properties>
         </profile>
     </profiles>
