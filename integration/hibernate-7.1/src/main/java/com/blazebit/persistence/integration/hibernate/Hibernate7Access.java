@@ -11,18 +11,23 @@ import com.blazebit.persistence.integration.hibernate.base.HibernateReturningRes
 import com.blazebit.persistence.spi.DbmsDialect;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQuery;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -81,10 +86,10 @@ public class Hibernate7Access implements HibernateAccess {
     }
 
     @Override
-    public JdbcOperationQuery createJdbcSelect(
+    public JdbcOperation createJdbcSelect(
             String sql,
             List<JdbcParameterBinder> parameterBinders,
-            JdbcOperationQuery original,
+            JdbcOperation original,
             Set<String> affectedTableNames) {
         JdbcOperationQuerySelect jdbcSelect = (JdbcOperationQuerySelect) original;
         return new JdbcOperationQuerySelect(
@@ -102,10 +107,10 @@ public class Hibernate7Access implements HibernateAccess {
     }
 
     @Override
-    public JdbcOperationQuery createFullJdbcSelect(
+    public JdbcOperation createFullJdbcSelect(
             String sql,
             List<JdbcParameterBinder> parameterBinders,
-            JdbcOperationQuery original,
+            JdbcOperation original,
             Set<String> affectedTableNames) {
         JdbcOperationQuerySelect jdbcSelect = (JdbcOperationQuerySelect) original;
         return new JdbcOperationQuerySelect(
@@ -123,23 +128,36 @@ public class Hibernate7Access implements HibernateAccess {
     }
 
     @Override
-    public JdbcParameter getLimitParameter(JdbcOperationQuery query) {
+    public JdbcOperation translateJdbcSelect(
+            SessionFactoryImplementor sessionFactory,
+            SelectStatement selectStatement,
+            JdbcParameterBindings jdbcParameterBindings,
+            QueryOptions queryOptions) {
+        final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+        final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+        final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+        return sqlAstTranslatorFactory.buildSelectTranslator(sessionFactory, selectStatement)
+                .translate(jdbcParameterBindings, queryOptions);
+    }
+
+    @Override
+    public JdbcParameter getLimitParameter(JdbcOperation query) {
         return ((JdbcOperationQuerySelect) query).getLimitParameter();
     }
 
     @Override
-    public JdbcParameter getOffsetParameter(JdbcOperationQuery query) {
+    public JdbcParameter getOffsetParameter(JdbcOperation query) {
         return ((JdbcOperationQuerySelect) query).getOffsetParameter();
     }
 
     @Override
-    public ExecutionContext createExecutionContextAdapter(DomainQueryExecutionContext executionContext, JdbcOperationQuery query) {
+    public ExecutionContext createExecutionContextAdapter(DomainQueryExecutionContext executionContext, JdbcOperation query) {
         return new SqmJdbcExecutionContextAdapter(executionContext, (JdbcOperationQuerySelect) query);
     }
 
     @Override
     public <R> List<R> list(
-            JdbcOperationQuery jdbcSelect,
+            JdbcOperation jdbcSelect,
             JdbcParameterBindings jdbcParameterBindings,
             ExecutionContext executionContext,
             RowTransformer<R> rowTransformer,
@@ -155,7 +173,7 @@ public class Hibernate7Access implements HibernateAccess {
 
     @Override
     public <R> ScrollableResultsImplementor<R> scroll(
-            JdbcOperationQuery jdbcSelect,
+            JdbcOperation jdbcSelect,
             ScrollMode scrollMode,
             JdbcParameterBindings jdbcParameterBindings,
             ExecutionContext executionContext,
@@ -170,7 +188,7 @@ public class Hibernate7Access implements HibernateAccess {
     }
 
     @Override
-    public int[] getReturningColumnTypes(JdbcOperationQuery queryPlan, SessionFactoryImplementor sfi) {
+    public int[] getReturningColumnTypes(JdbcOperation queryPlan, SessionFactoryImplementor sfi) {
         JdbcValuesMapping jdbcValuesMapping = ((JdbcOperationQuerySelect) queryPlan).getJdbcValuesMappingProducer().resolve( null, null, sfi);
         List<SqlSelection> sqlSelections = jdbcValuesMapping.getSqlSelections();
         List<Integer> sqlTypes = new ArrayList<>(sqlSelections.size());

@@ -418,7 +418,8 @@ public class WhereTest extends AbstractCoreTest {
         
         BlazeSubquery<Timestamp> subquery = cq.subquery(Timestamp.class);
         Root<Document> subRoot = subquery.from(Document.class, "subDoc");
-        subquery.select(subRoot.get(Document_.lastModified).as(Timestamp.class));
+        Path<Date> lastModifiedPath = subRoot.get(Document_.lastModified);
+        subquery.select(lastModifiedPath.as(Timestamp.class));
         
         cq.select(root.get(Document_.id));
         cq.where(
@@ -436,7 +437,7 @@ public class WhereTest extends AbstractCoreTest {
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder(em);
         String castedPath = "subDoc.lastModified";
-        if (!optimizesUnnecessaryCasts()) {
+        if (lastModifiedPath.getJavaType() != Timestamp.class) {
             castedPath = function("CAST_TIMESTAMP", castedPath);
         }
         String queryString = "SELECT document.id FROM Document document WHERE document.id IN " + listParameter("generated_param_0") + " OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > :generated_param_1 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > :generated_param_2 THEN document.creationDate ELSE CURRENT_TIMESTAMP END")

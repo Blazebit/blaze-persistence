@@ -87,5 +87,13 @@
                 <version.quarkus>${version.quarkus-3.32}</version.quarkus>
             </properties>
         </profile>
+        <profile>
+            <id>hibernate-7.3</id>
+            <properties>
+                <version.jpa>${version.jakarta-jpa-3.2-api}</version.jpa>
+                <version.hibernate-orm>${version.hibernate-7.2}</version.hibernate-orm>
+                <version.quarkus>${version.quarkus-3.32}</version.quarkus>
+            </properties>
+        </profile>
     </profiles>
 </project>
