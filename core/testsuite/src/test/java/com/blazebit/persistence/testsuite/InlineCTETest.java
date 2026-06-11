@@ -27,6 +27,7 @@ import com.blazebit.persistence.testsuite.entity.ParameterOrderCteB;
 import com.blazebit.persistence.testsuite.entity.ParameterOrderEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.RecursiveEntity;
+import com.blazebit.persistence.testsuite.entity.StringIdCTE;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE1;
 import com.blazebit.persistence.testsuite.entity.TestAdvancedCTE2;
 import com.blazebit.persistence.testsuite.entity.TestCTE;
@@ -62,6 +63,7 @@ public class InlineCTETest extends AbstractCoreTest {
             IntIdEntity.class,
             DocumentCTE.class,
             RecursiveEntity.class,
+            StringIdCTE.class,
             TestCTE.class,
             TestAdvancedCTE1.class,
             TestAdvancedCTE2.class,
@@ -590,6 +592,52 @@ public class InlineCTETest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
         List<RecursiveEntity> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
+    }
+
+    // Test for #2113
+    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testJoinInlineEntityInsideInlineCte() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
+        cb.with(TestCTE.class, true)
+                .fromValues(RecursiveEntity.class, "name", "val", Collections.singletonList("child1_1"))
+                .leftJoinOn(RecursiveEntity.class, "r")
+                    .on("r.name").eqExpression("val")
+                .end()
+                .bind("id").select("r.id")
+                .bind("name").select("val")
+                .bind("level").select("1")
+                .end();
+
+        List<TestCTE> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("child1_1", resultList.get(0).getName());
+    }
+
+    // Test for #2113
+    // NOTE: Entity joins are only supported on Hibernate 5.1+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoHibernate42.class, NoHibernate43.class, NoHibernate50.class })
+    public void testJoinInlineCteInsideInlineCte() {
+        CriteriaBuilder<StringIdCTE> cb = cbf.create(em, StringIdCTE.class, "c");
+        cb.with(TestCTE.class, true)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .bind("level").select("0")
+                .end();
+        cb.with(StringIdCTE.class, true)
+                .fromValues(RecursiveEntity.class, "name", "val", Collections.singletonList("child1_1"))
+                .leftJoinOn(TestCTE.class, "t")
+                    .on("t.name").eqExpression("val")
+                .end()
+                .bind("id").select("val")
+                .end();
+
+        List<StringIdCTE> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("child1_1", resultList.get(0).getId());
     }
 
     // NOTE: H2 and old MySQL do not support lateral joins

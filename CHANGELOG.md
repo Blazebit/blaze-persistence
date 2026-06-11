@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix `StringIndexOutOfBoundsException` when using a `VALUES` clause and an inline CTE join inside another inline CTE
 
 ### Backwards-incompatible changes
 

@@ -57,26 +57,54 @@ public class EntityFunction implements JpqlFunction {
         // We remove the synthetic predicate here and later extract the values clause alias of it so we can insert the proper SQL values clause at the right place
         String subquery = functionRenderContext.getArgument(0);
         StringBuilder sb = new StringBuilder();
-        int subqueryEndIndex = subquery.lastIndexOf(AND_MARKER);
-        if (subquery.regionMatches(subqueryEndIndex - NULL_IS_NULL.length(), NULL_IS_NULL, 0, NULL_IS_NULL.length())) {
-            subqueryEndIndex -= NULL_IS_NULL.length();
-        } else if (subquery.regionMatches(subqueryEndIndex - NULL_IS_NULL_IN_PARENTHESIS.length(), NULL_IS_NULL_IN_PARENTHESIS, 0, NULL_IS_NULL_IN_PARENTHESIS.length())) {
-            subqueryEndIndex -= NULL_IS_NULL_IN_PARENTHESIS.length();
-        }
-        int aliasEndIndex = subquery.indexOf('.', subqueryEndIndex) ;
-        int aliasStartIndex = aliasEndIndex - 1;
-        while (aliasStartIndex > subqueryEndIndex) {
-            if (!SqlUtils.isIdentifier(subquery.charAt(aliasStartIndex))) {
-                aliasStartIndex++;
-                break;
-            }
-            aliasStartIndex--;
-        }
 
         String entityName = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(1));
         String valuesClause = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(2));
         String valuesAliases = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(3));
         String syntheticPredicate = JpqlFunctionUtil.unquoteSingleQuotes(functionRenderContext.getArgument(4));
+
+        // The subquery may contain multiple marker predicates when e.g. a VALUES clause and an inline CTE
+        // are joined within the same query, so we have to find the marker predicate that belongs to this
+        // entity function invocation. Marker predicates of VALUES clauses are preceded by the synthetic predicate,
+        // whereas marker predicates of inline CTEs are preceded by a "null is null" placeholder predicate.
+        // If no marker predicate matches, we fall back to the last marker predicate
+        int subqueryEndIndex = -1;
+        int aliasStartIndex = -1;
+        int aliasEndIndex = -1;
+        for (int candidateMarkerIndex = subquery.lastIndexOf(AND_MARKER); candidateMarkerIndex != -1; candidateMarkerIndex = subquery.lastIndexOf(AND_MARKER, candidateMarkerIndex - 1)) {
+            int candidateEndIndex = candidateMarkerIndex;
+            if (subquery.regionMatches(candidateEndIndex - NULL_IS_NULL.length(), NULL_IS_NULL, 0, NULL_IS_NULL.length())) {
+                candidateEndIndex -= NULL_IS_NULL.length();
+            } else if (subquery.regionMatches(candidateEndIndex - NULL_IS_NULL_IN_PARENTHESIS.length(), NULL_IS_NULL_IN_PARENTHESIS, 0, NULL_IS_NULL_IN_PARENTHESIS.length())) {
+                candidateEndIndex -= NULL_IS_NULL_IN_PARENTHESIS.length();
+            }
+            int candidateAliasEndIndex = subquery.indexOf('.', candidateEndIndex);
+            int candidateAliasStartIndex = candidateAliasEndIndex - 1;
+            while (candidateAliasStartIndex > candidateEndIndex) {
+                if (!SqlUtils.isIdentifier(subquery.charAt(candidateAliasStartIndex))) {
+                    candidateAliasStartIndex++;
+                    break;
+                }
+                candidateAliasStartIndex--;
+            }
+            boolean markerMatches;
+            if (syntheticPredicate.isEmpty()) {
+                markerMatches = candidateEndIndex != candidateMarkerIndex;
+            } else {
+                String candidateAlias = subquery.substring(candidateAliasStartIndex, candidateAliasEndIndex);
+                String expectedPredicate = syntheticPredicate.replace(syntheticPredicate.substring(0, syntheticPredicate.indexOf('.')), candidateAlias);
+                markerMatches = subquery.regionMatches(candidateMarkerIndex - expectedPredicate.length(), expectedPredicate, 0, expectedPredicate.length());
+            }
+            if (markerMatches || subqueryEndIndex == -1) {
+                subqueryEndIndex = candidateEndIndex;
+                aliasStartIndex = candidateAliasStartIndex;
+                aliasEndIndex = candidateAliasEndIndex;
+                if (markerMatches) {
+                    break;
+                }
+            }
+        }
+
         String valuesTableSqlAlias = subquery.substring(aliasStartIndex, aliasEndIndex);
         appendSubqueryPart(sb, subquery, 1, subqueryEndIndex, subquery.length() - 1);
 
