@@ -356,7 +356,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             } else {
                 // Collect usage of collection join nodes to optimize away the count distinct
                 // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
-                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getCountAndIdQueryAlwaysIncludedNodes(getIdentifierExpressionsToUseNonRootJoinNodes());
                 Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, clauseExclusions, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null, true);
                 boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
@@ -459,7 +459,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             } else {
                 // Collect usage of collection join nodes to optimize away the count distinct
                 // Note that we always exclude the nodes with group by dependency. We consider just the ones from the identifiers
-                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getIdentifierExpressionsToUseNonRootJoinNodes();
+                Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes = getCountAndIdQueryAlwaysIncludedNodes(getIdentifierExpressionsToUseNonRootJoinNodes());
                 Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, COUNT_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, null, true, externalRepresentation, true, false, optionalWhereClauseConjuncts, whereClauseConjuncts, explicitVersionEntities, countNodesToFetch, identifierExpressionsToUseNonRootJoinNodes, null, true);
                 boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
 
@@ -603,6 +603,33 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
 
         return joinNodes;
+    }
+
+    protected Set<JoinNode> getCountAndIdQueryAlwaysIncludedNodes(Set<JoinNode> identifierExpressionsToUseNonRootJoinNodes) {
+        // Path expressions in the WHERE clause might lazily resolve to default join nodes that were created
+        // for other clauses only e.g. an implicit join in the SELECT clause. Since such nodes don't have a
+        // WHERE clause dependency registered, they would be omitted from count and id queries even though
+        // the rendered WHERE clause refers to their alias, so we have to include them explicitly
+        List<JoinNode> whereClauseJoinNodes = new ArrayList<>();
+        whereManager.acceptVisitor(new JoinNodeGathererVisitor(whereClauseJoinNodes));
+        Set<JoinNode> alwaysIncludedNodes = null;
+        for (int i = 0; i < whereClauseJoinNodes.size(); i++) {
+            JoinNode node = whereClauseJoinNodes.get(i);
+            while (node != null && node.getParent() != null) {
+                if (alwaysIncludedNodes == null) {
+                    if (identifierExpressionsToUseNonRootJoinNodes.contains(node)) {
+                        break;
+                    }
+                    alwaysIncludedNodes = new HashSet<>(identifierExpressionsToUseNonRootJoinNodes);
+                }
+                if (!alwaysIncludedNodes.add(node)) {
+                    break;
+                }
+                alwaysIncludedNodes.addAll(node.getDependencies());
+                node = node.getParent();
+            }
+        }
+        return alwaysIncludedNodes == null ? identifierExpressionsToUseNonRootJoinNodes : alwaysIncludedNodes;
     }
 
     protected ResolvedExpression[] getIdentifierExpressions() {

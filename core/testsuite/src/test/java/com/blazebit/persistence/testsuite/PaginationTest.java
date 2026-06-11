@@ -241,6 +241,24 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals("doc1", result.get(0).getName());
     }
 
+    // Test for #2114
+    @Test
+    public void testPaginatedWhereOnAssociationImplicitlyJoinedInSelect() {
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d LEFT JOIN d.parent parent_1 WHERE parent_1 IS NULL";
+        String expectedObjectQuery = "SELECT d.id, parent_1.name FROM Document d LEFT JOIN d.parent parent_1 WHERE parent_1 IS NULL ORDER BY d.id ASC";
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .where("d.parent").isNull()
+                .select("d.id")
+                .select("d.parent.name")
+                .orderByAsc("d.id")
+                .page(0, 10);
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, cb.withInlineCountQuery(false).getQueryString());
+        PagedList<Tuple> result = cb.getResultList();
+        assertEquals(7, result.getTotalSize());
+    }
+
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";

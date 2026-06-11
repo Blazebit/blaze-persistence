@@ -11,6 +11,7 @@ None yet
 ### Bug fixes
 
 * Fix `StringIndexOutOfBoundsException` when using a `VALUES` clause and an inline CTE join inside another inline CTE
+* Fix count and id query omitting joins that the WHERE clause refers to through an association path that is implicitly joined in the SELECT clause
 
 ### Backwards-incompatible changes
 
