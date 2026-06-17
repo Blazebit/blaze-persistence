@@ -17,8 +17,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
 
     private static final String START_CHUNK = "(select json_arrayagg(json_object('";
-    private static final String ELEMENT_POST_CHUNK = ")";
-    private static final String AGGREGATE_POST_CHUNK = " RETURNING CLOB)";  //To avoid VARCHAR2(4000) limit?
+    private static final String ELEMENT_POST_CHUNK = ") RETURNING CLOB";  //To avoid VARCHAR2(4000) limit?
+    private static final String AGGREGATE_POST_CHUNK = ")";
     private static final String POST_CHUNK = ELEMENT_POST_CHUNK + AGGREGATE_POST_CHUNK;
 
     @Override
@@ -34,15 +34,14 @@ public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
             int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
             if (limitIndex == -1) {
                 renderJsonObjectArguments(context, fields, selectItemExpressions);
-                context.addChunk(ELEMENT_POST_CHUNK);
-                context.addChunk(" ORDER BY (");
+                context.addChunk(POST_CHUNK);
+                context.addChunk(" OVER (");
                 context.addChunk(subquery.substring(orderByIndex));
                 context.addChunk(")");
-                context.addChunk(AGGREGATE_POST_CHUNK);
                 context.addChunk(subquery.substring(fromIndex, orderByIndex));
             } else {
                 renderJsonObjectArguments(context, fields, fields); //I am not sure if this part is correct limit syntax for oracle? Might need to use the lateral join from OracleToStringJsonFunction (V1)
-                context.addChunk(AGGREGATE_POST_CHUNK);
+                context.addChunk(POST_CHUNK);
                 context.addChunk(" from (select ");
                 for (int i = 0; i < fields.length; i++) {
                     if (i != 0) {
