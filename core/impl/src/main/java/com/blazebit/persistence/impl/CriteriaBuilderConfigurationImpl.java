@@ -395,7 +395,7 @@ import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.AbstractStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.GroupConcatBasedStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.MySQLStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.OracleStringJsonAggFunctionV2;
+import com.blazebit.persistence.impl.function.stringjsonagg.OracleStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringjsonagg.PostgreSQLStringJsonAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.AbstractStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.GroupConcatBasedStringXmlAggFunction;
@@ -415,7 +415,7 @@ import com.blazebit.persistence.impl.function.tostringjson.AbstractToStringJsonF
 import com.blazebit.persistence.impl.function.tostringjson.ForJsonPathToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.GroupConcatBasedToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.MySQLToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.OracleToStringJsonFunctionV2;
+import com.blazebit.persistence.impl.function.tostringjson.OracleToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringjson.PostgreSQLToStringJsonFunction;
 import com.blazebit.persistence.impl.function.tostringxml.AbstractToStringXmlFunction;
 import com.blazebit.persistence.impl.function.tostringxml.ForXmlPathToStringXmlFunction;
@@ -1792,7 +1792,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         jpqlFunctionGroup.add("postgresql", new PostgreSQLStringJsonAggFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLStringJsonAggFunction());
-        jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunctionV2());
+        jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunction());
         jpqlFunctionGroup.add("mariadb", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLStringJsonAggFunction());
@@ -1855,7 +1855,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("microsoft", new ForJsonPathToStringJsonFunction((CastFunction) findFunction("cast_string", "microsoft")));
-        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunctionV2());
+        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction());
         jpqlFunctionGroup.add("mariadb", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
