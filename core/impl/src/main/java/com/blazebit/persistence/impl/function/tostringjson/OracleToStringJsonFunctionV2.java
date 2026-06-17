@@ -9,9 +9,11 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
- * Adapted from MySQLToStringJsonFunction by
- * Christian Beikov
+ * Oracle Database 12c Release 2 included support for JSON_OBJECT and JSON_ARRAYAGG
+ * <p>
+ * Adapted from MySQLToStringJsonFunction by Christian Beikov
  *
+ * @author Christian Beikov
  * @author Michael Saull
  */
 public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
@@ -35,14 +37,13 @@ public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
             if (limitIndex == -1) {
                 renderJsonObjectArguments(context, fields, selectItemExpressions);
                 context.addChunk(ELEMENT_POST_CHUNK);
-                context.addChunk(" ORDER BY (");
+                context.addChunk(" ORDER BY "); //Oracle uses ORDER BY instead of OVER for JSON_ARRAYAGG
                 context.addChunk(subquery.substring(orderByIndex));
-                context.addChunk(")");
                 context.addChunk(AGGREGATE_POST_CHUNK);
                 context.addChunk(subquery.substring(fromIndex, orderByIndex));
             } else {
                 renderJsonObjectArguments(context, fields, fields); //I am not sure if this part is correct limit syntax for oracle? Might need to use the lateral join from OracleToStringJsonFunction (V1)
-                context.addChunk(AGGREGATE_POST_CHUNK);
+                context.addChunk(POST_CHUNK);
                 context.addChunk(" from (select ");
                 for (int i = 0; i < fields.length; i++) {
                     if (i != 0) {
