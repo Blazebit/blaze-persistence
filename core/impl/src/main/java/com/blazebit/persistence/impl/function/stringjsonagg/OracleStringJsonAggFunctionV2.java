@@ -8,7 +8,7 @@ package com.blazebit.persistence.impl.function.stringjsonagg;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
- *  Oracle Database 12c Release 2 included support for JSON_OBJECT and JSON_ARRAYAGG
+ * Oracle Database 12c Release 2 included support for JSON_OBJECT and JSON_ARRAYAGG
  *
  * @author Michael Saull
  *
@@ -24,7 +24,7 @@ public class OracleStringJsonAggFunctionV2 extends AbstractStringJsonAggFunction
 
         context.addChunk("json_arrayagg(json_object(");
         writeArgumentPair(context, 0);
-        for (int i = 2; i < argumentsCount; i+=2) {
+        for (int i = 2; i < argumentsCount; i += 2) {
             context.addChunk(",");
             writeArgumentPair(context, i);
         }
@@ -34,6 +34,6 @@ public class OracleStringJsonAggFunctionV2 extends AbstractStringJsonAggFunction
     private static void writeArgumentPair(FunctionRenderContext context, int i) {
         context.addArgument(i);
         context.addChunk(":");
-        context.addArgument(i+1);
+        context.addArgument(i + 1);
     }
 }
