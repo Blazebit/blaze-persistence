@@ -11,7 +11,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * Oracle Database 12c Release 2 included support for JSON_OBJECT and JSON_ARRAYAGG
  *
  * @author Michael Saull
- *
+ * @since 1.6.x?
  */
 public class OracleStringJsonAggFunctionV2 extends AbstractStringJsonAggFunction {
 

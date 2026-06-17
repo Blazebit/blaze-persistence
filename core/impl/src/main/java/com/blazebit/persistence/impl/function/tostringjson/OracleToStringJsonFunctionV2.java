@@ -13,6 +13,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * Christian Beikov
  *
  * @author Michael Saull
+ * @since 1.6.x?
  */
 public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
 
