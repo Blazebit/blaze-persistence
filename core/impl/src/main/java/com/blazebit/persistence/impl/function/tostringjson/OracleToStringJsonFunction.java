@@ -9,11 +9,13 @@ import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
- * Adapted from MySQLToStringJsonFunction by
- * Christian Beikov
+ * Oracle Database 12c Release 2 included support for JSON_OBJECT and JSON_ARRAYAGG
+ * <p>
+ * Adapted from MySQLToStringJsonFunction by Christian Beikov
  *
+ * @author Christian Beikov
  * @author Michael Saull
- * @since 1.6.x?
+ * @since 1.6.19
  */
 public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
 
