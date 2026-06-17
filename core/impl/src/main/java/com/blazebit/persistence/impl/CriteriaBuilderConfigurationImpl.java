@@ -532,7 +532,6 @@ import com.blazebit.persistence.spi.JpqlMacro;
 import com.blazebit.persistence.spi.LateralStyle;
 import com.blazebit.persistence.spi.PackageOpener;
 import com.blazebit.persistence.spi.SetOperationType;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -1154,7 +1153,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql8", new MySQLEpochMicrosecondFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(TimestampIsoFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup( TimestampIsoFunction.FUNCTION_NAME, false );
         jpqlFunctionGroup.add(null, new TimestampIsoFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTimestampIsoFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLTimestampIsoFunction());
@@ -1164,7 +1163,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mariadb", new MySQLTimestampIsoFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(DateIsoFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup( DateIsoFunction.FUNCTION_NAME, false );
         jpqlFunctionGroup.add(null, new DateIsoFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLDateIsoFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLDateIsoFunction());
@@ -1174,7 +1173,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mariadb", new MySQLDateIsoFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(TimeIsoFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup = new JpqlFunctionGroup( TimeIsoFunction.FUNCTION_NAME, false );
         jpqlFunctionGroup.add(null, new TimeIsoFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLTimeIsoFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLTimeIsoFunction());
@@ -1724,9 +1723,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, EveryFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            EveryFunction.INSTANCE :
-                            FallbackEveryFunction.INSTANCE);
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          EveryFunction.INSTANCE :
+                                          FallbackEveryFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -1736,9 +1735,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, EveryFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            EveryFunction.INSTANCE :
-                            FallbackEveryFunction.INSTANCE);
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          EveryFunction.INSTANCE :
+                                          FallbackEveryFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -1748,9 +1747,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, OrAggFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            OrAggFunction.INSTANCE :
-                            FallbackOrAggFunction.INSTANCE);
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          OrAggFunction.INSTANCE :
+                                          FallbackOrAggFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -1758,9 +1757,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add(null, OrAggFunction.INSTANCE);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            OrAggFunction.INSTANCE :
-                            FallbackOrAggFunction.INSTANCE);
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          OrAggFunction.INSTANCE :
+                                          FallbackOrAggFunction.INSTANCE);
         }
         registerFunction(jpqlFunctionGroup);
     }
@@ -1920,9 +1919,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(WindowEveryFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new WindowEveryFunction(dialectEntry.getValue()) :
-                            new FallbackWindowEveryFunction(dialectEntry.getValue()));
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          new WindowEveryFunction(dialectEntry.getValue()) :
+                                          new FallbackWindowEveryFunction(dialectEntry.getValue()));
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -1931,9 +1930,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup("AND_AGG", JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new WindowEveryFunction(dialectEntry.getValue()) :
-                            new FallbackWindowEveryFunction(dialectEntry.getValue()));
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          new WindowEveryFunction(dialectEntry.getValue()) :
+                                          new FallbackWindowEveryFunction(dialectEntry.getValue()));
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -1942,9 +1941,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup = new JpqlFunctionGroup(WindowOrAggFunction.FUNCTION_NAME, JpqlFunctionKind.WINDOW);
         for (Map.Entry<String, DbmsDialect> dialectEntry : this.dbmsDialects.entrySet()) {
             jpqlFunctionGroup.add(dialectEntry.getKey(),
-                    dialectEntry.getValue().supportsBooleanAggregation() ?
-                            new WindowOrAggFunction(dialectEntry.getValue()) :
-                            new FallbackWindowOrAggFunction(dialectEntry.getValue()));
+                                  dialectEntry.getValue().supportsBooleanAggregation() ?
+                                          new WindowOrAggFunction(dialectEntry.getValue()) :
+                                          new FallbackWindowOrAggFunction(dialectEntry.getValue()));
         }
         registerFunction(jpqlFunctionGroup);
 
@@ -2082,22 +2081,22 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         // JSON_GET
         jpqlFunctionGroup = new JpqlFunctionGroup(AbstractJsonGetFunction.FUNCTION_NAME, false);
         jpqlFunctionGroup.add("postgresql", new PostgreSQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "postgresql")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"postgresql")));
         jpqlFunctionGroup.add("cockroach", new PostgreSQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "cockroach")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"cockroach")));
         jpqlFunctionGroup.add("mariadb", new MySQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "mariadb")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mariadb")));
         jpqlFunctionGroup.add("mysql", new MySQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "mysql")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mysql")));
         jpqlFunctionGroup.add("mysql8", new MySQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "mysql8")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"mysql8")));
         jpqlFunctionGroup.add("oracle", new OracleJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"oracle")));
         jpqlFunctionGroup.add("db2", new DB2JsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "db2")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"db2")));
         jpqlFunctionGroup.add("microsoft", new MSSQLJsonGetFunction(
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "microsoft"),
-                (CastFunction) findFunction("cast_string", "microsoft")));
+            (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME,"microsoft"),
+            (CastFunction) findFunction("cast_string","microsoft")));
         registerFunction(jpqlFunctionGroup);
 
         // JSON_SET
@@ -2283,7 +2282,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         dbmsDialects.put(dbms, dialect);
         return this;
     }
-
+    
     public Map<String, DbmsDialect> getDbmsDialects() {
         return dbmsDialects;
     }
