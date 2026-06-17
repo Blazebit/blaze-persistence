@@ -66,7 +66,7 @@ public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
         }
     }
 
-    private static void writeFieldItemPair(FunctionRenderContext context, String field, String itemExpression) {
+    private void writeFieldItemPair(FunctionRenderContext context, String field, String itemExpression) {
         context.addChunk(field);
         context.addChunk("':");
         context.addChunk(itemExpression); //Do we need to do a cast to string type like mysql does?

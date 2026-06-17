@@ -407,12 +407,7 @@ import com.blazebit.persistence.impl.function.timestampiso.PostgreSQLTimestampIs
 import com.blazebit.persistence.impl.function.timestampiso.SQLServerTimestampIsoFunction;
 import com.blazebit.persistence.impl.function.timestampiso.TimestampIsoFunction;
 import com.blazebit.persistence.impl.function.tomultiset.ToMultisetFunction;
-import com.blazebit.persistence.impl.function.tostringjson.AbstractToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.ForJsonPathToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.GroupConcatBasedToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.MySQLToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.OracleToStringJsonFunction;
-import com.blazebit.persistence.impl.function.tostringjson.PostgreSQLToStringJsonFunction;
+import com.blazebit.persistence.impl.function.tostringjson.*;
 import com.blazebit.persistence.impl.function.tostringxml.AbstractToStringXmlFunction;
 import com.blazebit.persistence.impl.function.tostringxml.ForXmlPathToStringXmlFunction;
 import com.blazebit.persistence.impl.function.tostringxml.GroupConcatBasedToStringXmlFunction;
@@ -1851,12 +1846,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("microsoft", new ForJsonPathToStringJsonFunction((CastFunction) findFunction("cast_string", "microsoft")));
-        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction(
-                (AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"),
-                (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"),
-                (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"),
-                (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")
-        ));
+        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunctionV2());
         jpqlFunctionGroup.add("mariadb", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
