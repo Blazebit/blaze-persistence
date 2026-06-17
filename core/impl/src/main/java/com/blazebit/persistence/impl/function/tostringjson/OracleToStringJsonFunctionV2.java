@@ -18,8 +18,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class OracleToStringJsonFunctionV2 extends AbstractToStringJsonFunction {
 
     private static final String START_CHUNK = "(select json_arrayagg(json_object('";
-    private static final String ELEMENT_POST_CHUNK = ") RETURNING CLOB";  //To avoid VARCHAR2(4000) limit?
-    private static final String AGGREGATE_POST_CHUNK = ")";
+    private static final String ELEMENT_POST_CHUNK = ")";
+    private static final String AGGREGATE_POST_CHUNK = "RETURNING CLOB)"; //To avoid VARCHAR2(4000) limit
     private static final String POST_CHUNK = ELEMENT_POST_CHUNK + AGGREGATE_POST_CHUNK;
 
     @Override
