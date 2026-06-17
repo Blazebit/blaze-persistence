@@ -392,11 +392,7 @@ import com.blazebit.persistence.impl.function.replace.ReplaceFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueComparisonFunction;
 import com.blazebit.persistence.impl.function.rowvalue.RowValueSubqueryComparisonFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.AbstractStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.GroupConcatBasedStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.MySQLStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.OracleStringJsonAggFunction;
-import com.blazebit.persistence.impl.function.stringjsonagg.PostgreSQLStringJsonAggFunction;
+import com.blazebit.persistence.impl.function.stringjsonagg.*;
 import com.blazebit.persistence.impl.function.stringxmlagg.AbstractStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.GroupConcatBasedStringXmlAggFunction;
 import com.blazebit.persistence.impl.function.stringxmlagg.OracleGroupConcatBasedStringXmlAggFunction;
@@ -1792,7 +1788,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
         jpqlFunctionGroup.add("postgresql", new PostgreSQLStringJsonAggFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLStringJsonAggFunction());
-        jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunction((AbstractGroupConcatFunction) findFunction(AbstractGroupConcatFunction.FUNCTION_NAME, "oracle"), (ChrFunction) findFunction(ChrFunction.FUNCTION_NAME, "oracle"), (ReplaceFunction) findFunction(ReplaceFunction.FUNCTION_NAME, "oracle"), (ConcatFunction) findFunction(ConcatFunction.FUNCTION_NAME, "oracle")));
+        jpqlFunctionGroup.add("oracle", new OracleStringJsonAggFunctionV2());
         jpqlFunctionGroup.add("mariadb", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql", new MySQLStringJsonAggFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLStringJsonAggFunction());
