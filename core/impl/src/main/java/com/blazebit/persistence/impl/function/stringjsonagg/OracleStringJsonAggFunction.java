@@ -34,7 +34,8 @@ public class OracleStringJsonAggFunction extends AbstractStringJsonAggFunction {
 
     private static void writeArgumentPair(FunctionRenderContext context, int i) {
         context.addArgument(i);
-        context.addChunk(":");
+        context.addChunk(":TO_CHAR(");
         context.addArgument(i + 1);
+        context.addChunk(")");
     }
 }
