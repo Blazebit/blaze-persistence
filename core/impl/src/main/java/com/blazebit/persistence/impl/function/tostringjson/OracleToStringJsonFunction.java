@@ -34,8 +34,7 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
             context.addChunk(POST_CHUNK);
             context.addChunk(subquery.substring(fromIndex));
         } else {
-            int limitIndex = SqlUtils.indexOfLimit(subquery, orderByIndex);
-            if (limitIndex == -1) {
+            if (SqlUtils.indexOfLimit(subquery, orderByIndex) == -1 && SqlUtils.indexOfFetchFirst(subquery, orderByIndex) == -1) {
                 renderJsonObjectArguments(context, fields, selectItemExpressions);
                 context.addChunk(POST_CHUNK);
                 context.addChunk(" OVER (");
