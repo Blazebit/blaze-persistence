@@ -21,8 +21,14 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
 
     private static final String START_CHUNK = "(select json_arrayagg(json_object('";
     private static final String ELEMENT_POST_CHUNK = ")";
-    private static final String AGGREGATE_POST_CHUNK = "RETURNING CLOB)"; //To avoid VARCHAR2(4000) limit
+    private static final String AGGREGATE_POST_CHUNK = " RETURNING CLOB)"; //To avoid VARCHAR2(4000) limit
     private static final String POST_CHUNK = ELEMENT_POST_CHUNK + AGGREGATE_POST_CHUNK;
+
+    private final String valueSeparator;
+
+    public OracleToStringJsonFunction(boolean compactSeparator){ //compact separator is only allowed 19c +
+        valueSeparator = compactSeparator ? "':" : "' VALUE ";
+    }
 
     @Override
     public void render(FunctionRenderContext context, String[] fields, String[] selectItemExpressions, String subquery, int fromIndex) {
@@ -71,12 +77,12 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
         boolean subJson = itemExpression.startsWith(START_CHUNK);
 
         context.addChunk(field);
+        context.addChunk(valueSeparator);
 
         if (subJson) {
-            context.addChunk("':");
             context.addChunk(itemExpression);
         } else { // cast to string
-            context.addChunk("':TO_CHAR(");
+            context.addChunk("TO_CHAR(");
             context.addChunk(itemExpression);
             context.addChunk(")");
         }
