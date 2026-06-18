@@ -43,9 +43,9 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
                 context.addChunk(")");
                 context.addChunk(subquery.substring(fromIndex, orderByIndex));
             } else {
-                renderJsonObjectArguments(context, fields, fields); //I am not sure if this part is correct limit syntax for oracle? Might need to use the lateral join from OracleToStringJsonFunction (V1)
+                renderJsonObjectArguments(context, fields, fields);
                 context.addChunk(POST_CHUNK);
-                context.addChunk(" from (select ");
+                context.addChunk(" from lateral(select ");
                 for (int i = 0; i < fields.length; i++) {
                     if (i != 0) {
                         context.addChunk(",");
