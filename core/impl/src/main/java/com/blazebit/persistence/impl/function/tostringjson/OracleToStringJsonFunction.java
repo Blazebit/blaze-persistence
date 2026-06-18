@@ -73,11 +73,11 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
 
         context.addChunk(field);
 
-        if(subJson){ //treat as JSON to prevent " escaping
+        if (subJson) { // treat as JSON to prevent " escaping
             context.addChunk("':");
             context.addChunk(itemExpression);
             context.addChunk(" FORMAT JSON");
-        }else { //cast to string
+        } else { // cast to string
             context.addChunk("':TO_CHAR(");
             context.addChunk(itemExpression);
             context.addChunk(")");
