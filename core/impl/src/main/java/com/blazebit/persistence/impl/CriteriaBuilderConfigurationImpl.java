@@ -1855,7 +1855,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("cockroach", new PostgreSQLToStringJsonFunction());
         jpqlFunctionGroup.add("microsoft", new ForJsonPathToStringJsonFunction((CastFunction) findFunction("cast_string", "microsoft")));
-        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction(false));
+        jpqlFunctionGroup.add("oracle", new OracleToStringJsonFunction(false)); //any way to check if version is 19+ and use true for compact?
         jpqlFunctionGroup.add("mariadb", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql", new MySQLToStringJsonFunction());
         jpqlFunctionGroup.add("mysql8", new MySQLToStringJsonFunction());
