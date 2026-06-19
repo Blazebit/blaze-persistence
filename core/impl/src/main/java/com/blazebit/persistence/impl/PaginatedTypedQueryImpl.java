@@ -373,7 +373,11 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 newKeyset = new DefaultKeysetPage(firstRow, pageSize, lowest, highest, keysets);
             }
 
-            totalSize = Math.max(totalSize, firstRow + ids.size());
+            // Don't promote the -1 sentinel that signals a disabled count query, otherwise getTotalSize() would
+            // wrongly report the number of rows seen so far instead of the documented -1
+            if (totalSize != -1) {
+                totalSize = Math.max(totalSize, firstRow + ids.size());
+            }
             List<X> queryResultList = objectQuery.getResultList();
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
@@ -452,7 +456,11 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 }
             }
 
-            totalSize = Math.max(totalSize, firstRow + result.size());
+            // Don't promote the -1 sentinel that signals a disabled count query, otherwise getTotalSize() would
+            // wrongly report the number of rows seen so far instead of the documented -1
+            if (totalSize != -1) {
+                totalSize = Math.max(totalSize, firstRow + result.size());
+            }
 
             PagedList<X> pagedResultList = new PagedArrayList<X>(result, newKeyset, totalSize, queryFirstResult, pageSize);
             return pagedResultList;

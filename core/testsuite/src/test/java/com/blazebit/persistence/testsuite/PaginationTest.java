@@ -259,6 +259,20 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(7, result.getTotalSize());
     }
 
+    // Test for #2120
+    @Test
+    public void testPaginatedDisabledCountQueryKeepsTotalSizeMinusOneOnFullPage() {
+        // There are 7 documents, so a page size of 2 yields a full first page with more rows remaining
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .orderByAsc("d.id")
+                .page(0, 2)
+                .withCountQuery(false);
+        PagedList<Document> result = cb.getResultList();
+        assertEquals(2, result.size());
+        // The count query is disabled, so the total size must be -1 per the getTotalSize() contract
+        assertEquals(-1, result.getTotalSize());
+    }
+
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";

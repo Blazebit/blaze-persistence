@@ -12,6 +12,7 @@ None yet
 
 * Fix `StringIndexOutOfBoundsException` when using a `VALUES` clause and an inline CTE join inside another inline CTE
 * Fix count and id query omitting joins that the WHERE clause refers to through an association path that is implicitly joined in the SELECT clause
+* Fix `PagedList.getTotalSize()` returning the page size instead of the documented `-1` on a full page when the count query is disabled
 
 ### Backwards-incompatible changes
 
