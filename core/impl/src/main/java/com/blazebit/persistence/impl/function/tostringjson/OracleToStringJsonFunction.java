@@ -26,7 +26,7 @@ public class OracleToStringJsonFunction extends AbstractToStringJsonFunction {
 
     private final String valueSeparator;
 
-    public OracleToStringJsonFunction(boolean compactSeparator){ //compact separator is only allowed 19c +
+    public OracleToStringJsonFunction(boolean compactSeparator) { //compact separator is only allowed 19c +
         valueSeparator = compactSeparator ? "':" : "' VALUE ";
     }
 
