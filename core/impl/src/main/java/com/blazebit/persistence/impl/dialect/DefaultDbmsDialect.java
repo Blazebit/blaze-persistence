@@ -273,6 +273,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return true;
     }
 
+    @Override
+    public boolean supportsCorrelationInJoinOnClause() {
+        return true;
+    }
+
     protected String getWindowFunctionDummyOrderBy() {
         return null;
     }
