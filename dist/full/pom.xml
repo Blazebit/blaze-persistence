@@ -294,6 +294,14 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jackson-3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jackson-3-jakarta</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-integration-jsonb</artifactId>
         </dependency>
         <dependency>
