@@ -10,10 +10,12 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.spring.data.repository.KeysetAwarePage;
 import com.blazebit.persistence.spring.data.repository.KeysetPageRequest;
 import com.blazebit.persistence.spring.data.repository.KeysetPageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * @author Christian Beikov
@@ -42,6 +44,11 @@ public class KeysetAwarePageImpl<T> extends PageImpl<T> implements KeysetAwarePa
     @Override
     public KeysetPage getKeysetPage() {
         return keysetPage;
+    }
+
+    @Override
+    public <U> Page<U> map(Function<? super T, ? extends U> converter) {
+        return new KeysetAwarePageImpl<U>(this.getConvertedContent(converter), this.getTotalElements(), this.keysetPage, this.getPageable());
     }
 
     @Override
