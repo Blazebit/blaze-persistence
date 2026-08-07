@@ -13,6 +13,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
+ * Oracle limit/offset handler based on {@code ROWNUM}.
+ * <p>
+ * Important details:
+ * <ul>
+ * <li>{@link SqlUtils#indexOfSelect(CharSequence)} is used so a leading {@code WITH} clause stays
+ * outside of the pagination wrapper. Wrapping the whole statement including the CTE (as Hibernate's
+ * native limit handler does for overridden SQL) produces invalid Oracle SQL and parameter binding
+ * mismatches (see issue #2091).</li>
+ * <li>When both limit and offset are present, the upper {@code ROWNUM} bound is the limit value
+ * argument. Callers that already know the inclusive max row ({@code limit + offset}) must pass that
+ * as {@code limit} when using string arguments; the integer-based entry points and parameter binding
+ * do this automatically via {@link #limitIncludesOffset()}.</li>
+ * </ul>
+ *
  * @author Christian Beikov
  * @since 1.2.0
  */
@@ -74,7 +88,10 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
         if (offset != null) {
             if (limit != null) {
-                sqlSb.insert(forUpdateIndex, " ) row_ where rownum <= (" + limit + "+" + offset + ")" + ") where rownum_ > " + offset);
+                // limit already represents the inclusive upper bound (limit+offset) for inlined/variable
+                // application via AbstractDbmsLimitHandler when limitIncludesOffset() is true, and for
+                // appendExtendedSql callers that pre-sum. A single placeholder/value is used — not (limit+offset).
+                sqlSb.insert(forUpdateIndex, " ) row_ where rownum <= " + limit + ") where rownum_ > " + offset);
             } else {
                 sqlSb.insert(forUpdateIndex, " ) where rownum > " + offset);
             }
@@ -87,9 +104,10 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
     public int bindLimitParametersAtEndOfQuery(Integer limit, Integer offset, PreparedStatement statement, int index) throws SQLException {
         if (offset != null) {
             if (limit != null) {
+                // SQL: rownum <= ? ) where rownum_ > ?
+                // First placeholder is the inclusive max row (limit + offset), second is offset.
                 statement.setInt(index, limit + offset);
                 statement.setInt(index + 1, offset);
-                statement.setInt(index + 2, offset);
                 return 2;
             } else {
                 statement.setInt(index, offset);
