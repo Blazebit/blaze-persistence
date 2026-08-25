@@ -10,6 +10,7 @@ import com.blazebit.persistence.ConfigurationProperties;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
@@ -104,6 +105,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     // Cache
     private String cachedIdQueryString;
     private String cachedExternalIdQueryString;
+    private ResolvedExpression[] cachedNullabilitySourceExpressions;
+    private boolean[] cachedIdentifierExpressionsNullability;
 
     public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, Object entityId, int pageSize, ResolvedExpression[] identifierExpressions) {
         super(baseBuilder);
@@ -178,9 +181,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             identifierExpressions = resultUniqueExpressions;
         }
 
+        boolean[] nullableIdentifierExpressions = getIdentifierExpressionsNullability(identifierExpressions);
+
         SubqueryBuilderImpl<T> subqueryBuilder = new SubqueryBuilderImpl<T>(criteriaBuilder.mainQuery, new QueryContext(criteriaBuilder, ClauseType.WHERE), criteriaBuilder.aliasManager, criteriaBuilder.joinManager, criteriaBuilder.mainQuery.subqueryExpressionFactory, null, false, null);
         // We always need synthetic aliases for subquery select items because Hibernate does not resolve aliases in the order by clause of subqueries
-        applyPageIdQueryInto(subqueryBuilder, keysetPage, firstResult, maxResults, identifierExpressions, true);
+        applyPageIdQueryInto(subqueryBuilder, keysetPage, firstResult, maxResults, identifierExpressions, true, nullableIdentifierExpressions);
 
         subqueryBuilder.collectParameters();
         Expression expression = new SubqueryExpression(subqueryBuilder);
@@ -192,12 +197,20 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
         Predicate p;
         if (identifierExpressions.length == 1) {
-            p = new InPredicate(identifierExpressions[0].getExpression(), expression);
+            Expression comparisonExpression = identifierExpressions[0].getExpression();
+            if (nullableIdentifierExpressions[0]) {
+                comparisonExpression = coalesceWithSentinel(comparisonExpression, createNullSafeSentinel(comparisonExpression));
+            }
+            p = new InPredicate(comparisonExpression, expression);
         } else {
             List<Expression> args = new ArrayList<>(identifierExpressions.length + 2);
             args.add(new StringLiteral("IN"));
             for (int j = 0; j < identifierExpressions.length; j++) {
-                args.add(identifierExpressions[j].getExpression());
+                Expression comparisonExpression = identifierExpressions[j].getExpression();
+                if (nullableIdentifierExpressions[j]) {
+                    comparisonExpression = coalesceWithSentinel(comparisonExpression, createNullSafeSentinel(comparisonExpression));
+                }
+                args.add(comparisonExpression);
             }
             args.add(expression);
             expression = new FunctionExpression(RowValueSubqueryComparisonFunction.FUNCTION_NAME, args);
@@ -440,6 +453,55 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         } else {
             return getQueryRootEntityIdentifierExpressions();
         }
+    }
+
+    /**
+     * Determines, for each of the given identifier expressions, whether its value can be {@code NULL} at
+     * runtime because it is resolved through a {@code LEFT}/{@code RIGHT} join somewhere along its path, e.g. a
+     * collection element identifier used only to disambiguate duplicate root rows produced by a fetch join, or a
+     * custom {@code pageBy("assoc.id")} identifier where {@code assoc} was left-joined. Such columns need
+     * null-safe handling when correlating the object query back to the page's id query/list, because SQL's
+     * {@code IN}/{@code =} never consider a {@code NULL} equal to another {@code NULL}, which would otherwise
+     * silently drop matching rows from the page. The root entity's own identifier is never left-joined and is
+     * therefore always reported as non-nullable.
+     */
+    private boolean[] getIdentifierExpressionsNullability(ResolvedExpression[] identifierExpressions) {
+        if (cachedNullabilitySourceExpressions != identifierExpressions) {
+            boolean[] nullability = new boolean[identifierExpressions.length];
+            List<JoinNode> joinNodes = new ArrayList<>();
+            JoinNodeGathererVisitor visitor = new JoinNodeGathererVisitor(joinNodes);
+            for (int i = 0; i < identifierExpressions.length; i++) {
+                joinNodes.clear();
+                identifierExpressions[i].getExpression().accept(visitor);
+                for (JoinNode joinNode : joinNodes) {
+                    boolean throughLeftJoin = false;
+                    for (JoinNode current = joinNode; current != null && current.getParent() != null; current = current.getParent()) {
+                        if (current.getJoinType() == JoinType.LEFT || current.getJoinType() == JoinType.RIGHT) {
+                            throughLeftJoin = true;
+                            break;
+                        }
+                    }
+                    // Only report as nullable if we can actually derive a safe sentinel for the null-safe
+                    // comparison, see #createNullSafeSentinel
+                    if (throughLeftJoin && createNullSafeSentinel(identifierExpressions[i].getExpression()) != null) {
+                        nullability[i] = true;
+                        break;
+                    }
+                }
+            }
+            cachedIdentifierExpressionsNullability = nullability;
+            cachedNullabilitySourceExpressions = identifierExpressions;
+        }
+        return cachedIdentifierExpressionsNullability;
+    }
+
+    private static boolean allTrue(boolean[] values) {
+        for (boolean value : values) {
+            if (!value) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -1163,11 +1225,25 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         queryGenerator.setQueryBuffer(sbSelectFrom);
         queryGenerator.setClauseType(ClauseType.SELECT);
         ResolvedExpression[] identifierExpressionsToUse = getIdentifierExpressionsToUse();
+        // Only the embedded-subquery rendering (aliasFunction == true, used by appendPageIdPredicate) may apply
+        // null-safe COALESCE wrapping, and only for the internal representation that actually gets executed;
+        // the standalone/external id query and getQueryString()'s external representation must keep returning/
+        // showing real NULLs
+        boolean[] nullableIdentifierExpressions = aliasFunction && !externalRepresentation ? getIdentifierExpressionsNullability(identifierExpressionsToUse) : null;
 
         if (aliasFunction && !externalRepresentation && needsNewIdList) {
             for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                boolean nullable = nullableIdentifierExpressions[i];
                 sbSelectFrom.append(mainQuery.jpaProvider.getCustomFunctionInvocation(AliasFunction.FUNCTION_NAME, 1));
+                if (nullable) {
+                    sbSelectFrom.append("COALESCE(");
+                }
                 identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
+                if (nullable) {
+                    sbSelectFrom.append(", ");
+                    appendNullSafeSentinel(sbSelectFrom, identifierExpressionsToUse[i].getExpression());
+                    sbSelectFrom.append(')');
+                }
                 sbSelectFrom.append(",'").append(ColumnTruncFunction.SYNTHETIC_COLUMN_PREFIX);
                 sbSelectFrom.append(i);
                 sbSelectFrom.append("')");
@@ -1179,7 +1255,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         } else {
             for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                boolean nullable = nullableIdentifierExpressions != null && nullableIdentifierExpressions[i];
+                if (nullable) {
+                    sbSelectFrom.append("COALESCE(");
+                }
                 identifierExpressionsToUse[i].getExpression().accept(queryGenerator);
+                if (nullable) {
+                    sbSelectFrom.append(", ");
+                    appendNullSafeSentinel(sbSelectFrom, identifierExpressionsToUse[i].getExpression());
+                    sbSelectFrom.append(')');
+                }
                 if (identifierToUseSelectAliases[i] != null) {
                     sbSelectFrom.append(" AS ");
                     sbSelectFrom.append(identifierToUseSelectAliases[i]);
@@ -1294,16 +1379,52 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         queryGenerator.setQueryBuffer(sbSelectFrom);
+        boolean[] nullableIdentifierExpressions = getIdentifierExpressionsNullability(identifierExpressions);
+        // ponytail: the bound-parameter tuple comparison below relies on a synthetic all-NULL padding tuple
+        // (see PaginatedTypedQueryImpl) to safely fill unused OR-branches when fewer than pageSize rows were
+        // found; that safety relies on at least one *non*-nullable column in each row, whose real value can
+        // never equal a bound NULL. If every identifier column were null-safe (COALESCE'd), a padding row would
+        // coalesce to (sentinel, sentinel, ...) on both sides and spuriously match. This is only a concern when
+        // ALL identifier columns are nullable (an unusual pageBy() with no non-left-joined column at all); in
+        // that rare case we conservatively skip null-safe handling entirely and keep the pre-existing behavior.
+        if (identifierExpressions.length > 1 && allTrue(nullableIdentifierExpressions)) {
+            nullableIdentifierExpressions = new boolean[identifierExpressions.length];
+        }
         if (identifierExpressions.length == 1) {
+            // ponytail: unlike the multi-column AND-chain below, a nullable *sole* identifier can't be made
+            // null-safe by simply COALESCE-ing the JPQL text, because the compared side is a bound IN-list
+            // parameter (:ID_PARAM_NAME), not a single scalar parameter - COALESCE can't reach into a list to
+            // sentinel-substitute individual null elements without Java-side pre-processing of the bound ids in
+            // PaginatedTypedQueryImpl. This is a narrow edge case (only hit when the query has exactly one
+            // identifier expression and it is itself resolved through a LEFT/RIGHT join) that is left unfixed
+            // here; upgrade path is to have PaginatedTypedQueryImpl substitute the same sentinel for null ids
+            // before binding the list, mirroring createNullSafeSentinel/NULL_SAFE_STRING_SENTINEL.
             identifierExpressions[0].getExpression().accept(queryGenerator);
             sbSelectFrom.append(" IN :").append(ID_PARAM_NAME);
         } else {
             sbSelectFrom.append('(');
             for (int i = 0; i < maxResults; i++) {
                 for (int j = 0; j < identifierExpressions.length; j++) {
-                    identifierExpressions[j].getExpression().accept(queryGenerator);
-                    sbSelectFrom.append(" = :").append(ID_PARAM_NAME);
-                    sbSelectFrom.append('_').append(j).append('_').append(i);
+                    Expression comparisonExpression = identifierExpressions[j].getExpression();
+                    boolean nullable = nullableIdentifierExpressions[j];
+                    if (nullable) {
+                        sbSelectFrom.append("COALESCE(");
+                    }
+                    comparisonExpression.accept(queryGenerator);
+                    if (nullable) {
+                        sbSelectFrom.append(", ");
+                        appendNullSafeSentinel(sbSelectFrom, comparisonExpression);
+                        sbSelectFrom.append(')');
+                    }
+                    sbSelectFrom.append(" = ");
+                    if (nullable) {
+                        sbSelectFrom.append("COALESCE(:").append(ID_PARAM_NAME).append('_').append(j).append('_').append(i).append(", ");
+                        appendNullSafeSentinel(sbSelectFrom, comparisonExpression);
+                        sbSelectFrom.append(')');
+                    } else {
+                        sbSelectFrom.append(':').append(ID_PARAM_NAME);
+                        sbSelectFrom.append('_').append(j).append('_').append(i);
+                    }
                     sbSelectFrom.append(" AND ");
                 }
                 sbSelectFrom.setLength(sbSelectFrom.length() - " AND ".length());
@@ -1494,6 +1615,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private void appendPageIdPredicate(StringBuilder sbSelectFrom, boolean externalRepresentation, ResolvedExpression[] identifierExpressions) {
         StringBuilder original = queryGenerator.getQueryBuffer();
         queryGenerator.setQueryBuffer(sbSelectFrom);
+        // Only the internal representation (externalRepresentation == false), which is what actually gets executed,
+        // applies null-safe COALESCE wrapping; getQueryString()'s external representation must keep showing the
+        // true comparison semantics, just like the standalone/public id query does
+        boolean[] nullableIdentifierExpressions = externalRepresentation ? null : getIdentifierExpressionsNullability(identifierExpressions);
         if (externalRepresentation) {
             if (identifierExpressions.length == 1) {
                 identifierExpressions[0].getExpression().accept(queryGenerator);
@@ -1510,7 +1635,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             appendPageIdQueryAsSubquery(sbSelectFrom, true);
         } else {
             if (identifierExpressions.length == 1) {
+                boolean nullable = nullableIdentifierExpressions[0];
+                if (nullable) {
+                    sbSelectFrom.append("COALESCE(");
+                }
                 identifierExpressions[0].getExpression().accept(queryGenerator);
+                if (nullable) {
+                    sbSelectFrom.append(", ");
+                    appendNullSafeSentinel(sbSelectFrom, identifierExpressions[0].getExpression());
+                    sbSelectFrom.append(')');
+                }
                 sbSelectFrom.append(" IN ");
 
                 if (needsNewIdList) {
@@ -1549,7 +1683,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
                 for (int j = 0; j < identifierExpressions.length; j++) {
                     sbSelectFrom.append(',');
+                    boolean nullable = nullableIdentifierExpressions[j];
+                    if (nullable) {
+                        sbSelectFrom.append("COALESCE(");
+                    }
                     identifierExpressions[j].getExpression().accept(queryGenerator);
+                    if (nullable) {
+                        sbSelectFrom.append(", ");
+                        appendNullSafeSentinel(sbSelectFrom, identifierExpressions[j].getExpression());
+                        sbSelectFrom.append(')');
+                    }
                 }
                 sbSelectFrom.append(',');
 
