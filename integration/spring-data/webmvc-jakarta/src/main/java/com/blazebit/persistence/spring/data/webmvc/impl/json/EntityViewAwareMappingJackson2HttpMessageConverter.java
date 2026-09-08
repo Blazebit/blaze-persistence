@@ -77,7 +77,7 @@ public class EntityViewAwareMappingJackson2HttpMessageConverter extends MappingJ
             }
             return entityViewAwareObjectMapper.readerFor(javaType).readValue(inputMessage.getBody());
         } catch (IOException ex) {
-            throw new HttpMessageNotReadableException("Could not read document: " + ex.getMessage(), ex);
+            throw new HttpMessageNotReadableException("Could not read document: " + ex.getMessage(), ex, inputMessage);
         }
     }
 }

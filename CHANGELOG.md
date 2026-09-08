@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Use the `HttpInputMessage` bearing `HttpMessageNotReadableException` constructor in `EntityViewAwareMappingJackson2HttpMessageConverter` so that unreadable entity view request bodies do not fail with `NoSuchMethodError` on Spring Framework 7
 
 ### Backwards-incompatible changes
 
