@@ -11,6 +11,7 @@ None yet
 ### Bug fixes
 
 * Fix keyset predicate binding to the last branch only when the WHERE clause is a top-level disjunction, which made keyset pagination return wrong rows from the second page on
+* Use the `HttpInputMessage` bearing `HttpMessageNotReadableException` constructor in `EntityViewAwareMappingJackson2HttpMessageConverter` so that unreadable entity view request bodies do not fail with `NoSuchMethodError` on Spring Framework 7
 
 ### Backwards-incompatible changes
 
