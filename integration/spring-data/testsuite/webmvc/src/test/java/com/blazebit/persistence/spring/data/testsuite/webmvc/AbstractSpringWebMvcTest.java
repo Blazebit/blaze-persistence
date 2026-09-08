@@ -104,6 +104,26 @@ public abstract class AbstractSpringWebMvcTest extends AbstractSpringTest {
         }
     }
 
+    protected RequestBuilder putRawJson(String path, Object idParam, byte[] content, String accept) {
+        MockHttpServletRequestBuilder builder = idParam == null ? put(path) : put(path, idParam);
+        if (CONTENT != null) {
+            try {
+                CONTENT.invoke(builder, content);
+                CONTENT_TYPE.invoke(builder, MediaType.APPLICATION_JSON);
+                if (accept != null) {
+                    ACCEPT.invoke(builder, (Object) new String[]{ accept });
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return builder;
+        } else {
+            builder.content(content)
+                    .contentType(MediaType.APPLICATION_JSON);
+            return accept == null ? builder : builder.accept(accept);
+        }
+    }
+
     protected RequestBuilder postJson(String path, Object createView) throws JsonProcessingException {
         MockHttpServletRequestBuilder builder = post(path);
         if (CONTENT != null) {
