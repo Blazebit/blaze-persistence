@@ -10,7 +10,7 @@ None yet
 
 ### Bug fixes
 
-None yet
+* Fix keyset predicate binding to the last branch only when the WHERE clause is a top-level disjunction, which made keyset pagination return wrong rows from the second page on
 
 ### Backwards-incompatible changes
 

@@ -3910,7 +3910,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             sbSelectFrom.append(" WHERE ");
 
             if (whereManager.hasPredicates()) {
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, true);
                 sbSelectFrom.append(" AND ");
             }
 

@@ -268,6 +268,16 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
     }
 
     void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts) {
+        buildClausePredicate(sb, additionalConjuncts, optionalConjuncts, false);
+    }
+
+    /**
+     * Renders the predicates of this clause, conjoined with the given additional and optional conjuncts.
+     *
+     * @param asConjunct Whether the caller conjoins the rendered predicate with further predicates it renders itself,
+     *                   e.g. a keyset predicate, in which case a top-level disjunction is parenthesized
+     */
+    void buildClausePredicate(StringBuilder sb, List<String> additionalConjuncts, List<String> optionalConjuncts, boolean asConjunct) {
         int size = additionalConjuncts.size();
         boolean hasPredicates = size > 0;
         for (int i = 0; i < size; i++) {
@@ -278,13 +288,24 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
         queryGenerator.setClauseType(getClauseType());
         queryGenerator.setQueryBuffer(sb);
         int oldLength = sb.length();
+        // The query generator only parenthesizes a disjunction nested in a conjunction with other children, so a
+        // disjunction that is the sole predicate of this clause would bind weaker than the AND that conjoins it
+        boolean parenthesize = (asConjunct || size > 0 || !optionalConjuncts.isEmpty()) && isDisjunction(rootPredicate.getPredicate());
+        if (parenthesize) {
+            sb.append('(');
+        }
+        int predicateStart = sb.length();
         applyPredicate(queryGenerator);
         queryGenerator.setClauseType(null);
-        if (sb.length() == oldLength) {
+        if (sb.length() == predicateStart) {
+            sb.setLength(oldLength);
             if (size > 0) {
                 sb.setLength(sb.length() - " AND ".length());
             }
         } else {
+            if (parenthesize) {
+                sb.append(')');
+            }
             hasPredicates = true;
         }
 
@@ -297,6 +318,21 @@ public abstract class PredicateManager<T extends WhereBuilder<T>> extends Abstra
     }
 
     protected abstract String getClauseName();
+
+    /**
+     * Whether the predicate renders as a top-level disjunction, looking through the single-child compound predicates
+     * that the query generator renders without parentheses.
+     */
+    private static boolean isDisjunction(Predicate predicate) {
+        while (predicate instanceof CompoundPredicate && !predicate.isNegated()) {
+            CompoundPredicate compoundPredicate = (CompoundPredicate) predicate;
+            if (compoundPredicate.getChildren().size() != 1) {
+                return compoundPredicate.getOperator() == CompoundPredicate.BooleanOperator.OR;
+            }
+            predicate = compoundPredicate.getChildren().get(0);
+        }
+        return false;
+    }
 
     void applyPredicate(ResolvingQueryGenerator queryGenerator) {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);

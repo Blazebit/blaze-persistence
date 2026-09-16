@@ -1226,7 +1226,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, true);
             }
         }
 
@@ -1451,7 +1451,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             if (!whereClauseConjuncts.isEmpty()) {
                 sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+                whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, true);
             }
 
             if (hasGroupBy) {
@@ -1475,7 +1475,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
                 if (whereManager.hasPredicates() || !whereClauseConjuncts.isEmpty()) {
                     sbSelectFrom.append(" AND ");
-                    whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts);
+                    whereManager.buildClausePredicate(sbSelectFrom, whereClauseConjuncts, optionalWhereClauseConjuncts, true);
                 }
             }
             appendGroupByClause(sbSelectFrom);

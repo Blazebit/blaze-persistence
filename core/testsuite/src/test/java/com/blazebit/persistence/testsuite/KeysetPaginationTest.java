@@ -149,6 +149,39 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    // Test for #2132
+    public void testKeysetPredicateOnTopLevelDisjunction() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name").select("d.owner.name");
+        crit.whereOr()
+                .where("d.name").eq("doc1")
+                .where("d.owner.name").eq("Karl4")
+            .endOr();
+        crit.orderByAsc("d.name")
+                .orderByAsc("d.id");
+
+        // doc1 by name, doc4/doc5/doc6 by owner
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 0, 2);
+        PagedList<Tuple> result = pcb.getResultList();
+        assertEquals(2, result.size());
+        assertEquals(4, result.getTotalSize());
+        assertEquals("doc1", result.get(0).get(0));
+        assertEquals("doc4", result.get(1).get(0));
+
+        // The keyset predicate must not bind to the last branch of the disjunction only
+        pcb = crit.page(result.getKeysetPage(), 2, 2);
+        String expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM Document d JOIN d.owner owner_1"
+                + " WHERE (d.name > :_keysetParameter_0 OR (d.name = :_keysetParameter_0 AND d.id > :_keysetParameter_1)) AND (d.name = :param_0 OR owner_1.name = :param_1)"
+                + " ORDER BY d.name ASC, d.id ASC";
+        assertEquals(expectedIdQuery, pcb.withInlineCountQuery(false).getQueryString());
+        result = pcb.getResultList();
+        assertEquals(2, result.size());
+        assertEquals(4, result.getTotalSize());
+        assertEquals("doc5", result.get(0).get(0));
+        assertEquals("doc6", result.get(1).get(0));
+    }
+
+    @Test
     public void backwardsPaginationResultSetOrder() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.name").select("d.owner.name");
