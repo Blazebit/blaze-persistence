@@ -140,7 +140,7 @@ public class OptimizedKeysetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeysetPage(), 2, 2);
         String expectedIdQuery = "SELECT d.name, owner_1.name, d.id FROM DocumentWithNullableName d JOIN d.owner owner_1"
                 + " WHERE ((d.name > :_keysetParameter_0 OR d.name IS NULL) OR (d.name = :_keysetParameter_0 AND d.id > :_keysetParameter_1)) AND (d.name = :param_0 OR owner_1.name = :param_1)"
-                + " ORDER BY d.name ASC NULLS LAST, d.id ASC";
+                + " ORDER BY " + renderNullPrecedence("d.name", "ASC", "LAST") + ", d.id ASC";
         assertEquals(expectedIdQuery, pcb.withInlineCountQuery(false).getQueryString());
         result = pcb.getResultList();
         assertEquals(2, result.size());
