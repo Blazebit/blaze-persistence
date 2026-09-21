@@ -472,7 +472,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -498,7 +498,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -527,7 +527,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT d.id, " + "strings_1" +", COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, " + "strings_1" +", COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -556,7 +556,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "strings_1") + " ORDER BY d.id ASC";
         String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -585,7 +585,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.id, "+ "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.id, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.id", "d.name", "strings_1") + " ORDER BY d.name ASC, d.id ASC";
         String expectedObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.id", "strings_1", "d.name")
                 + " ORDER BY d.name ASC, d.id ASC";
         String expectedInlineObjectQuery = "SELECT d.id, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -615,7 +615,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.name, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.name = :ids_0_0 AND strings_1 = :ids_1_0)"
+                + " WHERE (d.name = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.name", "strings_1", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -645,7 +645,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT " + countPaginated("d.name, d.age, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedIdQuery = "SELECT d.name, d.age, strings_1 FROM Document d LEFT JOIN d.strings strings_1 GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST")) + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
-                + " WHERE (d.name = :ids_0_0 AND d.age = :ids_1_0 AND strings_1 = :ids_2_0)"
+                + " WHERE (d.name = :ids_0_0 AND d.age = :ids_1_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_2_0, '##blaze_persistence_null_sentinel##'))"
                 + " GROUP BY " + groupBy("d.name", "strings_1", "d.age", renderNullPrecedenceGroupBy("strings_1", "ASC", "LAST"))
                 + " ORDER BY d.name ASC, d.age ASC, " + renderNullPrecedence("strings_1", "ASC", "LAST");
         String expectedInlineObjectQuery = "SELECT d.name, strings_1, COUNT(" + joinAliasValue("contacts_1", "id") + "), (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1"
@@ -938,7 +938,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + " ORDER BY contactCount ASC, d.id ASC";
         String expectedCountQuery = "SELECT " + countPaginated("d.id, " + "strings_1", true) + " FROM Document d LEFT JOIN d.strings strings_1";
         String expectedObjectQuery = "SELECT " + countDistinct("KEY(contacts_1)") + " AS contactCount, strings_1 FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
-                "WHERE (d.id = :ids_0_0 AND strings_1 = :ids_1_0) "
+                "WHERE (d.id = :ids_0_0 AND COALESCE(strings_1, '##blaze_persistence_null_sentinel##') = COALESCE(:ids_1_0, '##blaze_persistence_null_sentinel##')) "
                 + "GROUP BY " + groupBy("d.id", "strings_1")
                 + " ORDER BY contactCount ASC, d.id ASC";
         String expectedInlineObjectQuery = "SELECT " + countDistinct("KEY(contacts_1)") + " AS contactCount, strings_1, (" + expectedCountQuery + ") FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.strings strings_1 " +
@@ -1382,5 +1382,56 @@ public class PaginationTest extends AbstractCoreTest {
         PagedList<Tuple> resultList = cb.getResultList();
         assertTrue(resultList.isEmpty());
         assertEquals(7L, resultList.getTotalSize());
+    }
+
+    // Test for null-safe identifier matching in PaginatedCriteriaBuilderImpl#copyCriteriaBuilder,
+    // #appendPageIdPredicate and #buildBaseQueryString: an identifier expression resolved through a LEFT JOIN
+    // can legitimately be NULL (e.g. a document without any partner), and the correlation back to the page's
+    // ids must not silently drop such rows.
+    @Test
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoEclipselink.class, NoDatanucleus.class })
+    public void testPaginationNullSafeLeftJoinedIdentifier() {
+        // Persisted through the test's own ambient transaction (rolled back in @After) rather than a
+        // separately committed transactional(...) block, so this fixture data doesn't leak into later tests.
+        Person owner = new Person("NullSafeOwner");
+        em.persist(owner);
+
+        Document withPartner = new Document("nullSafeWithPartner");
+        withPartner.setOwner(owner);
+        Document withoutPartner = new Document("nullSafeWithoutPartner");
+        withoutPartner.setOwner(owner);
+        em.persist(withPartner);
+        em.persist(withoutPartner);
+
+        Person partner = new Person("NullSafePartner");
+        partner.setPartnerDocument(withPartner);
+        em.persist(partner);
+
+        // Uses a LIKE predicate (rather than an id equality/IN) to scope down to the rows created above,
+        // since constantifying "d.id" itself would trip up an unrelated pre-existing limitation in
+        // FunctionalDependencyAnalyzerVisitor when a plural (one-to-many) join is also used as an identifier.
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class)
+                .from(Document.class, "d")
+                .leftJoin("d.partners", "partners")
+                .where("d.name").like(false).value("nullSafe%").noEscape()
+                .select("d.id")
+                .select("partners.id")
+                .orderByAsc("d.id");
+        // partners.id is NULL for "nullSafeWithoutPartner" because of the LEFT JOIN, and is used as an
+        // additional identifier expression to correlate the page back to its rows
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.pageBy(0, 10, "d.id", "partners.id");
+        PagedList<Tuple> page = pcb.getResultList();
+        assertEquals(2, page.size());
+
+        // Also exercise copyCriteriaBuilder directly, which independently rebuilds the same null-safe
+        // correlation predicate as a reusable subquery
+        CriteriaBuilder<Document> newCb = cbf.create(em, Document.class)
+                .from(Document.class, "newD")
+                .where("newD.name").like(false).value("nullSafe%").noEscape()
+                .where("newD.id").in(pcb.copyCriteriaBuilder(Object[].class, false))
+                    .select("d.id")
+                .end();
+        List<Document> resultList = newCb.getResultList();
+        assertEquals(2, resultList.size());
     }
 }
