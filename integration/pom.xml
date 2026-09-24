@@ -194,6 +194,8 @@
                 <module>jaxrs-jackson-jakarta</module>
                 <module>jaxrs-jsonb-jakarta</module>
                 <module>jackson-jakarta</module>
+                <module>jackson-3</module>
+                <module>jackson-3-jakarta</module>
                 <module>jsonb-jakarta</module>
                 <module>graphql-jakarta</module>
                 <module>graphql-spqr-jakarta</module>

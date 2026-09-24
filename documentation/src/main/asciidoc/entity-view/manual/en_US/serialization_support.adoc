@@ -59,11 +59,13 @@ or if you are using Jakarta JPA
 </dependency>
 ----
 
-If you are using JAX-RS, Spring WebMvc or Spring WebFlux, consider using the already existing integrations instead to avoid unnecessary work.
+For Jackson 3 on Java 17 or later, use `blaze-persistence-integration-jackson-3` instead. For Jakarta JPA, use `blaze-persistence-integration-jackson-3-jakarta`.
+
+If you are using JAX-RS, Spring WebMvc or Spring WebFlux, consider using the already existing integrations instead to avoid unnecessary work. The existing framework integrations use Jackson 2.
 
 ==== Usage
 
-The integration happens by adding a module and a custom visibility checker to an existing `ObjectMapper`.
+The integration happens by adding a module and a custom visibility checker to an existing `ObjectMapper`. Jackson 3 `ObjectMapper` instances are immutable, so the Jackson 3 integration returns a rebuilt, configured mapper from `getObjectMapper()`.
 
 [source,java]
 ----
@@ -73,7 +75,7 @@ EntityViewAwareObjectMapper mapper = new EntityViewAwareObjectMapper(evm, existi
 ----
 
 The `EntityViewAwareObjectMapper` class provides utility methods for integrating with JAX-RS, Spring WebMvc and Spring WebFlux,
-but you can use your `ObjectMapper` directly as before as the module and visibility checker is registered in the existing mapper.
+but you can use the mapper returned by `getObjectMapper()` directly.
 
 [[jsonb-integration]]
 === JSONB integration
