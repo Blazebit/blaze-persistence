@@ -5,6 +5,7 @@
 
 package com.blazebit.persistence.impl.plan;
 
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 
@@ -42,16 +43,37 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
         this.queryPlanCacheEnabled = queryPlanCacheEnabled;
     }
 
+    /**
+     * Applies limit/offset via the Blaze {@link com.blazebit.persistence.spi.DbmsLimitHandler} so that a
+     * leading {@code WITH} clause stays outside of Oracle's {@code ROWNUM} pagination wrapper.
+     * Relying on the JPA provider's limit handler for custom/CTE SQL wraps the whole statement
+     * (including the CTE), which produces invalid Oracle SQL and parameter index errors (#2091).
+     */
+    private String applyLimitOffset(String sql) {
+        if (firstResult == 0 && maxResults == Integer.MAX_VALUE) {
+            extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
+            return sql;
+        }
+        Integer limit = maxResults == Integer.MAX_VALUE ? null : maxResults;
+        Integer offset = firstResult == 0 ? null : firstResult;
+        String limitedSql = serviceProvider.getService(DbmsDialect.class)
+                .createLimitHandler()
+                .applySqlInlined(sql, false, limit, offset);
+        // Clear provider-side first/max so the limit is not applied a second time on the overridden SQL
+        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, 0, Integer.MAX_VALUE);
+        return limitedSql;
+    }
+
     @Override
     public List<T> getResultList() {
-        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
-        return extendedQuerySupport.getResultList(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
+        String finalSql = applyLimitOffset(sql);
+        return extendedQuerySupport.getResultList(serviceProvider, participatingQueries, delegate, finalSql, queryPlanCacheEnabled);
     }
 
     @Override
     public T getSingleResult() {
-        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
-        return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
+        String finalSql = applyLimitOffset(sql);
+        return (T) extendedQuerySupport.getSingleResult(serviceProvider, participatingQueries, delegate, finalSql, queryPlanCacheEnabled);
     }
 
     @Override
@@ -65,7 +87,7 @@ public class CustomSelectQueryPlan<T> implements SelectQueryPlan<T> {
 
     @Override
     public Stream<T> getResultStream() {
-        extendedQuerySupport.applyFirstResultMaxResults(baseQuery, firstResult, maxResults);
-        return (Stream<T>) extendedQuerySupport.getResultStream(serviceProvider, participatingQueries, delegate, sql, queryPlanCacheEnabled);
+        String finalSql = applyLimitOffset(sql);
+        return (Stream<T>) extendedQuerySupport.getResultStream(serviceProvider, participatingQueries, delegate, finalSql, queryPlanCacheEnabled);
     }
 }
