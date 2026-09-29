@@ -24,6 +24,7 @@ import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentCreate
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentCreateOrUpdateViewBuilder;
 import com.blazebit.persistence.spring.data.testsuite.webmvc.view.DocumentUpdateView;
 import com.blazebit.persistence.spring.data.webmvc.impl.BlazePersistenceWebConfiguration;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -144,6 +145,18 @@ public class DocumentControllerTest extends AbstractSpringWebMvcTest {
         // attempted because the entity view used is both updatable and creatable. The update would fail like before.
         mockMvc.perform(postJson("/documents", createView))
             .andExpect(status().isOk());
+    }
+
+    // Test for #2128
+    @Test
+    public void testUnreadableRequestBodyIsReportedAsBadRequest() throws Exception {
+        // Given
+        Document d1 = createDocument("D1");
+        byte[] truncatedJson = "{\"name\":".getBytes(StandardCharsets.UTF_8);
+
+        // When / Then
+        mockMvc.perform(putRawJson("/documents/{id}", d1.getId(), truncatedJson, APPLICATION_VND_BLAZEBIT_UPDATE_1_JSON))
+            .andExpect(status().isBadRequest());
     }
 
     private Document createDocument(String name) {
