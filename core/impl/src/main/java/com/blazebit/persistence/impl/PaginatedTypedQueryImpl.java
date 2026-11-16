@@ -231,7 +231,8 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                 } else {
                     size = totalSize;
                 }
-                if (boundedCount) {
+                // Don't promote the -1 sentinel that signals a disabled count query
+                if (boundedCount && size != -1) {
                     if (keysetMode == KeysetMode.NEXT) {
                         size = Math.max(size, keysetPage.getFirstResult() + keysetPage.getMaxResults());
                     } else if (forceFirstResult || keysetMode == KeysetMode.NONE) {
@@ -409,7 +410,8 @@ public class PaginatedTypedQueryImpl<X> implements PaginatedTypedQuery<X> {
                         totalSize = getTotalCount();
                     }
                 }
-                if (boundedCount) {
+                // Don't promote the -1 sentinel that signals a disabled count query
+                if (boundedCount && totalSize != -1) {
                     if (keysetMode == KeysetMode.NEXT) {
                         totalSize = Math.max(totalSize, keysetPage.getFirstResult() + keysetPage.getMaxResults());
                     } else if (forceFirstResult || keysetMode == KeysetMode.NONE) {
