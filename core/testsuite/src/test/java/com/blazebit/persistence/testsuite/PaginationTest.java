@@ -273,6 +273,60 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(-1, result.getTotalSize());
     }
 
+    // Test for #2095
+    @Test
+    public void testPaginatedDisabledCountQueryKeepsTotalSizeMinusOneOnEmptyPage() {
+        // There are 7 documents, so the page starting at 100 is empty
+        PagedList<Document> result = cbf.create(em, Document.class, "d")
+                .orderByAsc("d.id")
+                .page(100, 2)
+                .withCountQuery(false)
+                .getResultList();
+        assertEquals(0, result.size());
+        assertEquals(-1, result.getTotalSize());
+    }
+
+    // Test for #2095
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void testPaginatedDisabledCountQueryKeepsTotalSizeMinusOneWithBoundedCount() {
+        PagedList<Document> result = cbf.create(em, Document.class, "d")
+                .orderByAsc("d.id")
+                .page(0, 2)
+                .withCountQuery(false)
+                .withBoundedCount(5)
+                .getResultList();
+        assertEquals(2, result.size());
+        assertEquals(-1, result.getTotalSize());
+    }
+
+    // Test for #2095
+    @Test
+    @Category({ NoEclipselink.class, NoDatanucleus.class, NoOpenJPA.class })
+    public void testPaginatedDisabledCountQueryKeepsTotalSizeMinusOneWithBoundedCountOnEmptyPage() {
+        PagedList<Document> result = cbf.create(em, Document.class, "d")
+                .orderByAsc("d.id")
+                .page(100, 2)
+                .withCountQuery(false)
+                .withBoundedCount(5)
+                .getResultList();
+        assertEquals(0, result.size());
+        assertEquals(-1, result.getTotalSize());
+    }
+
+    // Test for #2095
+    @Test
+    public void testPaginatedDisabledCountQueryKeepsTotalSizeMinusOneWithIdQuery() {
+        PagedList<Document> result = cbf.create(em, Document.class, "d")
+                .leftJoin("d.contacts", "c")
+                .orderByAsc("d.id")
+                .page(0, 2)
+                .withCountQuery(false)
+                .getResultList();
+        assertEquals(2, result.size());
+        assertEquals(-1, result.getTotalSize());
+    }
+
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
