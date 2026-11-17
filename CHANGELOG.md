@@ -11,6 +11,7 @@ None yet
 ### Bug fixes
 
 * Fix keyset predicate binding to the last branch only when the WHERE clause is a top-level disjunction, which made keyset pagination return wrong rows from the second page on
+* Fix `cast_boolean` on PostgreSQL rendering the non-existent type `number(1,0)` instead of `boolean`
 
 ### Backwards-incompatible changes
 
