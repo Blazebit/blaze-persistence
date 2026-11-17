@@ -182,7 +182,17 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
             }
         }
         if (limit != null) {
-            appendLimit(sqlSb, isSubquery, limit, offset);
+            // OracleDbmsLimitHandler.limitIncludesOffset(): the limit argument is the inclusive upper ROWNUM
+            // bound. appendExtendedSql receives raw maxResults/firstResult strings, so pre-sum here.
+            String effectiveLimit = limit;
+            if (offset != null && !"?".equals(limit) && !"?".equals(offset)) {
+                try {
+                    effectiveLimit = Integer.toString(Integer.parseInt(limit) + Integer.parseInt(offset));
+                } catch (NumberFormatException ex) {
+                    effectiveLimit = "(" + limit + "+" + offset + ")";
+                }
+            }
+            appendLimit(sqlSb, isSubquery, effectiveLimit, offset);
         }
 
         if (returningColumns != null) {
