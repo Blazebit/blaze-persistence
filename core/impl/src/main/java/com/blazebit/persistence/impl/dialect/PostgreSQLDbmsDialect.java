@@ -7,6 +7,7 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,22 @@ import com.blazebit.persistence.spi.UpdateJoinStyle;
 public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
 
     public PostgreSQLDbmsDialect() {
+        super(getSqlTypes(Collections.<Class<?>, String>emptyMap()));
     }
 
     public PostgreSQLDbmsDialect(Map<Class<?>, String> childSqlTypes) {
-        super(childSqlTypes);
+        super(getSqlTypes(childSqlTypes));
+    }
+
+    protected static Map<Class<?>, String> getSqlTypes(Map<Class<?>, String> childSqlTypes) {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>();
+
+        // PostgreSQL has no number type, but a native boolean type
+        types.put(Boolean.class, "boolean");
+        types.put(Boolean.TYPE, "boolean");
+
+        types.putAll(childSqlTypes);
+        return types;
     }
 
     @Override
