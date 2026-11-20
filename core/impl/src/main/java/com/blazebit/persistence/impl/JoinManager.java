@@ -1013,15 +1013,20 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
             if (!aliasManager.isAliasAvailable(alias)) {
                 alias = aliasManager.generateRootAlias(alias);
             }
-            String baseAlias = addRoot(result.baseNode.getEntityType(), alias, false);
-            JoinNode joinNode = ((JoinAliasInfo) aliasManager.getAliasInfo(baseAlias)).getJoinNode();
-            joinNode.getAliasInfo().setImplicit(true);
-            Predicate correlationPredicate = expressionFactory.createBooleanExpression(createCorrelationPredicate(result.baseNode.getEntityType(), result.baseNode.getAliasExpression(), baseAlias), false);
+            JoinAliasInfo rootAliasInfo = new JoinAliasInfo(alias, alias, true, true, aliasManager);
+            JoinNode joinNode = JoinNode.createEntityJoinNode(result.baseNode, JoinType.INNER, result.baseNode.getEntityType(), rootAliasInfo, false);
+            rootAliasInfo.setJoinNode(joinNode);
+            rootNodes.add(joinNode);
+            explicitJoinNodes.add(joinNode);
+            // register root alias in aliasManager
+            aliasManager.registerAliasInfo(rootAliasInfo);
+
+            Predicate correlationPredicate = expressionFactory.createBooleanExpression(createCorrelationPredicate(result.baseNode.getEntityType(), result.baseNode.getAliasExpression(), alias), false);
             correlationPredicate.accept(joinVisitor);
             joinNode.setOnPredicate(new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, correlationPredicate));
             if (implicit || !(correlatedAttributeExpr instanceof ArrayExpression)) {
                 PathExpression pathExpression = new PathExpression();
-                pathExpression.getExpressions().add(new PropertyExpression(baseAlias));
+                pathExpression.getExpressions().add(new PropertyExpression(alias));
                 if (correlatedAttributeExpr instanceof PathExpression) {
                     pathExpression.getExpressions().addAll(((PathExpression) correlatedAttributeExpr).getExpressions());
                 } else {
@@ -1961,6 +1966,9 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
         if (node.getJoinType() != JoinType.INNER) {
             return false;
         }
+        if (!mainQuery.dbmsDialect.supportsCorrelationInJoinOnClause() && node.isEntityJoinNode() && node.getAliasInfo().getAliasOwner() != node.getParent().getAliasInfo().getAliasOwner()) {
+            return true;
+        }
         // in Hibernate < 5.1, we weren't able to refer to non-driving table aliases in the ON clause which can be worked around by emulating through a cross join
         if (!mainQuery.jpaProvider.supportsNonDrivingAliasInOnClause()) {
             // But this only works when the parent join node has no RIGHT or FULL joins
@@ -2033,6 +2041,14 @@ public class JoinManager extends AbstractManager<ExpressionModifier> {
                         whereSb.append('.').append(extendedManagedType.getIdAttribute().getName());
                     }
                     whereConjuncts.add(whereSb.toString());
+                    return true;
+                } else if (!externalRepresentation && !node.isLateral()) {
+                    sb.append(joinBase.getEntityType().getName());
+                    sb.append(" _synthetic_");
+                    sb.append(node.getAlias());
+                    sb.append(" JOIN _synthetic_");
+                    sb.append(node.getAlias());
+                    sb.append('.').append(correlationPath);
                     return true;
                 }
             } else {
