@@ -8,6 +8,8 @@
     </parent>
     <properties>
         <module.name>com.blazebit.persistence.querydsl</module.name>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>blaze-persistence-integration-querydsl-expressions</artifactId>
