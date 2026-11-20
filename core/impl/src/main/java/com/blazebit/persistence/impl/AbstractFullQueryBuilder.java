@@ -38,6 +38,8 @@ import com.blazebit.persistence.impl.query.TypedQueryWrapper;
 import com.blazebit.persistence.parser.expression.Expression;
 import com.blazebit.persistence.parser.expression.ExpressionCopyContext;
 import com.blazebit.persistence.parser.expression.FunctionExpression;
+import com.blazebit.persistence.parser.expression.NumericLiteral;
+import com.blazebit.persistence.parser.expression.NumericType;
 import com.blazebit.persistence.parser.expression.PathExpression;
 import com.blazebit.persistence.parser.expression.StringLiteral;
 import com.blazebit.persistence.parser.util.JpaMetamodelUtils;
@@ -51,6 +53,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -189,11 +192,24 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         mainQuery.copyConfiguration(this.mainQuery.getQueryConfiguration());
         CriteriaBuilderImpl<Object[]> newBuilder = new CriteriaBuilderImpl<>(mainQuery, true, Object[].class, null);
         newBuilder.fromClassExplicitlySet = true;
-        applyPageIdQueryInto(newBuilder, keysetPage, firstResult, maxResults, identifierExpressionsToUse, false);
+        applyPageIdQueryInto(newBuilder, keysetPage, firstResult, maxResults, identifierExpressionsToUse, false, null);
         return newBuilder;
     }
 
     protected void applyPageIdQueryInto(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> newBuilder, KeysetPage keysetPage, int firstResult, int maxResults, ResolvedExpression[] identifierExpressionsToUse, boolean withAlias) {
+        applyPageIdQueryInto(newBuilder, keysetPage, firstResult, maxResults, identifierExpressionsToUse, withAlias, null);
+    }
+
+    /**
+     * @param nullableIdentifierExpressions Marks, per index into {@code identifierExpressionsToUse}, whether the
+     *                                       identifier can be {@code NULL} at runtime (e.g. resolved through a
+     *                                       {@code LEFT} join) and therefore needs null-safe select handling. Only
+     *                                       consulted when {@code withAlias} is {@code true}, i.e. when this id
+     *                                       query is embedded as a comparison subquery rather than exposed as a
+     *                                       standalone/public id query, which must keep returning real
+     *                                       {@code NULL}s. May be {@code null} to indicate no nullable columns.
+     */
+    protected void applyPageIdQueryInto(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> newBuilder, KeysetPage keysetPage, int firstResult, int maxResults, ResolvedExpression[] identifierExpressionsToUse, boolean withAlias, boolean[] nullableIdentifierExpressions) {
         ExpressionCopyContext expressionCopyContext = newBuilder.applyFrom(this, true, false, false, false, ID_QUERY_GROUP_BY_CLAUSE_EXCLUSIONS, getIdentifierExpressionsToUseNonRootJoinNodes(identifierExpressionsToUse), new IdentityHashMap<JoinManager, JoinManager>(), ExpressionCopyContext.EMPTY);
         newBuilder.setFirstResult(firstResult);
         newBuilder.setMaxResults(maxResults);
@@ -225,8 +241,12 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
 
         if (withAlias) {
             for (int i = 0; i < identifierExpressionsToUse.length; i++) {
+                Expression selectExpression = identifierExpressionsToUse[i].getExpression().copy(expressionCopyContext);
+                if (nullableIdentifierExpressions != null && nullableIdentifierExpressions[i]) {
+                    selectExpression = coalesceWithSentinel(selectExpression, createNullSafeSentinel(identifierExpressionsToUse[i].getExpression()));
+                }
                 List<Expression> args = new ArrayList<>(2);
-                args.add(identifierExpressionsToUse[i].getExpression().copy(expressionCopyContext));
+                args.add(selectExpression);
                 args.add(new StringLiteral(ColumnTruncFunction.SYNTHETIC_COLUMN_PREFIX + i));
                 newBuilder.selectManager.select(new FunctionExpression(AliasFunction.FUNCTION_NAME, args), identifierToUseSelectAliases[i]);
             }
@@ -234,6 +254,64 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
             for (int i = 0; i < identifierExpressionsToUse.length; i++) {
                 newBuilder.selectManager.select(identifierExpressionsToUse[i].getExpression().copy(expressionCopyContext), identifierToUseSelectAliases[i]);
             }
+        }
+    }
+
+    // ponytail: null-safety for the subquery-based identifier correlation (see
+    // PaginatedCriteriaBuilderImpl#copyCriteriaBuilder and #appendPageIdPredicate) is implemented by COALESCE-ing
+    // nullable columns (identifiers resolved through a LEFT/RIGHT join, which can legitimately be NULL) to a
+    // fixed, type-appropriate sentinel on both sides of the comparison, instead of a fully general correlated
+    // EXISTS rewrite or a synthetic is-null-flag column pair. This keeps the existing uncorrelated IN/tuple-IN
+    // query shape and dialect-specific subquery tricks untouched, at the cost of a narrow, accepted edge case: a
+    // real row whose identifier legitimately equals the sentinel *and* is genuinely non-null could only
+    // mis-match if another row in the same page is legitimately NULL for that column. Only numeric and String
+    // identifier types get a safe sentinel here; other types are simply left without null-safe handling
+    // (pre-existing behavior). Upgrade path if ever needed: correlated EXISTS (fully correct, more invasive) or
+    // a synthetic value/is-null-flag column pair (fully correct, widest blast radius).
+    // ponytail: plain printable sentinel (no NUL bytes) for cross-dialect portability - some databases
+    // (e.g. PostgreSQL) reject NUL bytes in text literals.
+    static final String NULL_SAFE_STRING_SENTINEL = "##blaze_persistence_null_sentinel##";
+
+    static Expression createNullSafeSentinel(Expression expression) {
+        Class<?> javaType = resolveIdentifierJavaType(expression);
+        if (javaType == null) {
+            return null;
+        }
+        if (Number.class.isAssignableFrom(javaType)) {
+            return new NumericLiteral("-1", NumericType.INTEGER);
+        }
+        if (CharSequence.class.isAssignableFrom(javaType)) {
+            return new StringLiteral(NULL_SAFE_STRING_SENTINEL);
+        }
+        return null;
+    }
+
+    static Class<?> resolveIdentifierJavaType(Expression expression) {
+        if (expression instanceof PathExpression) {
+            Type<?> type = ((PathExpression) expression).getPathReference().getType();
+            return type == null ? null : type.getJavaType();
+        }
+        return null;
+    }
+
+    static Expression coalesceWithSentinel(Expression expression, Expression sentinel) {
+        List<Expression> args = new ArrayList<>(2);
+        args.add(expression);
+        args.add(sentinel);
+        return new FunctionExpression("COALESCE", args);
+    }
+
+    /**
+     * String-building counterpart of {@link #coalesceWithSentinel(Expression, Expression)}: appends the sentinel
+     * literal appropriate for the given (nullable) identifier expression's type, e.g. to close a {@code COALESCE(}
+     * opened before rendering the expression itself.
+     */
+    static void appendNullSafeSentinel(StringBuilder sb, Expression expression) {
+        Class<?> javaType = resolveIdentifierJavaType(expression);
+        if (javaType != null && CharSequence.class.isAssignableFrom(javaType)) {
+            TypeUtils.STRING_CONVERTER.appendTo(NULL_SAFE_STRING_SENTINEL, sb);
+        } else {
+            sb.append("-1");
         }
     }
 
