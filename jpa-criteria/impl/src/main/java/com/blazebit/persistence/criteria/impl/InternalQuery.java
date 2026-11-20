@@ -24,6 +24,7 @@ import com.blazebit.persistence.criteria.BlazeAbstractQuery;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.BlazeOrder;
 import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSelectRecursiveCTECriteria;
 import com.blazebit.persistence.criteria.BlazeSubquery;
 import com.blazebit.persistence.criteria.impl.RenderContext.ClauseType;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
@@ -266,6 +267,13 @@ public class InternalQuery<T> implements Serializable {
         }
 
         RenderContextImpl context = new RenderContextImpl();
+
+        if (ctes != null && ctes.size() > 0) {
+            for (AbstractBlazeSelectBaseCTECriteria<?> cte : ctes) {
+                cte.render(cb);
+            }
+        }
+
         renderFrom(cb, context);
         List<TreatedPath<?>> treatedSelections = renderSelect(cb, context);
 
@@ -768,4 +776,24 @@ public class InternalQuery<T> implements Serializable {
         }
     }
 
+    private List<AbstractBlazeSelectBaseCTECriteria<?>> ctes;
+
+    private List<AbstractBlazeSelectBaseCTECriteria<?>> getCtesInternal() {
+        if (ctes == null) {
+            ctes = new ArrayList<>();
+        }
+        return ctes;
+    }
+
+    public <X> BlazeFullSelectCTECriteriaImpl<X> with(Class<X> clasz) {
+        BlazeFullSelectCTECriteriaImpl<X> cteCriteria = new BlazeFullSelectCTECriteriaImpl<>(criteriaBuilder, clasz);
+        getCtesInternal().add(cteCriteria);
+        return cteCriteria;
+    }
+
+    public <X> BlazeSelectRecursiveCTECriteriaImpl<X> withRecursive(Class<X> clasz) {
+        BlazeSelectRecursiveCTECriteriaImpl cteCriteria = new BlazeSelectRecursiveCTECriteriaImpl<>(criteriaBuilder, clasz);
+        getCtesInternal().add(cteCriteria);
+        return cteCriteria;
+    }
 }
