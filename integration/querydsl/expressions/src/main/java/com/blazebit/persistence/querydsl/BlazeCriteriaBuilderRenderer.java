@@ -66,6 +66,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.ParamExpression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.SubQueryExpression;
 import com.querydsl.core.types.TemplateExpression;
 import com.querydsl.core.types.Visitor;
@@ -260,14 +261,14 @@ public class BlazeCriteriaBuilderRenderer<T> {
                 renderGroupBy(subQueryMetadata, (GroupByBuilder<?>) criteriaBuilder);
                 renderHaving(subQueryMetadata, (HavingBuilder<?>) criteriaBuilder);
 
-                Expression<?> select = subQueryMetadata.getProjection();
+                Expression<?> select = extractExpression(subQueryMetadata);
                 if (select instanceof FactoryExpression<?> && criteriaBuilder instanceof FullQueryBuilder<?, ?>) {
                     FactoryExpression<T> factoryExpression = (FactoryExpression<T>) select;
                     FullQueryBuilder<?, ?> fullQueryBuilder = (FullQueryBuilder<?, ?>) criteriaBuilder;
                     criteriaBuilder = fullQueryBuilder.selectNew(new FactoryExpressionObjectBuilder(factoryExpression));
 
                 } else {
-                    List<? extends Expression<?>> projection = expandProjection(subQueryMetadata.getProjection());
+                    List<? extends Expression<?>> projection = expandProjection(extractExpression(subQueryMetadata));
 
                     if (criteriaBuilder instanceof SelectBaseCTECriteriaBuilder) {
                         SelectBaseCTECriteriaBuilder<?> selectBaseCriteriaBuilder = (SelectBaseCTECriteriaBuilder<?>) criteriaBuilder;
@@ -905,6 +906,27 @@ public class BlazeCriteriaBuilderRenderer<T> {
         return pathString.toString();
     }
 
+    private static Expression<?> extractExpression(QueryMetadata meta) {
+        Expression<?> projection = meta.getProjection();
+        if (projection != null) {
+            return projection;
+        }
+
+        List<JoinExpression> joins = meta.getJoins();
+        if (joins == null || joins.isEmpty()) {
+            return null;
+        }
+
+        JoinExpression firstJoin = joins.get(0);
+        if (firstJoin == null) {
+            return null;
+        }
+
+        return firstJoin.getType() == com.querydsl.core.JoinType.DEFAULT
+                ? Projections.constructor(firstJoin.getTarget().getType())
+                : null;
+    }
+
     /**
      * Visitor that parses {@link JPQLNextOps#WITH_ALIAS}.
      */
@@ -1523,7 +1545,7 @@ public class BlazeCriteriaBuilderRenderer<T> {
 
             renderCTEs(metadata);
 
-            metadata.getProjection().accept(this, context);
+            extractExpression(metadata).accept(this, context);
 
             for (QueryFlag flag : metadata.getFlags()) {
                 flag.getFlag().accept(this, context);
