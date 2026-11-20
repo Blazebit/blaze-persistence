@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2014 - 2019 Blazebit.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
+<idea-plugin>
+    <id>com.blazebit.persistence.intellij</id>
+    <name>Blaze-Persistence Support</name>
+    <version>1.0</version>
+    <vendor url="https://persistence.blazebit.com">Blaze-Persistence</vendor>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="192"/>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.intellij.intelliLang</depends>
+
+    <extensions defaultExtensionNs="org.intellij.intelliLang">
+        <injectionConfig config="javaInjections.xml"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+        <fileType name="JPQL.Next-Expression" language="JPQL.Next-Expression" implementationClass="com.blazebit.persistence.plugin.intellij.JpqlNextExpressionFileType"/>
+        <lang.syntaxHighlighterFactory language="JPQL.Next-Expression" implementationClass="com.blazebit.persistence.plugin.intellij.JpqlNextExpressionSyntaxHighlighterFactory"/>
+        <lang.parserDefinition language="JPQL.Next-Expression" implementationClass="com.blazebit.persistence.plugin.intellij.JpqlNextExpressionParserDefinition"/>
+        <lang.ast.factory language="JPQL.Next-Expression" implementationClass="com.blazebit.persistence.plugin.intellij.JpqlNextExpressionASTFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+        <action id="BlazePersistence.NewEntityView" class="com.blazebit.persistence.plugin.intellij.NewEntityViewAction" text="Edit Entity View" description="Edits entity view.">
+            <!-- Add new -->
+<!--            <add-to-group group-id="NewGroup" anchor="first"/>-->
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="CutCopyPasteGroup" anchor="before"/>
+        </action>
+
+        <action id="BlazePersistence.GenerateEntityViewAttributes" class="com.blazebit.persistence.plugin.intellij.GenerateEntityViewAttributesAction" text="Generate Entity View Attributes">
+            <add-to-group group-id="GenerateGroup" anchor="first"/>
+        </action>
+    </actions>
+
+</idea-plugin>
