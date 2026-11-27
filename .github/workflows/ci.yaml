@@ -623,6 +623,10 @@ jobs:
             provider: hibernate-7.4
             jdk: 17
             spring-data: spring-data-4.1.x
+          - rdbms: h2
+            provider: hibernate-7.4
+            jdk: 17
+            spring-data: spring-data-4.2.x
 ################################################
 # LTS JDKs
 ################################################
