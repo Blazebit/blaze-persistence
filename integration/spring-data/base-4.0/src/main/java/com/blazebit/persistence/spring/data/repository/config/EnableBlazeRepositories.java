@@ -165,4 +165,13 @@ public @interface EnableBlazeRepositories {
      * @since 4.0
      */
     Class<? extends QueryEnhancerSelector> queryEnhancerSelector() default QueryEnhancerSelector.DefaultQueryEnhancerSelector.class;
+
+    /**
+     * Configures whether {@link org.springframework.data.jpa.repository.Query queries} are validated on creation.
+     * Only has an effect with Spring Data 4.2 or newer.
+     *
+     * @return {@literal true} by default.
+     * @since 1.6.21
+     */
+    boolean validateQueries() default true;
 }

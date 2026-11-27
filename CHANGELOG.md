@@ -6,7 +6,7 @@ Changes that happened in releases
 
 ### New features
 
-None yet
+* Ensure support for Spring Boot/Data 4.2
 
 ### Bug fixes
 

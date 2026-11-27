@@ -15,6 +15,7 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.data.jpa.repository.query.EscapeCharacter;
 import org.springframework.data.jpa.repository.query.JpaQueryMethodFactory;
 import org.springframework.data.jpa.repository.query.QueryEnhancerSelector;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFragmentsContributor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.querydsl.EntityPathResolver;
@@ -27,6 +28,7 @@ import org.springframework.util.Assert;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.function.Function;
 
 /**
@@ -37,11 +39,25 @@ import java.util.function.Function;
 public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
         TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
+    private static final Method SET_VALIDATE_QUERIES;
+
+    static {
+        Method setValidateQueries;
+        try {
+            setValidateQueries = JpaRepositoryFactory.class.getMethod("setValidateQueries", boolean.class);
+        } catch (NoSuchMethodException ex) {
+            // Only available as of Spring Data 4.2
+            setValidateQueries = null;
+        }
+        SET_VALIDATE_QUERIES = setValidateQueries;
+    }
+
     private EntityManager entityManager;
     private BeanFactory beanFactory;
     private EntityPathResolver entityPathResolver = SimpleEntityPathResolver.INSTANCE;
     private JpaRepositoryFragmentsContributor repositoryFragmentsContributor = JpaRepositoryFragmentsContributor.DEFAULT;
     private EscapeCharacter escapeCharacter = EscapeCharacter.DEFAULT;
+    private boolean validateQueries = true;
     private JpaQueryMethodFactory queryMethodFactory;
     private Function<BeanFactory, QueryEnhancerSelector> queryEnhancerSelectorSource;
 
@@ -120,6 +136,16 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
     }
 
     /**
+     * Configures whether queries should be validated on creation. Only has an effect with Spring Data 4.2 or newer.
+     *
+     * @param validateQueries whether to validate queries
+     * @since 1.6.21
+     */
+    public void setValidateQueries(boolean validateQueries) {
+        this.validateQueries = validateQueries;
+    }
+
+    /**
      * Configures the {@link QueryEnhancerSelector} to be used. Defaults to
      * {@link QueryEnhancerSelector#DEFAULT_SELECTOR}.
      *
@@ -194,6 +220,13 @@ public class BlazePersistenceRepositoryFactoryBean<T extends Repository<S, ID>, 
         BlazePersistenceRepositoryFactory factory = new BlazePersistenceRepositoryFactory(entityManager, cbf, evm);
         factory.setEntityPathResolver(entityPathResolver);
         factory.setEscapeCharacter(escapeCharacter);
+        if (SET_VALIDATE_QUERIES != null) {
+            try {
+                SET_VALIDATE_QUERIES.invoke(factory, validateQueries);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
         factory.setFragmentsContributor(getRepositoryFragmentsContributor());
 
         if (queryMethodFactory != null) {

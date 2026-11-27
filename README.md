@@ -202,7 +202,7 @@ OpenJPA integration              | N/A                                 | (Curren
 Entity View CDI integration      | CDI 1.0                             | 1.0, 1.1, 1.2, 2.0, 3.0
 Entity View Spring integration   | Spring 4.3                          | 4.3, 5.0, 5.1, 5.2, 5.3, 6.0, 6.1, 6.2, 7.0
 DeltaSpike Data integration      | DeltaSpike 1.7                      | 1.7, 1.8, 1.9
-Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.7, 3.1 - 3.5, 4.0 - 4.1
+Spring Data integration          | Spring Data 1.11                    | 1.11 - 2.7, 3.1 - 3.5, 4.0 - 4.2
 Spring Data WebMvc integration   | Spring Data 1.11, Spring WebMvc 4.3 | Spring Data 1.11+, Spring WebMvc 4.3+
 Spring Data WebFlux integration  | Spring Data 2.0, Spring WebFlux 5.0 | Spring Data 2.0+, Spring WebFlux 5.0+
 Spring HATEOAS WebMvc integration| Spring Data 2.2, Spring WebMvc 5.2  | Spring Data 2.3+, Spring WebMvc 5.2+, Spring HATEOAS 1.0+
@@ -499,6 +499,8 @@ To test a specific combination, you need to activate at least 4 profiles
   * `firebird`
   * `sqllite`
 * A Spring data profile
+  * `spring-data-4.2.x`
+  * `spring-data-4.1.x`
   * `spring-data-4.0.x`
   * `spring-data-3.5.x`
   * `spring-data-3.4.x`
