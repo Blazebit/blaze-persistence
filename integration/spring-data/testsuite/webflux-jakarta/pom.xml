@@ -237,6 +237,12 @@
             </properties>
         </profile>
         <profile>
+            <id>spring-data-4.2.x</id>
+            <properties>
+                <second.rename>spring-boot-4-renames.properties</second.rename>
+            </properties>
+        </profile>
+        <profile>
             <id>blazebit-release</id>
             <build>
                 <plugins>

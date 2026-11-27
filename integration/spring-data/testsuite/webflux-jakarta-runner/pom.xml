@@ -625,6 +625,46 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>spring-data-4.2.x</id>
+            <properties>
+                <version.spring>${version.spring-data-4.2-spring}</version.spring>
+                <version.spring-boot>${version.spring-data-4.2-spring-boot}</version.spring-boot>
+                <version.spring-data>${version.spring-data-4.2}</version.spring-data>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-webflux</artifactId>
+                    <version>${version.spring-boot}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-webflux-test</artifactId>
+                    <version>${version.spring-boot}</version>
+                    <scope>test</scope>
+                </dependency>
+                <!-- Need a special artifact to test with Jackson2 as Spring Boot 4 switched to Jackson 3 -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-jackson2</artifactId>
+                    <version>${version.spring-boot}</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.21.1</version>
+                    <scope>compile</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
 </project>
